@@ -1,0 +1,705 @@
+% math writing template — ams + readable defaults
+\documentclass[11pt, a4paper]{article}
+
+% --- encoding & fonts ---
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern} % better vector fonts than cm default
+\usepackage{microtype} % better justification, fewer overflows
+
+% --- math ---
+\usepackage{amsmath} % align, gather, etc.
+\usepackage{amssymb} % \mathbb, \mathfrak, extra symbols
+\usepackage{amsthm} % theorem environments
+\usepackage{mathtools} % extends amsmath: \coloneqq, \prescript, etc.
+
+% --- layout ---
+\usepackage[
+top=1in, bottom=1in,
+left=1.0in, right=0.5in
+]{geometry}
+\usepackage{parskip} % block paragraphs, no indent
+\usepackage{setspace}
+\setstretch{1.15}
+
+% --- utilities ---
+\usepackage{hyperref} % clickable refs & toc
+\usepackage{cleveref} % \cref{} auto-prefixes label type
+\usepackage{enumitem} % fine-grained list control
+\usepackage{booktabs} % professional tables
+\usepackage{graphicx}
+
+% --- theorem styles ---
+\theoremstyle{plain} % italic body
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\theoremstyle{definition} % upright body
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{remark}[theorem]{Remark}
+
+
+
+\title{Geometric Dataset Distances via Optimal Transport}
+\author{Authors: David Alvarez-Melis, Nicolò Fusi\\Paper Comprehension Session 1\\Shreesh Bhattarai}
+\date{\today}
+
+\begin{document}
+	
+	\maketitle
+	
+	\section{Context}
+	\label{sec:context}
+		The paper introduces Optimal Transport Dataset Distance (OTDD), a novel method for measuring similarity between two datasets.
+
+
+
+	\section{Comprehension}
+	\label{sec:comprehension}
+		\subsection{Objectives}
+		\label{sec:objectives}
+			\begin{itemize}
+				\item The main objective of the paper is to introduce a notion of distance between datasets that is principled, flexible, and computable in practice. Hence, OTDD:
+				\begin{enumerate}
+					\item is model-agnostic (can be applied to any machine learning model),
+					\item does not involve training,
+					\item can compare datasets even if their label sets are completely disjoint,
+					\item has solid theoretical founding.
+				\end{enumerate}
+				\item The paper proposes various algorithmic shortcuts to scale up computation of this method.
+				\item The paper provides extensive evidence that the measured distance is highly predictive of transfer learning success across various domain tasks and data modalities.
+			\end{itemize}
+
+
+		\subsection{Facts}
+		\label{sec:facts}
+			\begin{itemize}
+				\item While comparing the input-data (features) is usually straightforward, measuring the difference between categories (labels) is difficult, especially when two different AI tasks use different sets of labels.\\
+				Example:
+				\begin{itemize}
+					\item Breed Classifier Model (Model 1): Classifies Husky, Pug, and Pitbull.
+					\item Animal Classifier Model (Model 2): Classifies Dog and Cat.
+					\item Images of different breeds in Model 1 have known distance because the features are numerically comparable.
+					\item But, labels are discrete symbols. There is no \textbf{direct} mathematical distance between Cat of Model 2 and Husky of Model 1. A machine may not be able to calculate how far apart a Husky from Model 1 is from a Cat of Model 2 compared to how far apart it is from a Pug of the same Model 1.
+				\end{itemize}
+				\item Since measuring the actual difference between datasets is hard, researchers use shortcuts or indirect methods to guess how similar two tasks are. Such shortcuts or indirect methods includes heuristic or proxies like:
+				\begin{itemize}
+					\item Transfer Performance
+					\item Learning Curve Slopes
+					\item Weight Similarity
+					\item Feature Distributions
+					\item Label Co-occurrence
+				\end{itemize}
+				\item Such existing ways to measure the difference between datasets rely on testing how much a specific "predictor" (like AI model) fails when moving from one task to another.
+				\item However, those shortcuts are unreliable because they require full training, and, are not theoretically sound methods.
+				\item Conversely, while the perfect mathematical formula for such measurement between datasets exists, they are usually too complex to calculate or too slow for large amount of data.
+				\item The novel method uses mathematical framework called Optimal Transport. It is the most efficient way to transform one dataset into another (to measure the distance), providing more reliable and theoretically sound method.
+				\item A specific formula: hybrid \textbf{Eucliden-Wasserstein} that treats labels not as simple strings, but as clouds of data points is used here. Because it focuses on the underlying structure, it can compare two datasets even if their categories are completely different (like comparing a "Truck" dataset to a "Fruit" dataset).
+				\item Moreover, it has potential to optimally sub-sample classes from large datasets for more efficient training. In simple terms, it can help pick the best part of a large dataset to speed up the AI training.
+			\end{itemize}
+
+
+
+	\section{Development}
+	\label{sec:development}
+		The paper describes active research trend where complex items are treated as "probability clouds" (distributions rather than single points). Specifically, it mentions objects as "ellipses" (which are mathematically easy to handle) and \textbf{use OT to measure} how much one cloud would have to shift or stretch to become the other cloud. Furthermore, it discusses the use of specialized tool like Gromov-Wasserstein distance to compare datasets that don't even live in the same space (like comparing a set of 3D shapes to a set of text documents). The paper proceeds to describe "layered" approach to measure the distance of datasets, which instead of one simple calculation, uses a smaller OT problems to define "cost" of moving data, that is then fed into a larger OT problem to compare entire datasets. This is similar to how researchers might first compare individual topics to find the distance between two books, or compare groups of pixels to better understand the difference between two images.
+
+		The paper clarifies that the goal, metric, and approach used by such previous methods differ from its own. Additionally, it criticizes some previous methods that use OT to match similar categories between datasets. It points out that those methods had labels for \textbf{one side} (unsupervised), and that they did not actually measure the distance between different labels, as well as weren't tested on many different tasks at once.
+
+		The development towards correct measurement of different labels of different datasets proceeds as follows:
+		\subsection{Kantorovich Formulation}
+		\label{sec:kantorovich}
+			First, Lenoid Kantorovich introduced Kantorovich formulation that characterizes the minimal cost of moving one distribution to another by finding an "optimal" coupling or transport plan. This is a special way of looking at the transportation problem that allows for "splitting-mass", meaning one starting point can send its data to multiple destinations to find the cheapest overall plan.
+
+			The Kantorovich formulation is expressed as:
+			\begin{equation}
+				\label{eq:kantorovich_formulation}
+				OT(\alpha, \beta) \triangleq \inf_{\pi \in \Pi(\alpha, \beta)} \int_{X \times X} c(x, y) \, d\pi(x, y)
+			\end{equation}
+			where:
+			\begin{itemize}
+				\item $OT(\alpha, \beta)$: Total optimal transport cost or Wasserstein distance between distributions.
+				\item $\alpha, \beta$: Source and target probability measures (distributions) being compared, residing in the space $\mathcal{P}(X)$.
+				\item $\pi$: Transport plan/coupling defining mass distribution between locations $x$ and $y$.
+				\item $\Pi(\alpha, \beta)$: Set of all valid couplings.\\For a coupling to be valid, it must have $\alpha$ and $\beta$ as its marginals, meaning the total mass moved out of any region in the source must equal the mass assigned to it by $\alpha$, and the mass moved into any region in the target must equal the mass assigned by $\beta$. This is formally defined in the sources as:
+				\begin{equation}
+					\label{eq:coupling_set}
+					\Pi(\alpha, \beta) \triangleq \{ \pi \in \mathcal{P}(X \times X) \mid P_{1\#}\pi = \alpha, P_{2\#}\pi = \beta \}
+				\end{equation}
+				\item $c(x, y)$: Ground cost function representing the expense of moving unit mass from $x$ to $y$.
+				\item $X$: Metric space containing the support of the measures.
+				\item $\int_{X \times X} \dots d\pi(x, y)$: Total expected transport cost under plan $\pi$.
+				\item $d\pi$$(x, y)$: Shipping Manifest--tells the formula how much mass is actually being moved from $x$ to $y$.
+			\end{itemize}
+			However, the standard Kantorovich formulation could not be used directly because it requires a "ground cost" to measure the distance between individual data points, which is problematic when those points include labels. As stated earlier, while it is easy to measure the distance between features (like pixels in an image), there is no obvious way to measure the distance between labels from different datasets.
+
+
+		\subsection{$p$-Wasserstein Distance}
+		\label{sec:p_wasserstein_distance}
+			The Kantorovich formulation is the general mathematical framework for optimal transport, and when you use a metric (like Euclidean distance) as your "ground cost," the resulting value is called the $p$-Wasserstein distance. The $p$-Wasserstein distance is a metric specifically defined when the ground cost of moving mass is determined by a metric raised to the power of $p$.
+
+			The distance is mathematically expressed as:
+			\begin{equation}
+				\label{eq:p_wasserstein}
+				W_p(\alpha, \beta) \triangleq OT(\alpha, \beta)^{1/p}
+			\end{equation}
+			where:
+			\begin{itemize}
+				\item $W_p(\alpha, \beta)$: $p$-Wasserstein distance between two distributions. When $p=1$, it is commonly referred to as the \textit{Earth Mover's Distance}.
+				\item $p$: Parameter representing the power to which the ground metric is raised, where $p \ge 1$.
+				\item $d_X$: Metric (distance function) associated with the complete and separable metric space $X$ where the data resides.
+				\item $1/p$: Exponent applied to the total transport cost to ensure the resulting value satisfies the mathematical properties of a distance, such as the triangle inequality.
+			\end{itemize}
+			The paper's primary challenge was comparing datasets with different or unrelated labels. This was solved by treating each label not as a discrete category, but as a \textbf{distribution of features}. It used the $p$-Wasserstein distance to measure the "distance" between these label-defined distributions. This allows the framework to determine, for example, the mathematical distance between a "car" label and a "dog" label based on their feature characteristics.
+
+			However, the perfect mathematical description of the entire data distributions ($\alpha, \beta$) cannot be obtained in real-world. Instead only finite set of observations or data points (samples) from those distributions can be obtained.
+
+			For example, consider the MNIST dataset of handwritten digits mentioned in the sources:
+			\begin{itemize}
+				\item The Perfect Distribution ($\alpha, \beta$): This would be the "ideal" mathematical representation of every possible way a human could ever write the digits 0 through 9, including every variation in stroke, slant, and style. This is impossible to obtain perfectly in the real world.
+				\item The Finite Set of Observations: Instead of that perfect distribution, we have a specific, finite set of 60,000 images (samples). When we calculate a distance between MNIST and another dataset like USPS, we aren't comparing the "perfect" idea of digits; we are comparing these two specific, finite collections of images.
+			\end{itemize}
+
+
+		\subsection{Discrete Measures and Costs}
+		\label{sec:discrete_measures_and_costs}
+			When the true mathematical distributions of datasets are unknown, they are approximated using \textbf{discrete measures} (point clouds) created from finite samples.
+
+			The discrete formulation of the transportation problem is expressed as:
+			\begin{equation}
+				\label{eq:discrete_measure}
+				\alpha = \sum_{i=1}^n a_i \delta_{x^{(i)}} \quad \text{and} \quad \beta = \sum_{j=1}^m b_j \delta_{y^{(j)}}
+			\end{equation}
+			where:
+			\begin{itemize}
+				\item \textbf{$\alpha, \beta$}: Discrete measures (empirical distributions) representing the two datasets being compared.
+				\item \textbf{$n, m$}: Sample sizes (total number of data points) in each respective dataset.
+				\item \textbf{$a, b$}: Vectors in the probability simplex that assign weights to each data point (often uniform, such as $1/n$).
+				\item \textbf{$\delta_{x^{(i)}}, \delta_{y^{(j)}}$}: Dirac delta function, which indicates that the probability mass is concentrated entirely at the specific locations of the samples $x^{(i)}$ and $y^{(j)}$.
+				\item \textbf{$C$}: Cost matrix ($n \times m$), which compactly stores the "ground" costs for all possible pairings between the two datasets.
+				\item \textbf{$C_{ij}$}: Specific pairwise cost of transporting mass from point $i$ in dataset $\alpha$ to point $j$ in dataset $\beta$.
+				\item \textbf{$c(x, y)$}: Ground cost function (such as Euclidean distance) used to determine the distance between individual feature vectors.
+			\end{itemize}
+			This allows the transportation problem to be expressed using a cost matrix ($C$), where each entry $C_{ij}$ represents the specific pairwise cost between sample $i$ and sample $j$. This discrete formulation converts the theoretical Optimal Transport problem into a linear program. By representing datasets as finite collections of weighted points rather than complex continuous formulas, the distance between them can be computed using matrix scaling algorithms like Sinkhorn, which significantly improves computational efficiency.
+
+
+		\subsection{Entropy-Regularized Optimal Transport}
+		\label{sec:entropy-regularized_optimal_transport}
+			While the discrete formulation makes the problem solvable, solving it exactly as a linear program is computationally "prohibitive" because it \textbf{scales cubically with the sample size ($O(n^3)$)}. To solve this efficiency bottleneck, entropy regularization was introduced. By adding a relative entropy term to the objective function, the problem is transformed into a version that can be solved much more efficiently using the Sinkhorn algorithm. This matrix-scaling procedure allows the distance to be computed for very large datasets that would otherwise be impossible to process using the standard discrete linear programming approach. Thus, the regularized version offers better sample complexity than the original formulation, meaning it can provide more reliable estimates of the distance between distributions when only a finite number of samples are available.
+
+			This equation modifies the original transport problem by adding an entropy term to make it computationally tractable:
+			\begin{equation}
+				\label{eq:entropy_regularized_ot}
+				OT_\epsilon(\alpha, \beta) \triangleq \min_{\pi \in \Pi(\alpha, \beta)} \int_{X^2} c(x, y) \, d\pi(x, y) + \epsilon H(\pi \mid \alpha \otimes \beta)
+			\end{equation}
+			where:
+			\begin{itemize}
+				\item $OT_\epsilon(\alpha, \beta)$: Entropy-regularized optimal transport cost between two measures. The subscript $\epsilon$ indicates that the cost is dependent on the chosen regularization level.
+				\item $\epsilon$ (Regularization Parameter): Positive scalar that controls the trade-off between accuracy and runtime. As $\epsilon$ increases, the problem becomes easier to solve but the resulting transport plan becomes ``blurrier'' or more diffused.
+				\item $H(\pi \mid \alpha \otimes \beta)$ (Relative Entropy): Kullback-Leibler divergence which measures the "distance" between the transport plan ($\pi$) and the product of the marginals ($\alpha \otimes \beta$). Formally, it is defined in the sources as:
+				\begin{equation}
+					\label{eq:relative_entropy}
+					H(\pi \mid \alpha \otimes \beta) = \int \log\left(\frac{d\pi}{d\alpha d\beta}\right) d\pi
+				\end{equation}
+				\item $\int_{X^2} \dots d\pi$: The integral representing the total cost of the transport plan across the entire space $X$.
+			\end{itemize}
+
+
+		\subsection{Sinkhorn Divergence}
+		\label{sec:sinkhorn_divergence}
+			The Sinkhorn Divergence ($SD_\epsilon$) was introduced immediately after the Entropy-Regularized Optimal Transport ($OT_\epsilon$) equation because, while regularization makes the transport problem computationally efficient and improves sample complexity, it introduces a "bias" where the distance between a distribution and itself is not necessarily zero. The Sinkhorn Divergence is introduced to provide a version of the distance that possesses several "desirable properties," such as being positive, convex, and metrizing the weak convergence of distributions.
+
+			The equation is formally defined as:
+			\begin{equation}
+				\label{eq:sinkhorn_divergence}
+				SD_\epsilon(\alpha, \beta) = OT_\epsilon(\alpha, \beta) - \frac{1}{2} OT_\epsilon(\alpha, \alpha) - \frac{1}{2} OT_\epsilon(\beta, \beta)
+			\end{equation}
+			where:
+			\begin{itemize}
+				\item $SD_\epsilon(\alpha, \beta)$: Total Sinkhorn Divergence between two probability measures $\alpha$ and $\beta$.
+				\item $OT_\epsilon(\alpha, \beta)$: Entropy-regularized optimal transport cost between the two distributions. This value is derived from the minimization problem that includes an entropy penalty term.
+				\item $OT_\epsilon(\alpha, \alpha)$ and $OT_\epsilon(\beta, \beta)$: Self-transport costs--they represent the regularized cost of "transporting" a distribution to itself, which is used here to normalize the divergence.
+			\end{itemize}
+			This formulation effectively "debiases" the regularized transport cost. By subtracting the self-transport costs ($OT_\epsilon(\alpha, \alpha)$ and $OT_\epsilon(\beta, \beta)$), it ensures that the divergence behaves more like a true distance metric while still benefiting from the speed of the Sinkhorn algorithm.
+
+			\subsubsection{Sinkhorn Algorithm}
+			\label{sec:sinkhorn_algorithm}
+				In the discrete regime, where distributions are represented as finite samples with weights (vectors $a$ and $b$) and a pairwise \textbf{cost matrix $C$}, the algorithm solves the regularized problem by alternatingly updating two scaling vectors, $u$ and $v$.
+
+				The process follows these specific steps:
+					\begin{enumerate}
+						\item Construction of the Kernel Matrix ($K$): The algorithm first transforms the cost matrix $C$ into a Gibbs kernel matrix $K$:
+						\begin{equation}
+							\label{eq:kernel_matrix}
+							K \triangleq \exp\left\{-\frac{1}{\epsilon} C\right\}
+						\end{equation}
+						Here, $\epsilon$ is the regularization parameter, and the exponential is applied entry-wise. This matrix $K$ represents the "affinities" between points based on their transport costs.
+						\item Iterative Updates: The algorithm then performs the following updates until the vectors $u$ and $v$ converge:
+						\begin{align}
+							u &\leftarrow a \oslash Kv \label{eq:sinkhorn_u} \\
+							v &\leftarrow b \oslash K^T u \label{eq:sinkhorn_v}
+						\end{align}
+						\begin{itemize}
+							\item In these equations, $\oslash$ denotes entry-wise division.
+							\item $a$ and $b$ are the marginal weights of the source and target distributions.
+							\item $K^T$ is the transpose of the kernel matrix.
+						\end{itemize}
+						The algorithm is a key "algorithmic shortcut" that allows the authors to scale their method to large datasets.
+						\item Resulting Transport Plan: Once $u$ and $v$ converge, the optimal transport plan (coupling) $\pi$ is recovered as:
+						\begin{equation}
+							\label{eq:transport_plan}
+							\pi = \text{diag}(u) \, K \, \text{diag}(v)
+						\end{equation}
+						This ensures that the final plan satisfies the required marginal constraints while minimizing the regularized cost.
+					\end{enumerate}
+
+					\textbf{The True Purpose of the Algorithm:} The primary purpose of the Sinkhorn algorithm in the context of these sources is to provide an "algorithmic shortcut" to make Optimal Transport practical for real-world datasets. Beyond raw speed, the regularized approach has better sample complexity than unregularized OT. This means it provides more accurate distance estimates when working with finite samples of data rather than full, known distributions. It allows the authors to maintain the "geometry awareness" of OT--where the distance reflects the underlying structure of the data--without the impossible computational cost usually required to achieve it.
+
+					\textbf{BUT WHY AND WHERE IS IT USED?}
+
+					The Sinkhorn algorithm is the computational engine for the Sinkhorn Divergence. The Sinkhorn Divergence ($SD_\epsilon$) is a formula (\cref{eq:sinkhorn_divergence}) that uses three separate regularized OT terms: $OT_\epsilon(\alpha, \beta)$, $OT_\epsilon(\alpha, \alpha)$, and  $OT_\epsilon(\beta, \beta)$. The Sinkhorn Algorithm is the iterative process used to actually calculate the value of each of those $OT_\epsilon$ terms. To find the Sinkhorn Divergence, the algorithm performs this exact process three times: once for the distance between datasets $\alpha$ and $\beta$, and twice more for the internal distances of each dataset ($\alpha$ to $\alpha$ and $\beta$ to $\beta$). Without this algorithm, the Sinkhorn Divergence would be a theoretical formula without a practical way to compute it for large datasets. The value for $OT_\epsilon$ (\cref{eq:entropy_regularized_ot}) is then calculated by using this plan to find the total cost plus the entropy penalty. 
+
+
+		\subsection{Combined Metric Space ($d_Z$)}
+		\label{sec:combined_metric_space}
+			The paper advances to the foundational mathematics of OTDD: from optimal transport to dataset comparison.
+
+			Before defining the combined metric, several key terms regarding the structure of data must be established:
+			\begin{itemize}
+				\item Dataset ($D$): Dataset defined as a set of \textbf{feature-label pairs} $(x, y)$ in the context of supervised learning.
+				\item Feature Space ($X$): Underlying space where the features (e.g., images or text embeddings) reside. It is usually assumed to be a complete and separable metric space.
+				\item Label Set ($Y$): Finite set of categories or classes associated with the features.
+				\item Joint Distributions ($P(x, y)$): Probabilistic interpretation of a dataset, where samples are viewed as being drawn from a distribution over the product space of features and labels.
+				\item Space $Z$: \textbf{Product space} $X \times Y$, which contains all possible feature-label combinations.
+			\end{itemize}
+
+			The equation for the ground metric on the space $Z$ \textbf{(The Combined Metric Space Equation ($d_Z$))} is expressed as:
+			\begin{equation}
+				\label{eq:combined_metric_space}
+				d_Z(z, z') = \left(d_X(x, x')^p + d_Y(y, y')^p\right)^{1/p}, \quad \text{for } p \geq 1
+			\end{equation}
+			where:
+			\begin{itemize}
+				\item $z, z'$: Specific data points within the combined space $Z$ (i.e., $z = (x, y)$ and $z' = (x', y')$).
+				\item $d_X$: Metric used to measure distance between \textbf{features} (often Euclidean distance).
+				\item $d_Y$: Metric on the \textbf{label set} used to measure the distance between different classes.
+				\item $p$: Power parameter that ensures the final result satisfies the \textbf{triangle inequality}, making it a valid metric.
+			\end{itemize}
+			The primary purpose of this equation is to solve the \textbf{"ground cost problem."} Standard Optimal Transport requires a cost function to compare individual points. While it is easy to find a distance between two feature vectors ($d_X$), it is difficult to define a distance between \textbf{categorical labels} ($d_Y$), especially if the labels across two datasets are disjoint. This equation provides a theoretical bridge to merge feature and label distances into a single value.
+
+			Chronologically:
+			\begin{itemize}
+				\item \textbf{(Discrete Measures \& Regularization):} Provides the computational tools (Sinkhorn) to solve the problem efficiently using a \textbf{Cost Matrix ($C$)}.
+				\item \textbf{(Combined Metric $d_Z$):} Defines \textbf{what goes into that Cost Matrix.} It specifies exactly how to calculate the cost ($C_{ij}$) for the Sinkhorn algorithm when your data has both features and labels.
+			\end{itemize}
+			In simple terms, in the discrete regime, the values calculated by $d_Z$ for every possible pair of points are stored in the Cost Matrix ($C$). Entropy regularization is then applied to this specific matrix to make the problem solvable. Without the $d_Z$ equation to define the entries of $C$, the Sinkhorn algorithm would have no data to process.
+
+			The authors note that $d_Y$ is rarely known in practice. Therefore, this equation builds toward \cref{eq:hierarchical_distance}, where the authors present \textbf{label-to-label distance} calculated by treating each label as a distribution of its features. This refinement allows the creation of the \textbf{Optimal Transport Dataset Distance (OTDD)}, which can compare datasets even if they have completely different labels.
+
+
+		\subsection{Label Distances via Centroid: Defining $d_Y$ in Practice}
+		\label{sec:label_distances_via_centroid}
+			After defining the theoretical combined metric $d_Z$ (\cref{eq:combined_metric_space}), the authors realize that the label distance component ($d_Y$) is still unknown. Equation~\ref{eq:label_centroid} is the first concrete implementation provided to fill that gap. Following the introduction of the combined metric space ($d_Z$), the paper proposes a practical way to define the label-to-label distance ($d_Y$) when no prior knowledge of the relationship between labels is available. Since, the only information we have about the labels is their occurrence in relation to the feature vectors $x$. Thus, we can take advantage of the fact that we have a meaningful metric in $X$ and use it to compare labels. By looking at where these labels "live" in the feature space $X$, one can determine how similar they are. This leads to the label distance via centroids \cref{eq:label_centroid}.
+
+			Simply, distance betwen two labels $y$ and $y'$ can be defined as the distance between the centroids of their associated feature vector collections. Hence, the label distance via centroid is the simplest way to calculate the distance between two labels, $y$ and $y'$. It compares the "average" version of those labels in the feature space:
+			\begin{equation}
+				\label{eq:label_centroid}
+				d(y, y') = d_X \left( \frac{1}{n_y} \sum_{x \in N_D(y)} x, \frac{1}{n_{y'}} \sum_{x \in N_D(y')} x \right)
+			\end{equation}
+			where:
+			\begin{itemize}
+				\item $N_D(y)$: Set of all feature vectors in the dataset that carry the label $y$. $$N_D(y) := \{x \in X \mid (x,y) \in D\}$$
+				This is the "bucket" of all images or data points ($x$) in the datasets that have the label $y$. If (label) $y$ is "Cat", then the set contains all cat images.
+				\item $n_y$: Cardinality (count) of the set $N_D(y)$.
+				\item $\frac{1}{n_y} \sum x$: Centroid (arithmetic mean) of all feature vectors associated with a specific label.
+				\item $d_X$: Metric (usually Euclidean) used to measure the distance between those two average points in the feature space.
+			\end{itemize}
+			The equation~\ref{eq:label_centroid} is introduced as a heuristic solution to the problem of disjoint label sets. In many transfer learning scenarios, there may be need to compare a dataset of "digits" to a dataset of "letters." Since there is no inherent distance between a '3' and an 'A', the paper suggest using the feature as a proxy. 
+
+			\textbf{WHERE IS IT USED?}
+
+			This value provides a numerical cost which is used to to fill the $d_Y$ variable that will be plugged back into the $d_Z$ (\cref{eq:combined_metric_space}) formula. There, it complements the feature distance ($d_X$). Together, they form the "ground cost" ($d_Z$) for feature-label pairs, which is necessary to build the Cost Matrix ($C$) used by the Sinkhorn algorithm (\cref{eq:kernel_matrix}) to find the final dataset distance.
+
+			\textbf{HOWEVER,} The authors immediately critique this equation, noting that representing a whole class of data by only its mean is "too simplistic for real datasets".
+
+			\textbf{DESPITE THAT,} this equation acts as a conceptual bridge to eq~\ref{eq:hierarchical_distance}, where instead of comparing single average points (centroids), the entire distributions of features for each label is compared using the Wasserstein distance.
+
+
+		\subsection{Hierarchical Distance between Feature-Label Pairs}
+		\label{sec:hierarchical_distance}
+			The Hierarchical Distance between Feature-Label Pairs, represented as \cref{eq:hierarchical_distance}, is a pivotal mathematical construct designed to quantify the distance between individual data points in a space \textbf{that combines both features and labels.}
+
+			The equation is expressed as:
+			\begin{equation}
+				\label{eq:hierarchical_distance}
+				d_Z((x, y), (x', y')) = \left(d_X(x, x')^p + W_p^p(\alpha_y, \alpha_{y'})\right)^{1/p}
+			\end{equation}
+			where:
+			\begin{itemize}
+				\item $z = (x, y)$ and $z' = (x', y')$: Represent individual samples or \textbf{feature-label pairs} within the underlying space $Z = X \times Y$.
+				\item $d_X(x, x')$: Metric in the feature space $X$. In most machine learning applications, this is the standard \textbf{Euclidean distance}. This is the distance between features (how different two images look).
+				\item $\alpha_y$ and $\alpha_{y'}$: Label-conditional distributions defined as: 
+				$$y \rightarrowtail \alpha_y(x)  \triangleq  P(X \mid Y = y)$$
+				where:
+				\begin{itemize}
+					\item $\triangleq$: Mathematical notation used to define symbol with its expression. Simply said, it is used for assigning a short variable to a long term.
+					\item $\rightarrowtail$: Mapping where a rule that assigns every element of one set to exactly one element of another set.
+					\item $P(X \mid Y = y)$: Conditional probability that represents the distribution of feature $X$ given that we know the label is $y$.
+				\end{itemize}
+				Rather than treating labels as abstract symbols, the researchers model each label as the distribution of feature vectors associated with it.
+				\item $W_p^p(\alpha_y, \alpha_{y'})$: $p$-Wasserstein distance (specifically the $p$-th power of it) between the two distributions $\alpha_y$ and $\alpha_{y'}$. It serves as the "distance between labels" by measuring how much effort it takes to transform the feature distribution of one label into the other. For example, it asks: how much work does it take to transform the distribution of all cats into distribution of all dogs.
+				\item $p \geq 1$: Parameter defining the order of the Wasserstein distance and the overall combination of the feature and label distances.
+			\end{itemize}
+			The primary purpose of this equation (\cref{eq:hierarchical_distance}) is to establish a \textbf{ground metric} that can compare datasets even when their label sets are \textbf{disjoint or unrelated}. It provides a way to mathematically define "label-to-label" similarity without needing pre-existing semantic knowledge (like a taxonomy of classes). Mathematically, this formula defines the \textbf{distance between two individual data points} $z$ and $z'$. Each point is a pair: an image $x$ and its label $y$. The result is you get a single number of how far apart two labeled samples are, accounting for both their appearance and complexity of their categories.
+
+			This equation serves as the \textbf{ground cost function} for the global dataset distance. Once $d_Z$ is defined for every pair of points, it is plugged into \cref{eq:otdd} to compute the \textbf{Optimal Transport Dataset Distance (OTDD)}, which is the final distance between two entire datasets $D_A$ and $D_B$.
+
+
+		\subsection{Optimal Transport Dataset Distance}
+		\label{sec:otdd}
+			The Optimal Transport Dataset Distance (OTDD), represented as \cref{eq:otdd} is the core contribution of the paper. It "lifts" a point-wise ground metric into a global distance between two entire datasets.
+
+			The equation is defined as:
+			\begin{equation}
+				\label{eq:otdd}
+				d_{OT}(D_A, D_B) = \min_{\pi \in \Pi(\alpha, \beta)} \int_{Z \times Z} d_Z(z, z') \, d\pi(z, z')
+			\end{equation}
+			where:
+			\begin{itemize}
+				\item $D_A, D_B$: Two datasets being compared, each consisting of feature-label pairs.
+				\item $d_Z(z, z')$: Ground metric (specifically the one defined in \cref{eq:hierarchical_distance} that measures the distance between two individual samples by combining their feature similarity and their label-conditional distribution similarity.
+				\item $\alpha, \beta$: Probability measures associated with datasets $D_A$ and $D_B$ respectively. In practice, these are often discrete measures formed by the available finite samples.
+				\item $\Pi(\alpha, \beta)$: Set of all possible \textbf{couplings} (joint distributions) that have $\alpha$ and $\beta$ as their marginals.
+				\item $\pi$: Specific \textbf{transport plan} or coupling that describes how to "move" the mass of one dataset to the other.
+			\end{itemize}
+			The equation's purpose is to provide a \textbf{principled and computable} way to measure how similar two supervised learning tasks are to one another. It moves beyond just comparing the distributions of features (which ignores the labels) to comparing the \textbf{joint distributions of features and labels}.
+
+			\textbf{QUESTION:} Why is OTDD (\cref{eq:otdd}) the best choice for measuring the distance between datasets?
+
+			The answer complements the Section~\ref{sec:objectives} where each objective are now fulfilled by this research. The contributions are three-fold:
+			\begin{enumerate}
+				\item Model Agnosticism: Previous methods often relied on "probe networks," meaning the distance between datasets changed depending on the neural network architecture used to measure it. Equation~\ref{eq:otdd} is \textbf{independent of any specific model or loss function}.
+				\item Interpretability: Because it is based on Optimal Transport (OT), the distance provides an \textbf{optimal coupling ($\pi^*$)}, which identifies which specific samples or classes in one dataset correspond most closely to those in another.
+				\item Theoretical Grounding: Unlike heuristic metrics, this equation was introduced to provide a \textbf{proper metric} (satisfying symmetry and the triangle inequality) for the space of datasets. It is able to deal with sparsely-supported distributions, all of which OT satisfies.
+			\end{enumerate}
+
+			First, equation~\ref{eq:hierarchical_distance} defines how to compare two individual \textit{points} ($z, z'$) in a dataset using the hierarchical distance, which accounts for both features and the distributions of features associated with their labels. Equation~\ref{eq:otdd} then uses that point-wise distance as the "cost" to solve a global OT problem, effectively \textbf{lifting} the point-wise logic to the dataset level. \textbf{Equation~\ref{eq:otdd} supports the paper's goal of creating a "geometry awareness" for transfer learning tasks}. The OTDD is used to \textbf{predict transfer learning hardness}. The authors demonstrate that the distance computed by equation~\ref{eq:otdd} correlates strongly with how much a model's performance improves when fine-tuned from one domain to another.
+
+			While this equation~\ref{eq:otdd} is theoretically sound, computing it exactly is computationally expensive because every single evaluation of $d_Z$ requires solving an inner OT problem. To refine this for practical use, the authors propose modeling the distributions $\alpha_y$ as \textbf{Gaussians} ($N(\hat{\mu}_y, \hat{\Sigma}_y)$). This allows the $W_p^p$ term in \cref{eq:hierarchical_distance} to be replaced by an \textbf{analytic, closed-form solution}, significantly speeding up the computation for large-scale datasets.
+
+
+		\subsection{Sample Mean and Covariance Calculations}
+		\label{sec:sample_mean_covariance}
+			Equation~\ref{eq:otdd} sets the stage for the \textbf{computational optimizations} that follow. Because solving \cref{eq:otdd} exactly requires solving an inner OT problem for \textit{every} pair of points (to compute $d_Z$), it is computationally prohibitive for large datasets---scaling at $O(n^5 \log n)$ in the worst case.
+
+			Consequently, \cref{eq:otdd} builds the mathematical foundation for \textbf{$d_{OT-N}$}, the \textbf{Gaussian Approximation}. By assuming labels are distributed as Gaussians, the authors can replace the expensive inner calculations within \cref{eq:otdd} with the \textbf{analytic, closed-form solution} of the 2-Wasserstein distance, making the global dataset distance tractable for real-world applications.
+
+			The \textbf{Sample Mean and Covariance Calculations}, represented in equation~\ref{eq:mean_and_covariance}, provide the statistical foundation for the Gaussian approximation used to make the dataset distance computationally tractable for large-scale machine learning.
+
+			The equations are defined as:
+			\begin{equation}
+				\label{eq:mean_and_covariance}
+				\hat{\mu}_y = \frac{1}{n_y} \sum_{x \in N_D(y)} x
+				\hat{\Sigma}_y = \frac{1}{n_y} \sum_{x \in N_D(y)} (x - \hat{\mu}_y)(x - \hat{\mu}_y)^\top
+			\end{equation}
+			where:
+			\begin{itemize}
+				\item $y$: Specific label in the dataset.
+				\item $N_D(y)$: Feature neighborhood of label $y$, defined as the set of all feature vectors $x$ in dataset $D$ that are associated with that specific label.
+				\item $\hat{\mu}_y \in \mathbb{R}^d$: Sample mean vector for the label-conditional distribution.
+				\item $\hat{\Sigma}_y \in \mathbb{R}^{d \times d}_+$: Sample covariance matrix representing the spread and orientation of the feature vectors associated with label $y$.
+				\item $(x - \hat{\mu}_y)^\top$: Transpose operation used to compute the outer product for the covariance matrix.
+			\end{itemize}
+			The purpose of these calculations is to transition from a \textbf{non-parametric representation} (viewing labels as raw collections of points) to a \textbf{parametric representation} (viewing labels as Gaussian distributions). Without this equation, the complexity is $O(n^5 \log n)$, which the authors describe as \textbf{"prohibitive for all but toy datasets"}.
+
+			Instead of storing and comparing every individual sample within a class, \cref{eq:mean_and_covariance} \textbf{summarizes the class} into its first two moments (mean and covariance), which is much more storage-efficient. By computing these parameters, the authors can use \textbf{closed-form solutions for distance rather than iterative optimization}. This further supports the paper's goal of making the distance "computable in practice."
+
+
+		\subsection{Analytic 2-Wasserstein Distance between Gaussians}
+		\label{sec:wasserstein_between_gaussians}
+			The Analytic 2-Wasserstein Distance between Gaussians, is the mathematical "engine" that enables the practical and efficient computation of dataset distances by providing a closed-form solution for label-to-label comparisons.
+
+			The equation is defined as:
+			\begin{equation}
+				\label{eq:2_wasserstein}
+				W_2^2(\alpha, \beta) = \|\mu_\alpha - \mu_\beta\|_2^2 + \text{tr}\left(\Sigma_\alpha + \Sigma_\beta - 2\left(\Sigma_\alpha^{1/2} \Sigma_\beta \Sigma_\alpha^{1/2}\right)^{1/2}\right)
+			\end{equation}
+			where:
+			\begin{itemize}
+				\item $\alpha, \beta$: Two \textbf{Gaussian distributions}, specifically the label-conditional distributions $N(\mu_\alpha, \Sigma_\alpha)$ and $N(\mu_\beta, \Sigma_\beta)$ for different labels.
+				\item $W_2^2(\alpha, \beta)$: Squared 2-Wasserstein distance (also known as the Bures-Wasserstein distance) between these two distributions.
+				\item $\mu_\alpha, \mu_\beta$: textbf{Mean vectors} of the distributions, which capture the central location of the features for each label.
+				\item $\Sigma_\alpha, \Sigma_\beta$: Covariance matrices, which represent the shape, spread, and orientation of the feature clusters.
+				\item $\Sigma^{1/2}$: Matrix square root, a fundamental operation in this distance calculation.
+				\item $\text{tr}(\cdot)$: Ttrace operator, which sums the diagonal elements of the resulting matrix.
+				\item $\|\cdot\|_2^2$: Squared $L_2$ norm, measuring the Euclidean distance between the mean vectors.
+			\end{itemize}
+			The equation provides an \textbf{exact analytic solution} for the Optimal Transport problem between two Gaussians, removing the need for iterative optimization algorithms when comparing labels. These analytic label distances are precomputed and stored to populate the cost matrix for the global dataset transport problem in \cref{eq:otdd}.
+
+			This equation is used as the \textbf{inner distance solver} for the Gaussian-approximated OTDD ($d_{OT-N}$). It leads to the realization that the label-to-label distance is often the most expensive part of the overall calculation, and by making it analytic, the total runtime is dominated only by the global optimization. By replacing optimization with an analytic form, the researchers can scale the OTDD to massive datasets like \textbf{ImageNet}, which would otherwise be computationally impossible. This equation supports the paper's central goal of making dataset distances \textbf{"computable in practice"}.
+
+
+		\subsection{Simplified Distance for Commuting Covariances}
+		\label{sec:simplified_distance_for_commuting_covariances}
+			Equation~\ref{eq:2_wasserstein} leads directly to equation~\ref{eq:simplified_distance}, which further simplifies the distance to a Frobenius norm if covariance matrices commute, enabling the "augmented representation" of datasets. The \textbf{Simplified Distance for Commuting Covariances}, represented as equation~\ref{eq:simplified_distance} in the sources, is a specific mathematical reduction of the Wasserstein distance that occurs when the covariance matrices of two label distributions share the same eigenvectors.
+
+			The equation is defined as:
+			\begin{equation}
+				\label{eq:simplified_distance}
+				W_2^2(\alpha, \beta) = \|\mu_\alpha - \mu_\beta\|_2^2 + \|\Sigma_\alpha^{1/2} - \Sigma_\beta^{1/2}\|_F^2
+			\end{equation}
+			where:
+			\begin{itemize}
+				\item $\Sigma_\alpha, \Sigma_\beta$: Sample covariance matrices for each label.
+				\item Commuting Covariances: Condition where $\Sigma_\alpha \Sigma_\beta = \Sigma_\beta \Sigma_\alpha$--implies the matrices are \textbf{simultaneously diagonalizable}, meaning they describe distributions with different spreads but the same principal axes of orientation.
+				\item $\|\cdot\|_F^2$:  \textbf{Squared Frobenius norm}, which is the matrix equivalent of the Euclidean norm (the square root of the sum of the absolute squares of its elements). In this context, it measures the distance between the "shapes" (covariance square roots) of the two distributions.
+				\item $\Sigma^{1/2}$: Matrix square root.
+			\end{itemize}
+			The purpose of this equation is to transform the complex matrix operations required for the general Gaussian distance into a \textbf{simple sum of squared differences}. It allows the distance between two probability distributions to be treated as a distance between two static vectors. Even though the general Gaussian formula \cref{eq:2_wasserstein} is analytic, it still requires computing the square root of a product of matrices $(\Sigma_\alpha^{1/2} \Sigma_\beta \Sigma_\alpha^{1/2})^{1/2}$, which is numerically sensitive and expensive. Equation~\ref{eq:simplified_distance} eliminates this product term entirely. By reducing the distance to a Frobenius norm of differences, the authors can treat the label's mean and covariance as a single "augmented" feature vector. This simplification makes it possible to scale to datasets with very high-dimensional features ($d$) where computing full matrix-matrix roots would be prohibitive.
+
+			Equation~\ref{eq:simplified_distance} is derived as a special case of \cref{eq:2_wasserstein} to further lower the algebraic complexity when covariances commute. If one assumes commuting covariances---for example, by using a \textbf{diagonal approximation} where matrices always commute---each sample $(x, y)$ can be represented as a stacked vector. In this transformed space, the squared Euclidean distance between two augmented vectors is exactly equal to the squared point-wise distance.
+	
+			Equation~\ref{eq:simplified_distance} refines the \textbf{computational pipeline} by enabling the use of \textbf{off-the-shelf OT solvers} and leads directly to the concept of \textbf{"Augmented Representations."}. Because it turns the hierarchical dataset distance into a simple distance between vectors, authors can now bypass the custom "label-to-label" precomputation step entirely and apply standard, highly-optimized linear programming or Sinkhorn solvers directly to the augmented datasets. This building block essentially allows the OTDD to be calculated as if the labels were just additional features, provided the "commuting" geometry is preserved.
+
+
+		\subsection{Bound for Gaussian Approximation}
+		\label{sec:bound}
+			The \textbf{Bound for Gaussian Approximation} provides the theoretical justification for using simplified Gaussian models to compare complex, real-world datasets. It ensures that the efficient approximation used in the paper is not a heuristic but a \textbf{principled lower bound} of the true distance.
+
+			The equation is expressed as:
+			\begin{equation}
+				\label{eq:otddn}
+				d_{OT-N}(D_A, D_B) \leq d_{OT}(D_A, D_B)
+			\end{equation}
+			where:
+			\begin{itemize}
+				\item $d_{OT}(D_A, D_B)$: True (general) Optimal Transport Dataset Distance. This is the "ideal" distance computed using the actual, potentially complex distributions of features for each label without making any assumptions about their shape.
+				\item $d_{OT-N}(D_A, D_B)$: \textbf{Gaussian-approximated Dataset Distance}. This version of the distance is computed by first simplifying every label distribution into a Gaussian (using the sample mean and covariance) and then using the analytic distance formula from equation~\ref{eq:2_wasserstein}.
+				\item $\leq$ (The Lower Bound): Indicates that the approximated distance will always be less than or equal to the true distance. It signifies that the Gaussian approximation provides a \textbf{conservative estimate} of dataset dissimilarity.
+				\item Gaussian or Elliptical Distributions: Specific families of probability distributions. The proposition states that if the true underlying data for each label follows these shapes, the inequality becomes an equality ($d_{OT-N} = d_{OT}$), meaning the approximation becomes \textbf{exact}.
+				\item Density Generator: Mathematical term used in the proof to define a broader class of distributions (elliptical) where this approximation remains perfectly accurate.
+			\end{itemize}
+			The purpose of this equation is to \textbf{theoretically validate} the computational shortcuts the authors take. Since calculating the "true" $d_{OT}$ is mathematically complex and computationally "prohibitive for all but toy datasets," the authors need a way to prove that their faster Gaussian method ($d_{OT-N}$) still respects the underlying geometry of the data. The true distance ($d_{OT}$) has a worst-case complexity of $O(n^5 \log n)$, making it impossible to use on datasets like ImageNet. Equation~\ref{eq:otddn} proves that the much faster $O(n^2d + d^3)$ Gaussian version is a mathematically sound proxy. It transforms the Gaussian assumption from a "heuristic choice" into a "principled approximation". It guarantees that if the Gaussian distance says two datasets are far apart, they are \textit{at least} that far apart in reality.
+
+			This equation is built directly upon the \textbf{Gelbrich bound}, a classic result in transport theory which states that the Wasserstein distance between any two distributions is always greater than or equal to the distance between two Gaussians with the same means and covariances. This allows the authors to move forward with confidence, using $d_{OT-N}$ for all their large-scale experiments on \textbf{MNIST, USPS, and Tiny-ImageNet}. It also refines the \textbf{computational pipeline} by showing that one can achieve "precision vs.\ efficiency" trade-offs. Because the bound is known to be \textbf{exact} for elliptical distributions, it suggests that the OTDD framework could be easily extended in the future to even more complex distributions (like Gaussian Mixture Models) while still maintaining the same geometric guarantees.
+
+
+	\section{Conclusion}
+	\label{sec:conclusion}
+		\subsection{Computational Considerations}
+		\label{sec:computational_considerations}
+			The paper now focuses on presenting the theoretically sound but computationally expensive Optimal Transport Dataset Distance (OTDD) as a practical tool for large-scale machine learning.
+			The authors first introduce several terms and methods to solve specific bottlenecks in computation and memory:
+			\begin{itemize}
+				\item Augmented Representations ($\tilde{x}$): Method where each feature-label pair $(x, y)$ is transformed into a \textbf{single stacked vector}, allowing the use of standard, off-the-shelf OT solvers.
+				\item Diagonal Approximation and Simultaneous Matrix Diagonalization: Mathematical simplifications for cases where covariance matrices do not commute, extending the applicability of the simplified distance in \cref{eq:simplified_distance}.
+				\item Newton-Schulz Iterative Method: Algorithm for computing \textbf{approximate matrix square roots}, replacing full eigendecompositions ($O(d^3)$), which are the primary bottleneck in label-to-label distance calculations.
+				\item Two-Pass Stable Online Batch Algorithm: Method for calculating class statistics (means and covariances) without \textbf{loading all samples into memory}, which is infeasible for massive datasets.
+				\item $\tau$-approximation: Parameter representing the \textbf{precision level} of an approximate OT solver, allowing accuracy-runtime trade-offs via algorithms like Sinkhorn.
+				\item $n, m$: Number of labeled examples in datasets $D_A$ and $D_B$.
+				\item $p, q$: Number of classes in the respective datasets.
+				\item $\bar{n}$: Maximum size of any single class cluster.
+			\end{itemize}
+
+			\subsubsection{The Augmented Feature Vector}
+			\label{sec:augmented_feature_vector}
+				The equation~\ref{eq:stacked_vector}, is a vector that augments the original feature $x$ by appending the label's mean ($\mu_y$) and the flattened square root of its covariance matrix, packing all hierarchical information into a single object.
+				\begin{equation}
+					\label{eq:stacked_vector}
+					\tilde{x} = [x; \mu_y; \text{vec}(\Sigma_y^{1/2})]
+				\end{equation}
+
+			\subsubsection{Distance Equivalence Equation}
+			\label{sec:distance_equivalence}
+				The distance equivalent equation shows that the \textbf{squared Euclidean distance} between two augmented vectors equals the squared \textbf{hierarchical ground metric}, enabling transformation into a standard OT problem compatible with existing software.
+				\begin{equation}
+					\label{eq:distance_equivalent}
+					\|\tilde{x} - \tilde{x}'\|_2^2 = d_Z(x, y; x', y')^2
+				\end{equation}
+
+			\subsubsection{Complexity Bounds}
+			\label{eq:complexity_bounds}
+				Authors demonstrate the massive efficiency gain of the Gaussian approximation: the general distance scales at $O(n^5 \log n)$ (prohibitive for realistic datasets), while the Gaussian version scales at $O(n^2d + d^3)$. The researchers provides the \textbf{practical justification} for focusing on the Gaussian version ($d_{OT-N}$). While the general OTDD is theoretically elegant, only the Gaussian-approximated version is viable for large datasets like ImageNet or BERT-embedded text.
+				\begin{itemize}
+					\item \textbf{General Case ($d_{OT}$):} $O(nm(d + \bar{n}^3 \log \bar{n} + d\bar{n}^2))$
+					\item \textbf{Gaussian Case ($d_{OT-N}$):} $O(nmd + pqd^3 + d^2\bar{n}(p+q))$
+				\end{itemize}
+
+
+		\subsection{Empirical Validation}
+		\label{sec:empirical_validation}
+			The researchers proceed to validate the Optimal Transport Dataset Distance (OTDD) across three experimental settings, demonstrating its predictive utility for transfer learning without requiring model training.
+			\subsubsection{Dataset Selection for Transfer Learning}
+			\label{sec:dataset_for_transfer_learning}
+				Researchers used OTDD to select source datasets for domain adaptation, comparing MNIST against Fashion-MNIST, KMNIST, EMNIST (letters), and USPS.
+
+				\textbf{Key Findings:}
+
+				The OTDD recovered expected class relations; the optimal coupling between MNIST and USPS exhibited block-diagonal structure, correctly matching corresponding digit classes. Notably, EMNIST was closer to MNIST than USPS, despite both being digit datasets. A strong correlation emerged between OTDD and relative test error drop during adaptation.
+
+				\textbf{Impact:}
+
+				OTDD is a predictive, learning-free criterion for selecting optimal source datasets for specific tasks.
+
+			\subsubsection{Distance-Driven Data Augmentation}
+			\label{sec:distance_drive_augmentation}
+				Researchers applied transformations (rotations, crops, affine transforms) to source datasets and measured resulting OTDD to targets.
+
+				\textbf{Key Findings:}
+
+				Lower OTDD transformations (e.g., cropping MNIST digits) led to significantly better adaptation on USPS. Rotations increasing OTDD degraded transferability. This demonstrated OTDD as a mathematical ranking tool for augmentations based on actual distributional proximity to targets.
+
+				\textbf{Impact:}
+
+				OTDD provides principled, quantitative guidance for augmentation selection, replacing previously heuristic approaches.
+
+			\subsubsection{Transfer Learning for Text Classification}
+			\label{sec:transfer_learning_text_classification}
+				OTDD was applied to NLP using BERT embeddings to furnish geometric structure for sentences, tested on AG News, DBPedia, Yelp, Amazon Reviews, and Yahoo Answers.
+
+				\textbf{Key Findings:}
+
+				OTDD remained highly correlated with transferability across large-scale NLP datasets, demonstrating domain-agnosticism and scalability to modern high-dimensional embedding spaces.
+
+				\textbf{Impact:}
+
+				The metric is universally applicable and scales efficiently. Results highlighted the risk of negative transfer when suboptimal pretrained models are selected.
+
+
+		\subsection{Discussion and Future Directions}
+		\label{sec:discussion_future_directions}
+			Finally, the authors advance to synthesize the findings on the OTDD's practicality, theoretical robustness, and future trajectory, centered on three main pillars.
+
+			\subsubsection{Effectiveness and Core Advantages}
+			\label{sec:effectivemess_and_core_advantages}
+				The OTDD is a scalable, flexible metric functioning in realistic transfer learning scenarios. It provides interpretable comparisons—such as class correspondences in optimal couplings—while requiring minimal assumptions. Unlike architecture-dependent or probe-training methods, OTDD offers a learning-free, geometrically aware distance with solid theoretical grounding.
+
+			\subsubsection{Proposed Mathematical Extensions}
+			\label{sec:proposed_mathematical_extensions}
+				\textbf{Handling Incomparable Features:}
+
+				The current implementation assumes shared feature dimensionality. The authors suggest leveraging \textbf{Gromov-Wasserstein distance} to compare datasets with non-comparable or different metric space features.
+
+				\textbf{Beyond Gaussian Modeling:}
+
+				While efficiency relies on Gaussian label-clusters, the framework extends to more general distributions with analytic or efficient Wasserstein distances:
+				\begin{itemize}
+					\item Elliptic distributions
+					\item Gaussian mixture models (GMMs)
+					\item Gaussian Processes
+					\item Tree metrics
+				\end{itemize}
+
+			\subsubsection{Intentional Exclusions and Future Work}
+			\label{sec:exclusions_and_future}
+				The discussion addresses why loss functions and predictor function classes were omitted from OTDD.
+
+				\textbf{Rationale for Independence:}
+
+				A model-agnostic distance ensures the metric reflects intrinsic data geometry rather than architecture-specific quirks, maintaining universality across learning scenarios.
+
+				\textbf{Future Directions:}
+
+				While independence is currently prioritized, the authors acknowledge the appeal of incorporating task-specific factors. Future work will inject loss and predictor class information into OTDD while maintaining minimal training overhead, aiming for a hybrid approach more efficient than traditional probe-based methods.
+
+			\subsubsection{Transferability Metric}
+			\label{sec:transferability_metric}
+				The researchers introduce a standardized formula to quantify transferability ($T$), measuring performance gain when a model is pretrained on a source domain and fine-tuned on a target domain.
+
+			\subsubsection{The Transferability Formula}
+			\label{sec:transferability_formula}
+				The equation is expressed as:
+				\begin{equation}
+					\label{eq:transferability_formula}
+					T(D_S \to D_T) = 100 \times \frac{\text{error}(D_S \to D_T) - \text{error}(D_T)}{\text{error}(D_T)}
+				\end{equation}
+				where:
+				\begin{itemize}
+					\item $T(D_S \to D_T)$: Transferability score of source domain ($D_S$) to target domain ($D_T$).
+					\item $\text{error}(D_S \to D_T)$: Classification error from a model pretrained on source data and fine-tuned to target data.
+					\item $\text{error}(D_T)$: Baseline error from a model trained exclusively on target domain without pretraining.
+					\item $100 \times$: Scalar multiplier expressing transferability as a percentage.
+				\end{itemize}
+
+			\subsubsection{Purpose and Context}
+			\label{sec:purpose_and_context}
+				This formula addresses dataset difficulty heterogeneity. Since inherently easier datasets (MNIST) versus harder ones (KMNIST) have incomparable raw error rates, the formula normalizes by baseline performance. It quantifies the relative error decrease when leveraging source domain knowledge.
+
+				The authors correlated OTDD with transferability across adaptation pairs, finding strong negative correlation ($\rho = -0.59$): lower OTDD values predict higher transferability gains.
+
+			\subsubsection{Results and Interpretation of OTDD}
+			\label{sec:results_and_interpretation}
+				Upon successful calculation of the Optimal Transport Dataset Distance (OTDD), a multi-faceted result emerges comprising both numerical distance and visual mapping between datasets, providing principled, learning-free transferability evaluation.
+
+			\subsubsection{Quantification of Transferability}
+			\label{sec:quantification_transferability}
+				The immediate result is a scalar value representing geometric distance between datasets $D_A$ and $D_B$.
+
+				\textbf{Interpretation:}
+
+				Lower distance indicates source similarity to target in both features and label-conditional distributions. Strong negative correlation ($\rho = -0.59$) links lower OTDD to higher transferability---the relative error decrease when pretraining on source and fine-tuning on target. For example, OTDD correctly predicted EMNIST superiority over USPS for MNIST adaptation despite both being digit datasets.
+
+			\subsubsection{The Optimal Coupling Matrix ($\pi^*$)}
+			\label{sec:optimal_coupling_matrix}
+				The transport plan provides class-level correspondence between datasets.
+
+				\textbf{Interpretation:}
+
+				Block-diagonal structure indicates class-coherent matches. Between MNIST and USPS, diagonal elements were significantly smaller, showing OTDD recovered digit correspondences from feature geometry alone without semantic priors.
+
+			\subsubsection{Guidelines for Data Augmentation}
+			\label{sec:guidelines_data_augmentation}
+				This was applied to dataset variants (original, rotated, cropped), OTDD ranks transformations.
+
+				\textbf{Interpretation:}
+
+				Decreased distance to target predicts improved fine-tuning performance. Increased distance (e.g., large rotations on digits) signals harm to transferability, empirically confirmed.
+
+			\subsubsection{Robustness and Domain Agnosticism}
+			\label{sec:robustness_domain_agnosticism}
+
+				Distance remains stable across modalities when features inhabit meaningful spaces (BERT embeddings for text).
+
+				\textbf{Interpretation:}
+
+				Metric captures intrinsic geometric task similarity beyond superficial feature correlations. High distance in text classification warns of negative transfer--where distant domain pretraining degrades powerful models like BERT.
+
+
+		\subsection{The OTDD Result: Scalar Distance and Optimal Coupling}
+		\label{sec:otdd_result}
+			When two datasets are compared using the framework, the result is a scalar value--the Optimal Transport Dataset Distance (OTDD)--serving as a principled metric quantifying dataset similarity.
+
+			\subsubsection{What the Result Represents?}
+			\label{sec:representation}
+				The resulting number is the minimal cost of coupling the two datasets in a joint space considering both features and labels.
+				\begin{itemize}
+					\item \textbf{Geometric Similarity:} Measures distance between datasets treated as distributions over feature-label pairs.
+					\item \textbf{Predictive Metric:} Learning-free criterion for transfer learning hardness. Lower values indicate easier knowledge transfer.
+				\end{itemize}
+	
+			\subsubsection{Typical Values from Experiments}
+			\label{sec:values_from_experiment}
+				For image datasets, results are commonly scaled by $10^3$ for readability:
+				\begin{itemize}
+					\item MNIST to EMNIST: $1.04 \times 10^3$
+					\item MNIST to Fashion-MNIST: $1.74 \times 10^3$
+				\end{itemize}
+				Exact values depend on dataset pair and feature space dimensionality.
+
+			\subsubsection{Optimal Coupling ($\pi^*$)}
+			\label{sec:optimal_coupling}
+				Beyond the scalar distance, the comparison produces an optimal coupling matrix identifying class-coherent matches. This matrix shows which labels in one dataset correspond most closely to labels in the other (e.g., matching digit "1" in MNIST to digit "1" in USPS).
+
+
+	\begin{thebibliography}{9}
+		\bibitem{alvarez2020geometric}
+		D.~Alvarez-Melis and N.~Fusi,
+		\textit{Geometric Dataset Distances via Optimal Transport},
+		CoRR, vol. abs/2002.02923, 2020.
+		Available: \url{https://arxiv.org/abs/2002.02923}
+	\end{thebibliography}
+
+\end{document}
