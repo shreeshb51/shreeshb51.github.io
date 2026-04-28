@@ -1,10 +1,16 @@
-## Mathematical Framework for Project 1 - Wasserstein Distance as Loss Function for Image Morphing
+# Mathematical Framework for Project 1 - Wasserstein Distance as Loss Function for Image Morphing
+
+---
+
+## Context 
 
 Before any optimal transport can happen, we need two objects to *transport between*. This code is the moment we reach into a dataset of 60,000 handwritten digits and pull out exactly two images — one "3" and one "8" — that will become the **source and target measures** of our Wasserstein geodesic. Every subsequent computation flows from these two arrays.
 
 ---
 
-**We take anchor example and use it consistently and cumulatively throughout all subsequent explanations.**
+## Underlying Mathematics
+
+---
 
 We pretend MNIST contains six toy samples, each a 2×2 pixel image. The six images have labels:
 
@@ -12,7 +18,7 @@ $$\mathbf{y} = (3,\ 7,\ 8,\ 3,\ 1,\ 8)$$
 
 The two images we care about are:
 
-$$A^{(3)} = \begin{pmatrix} 0 & 180 \\ 200 & 255 \end{pmatrix}, \qquad A^{(8)} = \begin{pmatrix} 210 & 255 \\ 180 & 240 \end{pmatrix}$$
+$$A^{(3)} = \begin{pmatrix} 0 & 180 \\\\ 200 & 255 \end{pmatrix}, \qquad A^{(8)} = \begin{pmatrix} 210 & 255 \\\\ 180 & 240 \end{pmatrix}$$
 
 Each entry is an integer in $\{0, \ldots, 255\}$, where 0 is black and 255 is white.
 
@@ -59,9 +65,11 @@ $$A^{(3)} \in \{0,\ldots,255\}^{28\times28} \xrightarrow{\ \text{cast}\ } A^{(3)
 
 The value 180 becomes 180.0 — identical numerically, but now living in $\mathbb{R}$ rather than $\mathbb{Z}$.
 
-**Why does this matter so much?** Consider what is coming:
+**Why does this matter so much?** 
 
-1. **Normalization** requires dividing by the pixel sum. In integer arithmetic, $1 / 635 = 0$ (truncated). In float64, $1.0 / 635.0 = 0.001574\ldots$ — correct.
+Consider what is coming:
+
+1. **Normalization** requires dividing by the pixel sum. In integer arithmetic, $1 / 635 = 0$ (truncated). In float64, $1.0 / 635.0 = 0.001574\ldots$
 2. **Sinkhorn iterations** require computing $\log$ of pixel values. $\log$ is not defined on integers in NumPy without a cast.
 3. **Barycentric interpolation** produces values like $0.3 \cdot 180.0 + 0.7 \cdot 210.0 = 201.0$ — fractional arithmetic is essential throughout.
 
@@ -69,13 +77,11 @@ The choice of **float64** (rather than float32) is deliberate: Sinkhorn iteratio
 
 On the anchor, after the cast:
 
-$$A^{(3)} = \begin{pmatrix} 0.0 & 180.0 \\ 200.0 & 255.0 \end{pmatrix}, \qquad A^{(8)} = \begin{pmatrix} 210.0 & 255.0 \\ 180.0 & 240.0 \end{pmatrix}$$
+$$A^{(3)} = \begin{pmatrix} 0.0 & 180.0 \\\\ 200.0 & 255.0 \end{pmatrix}, \qquad A^{(8)} = \begin{pmatrix} 210.0 & 255.0 \\\\ 180.0 & 240.0 \end{pmatrix}$$
 
 ---
 
-```
-pixel range before normalization: [0.0, 255.0]
-```
+*pixel range before normalization: [0.0, 255.0]*
 
 This confirms two facts that will drive the process fowrward:
 
@@ -114,11 +120,13 @@ The mapping is row-major (C-order): row 0 is laid down first, then row 1, etc. P
 
 On the anchor ($n=2$):
 
-$$A^{(3)} = \begin{pmatrix} 0.0 & 180.0 \\ 200.0 & 255.0 \end{pmatrix} \xrightarrow{\ \text{flatten}\ } \mathbf{a}^{(3)} = (0.0,\ 180.0,\ 200.0,\ 255.0)$$
+$$A^{(3)} = \begin{pmatrix} 0.0 & 180.0 \\\\ 200.0 & 255.0 \end{pmatrix} \xrightarrow{\ \text{flatten}\ } \mathbf{a}^{(3)} = (0.0,\ 180.0,\ 200.0,\ 255.0)$$
 
-$$A^{(8)} = \begin{pmatrix} 210.0 & 255.0 \\ 180.0 & 240.0 \end{pmatrix} \xrightarrow{\ \text{flatten}\ } \mathbf{a}^{(8)} = (210.0,\ 255.0,\ 180.0,\ 240.0)$$
+$$A^{(8)} = \begin{pmatrix} 210.0 & 255.0 \\\\ 180.0 & 240.0 \end{pmatrix} \xrightarrow{\ \text{flatten}\ } \mathbf{a}^{(8)} = (210.0,\ 255.0,\ 180.0,\ 240.0)$$
 
-**Why flatten?** Optimal transport operates on measures over a *metric space of points*. Each pixel index $i$ will later be assigned a 2D coordinate $\mathbf{x}_i = (r_i, c_i) \in \mathbb{R}^2$, and the cost of transporting mass from $i$ to $j$ will be $\|\mathbf{x}_i - \mathbf{x}_j\|^2$. The 2D grid structure is preserved through this coordinate system — flattening just gives each pixel a single canonical index.
+**Why flatten?**
+
+Optimal transport operates on measures over a *metric space of points*. Each pixel index $i$ will later be assigned a 2D coordinate $\mathbf{x}_i = (r_i, c_i) \in \mathbb{R}^2$, and the cost of transporting mass from $i$ to $j$ will be $\|\mathbf{x}_i - \mathbf{x}_j\|^2$. The 2D grid structure is preserved through this coordinate system — flattening just gives each pixel a single canonical index.
 
 ---
 
@@ -160,7 +168,7 @@ $0.2373 + 0.2881 + 0.2034 + 0.2712 = 1.0$
 
 ---
 
-### THE ZERO MASS PROBLEM
+**THE ZERO MASS PROBLEM**
 
 The output shows `m min: 0.000000`. This means **background pixels carry exactly zero mass**: $\mu(i) = 0$, for every pixel that was black in the original image. This is mathematically valid for a probability measure, but it creates a serious numerical problem in the next stage.
 
@@ -192,7 +200,7 @@ $$\mathbf{x}_i = \left(\left\lfloor \frac{i}{28} \right\rfloor,\ i \bmod 28\righ
 
 The result is a matrix of pixel coordinates:
 
-$$X = \begin{pmatrix} \mathbf{x}_0 \\ \mathbf{x}_1 \\ \vdots \\ \mathbf{x}_{783} \end{pmatrix} \in \mathbb{R}^{784 \times 2}$$
+$$X = \begin{pmatrix} \mathbf{x}_0 \\\\ \mathbf{x}_1 \\\\ \vdots \\\\ \mathbf{x}_{783} \end{pmatrix} \in \mathbb{R}^{784 \times 2}$$
 
 where row $i$ of $X$ is the spatial location of pixel $i$.
 
@@ -205,7 +213,7 @@ On the anchor example ($n=2$, so we divide by 2 instead of 28):
 | 2 | 1 | 0 | $(1,\ 0)$ |
 | 3 | 1 | 1 | $(1,\ 1)$ |
 
-So $X = \begin{pmatrix} 0 & 0 \\ 0 & 1 \\ 1 & 0 \\ 1 & 1 \end{pmatrix}$, recovering exactly the four corners of the 2×2 grid. The flattening from code and the coordinate recovery here are **consistent inverses** of each other: pixel $(r, c)$ flattens to index $i = 2r + c$, and index $i$ recovers to $\mathbf{x}_i = (\lfloor i/2 \rfloor, i \bmod 2) = (r, c)$.
+So $X = \begin{pmatrix} 0 & 0 \\\\ 0 & 1 \\\\ 1 & 0 \\\\ 1 & 1 \end{pmatrix}$, recovering exactly the four corners of the 2×2 grid. The flattening from code and the coordinate recovery here are **consistent inverses** of each other: pixel $(r, c)$ flattens to index $i = 2r + c$, and index $i$ recovers to $\mathbf{x}_i = (\lfloor i/2 \rfloor, i \bmod 2) = (r, c)$.
 
 ---
 
@@ -294,7 +302,7 @@ $$C_{03} = (0-1)^2 + (0-1)^2 = 1 + 1 = 2$$
 All obtained through broadcasting step stated earlier.
 The full $4\times 4$ cost matrix is:
 
-$$C = \begin{pmatrix} 0 & 1 & 1 & 2 \\ 1 & 0 & 2 & 1 \\ 1 & 2 & 0 & 1 \\ 2 & 1 & 1 & 0 \end{pmatrix}$$
+$$C = \begin{pmatrix} 0 & 1 & 1 & 2 \\\\ 1 & 0 & 2 & 1 \\\\ 1 & 2 & 0 & 1 \\\\ 2 & 1 & 1 & 0 \end{pmatrix}$$
 
 Read this as: moving mass from pixel 0 (top-left) to pixel 3 (bottom-right) costs 2; moving it one step right or down costs 1; staying put costs 0. The maximum cost is 2, achieved by the diagonal traversal — consistent with $c(0,3) = (-1)^2 + (-1)^2 = 2$.
 
@@ -449,7 +457,7 @@ $$\tilde{C}_{ij} = \frac{C_{ij}}{\max_{kl} C_{kl}} = \frac{\|\mathbf{x}_i - \mat
 
 On the anchor, $\max C = 2$ (top-left to bottom-right), so:
 
-$$\tilde{C} = \frac{1}{2}\begin{pmatrix} 0 & 1 & 1 & 2 \\ 1 & 0 & 2 & 1 \\ 1 & 2 & 0 & 1 \\ 2 & 1 & 1 & 0 \end{pmatrix} = \begin{pmatrix} 0 & 0.5 & 0.5 & 1 \\ 0.5 & 0 & 1 & 0.5 \\ 0.5 & 1 & 0 & 0.5 \\ 1 & 0.5 & 0.5 & 0 \end{pmatrix}$$
+$$\tilde{C} = \frac{1}{2}\begin{pmatrix} 0 & 1 & 1 & 2 \\\\ 1 & 0 & 2 & 1 \\\\ 1 & 2 & 0 & 1 \\\\ 2 & 1 & 1 & 0 \end{pmatrix} = \begin{pmatrix} 0 & 0.5 & 0.5 & 1 \\\\ 0.5 & 0 & 1 & 0.5 \\\\ 0.5 & 1 & 0 & 0.5 \\\\ 1 & 0.5 & 0.5 & 0 \end{pmatrix}$$
 
 **Why does this matter?** Recall the Sinkhorn update involves $\exp(g_j - C_{ij})/\varepsilon$. The argument of the exponential is $C_{ij}/\varepsilon$. Without normalization, the maximum cost is 1458 and $\varepsilon = 0.01$, giving exponent magnitudes up to $1458/0.01 = 145800$ — catastrophic overflow even in float64, whose maximum exponent is $\approx 709$. After normalization the maximum is $1/0.01 = 100$ — well within float64 range. Normalizing $C$ effectively makes $\varepsilon$ meaningful as a fraction of the total cost scale.
 

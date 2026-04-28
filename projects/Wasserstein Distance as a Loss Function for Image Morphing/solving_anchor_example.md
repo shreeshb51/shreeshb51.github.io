@@ -1,12 +1,12 @@
-## Anchor Example — Complete Step-by-Step Solution
+# Anchor Example — Complete Step-by-Step Solution
 
 ---
 
-### Step 1: Label vector and index selection
+## Step 1: Label vector and index selection
 
 $$\mathbf{y} = (3,\ 7,\ 8,\ 3,\ 1,\ 8), \quad N = 6$$
 
-#### Taking first occurrence of chosen labels: 3 and 8
+### Taking first occurrence of chosen labels: 3 and 8
 
 $$\mathcal{I}_3 = \{i : y_i = 3\} = \{0, 3\} \implies i_3 = \min\{0,3\} = 0$$
 
@@ -14,13 +14,13 @@ $$\mathcal{I}_8 = \{i : y_i = 8\} = \{2, 5\} \implies i_8 = \min\{2,5\} = 2$$
 
 ---
 
-### Step 2: Cast images to float64
+## Step 2: Cast images to float64
 
-$$A^{(3)} = \begin{pmatrix} 0 & 180 \\ 200 & 255 \end{pmatrix} \xrightarrow{\text{cast}} \begin{pmatrix} 0.0 & 180.0 \\ 200.0 & 255.0 \end{pmatrix}, \qquad A^{(8)} = \begin{pmatrix} 210 & 255 \\ 180 & 240 \end{pmatrix} \xrightarrow{\text{cast}} \begin{pmatrix} 210.0 & 255.0 \\ 180.0 & 240.0 \end{pmatrix}$$
+$$A^{(3)} = \begin{pmatrix} 0 & 180 \\\\ 200 & 255 \end{pmatrix} \xrightarrow{\text{cast}} \begin{pmatrix} 0.0 & 180.0 \\\\ 200.0 & 255.0 \end{pmatrix}, \qquad A^{(8)} = \begin{pmatrix} 210 & 255 \\\\ 180 & 240 \end{pmatrix} \xrightarrow{\text{cast}} \begin{pmatrix} 210.0 & 255.0 \\\\ 180.0 & 240.0 \end{pmatrix}$$
 
 ---
 
-### Step 3: Flatten
+## Step 3: Flatten
 
 $$A^{(3)} \xrightarrow{\text{flatten}} \mathbf{a}^{(3)} = (0.0,\ 180.0,\ 200.0,\ 255.0)$$
 
@@ -28,7 +28,7 @@ $$A^{(8)} \xrightarrow{\text{flatten}} \mathbf{a}^{(8)} = (210.0,\ 255.0,\ 180.0
 
 ---
 
-### Step 4: Normalize to probability measures
+## Step 4: Normalize to probability measures
 
 $$Z^{(3)} = 0.0 + 180.0 + 200.0 + 255.0 = 635.0$$
 
@@ -46,7 +46,7 @@ $$0.2373 + 0.2881 + 0.2034 + 0.2712 = 1.0000\ \checkmark$$
 
 ---
 
-### Step 5: Pixel coordinates
+## Step 5: Pixel coordinates
 
 For $n=2$: $\mathbf{x}_i = (\lfloor i/2 \rfloor,\ i \bmod 2)$
 
@@ -57,11 +57,11 @@ For $n=2$: $\mathbf{x}_i = (\lfloor i/2 \rfloor,\ i \bmod 2)$
 | 2 | 1 | 0 | $(1,0)$ |
 | 3 | 1 | 1 | $(1,1)$ |
 
-$$X = \begin{pmatrix} 0 & 0 \\ 0 & 1 \\ 1 & 0 \\ 1 & 1 \end{pmatrix}$$
+$$X = \begin{pmatrix} 0 & 0 \\\\ 0 & 1 \\\\ 1 & 0 \\\\ 1 & 1 \end{pmatrix}$$
 
 ---
 
-### Step 6: Cost matrix
+## Step 6: Cost matrix
 
 $C_{ij} = (r_i - r_j)^2 + (c_i - c_j)^2$. All 16 entries:
 
@@ -93,17 +93,17 @@ $$C_{31} = (1-0)^2+(1-1)^2 = 1$$
 $$C_{32} = (1-1)^2+(1-0)^2 = 1$$
 $$C_{33} = (1-1)^2+(1-1)^2 = 0$$
 
-$$C = \begin{pmatrix} 0 & 1 & 1 & 2 \\ 1 & 0 & 2 & 1 \\ 1 & 2 & 0 & 1 \\ 2 & 1 & 1 & 0 \end{pmatrix}$$
+$$C = \begin{pmatrix} 0 & 1 & 1 & 2 \\\\ 1 & 0 & 2 & 1 \\\\ 1 & 2 & 0 & 1 \\\\ 2 & 1 & 1 & 0 \end{pmatrix}$$
 
 ---
 
-### Step 7: Normalize cost matrix
+## Step 7: Normalize cost matrix
 
-$$\max(C) = 2 \implies \tilde{C} = \frac{C}{2} = \begin{pmatrix} 0 & 0.5 & 0.5 & 1 \\ 0.5 & 0 & 1 & 0.5 \\ 0.5 & 1 & 0 & 0.5 \\ 1 & 0.5 & 0.5 & 0 \end{pmatrix}$$
+$$\max(C) = 2 \implies \tilde{C} = \frac{C}{2} = \begin{pmatrix} 0 & 0.5 & 0.5 & 1 \\\\ 0.5 & 0 & 1 & 0.5 \\\\ 0.5 & 1 & 0 & 0.5 \\\\ 1 & 0.5 & 0.5 & 0 \end{pmatrix}$$
 
 ---
 
-### Step 8: Log-measures
+## Step 8: Log-measures
 
 $\mathbf{m} = (0.0000,\ 0.2835,\ 0.3150,\ 0.4016)$
 
@@ -117,13 +117,13 @@ $\log_{nu} = (\log(0.2373),\ \log(0.2881),\ \log(0.2034),\ \log(0.2712)) = (-1.4
 
 ---
 
-### Step 9: Initialize potentials
+## Step 9: Initialize potentials
 
 $$\mathbf{f}^{(0)} = (0,\ 0,\ 0,\ 0), \qquad \mathbf{g}^{(0)} = (0,\ 0,\ 0,\ 0)$$
 
 ---
 
-### Step 10: f-update -> Iteration 1
+## Step 10: f-update -> Iteration 1
 
 $$\varepsilon = 0.01, \quad \mathbf{g} = \mathbf{0}$$
 
@@ -159,7 +159,7 @@ $$\mathbf{f}^{(1)} = (-6.9078,\ -0.01261,\ -0.01155,\ -0.00912)$$
 
 ---
 
-### Step 11: g-update -> Iteration 1
+## Step 11: g-update -> Iteration 1
 
 Formula: $g_j \leftarrow \varepsilon\log\nu_j - \varepsilon\operatorname{LSE}_i\!\left(\dfrac{f_i - \tilde{C}_{ij}}{\varepsilon}\right)$
 
@@ -205,7 +205,7 @@ $$\mathbf{g}^{(1)} = (0.49717,\ 0.00017,\ -0.00439,\ -0.00393)$$
 
 ---
 
-### Step 12: Transport plan after convergence
+## Step 12: Transport plan after convergence
 
 After many iterations, potentials converge to $\mathbf{f}^*$, $\mathbf{g}^*$. The transport plan is then recovered as:
 
@@ -316,7 +316,7 @@ $$\log\pi_{33} = \frac{-0.0095 - 0.0040 - 0}{0.01} = \frac{-0.0135}{0.01} = -1.3
 
 **Full transport plan (approximate):**
 
-$$\pi \approx \begin{pmatrix} 0 & 0 & 0 & 0 \\ 0.1003 & 0.2780 & 0 & 0 \\ 0.1108 & 0 & 0.1920 & 0 \\ 0 & 0 & 0 & 0.2592 \end{pmatrix}$$
+$$\pi \approx \begin{pmatrix} 0 & 0 & 0 & 0 \\\\ 0.1003 & 0.2780 & 0 & 0 \\\\ 0.1108 & 0 & 0.1920 & 0 \\\\ 0 & 0 & 0 & 0.2592 \end{pmatrix}$$
 
 ---
 
@@ -405,11 +405,11 @@ Reading the pattern down any column: the higher the cost, the less mass flows �
 
 ---
 
-### Step 13: Primal Cost $\langle \tilde{C}, \pi \rangle$
+## Step 13: Primal Cost $\langle \tilde{C}, \pi \rangle$
 
 Using the transport plan from Step 12.5 and the Normalized Cost Matrix $\tilde{C}$:
 
-$$\pi \approx \begin{pmatrix} 0 & 0 & 0 & 0 \\ 0.1003 & 0.2780 & 0 & 0 \\ 0.1108 & 0 & 0.1920 & 0 \\ 0 & 0 & 0 & 0.2592 \end{pmatrix}, \qquad \tilde{C} = \begin{pmatrix} 0 & 0.5 & 0.5 & 1 \\ 0.5 & 0 & 1 & 0.5 \\ 0.5 & 1 & 0 & 0.5 \\ 1 & 0.5 & 0.5 & 0 \end{pmatrix}$$
+$$\pi \approx \begin{pmatrix} 0 & 0 & 0 & 0 \\\\ 0.1003 & 0.2780 & 0 & 0 \\\\ 0.1108 & 0 & 0.1920 & 0 \\\\ 0 & 0 & 0 & 0.2592 \end{pmatrix}, \qquad \tilde{C} = \begin{pmatrix} 0 & 0.5 & 0.5 & 1 \\\\ 0.5 & 0 & 1 & 0.5 \\\\ 0.5 & 1 & 0 & 0.5 \\\\ 1 & 0.5 & 0.5 & 0 \end{pmatrix}$$
 
 Compute $\tilde{C}_{ij} \cdot \pi_{ij}$ for every nonzero entry:
 
@@ -443,7 +443,7 @@ $0.1056$ means: **10.56% of the maximum possible transport cost was spent** movi
 
 ---
 
-### Step 14: Effect of $\varepsilon$ on anchor
+## Step 14: Effect of $\varepsilon$ on anchor
 
 We now answer: *What happens to the transport plan and its cost when $\varepsilon$ changes?*
 
@@ -483,9 +483,9 @@ This is the **worst-case cost** — what you pay when you completely ignore geom
 
 $$\mathbf{m} = (0,\ 0.2835,\ 0.3150,\ 0.4016), \quad \mathbf{v} = (0.2373,\ 0.2881,\ 0.2034,\ 0.2712)$$
 
-$$\mathbf{m}\mathbf{v}^\top = \begin{pmatrix} 0\cdot0.2373 & 0\cdot0.2881 & 0\cdot0.2034 & 0\cdot0.2712 \\ 0.2835\cdot0.2373 & 0.2835\cdot0.2881 & 0.2835\cdot0.2034 & 0.2835\cdot0.2712 \\ 0.3150\cdot0.2373 & 0.3150\cdot0.2881 & 0.3150\cdot0.2034 & 0.3150\cdot0.2712 \\ 0.4016\cdot0.2373 & 0.4016\cdot0.2881 & 0.4016\cdot0.2034 & 0.4016\cdot0.2712 \end{pmatrix}$$
+$$\mathbf{m}\mathbf{v}^\top = \begin{pmatrix} 0\cdot0.2373 & 0\cdot0.2881 & 0\cdot0.2034 & 0\cdot0.2712 \\\\ 0.2835\cdot0.2373 & 0.2835\cdot0.2881 & 0.2835\cdot0.2034 & 0.2835\cdot0.2712 \\\\ 0.3150\cdot0.2373 & 0.3150\cdot0.2881 & 0.3150\cdot0.2034 & 0.3150\cdot0.2712 \\\\ 0.4016\cdot0.2373 & 0.4016\cdot0.2881 & 0.4016\cdot0.2034 & 0.4016\cdot0.2712 \end{pmatrix}$$
 
-$$= \begin{pmatrix} 0 & 0 & 0 & 0 \\ 0.0673 & 0.0817 & 0.0577 & 0.0769 \\ 0.0747 & 0.0908 & 0.0641 & 0.0854 \\ 0.0953 & 0.1157 & 0.0817 & 0.1089 \end{pmatrix}$$
+$$= \begin{pmatrix} 0 & 0 & 0 & 0 \\\\ 0.0673 & 0.0817 & 0.0577 & 0.0769 \\\\ 0.0747 & 0.0908 & 0.0641 & 0.0854 \\\\ 0.0953 & 0.1157 & 0.0817 & 0.1089 \end{pmatrix}$$
 
 Verify row 1 sums: $0.0673+0.0817+0.0577+0.0769 = 0.2836 \approx m_1$ ✓
 
@@ -493,9 +493,9 @@ Verify row 1 sums: $0.0673+0.0817+0.0577+0.0769 = 0.2836 \approx m_1$ ✓
 
 **Sub-step B: Multiply elementwise by $\tilde{C}$**
 
-$$\tilde{C} \odot \mathbf{m}\mathbf{v}^\top = \begin{pmatrix} 0\cdot0 & 0.5\cdot0 & 0.5\cdot0 & 1\cdot0 \\ 0.5\cdot0.0673 & 0\cdot0.0817 & 1\cdot0.0577 & 0.5\cdot0.0769 \\ 0.5\cdot0.0747 & 1\cdot0.0908 & 0\cdot0.0641 & 0.5\cdot0.0854 \\ 1\cdot0.0953 & 0.5\cdot0.1157 & 0.5\cdot0.0817 & 0\cdot0.1089 \end{pmatrix}$$
+$$\tilde{C} \odot \mathbf{m}\mathbf{v}^\top = \begin{pmatrix} 0\cdot0 & 0.5\cdot0 & 0.5\cdot0 & 1\cdot0 \\\\ 0.5\cdot0.0673 & 0\cdot0.0817 & 1\cdot0.0577 & 0.5\cdot0.0769 \\\\ 0.5\cdot0.0747 & 1\cdot0.0908 & 0\cdot0.0641 & 0.5\cdot0.0854 \\\\ 1\cdot0.0953 & 0.5\cdot0.1157 & 0.5\cdot0.0817 & 0\cdot0.1089 \end{pmatrix}$$
 
-$$= \begin{pmatrix} 0 & 0 & 0 & 0 \\ 0.0337 & 0 & 0.0577 & 0.0385 \\ 0.0374 & 0.0908 & 0 & 0.0427 \\ 0.0953 & 0.0579 & 0.0409 & 0 \end{pmatrix}$$
+$$= \begin{pmatrix} 0 & 0 & 0 & 0 \\\\ 0.0337 & 0 & 0.0577 & 0.0385 \\\\ 0.0374 & 0.0908 & 0 & 0.0427 \\\\ 0.0953 & 0.0579 & 0.0409 & 0 \end{pmatrix}$$
 
 **Sub-step C: Sum all entries**
 
@@ -515,7 +515,7 @@ The optimized plan costs **79% less** than the geometry-blind plan — this is t
 
 ---
 
-### Step 15: Dual Potentials — Anchor Values
+## Step 15: Dual Potentials — Anchor Values
 
 Using converged potentials (assumed) from Step 12.5:
 
@@ -538,7 +538,7 @@ Similarly for $\psi$: $\psi_0 = 0.4900$ is large and positive because pixel 0 in
 
 ---
 
-### Step 16: Entropy $H(\pi)$
+## Step 16: Entropy $H(\pi)$
 
 $$H(\pi) = -\sum_{i,j} \pi_{ij}\log\pi_{ij}$$
 
@@ -554,7 +554,7 @@ $$H(\pi) = 0.2307 + 0.3558 + 0.2438 + 0.3168 + 0.3499 = 1.4970$$
 
 ---
 
-### Step 17: Full regularized objective $\mathcal{L}_\varepsilon(\pi)$
+## Step 17: Full regularized objective $\mathcal{L}_\varepsilon(\pi)$
 
 $$\mathcal{L}_\varepsilon(\pi) = \langle \tilde{C}, \pi \rangle - \varepsilon H(\pi) = 0.1056 - 0.01\times1.4970 = 0.1056 - 0.01497 = 0.09063$$
 
@@ -574,7 +574,7 @@ On the anchor, only 5 entries of $\pi$ are nonzero, so $H(\pi) = 1.497$ — a ti
 
 ---
 
-### Step 18: Dual objective $\mathcal{D}(\phi, \psi)$
+## Step 18: Dual objective $\mathcal{D}(\phi, \psi)$
 
 The primal problem asks: *find the cheapest transport plan $\pi$*. The dual problem asks the opposite question from the other side: *find the most revenue the "price system" $(\phi, \psi)$ can extract*. These are two different routes to the same answer.
 
@@ -647,7 +647,7 @@ Net: $0.1056 - 0.01497 = 0.09063$ — this is what Sinkhorn reduced iteration by
 
 ---
 
-### Step 19: Slack Matrix and Complementary Slackness
+## Step 19: Slack Matrix and Complementary Slackness
 
 **What is slack and why compute it?**
 
@@ -671,9 +671,9 @@ So slack directly dials $\pi_{ij}$: zero slack → $\exp(0) = 1$ → maximum flo
 
 First compute $\phi_i + \psi_j$ for all pairs:
 
-$$\phi_i + \psi_j = \begin{pmatrix} -6.9100+0.4900 & -6.9100+0.0002 & -6.9100-0.0045 & -6.9100-0.0040 \\ -0.0130+0.4900 & -0.0130+0.0002 & -0.0130-0.0045 & -0.0130-0.0040 \\ -0.0120+0.4900 & -0.0120+0.0002 & -0.0120-0.0045 & -0.0120-0.0040 \\ -0.0095+0.4900 & -0.0095+0.0002 & -0.0095-0.0045 & -0.0095-0.0040 \end{pmatrix}$$
+$$\phi_i + \psi_j = \begin{pmatrix} -6.9100+0.4900 & -6.9100+0.0002 & -6.9100-0.0045 & -6.9100-0.0040 \\\\ -0.0130+0.4900 & -0.0130+0.0002 & -0.0130-0.0045 & -0.0130-0.0040 \\\\ -0.0120+0.4900 & -0.0120+0.0002 & -0.0120-0.0045 & -0.0120-0.0040 \\\\ -0.0095+0.4900 & -0.0095+0.0002 & -0.0095-0.0045 & -0.0095-0.0040 \end{pmatrix}$$
 
-$$= \begin{pmatrix} -6.4200 & -6.9098 & -6.9145 & -6.9140 \\ 0.4770 & -0.0128 & -0.0175 & -0.0170 \\ 0.4780 & -0.0118 & -0.0165 & -0.0160 \\ 0.4805 & -0.0093 & -0.0140 & -0.0135 \end{pmatrix}$$
+$$= \begin{pmatrix} -6.4200 & -6.9098 & -6.9145 & -6.9140 \\\\ 0.4770 & -0.0128 & -0.0175 & -0.0170 \\\\ 0.4780 & -0.0118 & -0.0165 & -0.0160 \\\\ 0.4805 & -0.0093 & -0.0140 & -0.0135 \end{pmatrix}$$
 
 <br>
 
@@ -707,7 +707,7 @@ $$s_{33} = 0 - (-0.0135) = 0.0135$$
 
 <br>
 
-$$S = \begin{pmatrix} 6.4200 & 7.4098 & 7.4145 & 7.9140 \\ 0.0230 & 0.0128 & 1.0175 & 0.5170 \\ 0.0220 & 1.0118 & 0.0165 & 0.5160 \\ 0.5195 & 0.5093 & 0.5140 & 0.0135 \end{pmatrix}$$
+$$S = \begin{pmatrix} 6.4200 & 7.4098 & 7.4145 & 7.9140 \\\\ 0.0230 & 0.0128 & 1.0175 & 0.5170 \\\\ 0.0220 & 1.0118 & 0.0165 & 0.5160 \\\\ 0.5195 & 0.5093 & 0.5140 & 0.0135 \end{pmatrix}$$
 
 **Verify dual feasibility:** $\min(S) = 0.0128 > 0$ ✓ — every entry is non-negative, meaning $\phi_i + \psi_j \leq \tilde{C}_{ij}$ everywhere. The price system never over-values any path.
 
@@ -766,7 +766,7 @@ All three hold. $\pi$ is globally optimal — no other transport plan between $\
 
 ---
 
-### Step 20: Displacement Interpolation — Wasserstein Geodesic
+## Step 20: Displacement Interpolation — Wasserstein Geodesic
 
 $\pi$ tells us how much mass moves from pixel $i$ to pixel $j$. Displacement interpolation asks: at time $t$, where is that mass *in transit*?
 
@@ -786,7 +786,7 @@ We work through $t=0$, $t=0.5$ (midpoint), and $t=1$ fully. These three cover al
 
 <br>
 
-#### $t = 0$: Recovery of source $\mu$
+### $t = 0$: Recovery of source $\mu$
 
 $$\mathbf{z}_{ij}(0) = (1-0)\mathbf{x}_i + 0\cdot\mathbf{x}_j = \mathbf{x}_i \quad \forall j$$
 
@@ -825,7 +825,7 @@ Compare to $\mathbf{m} = (0,\ 0.2835,\ 0.3150,\ 0.4016)$ — close but not exact
 
 <br>
 
-#### $t = 0.5$: Midpoint frame
+### $t = 0.5$: Midpoint frame
 
 $$\mathbf{z}_{ij}(0.5) = 0.5\mathbf{x}_i + 0.5\mathbf{x}_j$$
 
@@ -884,7 +884,7 @@ Verify mass conservation: $0.2111 + 0.2780 + 0.1920 + 0.2592 = 0.9403 \approx 1$
 
 <br>
 
-#### $t = 1$: Recovery of target $\nu$
+### $t = 1$: Recovery of target $\nu$
 
 $$\mathbf{z}_{ij}(1) = 0\cdot\mathbf{x}_i + 1\cdot\mathbf{x}_j = \mathbf{x}_j \quad \forall i$$
 
@@ -909,7 +909,7 @@ Compare to $\mathbf{v} = (0.2373,\ 0.2881,\ 0.2034,\ 0.2712)$ — close, gap fro
 
 <br>
 
-#### Summary across all three frames
+### Summary across all three frames
 
 | Pixel $k$ | Location | $\mu_0$ (source) | $\mu_{0.5}$ (midpoint) | $\mu_1$ (target) | $\mathbf{v}$ (true target) |
 |---|---|---|---|---|---|
@@ -922,7 +922,7 @@ The key observation: pixel 0 starts at zero mass, gains $0.2111$ by $t=0.5$ as t
 
 ---
 
-### Step 21: Pixel Blending Baseline at $t=0.5$
+## Step 21: Pixel Blending Baseline at $t=0.5$
 
 <br>
 
@@ -950,7 +950,7 @@ Blending never moves mass — pixel 3 stays bright because both $m_3$ and $v_3$ 
 
 ---
 
-### Step 22: Naive Pixel Blending — All Timesteps
+## Step 22: Naive Pixel Blending — All Timesteps
 
 Naive Pixel Blending computes a weighted average of $\mathbf{m}$ and $\mathbf{v}$ at each pixel independently — no coordinates, no transport, no geometry.
 
@@ -983,7 +983,7 @@ Exact by linearity: $(1-t)\sum_k m_k + t\sum_k v_k = (1-t)\cdot1 + t\cdot1 = 1$.
 
 <br>
 
-#### Final Comparison: Wasserstein vs Blending at $t=0.5$
+### Final Comparison: Wasserstein vs Blending at $t=0.5$
 
 | Pixel $k$ | Location | $m_k$ | $v_k$ | $\mu_{0.5}^{\text{Wass}}$ | $\mu_{0.5}^{\text{blend}}$ |
 |---|---|---|---|---|---|
@@ -1035,7 +1035,7 @@ $$\mu_{0.5}^{\text{blend}} = (0.1187,\ 0.2858,\ 0.2592,\ 0.3364) \rightarrow \te
 | Step | Cell | Operation | Mathematical Object | What It Produces |
 |---|---|---|---|---|
 | 1 | 4 | Extract labels, find first "3" and "8" | $i_3 = \min\mathcal{I}_3,\ i_8 = \min\mathcal{I}_8$ | Indices $i_3=0,\ i_8=2$ into toy dataset |
-| 2 | 4 | Cast images to float64 | $A^{(3)}, A^{(8)} \in \mathbb{R}^{2\times2}$ | $A^{(3)}=\begin{pmatrix}0&180\\200&255\end{pmatrix}$, enables real arithmetic |
+| 2 | 4 | Cast images to float64 | $A^{(3)}, A^{(8)} \in \mathbb{R}^{2\times2}$ | $A^{(3)}=\begin{pmatrix}0&180\\\\200&255\end{pmatrix}$, enables real arithmetic |
 | 3 | 6 | Flatten images | $A \in \mathbb{R}^{2\times2} \to \mathbf{a} \in \mathbb{R}^4$ | $\mathbf{a}^{(3)}=(0,180,200,255)$, $\mathbf{a}^{(8)}=(210,255,180,240)$ |
 | 4 | 6 | Normalize to probability measures | $\mathbf{m}=\mathbf{a}^{(3)}/Z^{(3)},\ \mathbf{v}=\mathbf{a}^{(8)}/Z^{(8)}$ | $\mathbf{m},\mathbf{v}\in\Delta^3$, both sum to 1 |
 | 5 | 8 | Assign pixel coordinates | $\mathbf{x}_i=(\lfloor i/2\rfloor,\ i\bmod 2)$ | $X\in\mathbb{R}^{4\times2}$, embeds pixels into $\mathbb{R}^2$ |

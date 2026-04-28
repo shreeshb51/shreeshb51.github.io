@@ -188,12 +188,12 @@ window.Quarto = {
   <li><a href="#wasserstein-distance-as-a-loss-function-for-image-morphing" id="toc-wasserstein-distance-as-a-loss-function-for-image-morphing" class="nav-link active" data-scroll-target="#wasserstein-distance-as-a-loss-function-for-image-morphing">Wasserstein Distance as a Loss Function for Image Morphing</a>
   <ul class="collapse">
   <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview">Overview</a></li>
-  <li><a href="#intuitive-explanation-what-is-wasserstein-distance" id="toc-intuitive-explanation-what-is-wasserstein-distance" class="nav-link" data-scroll-target="#intuitive-explanation-what-is-wasserstein-distance">Intuitive Explanation: What is Wasserstein Distance?</a></li>
-  <li><a href="#mathematical-formulation" id="toc-mathematical-formulation" class="nav-link" data-scroll-target="#mathematical-formulation">Mathematical Formulation</a></li>
+  <li><a href="#intuitive-explanation" id="toc-intuitive-explanation" class="nav-link" data-scroll-target="#intuitive-explanation">Intuitive Explanation</a></li>
+  <li><a href="#mathematical-foundations" id="toc-mathematical-foundations" class="nav-link" data-scroll-target="#mathematical-foundations">Mathematical Foundations</a></li>
   <li><a href="#sinkhorn-algorithm" id="toc-sinkhorn-algorithm" class="nav-link" data-scroll-target="#sinkhorn-algorithm">Sinkhorn Algorithm</a></li>
   <li><a href="#displacement-interpolation" id="toc-displacement-interpolation" class="nav-link" data-scroll-target="#displacement-interpolation">Displacement Interpolation</a></li>
   <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">Results</a></li>
-  <li><a href="#key-insight-why-pixel-blending-fails" id="toc-key-insight-why-pixel-blending-fails" class="nav-link" data-scroll-target="#key-insight-why-pixel-blending-fails">Key Insight: Why Pixel Blending Fails</a></li>
+  <li><a href="#key-insights" id="toc-key-insights" class="nav-link" data-scroll-target="#key-insights">Key Insights</a></li>
   <li><a href="#implementation-notes" id="toc-implementation-notes" class="nav-link" data-scroll-target="#implementation-notes">Implementation Notes</a></li>
   <li><a href="#dependencies" id="toc-dependencies" class="nav-link" data-scroll-target="#dependencies">Dependencies</a></li>
   </ul></li>
@@ -236,11 +236,11 @@ window.Quarto = {
 <hr>
 <section id="overview" class="level2">
 <h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>This project implements a complete <strong>Wasserstein-based image morphing system from scratch</strong> — no POT, no GeomLoss, no external OT libraries. It transforms an MNIST digit ‘3’ into a digit ‘8’ via the Wasserstein geodesic in the space of probability measures, and contrasts the result against naive pixel blending.</p>
-<p>The core implementation covers:</p>
+<p>This project implements a complete <strong>Wasserstein-based image morphing system from scratch</strong> — no POT, no GeomLoss, no external OT libraries. It transforms an MNIST digit ‘3’ into a digit ‘8’ via the Wasserstein geodesic in the space of probability measures, and contrasts the result against naive pixel blending. The project covers the full pipeline from discrete probability measures and entropic regularization to log-domain Sinkhorn iterations, Kantorovich duality verification, and displacement interpolation on the space of probability measures.</p>
+<p><strong>Core implementations covered:</strong></p>
 <ul>
 <li>Discrete probability measures from grayscale images</li>
-<li>Squared Euclidean ground cost matrix (W₂)</li>
+<li>Squared Euclidean ground cost matrix (<span class="math inline">\(W_2\)</span>)</li>
 <li>Sinkhorn-Knopp algorithm in log-domain (numerically stable)</li>
 <li>Kantorovich duality verification (primal-dual gap: 2.42e-12)</li>
 <li>Displacement interpolation (McCann interpolation) for geodesic frames</li>
@@ -248,72 +248,94 @@ window.Quarto = {
 </ul>
 <hr>
 </section>
-<section id="intuitive-explanation-what-is-wasserstein-distance" class="level2">
-<h2 class="anchored" data-anchor-id="intuitive-explanation-what-is-wasserstein-distance">Intuitive Explanation: What is Wasserstein Distance?</h2>
-<p>Imagine you have a pile of sand shaped like a mountain, and you want to move all that sand into a new hole shaped like a valley. The Wasserstein distance is simply the cheapest possible way to get the job done. To calculate it, you look at every grain of sand and multiply how much it weighs by how far you have to carry it. If the mountain and the valley are already in the same spot, the distance is zero because you do not have to move anything. If they are far apart, or if the shapes are very different, the distance is high because you are doing more work to shove, drag, and reshuffle the sand into its new home. It is often called the <strong>Earth Mover’s Distance</strong> because it measures the literal effort of moving dirt from point A to point B.</p>
+<section id="intuitive-explanation" class="level2">
+<h2 class="anchored" data-anchor-id="intuitive-explanation">Intuitive Explanation</h2>
+<p><strong>1. What is Wasserstein Distance?</strong></p>
+<p>Imagine you have a pile of sand shaped like a mountain, and you want to move all that sand into a new hole shaped like a valley. The Wasserstein distance is simply the cheapest possible way to get the job done. To calculate it, you look at every grain of sand and multiply how much it weighs by how far you have to carry it. If the mountain and the valley are already in the same spot, the distance is zero because you do not have to move anything. If they are far apart, or if the shapes are very different, the distance is high because you are doing more work to shove, drag, and reshuffle the sand into its new home.</p>
+<p>This is why it is formally called the <strong>Earth Mover’s Distance</strong>: it measures the minimum total work required to transport one probability distribution into another. In this project, each MNIST digit is treated as a probability distribution over pixel locations, and the Wasserstein distance quantifies the cost of optimally displacing the ink mass of one digit into the shape of another.</p>
 <hr>
 </section>
-<section id="mathematical-formulation" class="level2">
-<h2 class="anchored" data-anchor-id="mathematical-formulation">Mathematical Formulation</h2>
+<section id="mathematical-foundations" class="level2">
+<h2 class="anchored" data-anchor-id="mathematical-foundations">Mathematical Foundations</h2>
 <section id="the-kantorovich-primal-problem" class="level3">
 <h3 class="anchored" data-anchor-id="the-kantorovich-primal-problem">The Kantorovich Primal Problem</h3>
 <p>Find a transport plan <span class="math inline">\(\pi\)</span> that minimizes the total cost of moving mass from <span class="math inline">\(\mu\)</span> to <span class="math inline">\(\nu\)</span>:</p>
 <p><span class="math display">\[\min_{\pi} \sum_{i,j} \pi_{ij} C_{ij}\]</span></p>
-<p>Subject to the feasibility constraints:</p>
+<p>Here <span class="math inline">\(\pi_{ij}\)</span> is the amount of mass transported from source location <span class="math inline">\(i\)</span> to target location <span class="math inline">\(j\)</span>, and <span class="math inline">\(C_{ij}\)</span> is the cost of doing so.</p>
+<p>Subject to:</p>
 <p><span class="math display">\[\sum_{j=1}^{m} \pi_{ij} = \mu_i \quad \forall i \qquad \text{(row marginal)}\]</span></p>
 <p><span class="math display">\[\sum_{i=1}^{n} \pi_{ij} = \nu_j \quad \forall j \qquad \text{(column marginal)}\]</span></p>
 <p><span class="math display">\[\pi_{ij} \geq 0 \quad \forall i, j \qquad \text{(non-negativity)}\]</span></p>
+<p>The row marginal constraint ensures all mass from <span class="math inline">\(\mu\)</span> is fully shipped; the column marginal ensures <span class="math inline">\(\nu\)</span> is exactly satisfied; non-negativity prevents mass from flowing backwards.</p>
+<hr>
 </section>
 <section id="the-kantorovich-dual-problem" class="level3">
 <h3 class="anchored" data-anchor-id="the-kantorovich-dual-problem">The Kantorovich Dual Problem</h3>
 <p>Find potentials <span class="math inline">\(\phi\)</span> and <span class="math inline">\(\psi\)</span> that maximize the total value:</p>
 <p><span class="math display">\[\max_{\phi,\, \psi} \sum_{i} \phi_i \mu_i + \sum_{j} \psi_j \nu_j\]</span></p>
-<p>Subject to the admissibility constraint:</p>
+<p>Subject to:</p>
 <p><span class="math display">\[\phi_i + \psi_j \leq C_{ij} \quad \forall i, j\]</span></p>
-<p><strong>Strong duality</strong> guarantees that at optimality, the primal and dual objectives are equal:</p>
+<p>The admissibility constraint ensures no pair of potentials over-values any transport link relative to its cost.</p>
+<p><strong>Strong Duality:</strong> At optimality, the primal and dual objectives are equal:</p>
 <p><span class="math display">\[\langle C, \pi^\star \rangle = \langle \phi^\star, \mu \rangle + \langle \psi^\star, \nu \rangle\]</span></p>
+<p>This result is used in this project to numerically verify that the Sinkhorn algorithm has converged to the global optimum of the regularized problem.</p>
 <hr>
 </section>
 </section>
 <section id="sinkhorn-algorithm" class="level2">
 <h2 class="anchored" data-anchor-id="sinkhorn-algorithm">Sinkhorn Algorithm</h2>
+<p>The Sinkhorn algorithm solves the entropy-regularized optimal transport problem, enabling efficient computation of approximate Wasserstein distances on large discrete supports such as image pixel grids.</p>
 <section id="entropic-regularization" class="level3">
 <h3 class="anchored" data-anchor-id="entropic-regularization">Entropic Regularization</h3>
 <p>We solve the regularized problem:</p>
 <p><span class="math display">\[\min_{\pi \in \Pi(\mu,\nu)} \langle C, \pi \rangle - \varepsilon H(\pi)\]</span></p>
 <p>where <span class="math inline">\(H(\pi) = -\sum_{ij} \pi_{ij} \log \pi_{ij}\)</span> is the entropy of the transport plan and <span class="math inline">\(\varepsilon &gt; 0\)</span> is the regularization strength.</p>
+<p>Adding the entropy term makes the problem strictly convex and yields a unique, smooth solution that can be computed via simple matrix scaling iterations.</p>
+<hr>
 </section>
 <section id="standard-form-scaling-vectors" class="level3">
 <h3 class="anchored" data-anchor-id="standard-form-scaling-vectors">Standard Form (Scaling Vectors)</h3>
 <p>The optimal plan takes the form <span class="math inline">\(\pi = \text{diag}(u) \cdot K \cdot \text{diag}(v)\)</span> where <span class="math inline">\(K = \exp(-C/\varepsilon)\)</span>. The Sinkhorn iterations are:</p>
 <p><span class="math display">\[u^{(\ell+1)} = \frac{\mu}{K v^{(\ell)}}\]</span></p>
 <p><span class="math display">\[v^{(\ell+1)} = \frac{\nu}{K^\top u^{(\ell+1)}}\]</span></p>
+<p>Each iteration alternately rescales rows then columns of <span class="math inline">\(K\)</span> until the marginal constraints are satisfied. Convergence is indicated when <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span> stabilize between iterations.</p>
+<hr>
 </section>
 <section id="log-domain-form-numerically-stable" class="level3">
 <h3 class="anchored" data-anchor-id="log-domain-form-numerically-stable">Log-Domain Form (Numerically Stable)</h3>
-<p>To avoid underflow from <span class="math inline">\(\exp(-C/\varepsilon)\)</span> at small <span class="math inline">\(\varepsilon\)</span>, we iterate the potentials <span class="math inline">\(f = \varepsilon \ln u\)</span> and <span class="math inline">\(g = \varepsilon \ln v\)</span> directly:</p>
+<p>For small <span class="math inline">\(\varepsilon\)</span>, the kernel <span class="math inline">\(K = \exp(-C/\varepsilon)\)</span> contains entries so close to zero that they underflow to exactly zero in float64, corrupting the scaling vectors. To avoid this, we iterate the potentials <span class="math inline">\(f = \varepsilon \ln u\)</span> and <span class="math inline">\(g = \varepsilon \ln v\)</span> directly:</p>
 <p><span class="math display">\[f_i^{(\ell+1)} = \varepsilon \ln \mu_i - \varepsilon \operatorname{LSE}_j\!\left(\frac{g_j^{(\ell)} - C_{ij}}{\varepsilon}\right)\]</span></p>
 <p><span class="math display">\[g_j^{(\ell+1)} = \varepsilon \ln \nu_j - \varepsilon \operatorname{LSE}_i\!\left(\frac{f_i^{(\ell+1)} - C_{ij}}{\varepsilon}\right)\]</span></p>
 <p>The <strong>Log-Sum-Exp</strong> operator is defined with numerical stabilization via:</p>
 <p><span class="math display">\[\operatorname{LSE}_k(x_k) = M + \ln \sum_k \exp(x_k - M), \qquad M = \max_k x_k\]</span></p>
-<p>This shifts all exponents relative to the maximum, preventing overflow and underflow simultaneously.</p>
+<p>This shifts all exponents relative to the maximum, preventing overflow and underflow simultaneously. The log-domain form is preferred over the standard form whenever <span class="math inline">\(\varepsilon\)</span> is small or the cost matrix has large entries.</p>
 <hr>
 </section>
 </section>
 <section id="displacement-interpolation" class="level2">
 <h2 class="anchored" data-anchor-id="displacement-interpolation">Displacement Interpolation</h2>
 <p>Displacement interpolation (McCann interpolation) defines a geodesic path in the space of probability measures by physically moving mass along the optimal transport trajectories — not fading one image into another.</p>
-<p>For time <span class="math inline">\(t \in [0, 1]\)</span>, define the interpolation map <span class="math inline">\(T_t : \mathbb{R}^2 \times \mathbb{R}^2 \to \mathbb{R}^2\)</span>:</p>
+<p>For <span class="math inline">\(t \in [0, 1]\)</span>, define the interpolation map <span class="math inline">\(T_t : \mathbb{R}^2 \times \mathbb{R}^2 \to \mathbb{R}^2\)</span>:</p>
 <p><span class="math display">\[T_t(x, y) = (1 - t)\,x + t\,y\]</span></p>
 <p>The interpolated measure <span class="math inline">\(\mu_t\)</span> is the <strong>push-forward</strong> of the optimal transport plan <span class="math inline">\(\pi^\star\)</span> under this map:</p>
 <p><span class="math display">\[\mu_t = (T_t)_{\#}\, \pi^\star\]</span></p>
 <p>Geometrically: every particle of mass at pixel location <span class="math inline">\(x\)</span> travels in a straight line toward its matched location <span class="math inline">\(y\)</span>, arriving at the intermediate position <span class="math inline">\(T_t(x,y)\)</span> at time <span class="math inline">\(t\)</span>. The intermediate measure is a coherent, solid object — not a superposition of two transparent images.</p>
+<section id="comparison-with-naive-interpolation" class="level3">
+<h3 class="anchored" data-anchor-id="comparison-with-naive-interpolation">Comparison with Naive Interpolation</h3>
+<p>Naive pixel blending linearly interpolates pixel intensities directly:</p>
+<p><span class="math display">\[I_t = (1-t)\,I_{\mu} + t\,I_{\nu}\]</span></p>
+<p>This produces a double-exposure effect — two transparent digits occupying the same space simultaneously at <span class="math inline">\(t = 0.5\)</span>. It preserves no spatial geometry and moves no mass. Displacement interpolation, by contrast, encodes a coherent redistribution of mass through space: structure is moved, not mixed.</p>
 <hr>
+</section>
 </section>
 <section id="results" class="level2">
 <h2 class="anchored" data-anchor-id="results">Results</h2>
-<section id="primal-dual-verification" class="level3">
-<h3 class="anchored" data-anchor-id="primal-dual-verification">Primal-Dual Verification</h3>
+<section id="findings" class="level3">
+<h3 class="anchored" data-anchor-id="findings">Findings</h3>
+<p>The log-domain Sinkhorn algorithm converged to the global optimum of the regularized problem, verified by a primal-dual duality gap of 2.42 × 10⁻¹² — at floating-point precision for float64. Marginal constraint errors remained below 1 × 10⁻⁶, confirming that the computed transport plan is feasible. The displacement interpolation frames produce a geometrically coherent morphing sequence, while the naive pixel blending baseline exhibits the expected ghosting artifact at intermediate timesteps.</p>
+</section>
+<section id="verification-table" class="level3">
+<h3 class="anchored" data-anchor-id="verification-table">Verification Table</h3>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 50%">
@@ -348,30 +370,31 @@ window.Quarto = {
 </tr>
 </tbody>
 </table>
-<p>The duality gap of 2.42 × 10⁻¹² is at floating-point precision for float64 — confirming that the log-domain Sinkhorn algorithm converged to the global optimum of the regularized problem.</p>
+<p>The duality gap of 2.42 × 10⁻¹² confirms that the log-domain Sinkhorn algorithm converged to the global optimum of the regularized problem.</p>
 </section>
-<section id="animation" class="level3">
-<h3 class="anchored" data-anchor-id="animation">Animation</h3>
+<section id="figures-animations" class="level3">
+<h3 class="anchored" data-anchor-id="figures-animations">Figures &amp; Animations</h3>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="morphing.gif" class="img-fluid figure-img"></p>
 <figcaption>Wasserstein Morphing</figcaption>
 </figure>
 </div>
-<p><em>Left: Wasserstein geodesic via displacement interpolation. Right: naive pixel blending. Both panels animate across the same 10 timesteps t ∈ {0.0, 0.1, …, 1.0}.</em></p>
+<p><em>Left: Wasserstein geodesic via displacement interpolation. Right: naive pixel blending. Both panels animate across the same 10 timesteps <span class="math inline">\(t \in \{0.0, 0.1, \ldots, 1.0\}\)</span>.</em></p>
 <hr>
 </section>
 </section>
-<section id="key-insight-why-pixel-blending-fails" class="level2">
-<h2 class="anchored" data-anchor-id="key-insight-why-pixel-blending-fails">Key Insight: Why Pixel Blending Fails</h2>
-<p>Pixel blending fails because it treats an image as a collection of independent light bulbs that simply dim or brighten in place. This ignores the <strong>spatial geometry</strong> of the mass distribution entirely, resulting in a ghosting effect where the first digit disappears while the second one fades in. At t = 0.5, you see two transparent, overlapping images occupying the same space simultaneously — a double exposure, not a transformation.</p>
+<section id="key-insights" class="level2">
+<h2 class="anchored" data-anchor-id="key-insights">Key Insights</h2>
+<p><strong>1. Why Pixel Blending Fails</strong></p>
+<p>Pixel blending fails because it treats an image as a collection of independent light bulbs that simply dim or brighten in place. This ignores the <strong>spatial geometry</strong> of the mass distribution entirely, resulting in a ghosting effect where the first digit disappears while the second one fades in. At <span class="math inline">\(t = 0.5\)</span>, you see two transparent, overlapping images occupying the same space simultaneously — a double exposure, not a transformation.</p>
 <p>In contrast, Wasserstein distance treats the image as a physical pile of ink. By computing the optimal transport plan, it finds the most efficient way to physically displace each grain of mass from its source location to its target location. The intermediate frames preserve the geometric structure of the digit — mass is <strong>moved</strong>, not mixed. This is what the push-forward <span class="math inline">\((T_t)_\# \pi^\star\)</span> encodes mathematically: a coherent redistribution of mass through space, not a pointwise average of intensities. Blending destroys structure; displacement interpolation preserves it.</p>
 <hr>
 </section>
 <section id="implementation-notes" class="level2">
 <h2 class="anchored" data-anchor-id="implementation-notes">Implementation Notes</h2>
 <ul>
-<li><strong>No external OT libraries.</strong> Sinkhorn is implemented from scratch in pure NumPy.</li>
+<li><strong>No external OT libraries.</strong> Sinkhorn is implemented from scratch in pure NumPy to expose every numerical detail explicitly.</li>
 <li><strong>Cost matrix normalization.</strong> <span class="math inline">\(C\)</span> is normalized to <span class="math inline">\([0, 1]\)</span> before the Sinkhorn iteration to prevent <span class="math inline">\(-C/\varepsilon\)</span> from producing values that underflow even before LSE stabilization.</li>
 <li><strong>Log-domain throughout.</strong> The kernel <span class="math inline">\(K = \exp(-C/\varepsilon)\)</span> is never explicitly materialized. All computation stays in log-space.</li>
 <li><strong>Epsilon = 0.1</strong> used for the final transport plan. Smaller <span class="math inline">\(\varepsilon\)</span> sharpens the plan but requires more iterations.</li>
@@ -383,7 +406,8 @@ window.Quarto = {
 <pre><code>numpy
 scipy
 matplotlib
-torchvision   # MNIST download only</code></pre>
+torchvision   # mnist download only</code></pre>
+<hr>
 <hr>
 <ul>
 <li><a href="https://github.com/shreeshb51/shreeshb51.github.io/blob/main/projects/Wasserstein%20Distance%20as%20a%20Loss%20Function%20for%20Image%20Morphing/project_1_wasserstein_distance_for_morphing.ipynb">Project Notebook (Code)</a></li>
