@@ -184,7 +184,11 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul class="collapse">
-  <li><a href="#mathematical-framework-for-project-1---wasserstein-distance-as-loss-function-for-image-morphing" id="toc-mathematical-framework-for-project-1---wasserstein-distance-as-loss-function-for-image-morphing" class="nav-link active" data-scroll-target="#mathematical-framework-for-project-1---wasserstein-distance-as-loss-function-for-image-morphing">Mathematical Framework for Project 1 - Wasserstein Distance as Loss Function for Image Morphing</a></li>
+  <li><a href="#mathematical-framework-for-project-1---wasserstein-distance-as-loss-function-for-image-morphing" id="toc-mathematical-framework-for-project-1---wasserstein-distance-as-loss-function-for-image-morphing" class="nav-link active" data-scroll-target="#mathematical-framework-for-project-1---wasserstein-distance-as-loss-function-for-image-morphing">Mathematical Framework for Project 1 - Wasserstein Distance as Loss Function for Image Morphing</a>
+  <ul class="collapse">
+  <li><a href="#context" id="toc-context" class="nav-link" data-scroll-target="#context">Context</a></li>
+  <li><a href="#underlying-mathematics" id="toc-underlying-mathematics" class="nav-link" data-scroll-target="#underlying-mathematics">Underlying Mathematics</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -194,15 +198,21 @@ window.Quarto = {
 
 
 
-<section id="mathematical-framework-for-project-1---wasserstein-distance-as-loss-function-for-image-morphing" class="level2">
-<h2 class="anchored" data-anchor-id="mathematical-framework-for-project-1---wasserstein-distance-as-loss-function-for-image-morphing">Mathematical Framework for Project 1 - Wasserstein Distance as Loss Function for Image Morphing</h2>
+<section id="mathematical-framework-for-project-1---wasserstein-distance-as-loss-function-for-image-morphing" class="level1">
+<h1>Mathematical Framework for Project 1 - Wasserstein Distance as Loss Function for Image Morphing</h1>
+<hr>
+<section id="context" class="level2">
+<h2 class="anchored" data-anchor-id="context">Context</h2>
 <p>Before any optimal transport can happen, we need two objects to <em>transport between</em>. This code is the moment we reach into a dataset of 60,000 handwritten digits and pull out exactly two images — one “3” and one “8” — that will become the <strong>source and target measures</strong> of our Wasserstein geodesic. Every subsequent computation flows from these two arrays.</p>
 <hr>
-<p><strong>We take anchor example and use it consistently and cumulatively throughout all subsequent explanations.</strong></p>
+</section>
+<section id="underlying-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="underlying-mathematics">Underlying Mathematics</h2>
+<hr>
 <p>We pretend MNIST contains six toy samples, each a 2×2 pixel image. The six images have labels:</p>
 <p><span class="math display">\[\mathbf{y} = (3,\ 7,\ 8,\ 3,\ 1,\ 8)\]</span></p>
 <p>The two images we care about are:</p>
-<p><span class="math display">\[A^{(3)} = \begin{pmatrix} 0 &amp; 180 \\ 200 &amp; 255 \end{pmatrix}, \qquad A^{(8)} = \begin{pmatrix} 210 &amp; 255 \\ 180 &amp; 240 \end{pmatrix}\]</span></p>
+<p><span class="math display">\[A^{(3)} = \begin{pmatrix} 0 &amp; 180 \\\\ 200 &amp; 255 \end{pmatrix}, \qquad A^{(8)} = \begin{pmatrix} 210 &amp; 255 \\\\ 180 &amp; 240 \end{pmatrix}\]</span></p>
 <p>Each entry is an integer in <span class="math inline">\(\{0, \ldots, 255\}\)</span>, where 0 is black and 255 is white.</p>
 <hr>
 <p><strong><code>labels = np.array([label for _, label in mnist])</code></strong></p>
@@ -225,17 +235,18 @@ window.Quarto = {
 <p>This is a <strong>type cast</strong>, not a value change:</p>
 <p><span class="math display">\[A^{(3)} \in \{0,\ldots,255\}^{28\times28} \xrightarrow{\ \text{cast}\ } A^{(3)} \in \mathbb{R}^{28\times28}\]</span></p>
 <p>The value 180 becomes 180.0 — identical numerically, but now living in <span class="math inline">\(\mathbb{R}\)</span> rather than <span class="math inline">\(\mathbb{Z}\)</span>.</p>
-<p><strong>Why does this matter so much?</strong> Consider what is coming:</p>
+<p><strong>Why does this matter so much?</strong></p>
+<p>Consider what is coming:</p>
 <ol type="1">
-<li><strong>Normalization</strong> requires dividing by the pixel sum. In integer arithmetic, <span class="math inline">\(1 / 635 = 0\)</span> (truncated). In float64, <span class="math inline">\(1.0 / 635.0 = 0.001574\ldots\)</span> — correct.</li>
+<li><strong>Normalization</strong> requires dividing by the pixel sum. In integer arithmetic, <span class="math inline">\(1 / 635 = 0\)</span> (truncated). In float64, <span class="math inline">\(1.0 / 635.0 = 0.001574\ldots\)</span></li>
 <li><strong>Sinkhorn iterations</strong> require computing <span class="math inline">\(\log\)</span> of pixel values. <span class="math inline">\(\log\)</span> is not defined on integers in NumPy without a cast.</li>
 <li><strong>Barycentric interpolation</strong> produces values like <span class="math inline">\(0.3 \cdot 180.0 + 0.7 \cdot 210.0 = 201.0\)</span> — fractional arithmetic is essential throughout.</li>
 </ol>
 <p>The choice of <strong>float64</strong> (rather than float32) is deliberate: Sinkhorn iterations involve repeated multiplication of numbers close to zero (exponentials of negative costs scaled by small <span class="math inline">\(\varepsilon\)</span>), and float32’s ~7 decimal digits of precision can cause <strong>numerical underflow</strong> that corrupts the transport plan. float64 gives ~15 digits.</p>
 <p>On the anchor, after the cast:</p>
-<p><span class="math display">\[A^{(3)} = \begin{pmatrix} 0.0 &amp; 180.0 \\ 200.0 &amp; 255.0 \end{pmatrix}, \qquad A^{(8)} = \begin{pmatrix} 210.0 &amp; 255.0 \\ 180.0 &amp; 240.0 \end{pmatrix}\]</span></p>
+<p><span class="math display">\[A^{(3)} = \begin{pmatrix} 0.0 &amp; 180.0 \\\\ 200.0 &amp; 255.0 \end{pmatrix}, \qquad A^{(8)} = \begin{pmatrix} 210.0 &amp; 255.0 \\\\ 180.0 &amp; 240.0 \end{pmatrix}\]</span></p>
 <hr>
-<pre><code>pixel range before normalization: [0.0, 255.0]</code></pre>
+<p><em>pixel range before normalization: [0.0, 255.0]</em></p>
 <p>This confirms two facts that will drive the process fowrward:</p>
 <ul>
 <li>The <strong>minimum is 0.0</strong> — the background pixels. These are <em>problematic</em> for optimal transport, because a pixel with value 0 carries zero mass, and we need to decide how to handle that (you’ll see a small <span class="math inline">\(\epsilon\)</span> regularization added during normalization).</li>
@@ -257,9 +268,10 @@ window.Quarto = {
 <p><span class="math display">\[A \in \mathbb{R}^{n \times n} \xrightarrow{\ \text{flatten}\ } \mathbf{a} \in \mathbb{R}^{n^2}\]</span></p>
 <p>The mapping is row-major (C-order): row 0 is laid down first, then row 1, etc. Pixel at grid position <span class="math inline">\((r, c)\)</span> lands at index <span class="math inline">\(i = rn + c\)</span>.</p>
 <p>On the anchor (<span class="math inline">\(n=2\)</span>):</p>
-<p><span class="math display">\[A^{(3)} = \begin{pmatrix} 0.0 &amp; 180.0 \\ 200.0 &amp; 255.0 \end{pmatrix} \xrightarrow{\ \text{flatten}\ } \mathbf{a}^{(3)} = (0.0,\ 180.0,\ 200.0,\ 255.0)\]</span></p>
-<p><span class="math display">\[A^{(8)} = \begin{pmatrix} 210.0 &amp; 255.0 \\ 180.0 &amp; 240.0 \end{pmatrix} \xrightarrow{\ \text{flatten}\ } \mathbf{a}^{(8)} = (210.0,\ 255.0,\ 180.0,\ 240.0)\]</span></p>
-<p><strong>Why flatten?</strong> Optimal transport operates on measures over a <em>metric space of points</em>. Each pixel index <span class="math inline">\(i\)</span> will later be assigned a 2D coordinate <span class="math inline">\(\mathbf{x}_i = (r_i, c_i) \in \mathbb{R}^2\)</span>, and the cost of transporting mass from <span class="math inline">\(i\)</span> to <span class="math inline">\(j\)</span> will be <span class="math inline">\(\|\mathbf{x}_i - \mathbf{x}_j\|^2\)</span>. The 2D grid structure is preserved through this coordinate system — flattening just gives each pixel a single canonical index.</p>
+<p><span class="math display">\[A^{(3)} = \begin{pmatrix} 0.0 &amp; 180.0 \\\\ 200.0 &amp; 255.0 \end{pmatrix} \xrightarrow{\ \text{flatten}\ } \mathbf{a}^{(3)} = (0.0,\ 180.0,\ 200.0,\ 255.0)\]</span></p>
+<p><span class="math display">\[A^{(8)} = \begin{pmatrix} 210.0 &amp; 255.0 \\\\ 180.0 &amp; 240.0 \end{pmatrix} \xrightarrow{\ \text{flatten}\ } \mathbf{a}^{(8)} = (210.0,\ 255.0,\ 180.0,\ 240.0)\]</span></p>
+<p><strong>Why flatten?</strong></p>
+<p>Optimal transport operates on measures over a <em>metric space of points</em>. Each pixel index <span class="math inline">\(i\)</span> will later be assigned a 2D coordinate <span class="math inline">\(\mathbf{x}_i = (r_i, c_i) \in \mathbb{R}^2\)</span>, and the cost of transporting mass from <span class="math inline">\(i\)</span> to <span class="math inline">\(j\)</span> will be <span class="math inline">\(\|\mathbf{x}_i - \mathbf{x}_j\|^2\)</span>. The 2D grid structure is preserved through this coordinate system — flattening just gives each pixel a single canonical index.</p>
 <hr>
 <p><strong><code>total = flat.sum()</code></strong></p>
 <p>Computes the total brightness — the sum of all pixel values:</p>
@@ -280,8 +292,7 @@ window.Quarto = {
 <p><span class="math inline">\(0.0 + 0.2835 + 0.3150 + 0.4016 = 1.0\)</span>, and</p>
 <p><span class="math inline">\(0.2373 + 0.2881 + 0.2034 + 0.2712 = 1.0\)</span></p>
 <hr>
-<section id="the-zero-mass-problem" class="level3">
-<h3 class="anchored" data-anchor-id="the-zero-mass-problem">THE ZERO MASS PROBLEM</h3>
+<p><strong>THE ZERO MASS PROBLEM</strong></p>
 <p>The output shows <code>m min: 0.000000</code>. This means <strong>background pixels carry exactly zero mass</strong>: <span class="math inline">\(\mu(i) = 0\)</span>, for every pixel that was black in the original image. This is mathematically valid for a probability measure, but it creates a serious numerical problem in the next stage.</p>
 <p>Sinkhorn iterations require computing <span class="math inline">\(\log \mu(i)\)</span> for every <span class="math inline">\(i\)</span>. But:</p>
 <p><span class="math display">\[\log(0) = -\infty\]</span></p>
@@ -297,7 +308,7 @@ window.Quarto = {
 <p>For each flat index <span class="math inline">\(i \in \{0, \ldots, 783\}\)</span>, this recovers the corresponding 2D grid position via integer division and remainder — the exact inverse of the row-major flattening:</p>
 <p><span class="math display">\[\mathbf{x}_i = \left(\left\lfloor \frac{i}{28} \right\rfloor,\ i \bmod 28\right) \in \{0,\ldots,27\}^2\]</span></p>
 <p>The result is a matrix of pixel coordinates:</p>
-<p><span class="math display">\[X = \begin{pmatrix} \mathbf{x}_0 \\ \mathbf{x}_1 \\ \vdots \\ \mathbf{x}_{783} \end{pmatrix} \in \mathbb{R}^{784 \times 2}\]</span></p>
+<p><span class="math display">\[X = \begin{pmatrix} \mathbf{x}_0 \\\\ \mathbf{x}_1 \\\\ \vdots \\\\ \mathbf{x}_{783} \end{pmatrix} \in \mathbb{R}^{784 \times 2}\]</span></p>
 <p>where row <span class="math inline">\(i\)</span> of <span class="math inline">\(X\)</span> is the spatial location of pixel <span class="math inline">\(i\)</span>.</p>
 <p>On the anchor example (<span class="math inline">\(n=2\)</span>, so we divide by 2 instead of 28):</p>
 <table class="caption-top table">
@@ -336,7 +347,7 @@ window.Quarto = {
 </tr>
 </tbody>
 </table>
-<p>So <span class="math inline">\(X = \begin{pmatrix} 0 &amp; 0 \\ 0 &amp; 1 \\ 1 &amp; 0 \\ 1 &amp; 1 \end{pmatrix}\)</span>, recovering exactly the four corners of the 2×2 grid. The flattening from code and the coordinate recovery here are <strong>consistent inverses</strong> of each other: pixel <span class="math inline">\((r, c)\)</span> flattens to index <span class="math inline">\(i = 2r + c\)</span>, and index <span class="math inline">\(i\)</span> recovers to <span class="math inline">\(\mathbf{x}_i = (\lfloor i/2 \rfloor, i \bmod 2) = (r, c)\)</span>.</p>
+<p>So <span class="math inline">\(X = \begin{pmatrix} 0 &amp; 0 \\\\ 0 &amp; 1 \\\\ 1 &amp; 0 \\\\ 1 &amp; 1 \end{pmatrix}\)</span>, recovering exactly the four corners of the 2×2 grid. The flattening from code and the coordinate recovery here are <strong>consistent inverses</strong> of each other: pixel <span class="math inline">\((r, c)\)</span> flattens to index <span class="math inline">\(i = 2r + c\)</span>, and index <span class="math inline">\(i\)</span> recovers to <span class="math inline">\(\mathbf{x}_i = (\lfloor i/2 \rfloor, i \bmod 2) = (r, c)\)</span>.</p>
 <hr>
 <p>With coordinates in hand, we can now define the <strong>ground cost</strong> between any two pixels <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span> as squared Euclidean distance:</p>
 <p><span class="math display">\[c(i, j) = \|\mathbf{x}_i - \mathbf{x}_j\|^2 = \left(\left\lfloor\frac{i}{n}\right\rfloor - \left\lfloor\frac{j}{n}\right\rfloor\right)^2 + (i \bmod n - j \bmod n)^2\]</span></p>
@@ -377,7 +388,7 @@ window.Quarto = {
 <p>Each entry <span class="math inline">\(C_{ij} = (r_i - r_j)^2 + (c_i - c_j)^2\)</span>. Work through row 0 explicitly:</p>
 <p><span class="math display">\[C_{00} = (0-0)^2 + (0-0)^2 = 0\]</span> <span class="math display">\[C_{01} = (0-0)^2 + (0-1)^2 = 0 + 1 = 1\]</span> <span class="math display">\[C_{02} = (0-1)^2 + (0-0)^2 = 1 + 0 = 1\]</span> <span class="math display">\[C_{03} = (0-1)^2 + (0-1)^2 = 1 + 1 = 2\]</span></p>
 <p>All obtained through broadcasting step stated earlier. The full <span class="math inline">\(4\times 4\)</span> cost matrix is:</p>
-<p><span class="math display">\[C = \begin{pmatrix} 0 &amp; 1 &amp; 1 &amp; 2 \\ 1 &amp; 0 &amp; 2 &amp; 1 \\ 1 &amp; 2 &amp; 0 &amp; 1 \\ 2 &amp; 1 &amp; 1 &amp; 0 \end{pmatrix}\]</span></p>
+<p><span class="math display">\[C = \begin{pmatrix} 0 &amp; 1 &amp; 1 &amp; 2 \\\\ 1 &amp; 0 &amp; 2 &amp; 1 \\\\ 1 &amp; 2 &amp; 0 &amp; 1 \\\\ 2 &amp; 1 &amp; 1 &amp; 0 \end{pmatrix}\]</span></p>
 <p>Read this as: moving mass from pixel 0 (top-left) to pixel 3 (bottom-right) costs 2; moving it one step right or down costs 1; staying put costs 0. The maximum cost is 2, achieved by the diagonal traversal — consistent with <span class="math inline">\(c(0,3) = (-1)^2 + (-1)^2 = 2\)</span>.</p>
 <p>The print statement verifies this on the real grid: <span class="math inline">\(C_{0,27} = 27^2 = 729\)</span> (moving across an entire row) and <span class="math inline">\(C_{0,783} = 27^2 + 27^2 = 1458\)</span> (moving corner to corner).</p>
 <hr>
@@ -465,7 +476,7 @@ window.Quarto = {
 <p>Divides every entry of <span class="math inline">\(C\)</span> by its maximum value, rescaling the cost matrix to <span class="math inline">\([0, 1]\)</span>:</p>
 <p><span class="math display">\[\tilde{C}_{ij} = \frac{C_{ij}}{\max_{kl} C_{kl}} = \frac{\|\mathbf{x}_i - \mathbf{x}_j\|^2}{1458}\]</span></p>
 <p>On the anchor, <span class="math inline">\(\max C = 2\)</span> (top-left to bottom-right), so:</p>
-<p><span class="math display">\[\tilde{C} = \frac{1}{2}\begin{pmatrix} 0 &amp; 1 &amp; 1 &amp; 2 \\ 1 &amp; 0 &amp; 2 &amp; 1 \\ 1 &amp; 2 &amp; 0 &amp; 1 \\ 2 &amp; 1 &amp; 1 &amp; 0 \end{pmatrix} = \begin{pmatrix} 0 &amp; 0.5 &amp; 0.5 &amp; 1 \\ 0.5 &amp; 0 &amp; 1 &amp; 0.5 \\ 0.5 &amp; 1 &amp; 0 &amp; 0.5 \\ 1 &amp; 0.5 &amp; 0.5 &amp; 0 \end{pmatrix}\]</span></p>
+<p><span class="math display">\[\tilde{C} = \frac{1}{2}\begin{pmatrix} 0 &amp; 1 &amp; 1 &amp; 2 \\\\ 1 &amp; 0 &amp; 2 &amp; 1 \\\\ 1 &amp; 2 &amp; 0 &amp; 1 \\\\ 2 &amp; 1 &amp; 1 &amp; 0 \end{pmatrix} = \begin{pmatrix} 0 &amp; 0.5 &amp; 0.5 &amp; 1 \\\\ 0.5 &amp; 0 &amp; 1 &amp; 0.5 \\\\ 0.5 &amp; 1 &amp; 0 &amp; 0.5 \\\\ 1 &amp; 0.5 &amp; 0.5 &amp; 0 \end{pmatrix}\]</span></p>
 <p><strong>Why does this matter?</strong> Recall the Sinkhorn update involves <span class="math inline">\(\exp(g_j - C_{ij})/\varepsilon\)</span>. The argument of the exponential is <span class="math inline">\(C_{ij}/\varepsilon\)</span>. Without normalization, the maximum cost is 1458 and <span class="math inline">\(\varepsilon = 0.01\)</span>, giving exponent magnitudes up to <span class="math inline">\(1458/0.01 = 145800\)</span> — catastrophic overflow even in float64, whose maximum exponent is <span class="math inline">\(\approx 709\)</span>. After normalization the maximum is <span class="math inline">\(1/0.01 = 100\)</span> — well within float64 range. Normalizing <span class="math inline">\(C\)</span> effectively makes <span class="math inline">\(\varepsilon\)</span> meaningful as a fraction of the total cost scale.</p>
 <hr>
 <p><strong><code>pi, f, g = sinkhorn_log(m, v, C_norm, epsilon=epsilon, n_iter=1000)</code></strong></p>
