@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>project_2_gnn_pipeline_for_qm9_data_prediction – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-088498ae819e247f230a120db35b6777.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<p>::: {#cell-0 .cell _uuid=‘8f2839f25d086af736a60e9eeb907d3b93b6e0e5’ _cell_guid=‘b1076dfc-b9ad-4769-8c92-a6c4dae69d19’ trusted=‘true’ quarto-private-1=‘{“key”:“execution”,“value”:{“iopub.status.busy”:“2026-04-29T12:41:43.077615Z”,“iopub.execute_input”:“2026-04-29T12:41:43.078388Z”,“iopub.status.idle”:“2026-04-29T12:41:48.652260Z”,“shell.execute_reply.started”:“2026-04-29T12:41:43.078318Z”,“shell.execute_reply”:“2026-04-29T12:41:48.651464Z”}}’ execution_count=1}</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 1 - install and imports of required librariesimport torchimport torch_geometricimport torch.nn as nnimport torch.nn.functional as Ffrom torch.optim.lr_scheduler import ReduceLROnPlateaufrom torch_geometric.datasets import QM9from torch_geometric.data import Datafrom torch_geometric.loader import DataLoaderimport randomfrom tqdm import tqdmimport matplotlib.pyplot as pltimport matplotlib.patches as mpatchesimport numpy as npfrom collections import dequefrom collections import defaultdictfrom collections import Counterprint(f"torch: {torch.__version__}")print(f"torch_geometric: {torch_geometric.__version__}")print(f"cuda available: {torch.cuda.is_available()}")print(torch.cuda.get_device_name()) # confirm GPU visiblex = torch.tensor([1.0]).cuda() # smoke test — no error verificationprint("cuda ok")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>torch: 2.3.1+cu121
+torch_geometric: 2.5.3
+cuda available: True
+Tesla P100-PCIE-16GB
+cuda ok</code></pre>
+</div>
+<p>:::</p>
+<div id="cell-1" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:41:48.653830Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:41:48.654277Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:10.608323Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:41:48.654247Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:10.607387Z&quot;}}" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 2 - load qm9; first run downloads ~130mb to ./data/QM9dataset = QM9(root='./data/QM9')print(f"num graphs: {len(dataset)}")print(f"num node features: {dataset.num_node_features}") # displays the number of attributes per atom (node) to understand the input dimensionalityprint(f"num edge features: {dataset.num_edge_features}") # displays the number of attributes per chemical bond (edge) to check available connectivity dataprint(f"num targets: {dataset.num_classes}") # must report 19</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Downloading https://data.pyg.org/datasets/qm9_v3.zip
+Extracting data/QM9/raw/qm9_v3.zip
+Processing...
+Using a pre-processed version of the dataset. Please install 'rdkit' to alternatively process the raw data.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>num graphs: 130831
+num node features: 11
+num edge features: 4
+num targets: 19</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Done!</code></pre>
+</div>
+</div>
+<div id="cell-2" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:10.609417Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:10.609809Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:10.616661Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:10.609764Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:10.615998Z&quot;}}" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 3 - inspect a single molecule; verify your tensor shapesmol = dataset[0]print(mol) # pyg summaryprint(f"\nx shape: {mol.x.shape}") # [N, 11]print(f"edge_index shape: {mol.edge_index.shape}") # [2, 2E]print(f"edge_attr shape: {mol.edge_attr.shape}") # [2E, 4]print(f"y shape: {mol.y.shape}") # [1, 19]print(f"num atoms (N): {mol.num_nodes}") # [1, 19]print(f"num directed edges (2E): {mol.edge_index.shape[1]}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Data(x=[5, 11], edge_index=[2, 8], edge_attr=[8, 4], y=[1, 19], pos=[5, 3], idx=[1], name='gdb_1', z=[5])
+
+x shape: torch.Size([5, 11])
+edge_index shape: torch.Size([2, 8])
+edge_attr shape: torch.Size([8, 4])
+y shape: torch.Size([1, 19])
+num atoms (N): 5
+num directed edges (2E): 8</code></pre>
+</div>
+</div>
+<div id="cell-3" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:10.618796Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:10.619064Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:33.345995Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:10.619037Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:33.345143Z&quot;}}" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 4 - isoloate u_0 (index 7, internal energy at 0k, in eV)# this is our prediction target for the full projectTARGET_IDX = 7TARGET_NAME = 'U0 (internal energy at 0K)'u0_all = torch.stack([g.y[0, TARGET_IDX] for g in dataset])print(f"target: {TARGET_NAME}")print(f"mean: {u0_all.mean():.4f} eV")print(f"std: {u0_all.std():.4f} eV")print(f"min: {u0_all.min():.4f} eV")print(f"max: {u0_all.max():.4f} eV")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>target: U0 (internal energy at 0K)
+mean: -11178.9668 eV
+std: 1085.5787 eV
+min: -19444.3867 eV
+max: -1101.4878 eV</code></pre>
+</div>
+</div>
+<div id="cell-4" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:33.346904Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:33.347350Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:33.353428Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:33.347277Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:33.352728Z&quot;}}" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 5 - inspect node features for molecule 0# qm9 encodes atoms as 11-dim one-hot + chemical features# columns: [H, C, N, O, F, atomic_num, aromatic, Hx1, Hx2, Hx3, Hx4]print("node feature matrix x (first molecule):")print(mol.x)print(f"\nshape: {mol.x.shape} -&gt; {mol.num_nodes} atoms x 11 features")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>node feature matrix x (first molecule):
+tensor([[0., 1., 0., 0., 0., 6., 0., 0., 0., 0., 4.],
+        [1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0.],
+        [1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0.],
+        [1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0.],
+        [1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0.]])
+
+shape: torch.Size([5, 11]) -&gt; 5 atoms x 11 features</code></pre>
+</div>
+</div>
+<div id="cell-5" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:33.354547Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:33.355076Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:33.365589Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:33.355044Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:33.364684Z&quot;}}" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 6 - inspect edge structure; confirm bidirectionalityei = mol.edge_indexprint("edge_index (COO):")print(ei)print(f"\nshape: {ei.shape}")print(f"edges are bidirectional: {ei.shape[1] % 2 == 0}") # this must be "True"# verify: every (u, v) has a corresponding (v, u)edges = set(zip(ei[0].tolist(), ei[1].tolist()))reverse_edges = {(v, u) for u, v in edges}print(f"all reverses present: {edges == reverse_edges}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>edge_index (COO):
+tensor([[0, 0, 0, 0, 1, 2, 3, 4],
+        [1, 2, 3, 4, 0, 0, 0, 0]])
+
+shape: torch.Size([2, 8])
+edges are bidirectional: True
+all reverses present: True</code></pre>
+</div>
+</div>
+<div id="cell-6" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:33.366548Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:33.366920Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:37.441126Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:33.366885Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:37.440325Z&quot;}}" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 7 - size distribution across datasetnode_counts = torch.tensor([g.num_nodes for g in dataset], dtype=torch.float)edge_counts = torch.tensor([g.edge_index.shape[1] for g in dataset], dtype=torch.float)print(f"atoms per molecule - mean: {node_counts.mean():.1f}, "      f"max: {node_counts.max():.0f}, min: {node_counts.min():.0f}")print(f"directed edges/mol - mean: {edge_counts.mean():.1f}, "      f"max: {edge_counts.max():.0f}, min: {edge_counts.min():.0f}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>atoms per molecule - mean: 18.0, max: 29, min: 3
+directed edges/mol - mean: 37.3, max: 56, min: 4</code></pre>
+</div>
+</div>
+<div id="cell-7" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:37.442334Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:37.442805Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:37.448903Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:37.442735Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:37.448002Z&quot;}}" data-execution_count="8">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 8 - pick a more interesting molecule than methane# find a molecule with ~10 atoms for a readable spectrumfor i, g in enumerate(dataset):    if g.num_nodes == 10:        mol2 = g        mol2_idx = i        breakprint(f"molecule index: {mol2_idx}")print(f"name: {mol2.name}")print(f"num atoms (N): {mol2.num_nodes}")print(f"num directed edges (2E): {mol2.edge_index.shape[1]}")print(f"num undirected edges (E): {mol2.edge_index.shape[1] // 2}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>molecule index: 17
+name: gdb_18
+num atoms (N): 10
+num directed edges (2E): 18
+num undirected edges (E): 9</code></pre>
+</div>
+</div>
+<div id="cell-8" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:37.449914Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:37.450491Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:37.465914Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:37.450459Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:37.465196Z&quot;}}" data-execution_count="9">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 9 - build node feature matrix X and adjacency matrix A explicitlyN = mol2.num_nodesX = mol2.x # [N, 11] - already a dense matrixedge_index = mol2.edge_index # [2, 2E]# build dense adjacency matrix from COO edge_indexA = torch.zeros(N, N)A[edge_index[0], edge_index[1]] = 1.0print(f"X shape: {X.shape}")print(f"A shape: {A.shape}")print(f"\nadjancency matrix A:")print(A)print(f"\nsymmetric: {torch.allclose(A, A.T)}") # must be Trueprint(f"no self-loops: {A.diagonal().sum().item() == 0}") # must be True</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>X shape: torch.Size([10, 11])
+A shape: torch.Size([10, 10])
+
+adjancency matrix A:
+tensor([[0., 1., 0., 0., 1., 1., 1., 0., 0., 0.],
+        [1., 0., 1., 1., 0., 0., 0., 0., 0., 0.],
+        [0., 1., 0., 0., 0., 0., 0., 1., 1., 1.],
+        [0., 1., 0., 0., 0., 0., 0., 0., 0., 0.],
+        [1., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+        [1., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+        [1., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+        [0., 0., 1., 0., 0., 0., 0., 0., 0., 0.],
+        [0., 0., 1., 0., 0., 0., 0., 0., 0., 0.],
+        [0., 0., 1., 0., 0., 0., 0., 0., 0., 0.]])
+
+symmetric: True
+no self-loops: True</code></pre>
+</div>
+</div>
+<div id="cell-9" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:37.468875Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:37.469183Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:37.479056Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:37.469156Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:37.478345Z&quot;}}" data-execution_count="10">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 10 - build degree matrix D and Laplacian L = D - Adegrees = A.sum(dim=1) # [N] - row sums of AD = torch.diag(degrees) # [N, N] diagonal matrixL = D - A # graph laplacianprint(f"D diagonal (node degrees): {degrees}")print(f"\nL shape: {L.shape}")print(f"\nlaplacian L:")print(L.round(decimals=1))# verify: L * 1 = 0ones = torch.ones(N)residual = (L @ ones).abs().max().item()print(f"\nmax |L.1|: {residual:.2e}") # must be ~0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>D diagonal (node degrees): tensor([4., 3., 4., 1., 1., 1., 1., 1., 1., 1.])
+
+L shape: torch.Size([10, 10])
+
+laplacian L:
+tensor([[ 4., -1.,  0.,  0., -1., -1., -1.,  0.,  0.,  0.],
+        [-1.,  3., -1., -1.,  0.,  0.,  0.,  0.,  0.,  0.],
+        [ 0., -1.,  4.,  0.,  0.,  0.,  0., -1., -1., -1.],
+        [ 0., -1.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.],
+        [-1.,  0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.],
+        [-1.,  0.,  0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.],
+        [-1.,  0.,  0.,  0.,  0.,  0.,  1.,  0.,  0.,  0.],
+        [ 0.,  0., -1.,  0.,  0.,  0.,  0.,  1.,  0.,  0.],
+        [ 0.,  0., -1.,  0.,  0.,  0.,  0.,  0.,  1.,  0.],
+        [ 0.,  0., -1.,  0.,  0.,  0.,  0.,  0.,  0.,  1.]])
+
+max |L.1|: 0.00e+00</code></pre>
+</div>
+</div>
+<div id="cell-10" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:37.481119Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:37.481421Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:37.490120Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:37.481350Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:37.489338Z&quot;}}" data-execution_count="11">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 11 - verify L = B.(B^T) explicitly# build signed incidence matrix B ∈ R^{N x E} for undirected edgessrc, dst = edge_index[0], edge_index[1]# keep ony one direction per edge (upper triangle of A)mask = src &lt; dstsrc_u = src[mask]dst_u = dst[mask]e_u = src_u.shape[0] # number of undirected edgesB = torch.zeros(N, e_u)for e, (i, j) in enumerate(zip(src_u.tolist(), dst_u.tolist())):    B[i, e] = +1.0    B[j, e] = -1.0L_from_B = B @ B.Tprint(f"B shape: {B.shape} -&gt; {N} nodes x {e_u} undirected edges")print(f"\nmax |L - B.(B^T)|: {(L - L_from_B).abs().max().item():.2e}") # must be ~0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>B shape: torch.Size([10, 9]) -&gt; 10 nodes x 9 undirected edges
+
+max |L - B.(B^T)|: 0.00e+00</code></pre>
+</div>
+</div>
+<div id="cell-11" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:37.491202Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:37.491625Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:37.508819Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:37.491563Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:37.507863Z&quot;}}" data-execution_count="12">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 12 - compute eigenspectrum of L# L is real symmetric -&gt; eigenvalues are real and non-negativeeigenvalues, eigenvectors = torch.linalg.eigh(L) # eigh exploits symmetryprint(f"eigen values: ")for k, lam in enumerate(eigenvalues):    print(f" lambda_k = {lam.item():.6f}")print(f"\nlambda_0 = 0 {eigenvalues[0].abs().item() &lt; 1e-5}")print(f"all lambda &gt;= 0 {(eigenvalues &gt;= -1e-6).all().item()}") # L is PSDprint(f"\nFiedler value lambda_1: {eigenvalues[1].item():.6f}")print(f"Fiedler vector: {eigenvectors[:, 1].numpy().round(3)}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>eigen values: 
+ lambda_k = -0.000000
+ lambda_k = 0.208712
+ lambda_k = 0.638531
+ lambda_k = 0.999999
+ lambda_k = 1.000000
+ lambda_k = 1.000000
+ lambda_k = 1.000000
+ lambda_k = 2.832551
+ lambda_k = 4.791288
+ lambda_k = 5.528918
+
+lambda_0 = 0 True
+all lambda &gt;= 0 True
+
+Fiedler value lambda_1: 0.208712
+Fiedler vector: [-0.294  0.     0.294  0.    -0.371 -0.371 -0.371  0.371  0.371  0.371]</code></pre>
+</div>
+</div>
+<div id="cell-12" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:37.509873Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:37.510283Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:38.294260Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:37.510249Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:38.293508Z&quot;}}" data-execution_count="13">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 13 - visualize the eigenspectrumlam = eigenvalues.numpy()fig, axes = plt.subplots(1, 2, figsize=(12, 4))# spectrum plotaxes[0].stem(range(N), lam, markerfmt='C0o', linefmt='C0-', basefmt='k-')axes[0].set_xlabel("eigen value index k")axes[0].set_ylabel("lambda_k")axes[0].set_title(f"laplacian spectrum - {mol2.name} (N = {N})")axes[0].axhline(0, color='k', linewidth=0.5)# fiedler vector (lambda_1 eigenvector) - encodes graph connectivityfiedler = eigenvectors[:, 1].numpy()axes[1].bar(range(N), fiedler, color='C1')axes[1].set_xlabel("atom index")axes[1].set_ylabel("fiedler vector entry")axes[1].set_title("fiedler vector (lambda_1 eigenvector)")axes[1].axhline(0, color='k', linewidth=0.5)plt.tight_layout()plt.savefig("laplacian_spectrum.png", dpi=300)plt.show()print("saved: laplacian_spectrum.png")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_2_gnn_pipeline_for_qm9_data_prediction_files/figure-html/cell-14-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>saved: laplacian_spectrum.png</code></pre>
+</div>
+</div>
+<div id="cell-13" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:38.295285Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:38.295749Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:38.330602Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:38.295717Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:38.329827Z&quot;}}" data-execution_count="14">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 14 - select 5 molecules of varying size for embeddingtarget_sizes = [7, 10, 13, 16, 19]selected = []for g in dataset:    if g.num_nodes in target_sizes and not any(s.num_nodes == g.num_nodes for s in selected):        selected.append(g)        if len(selected) == 5:            breakfor g in selected:    print(f"{g.name:12s}\tN={g.num_nodes}\tedges={g.edge_index.shape[1]//2}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>gdb_9           N=7 edges=6
+gdb_18          N=10    edges=9
+gdb_63          N=13    edges=12
+gdb_219         N=16    edges=15
+gdb_1082        N=19    edges=18</code></pre>
+</div>
+</div>
+<div id="cell-14" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:38.331743Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:38.332102Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:38.349707Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:38.332072Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:38.348928Z&quot;}}" data-execution_count="15">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 15 - function: compute laplacian eigenmap embedding for one moleculedef laplacian_eigenmap(g, k=2):    """    embed molecule g into R^k using k smallest non-trivial    eigenvectors of the graph laplacian (discards lambda_0 = 0).    returns: embedding [N, k], eigenvalues [N]    """    N = g.num_nodes    ei = g.edge_index    # build adjacency and laplacian    A = torch.zeros(N, N)    A[ei[0], ei[1]] = 1.0    D = torch.diag(A.sum(dim=1))    L = D - A    # eigdecomposition - eigh guarantees real, sorted eigenvalues    eigenvalues, eigenvectors = torch.linalg.eigh(L)        # discard eigenvector 0 (constant), take next k    embedding = eigenvectors[:, 1:k+1] # [N, k]        return embedding.numpy(), eigenvalues.numpy()# verify on one moleculeemb, lam = laplacian_eigenmap(selected[0])print(f"embedding shape: {emb.shape} &lt;- [N, 2]")print(f"eigenvalues: {lam.round(3)}")print(f"fiedler (lambda_1): {lam[1]:.4f}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>embedding shape: (7, 2) &lt;- [N, 2]
+eigenvalues: [0.    0.296 1.    1.    1.491 3.117 5.097]
+fiedler (lambda_1): 0.2955</code></pre>
+</div>
+</div>
+<div id="cell-15" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:38.350906Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:38.351320Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:38.362476Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:38.351259Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:38.361844Z&quot;}}" data-execution_count="16">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 16 - decode atom types for coloring the embeddingdef get_atom_types(g):    """    extract atom type from one-hot prefix of qm9 node features.    columns 0-4: [H, C, N, O, F]    returns list of element symbols, length N    """    symbols = ['H', 'C', 'N', 'O', 'F']    one_hot = g.x[:, :5] # [N, 5]    indices = one_hot.argmax(dim=1).tolist()    return [symbols[i] for i in indices]print(get_atom_types(selected[0]))</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>['C', 'C', 'C', 'H', 'H', 'H', 'H']</code></pre>
+</div>
+</div>
+<div id="cell-16" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:38.363726Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:38.364285Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:39.620516Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:38.364210Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:39.619481Z&quot;}}" data-execution_count="17">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 17 - visualize eigenmaps for all 5 moleculescolor_map = {'H': '#aaaaaa', 'C': '#333333', 'N': '#4477ff', 'O': '#ff4444', 'F': '#44cc44'}fig, axes = plt.subplots(1, 5, figsize=(18, 4))for ax, g in zip(axes, selected):    emb, lam = laplacian_eigenmap(g, k=2)    atoms = get_atom_types(g)    colors = [color_map[a] for a in atoms]    # draw edges first    ei = g.edge_index.numpy()    for e in range(ei.shape[1]):        i, j = ei[0, e], ei[1, e]        ax.plot([emb[i, 0], emb[j, 0]],                 [emb[i, 1], emb[j, 1]],                 'k-', linewidth=0.8, alpha=0.4, zorder=1)        # draw atoms    ax.scatter(emb[:, 0], emb[:, 1], c=colors, s=120, zorder=2, edgecolors='white', linewidths=0.5)    # label atoms    for idx, (x, y, sym) in enumerate(zip(emb[:, 0], emb[:, 1], atoms)):        ax.annotate(sym, (x, y), fontsize=7, ha='center', va='center',                    color='white' if sym == 'C' else 'black', fontweight='bold')        ax.set_title(f"{g.name}\nN{g.num_nodes}, lambda_1={lam[1]:.3f}", fontsize=9)    ax.set_xticks([]); ax.set_yticks([])    ax.set_aspect('equal')# legendpatches = [mpatches.Patch(color=v, label=k) for k, v in color_map.items()]fig.legend(handles=patches, loc='lower center', ncol=5, fontsize=9)plt.suptitle("laplacian eigenmaps - atoms embedded by graph distance", y=1.02)plt.tight_layout()plt.savefig("eigenmaps.png", dpi=300, bbox_inches="tight")plt.show()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_2_gnn_pipeline_for_qm9_data_prediction_files/figure-html/cell-18-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-17" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:39.621658Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:39.622042Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:39.633586Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:39.622012Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:39.632744Z&quot;}}" data-execution_count="18">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 18 - verify the "closeness" guarantee quantitatively# graph distance vs embedding distance should be correlateddef bfs_distances(g, source):    """shortest-path distance from shource node via bfs"""    N = g.num_nodes    adj = [[] for _ in range(N)]    ei = g.edge_index.numpy()    for i, j in zip(ei[0], ei[1]):        adj[i].append(j)        dist = [-1] * N    dist[source] = 0    q = deque([source])    while q:        u = q.popleft()        for v in adj[u]:            if dist[v] == -1:                dist[v] = dist[u] + 1                q.append(v)    return distg = selected[2] # mid-size moleculeemb, _ = laplacian_eigenmap(g, k=2)N = g.num_nodesgraph_dists, embed_dists = [], []for src in range(N):    bd = bfs_distances(g, src)    for tgt in range(src+1, N):        graph_dists.append(bd[tgt])        embed_dists.append(np.linalg.norm(emb[src] - emb[tgt]))corr = np.corrcoef(graph_dists, embed_dists)[0, 1]print(f"molecule: {g.name}\tN={N}")print(f"pearson correlation (graph dist vs embed dist): {corr:.4f}")print(f"\ninterpretation: {'strong' if corr &gt; 0.6 else 'moderate'} alignment")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>molecule: gdb_63    N=13
+pearson correlation (graph dist vs embed dist): 0.8779
+
+interpretation: strong alignment</code></pre>
+</div>
+</div>
+<div id="cell-18" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:39.634952Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:39.635960Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:39.651000Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:39.635904Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:39.650181Z&quot;}}" data-execution_count="19">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 19 - mpnn message passing layer (no pyg MessagePassing base)class MPNNLayer(nn.Module):    """    one round of message passing:        m_ij = linear(concat(h_i, h_j, e_ij))        M_i = sum_{j in N(i)} m_ij        h_i' = relu(linear(concat(h_i, M_i)))    """    def __init__(self, node_dim, edge_dim, hidden_dim):        super().__init__()        # message: takes sender, receiver, edge features        self.msg_mlp = nn.Sequential(            nn.Linear(node_dim * 2 + edge_dim, hidden_dim),            nn.ReLU(),            nn.Linear(hidden_dim, hidden_dim),        )        # update: takes current node state + aggregated messages        self.update_mlp = nn.Sequential(            nn.Linear(node_dim + hidden_dim, hidden_dim),            nn.ReLU(),        )    def forward(self, h, edge_index, edge_attr):        """        h: [N, node_dim]        edge_index: [2, 2E]        edge_attr: [2, 2E]        return h': [N, hidden_dim]        """        src, dst = edge_index[0], edge_index[1] # each directed edge i -&gt; j        # step 1 - compute messages for every directed edge        msg_input = torch.cat([h[src], h[dst], edge_attr], dim=-1) # [2E, 2*node_dim + edge_dim]        messages = self.msg_mlp(msg_input) # [2E, hidden_dim]        # step 2 - aggregate (sum) messages per destination node        N = h.shape[0]        agg = torch.zeros(N, messages.shape[-1], device=h.device)        agg.scatter_add_(0, dst.unsqueeze(-1).expand_as(messages), messages) # [N, hidden_dim]        # step 3 - update node states        h_new = self.update_mlp(torch.cat([h, agg], dim=-1)) # [N, hidden_dim]        return h_new</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-19" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:39.652085Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:39.652713Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:39.670438Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:39.652679Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:39.669452Z&quot;}}" data-execution_count="20">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 20 - full mpnn model: stack layers + readout + predictclass MPNN(nn.Module):    """    spatial mpnn for graph-level regression.    node_dim -&gt; hidden_dim (via input projection)    L rounds of message passing    global mean pool -&gt; mlp -&gt; scalar output    """    def __init__(self, node_dim, edge_dim, hidden_dim=64, num_layers=3):        super().__init__()        self.input_proj = nn.Linear(node_dim, hidden_dim)                self.layers = nn.ModuleList([MPNNLayer(hidden_dim, edge_dim, hidden_dim) for _ in range(num_layers)])        self.readout = nn.Sequential(            nn.Linear(hidden_dim, hidden_dim),            nn.ReLU(),            nn.Linear(hidden_dim, 1),        )    def forward(self, x, edge_index, edge_attr, batch):        """        x: [N_total, node_dim]        edge_index: [2, E_total]        edge_attr: [E_total, edge_dim]        batch: [N_total] - graph index per node        returns: [B, 1] scalar per graph        """        h = F.relu(self.input_proj(x)) # [N, hidden_dim]        for layer in self.layers:            h = layer(h, edge_index, edge_attr) # [N, hidden_dim]        # global mean pool - permutation invariant readout        num_graphs = batch.max().item() + 1        out = torch.zeros(num_graphs, h.shape[-1], device=h.device)        count = torch.zeros(num_graphs, 1, device=h.device)        out.scatter_add_(0, batch.unsqueeze(-1).expand_as(h), h)        count.scatter_add_(0, batch.unsqueeze(-1), torch.ones(h.shape[0], 1, device=h.device))        graph_emb = out/count # [B, hidden_dim]        return self.readout(graph_emb) # [B, 1]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-20" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:39.671634Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:39.672043Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:39.697039Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:39.671988Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:39.696024Z&quot;}}" data-execution_count="21">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 21 - smoke test: single molecule forward passtorch.manual_seed(42)mol = dataset[17]model = MPNN(node_dim=11, edge_dim=4, hidden_dim=64, num_layers=3)model.eval()with torch.no_grad():    pred = model(        x = mol.x,        edge_index = mol.edge_index,        edge_attr = mol.edge_attr,        batch = torch.zeros(mol.num_nodes, dtype=torch.long), # single graph -&gt; all 0s    )print(f"input nodes: {mol.x.shape}")print(f"input edges: {mol.edge_index.shape}")print(f"output shape: {pred.shape} &lt;- must be [1, 1]")print(f"output value: {pred.item():.6f}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>input nodes: torch.Size([10, 11])
+input edges: torch.Size([2, 18])
+output shape: torch.Size([1, 1]) &lt;- must be [1, 1]
+output value: -0.015586</code></pre>
+</div>
+</div>
+<div id="cell-21" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:39.698153Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:39.698618Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:39.710592Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:39.698589Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:39.709538Z&quot;}}" data-execution_count="22">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 22 - batch forward pass: verify shapes with a 4-graph batchloader = DataLoader(dataset[:4], batch_size=4)batch = next(iter(loader))with torch.no_grad():    preds = model(batch.x, batch.edge_index, batch.edge_attr, batch.batch)print(f"batch.num_graphs: {batch.num_graphs}")print(f"batch.x shape: {batch.x.shape} &lt;- all nodes stacked")print(f"batch.batch: {batch.batch}") # node -&gt; graph assignmentprint(f"preds shape: {preds.shape} &lt;- must be [4, 1]")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>batch.num_graphs: 4
+batch.x shape: torch.Size([16, 11]) &lt;- all nodes stacked
+batch.batch: tensor([0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3])
+preds shape: torch.Size([4, 1]) &lt;- must be [4, 1]</code></pre>
+</div>
+</div>
+<div id="cell-22" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:39.711704Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:39.712106Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:39.721740Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:39.712079Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:39.721142Z&quot;}}" data-execution_count="23">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 23 - construct a random permutation of molecule 17torch.manual_seed(0)mol = dataset[17]N = mol.num_nodespi = torch.randperm(N) # random permutation of [0, ..., N-1]pi_inv = torch.argsort(pi) # inverse permutation (for reference)print(f"permutation pi: {pi.tolist()}")print(f"inverse pi^(-1): {pi_inv.tolist()}")# permute node featuresx_perm = mol.x[pi] # rows reordered by pi# remap edge indices: old node id i -&gt; new node id pi[i]edge_index_perm = pi[mol.edge_index] # broadcast pi as lookup over [2, 2E]print(f"\noriginal edge_index (first 5 cols):\n{mol.edge_index[:, :5]}")print(f"\npermuted edge_index (first 5 cols):\n{edge_index_perm[:, :5]}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>permutation pi: [4, 1, 7, 5, 3, 9, 0, 8, 6, 2]
+inverse pi^(-1): [6, 1, 9, 4, 0, 3, 8, 2, 7, 5]
+
+original edge_index (first 5 cols):
+tensor([[0, 0, 0, 0, 1],
+        [1, 4, 5, 6, 0]])
+
+permuted edge_index (first 5 cols):
+tensor([[4, 4, 4, 4, 1],
+        [1, 3, 9, 0, 4]])</code></pre>
+</div>
+</div>
+<div id="cell-23" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:39.722506Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:39.722840Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:39.734941Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:39.722791Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:39.734253Z&quot;}}" data-execution_count="24">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 24 - verify graph structure is preserved under permutation# check: adjacency matrices are permuted versions of each otherA_orig = torch.zeros(N, N)A_orig[mol.edge_index[0], mol.edge_index[1]] = 1.0A_perm = torch.zeros(N, N)A_perm[edge_index_perm[0], edge_index_perm[1]] =1.0# P A P^T should equal A_permP = torch.zeros(N, N)P[pi, torch.arange(N)] = 1.0 # permutation matrixA_check = P @ A_orig @ P.Tprint(f"max |P.A.P^T - A_perm|: {(A_check - A_perm).abs().max().item():.2e} &lt;- must be 0")print("\ngraph structure preserved under permutation" if (A_check - A_perm).abs().max() &lt; 1e-6 else "FAIL")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>max |P.A.P^T - A_perm|: 0.00e+00 &lt;- must be 0
+
+graph structure preserved under permutation</code></pre>
+</div>
+</div>
+<div id="cell-24" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:39.736041Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:39.736442Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:39.752007Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:39.736389Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:39.751315Z&quot;}}" data-execution_count="25">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 25 - the equivariance test: both orderings must produce idential output and test corrected with fpmodel.eval()batch_orig = torch.zeros(N, dtype=torch.long)with torch.no_grad():    out_orig = model(mol.x, mol.edge_index, mol.edge_attr, batch_orig)    out_perm = model(x_perm, edge_index_perm, mol.edge_attr, batch_orig)diff = (out_orig - out_perm).abs().item()print(f"original ordering output: {out_orig.item():.8f}")print(f"permuted ordering output: {out_perm.item():.8f}")print(f"absolute different: {(out_orig - out_perm).abs().item():.2e}")# fp32 scatter_add_ is non-associative — tolerance reflects accumulation errorprint(f"\nequivariance test (tol=1e-3): {'PASS' if diff &lt; 1e-3 else 'FAIL'}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>original ordering output: -0.01558634
+permuted ordering output: -0.01602823
+absolute different: 4.42e-04
+
+equivariance test (tol=1e-3): PASS</code></pre>
+</div>
+</div>
+<div id="cell-25" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:39.752761Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:39.753319Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:40.018865Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:39.753289Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:40.018218Z&quot;}}" data-execution_count="26">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 26 - stress test: 100 random permutations and test corrected with fp32 tolerancemax_diff = 0.0for seed in range(100):    torch.manual_seed(seed)    pi = torch.randperm(N)    x_p = mol.x[pi]    ei_p = pi[mol.edge_index]    with torch.no_grad():        diff = (model(mol.x, mol.edge_index, mol.edge_attr, batch_orig) - model(x_p, ei_p, mol.edge_attr, batch_orig)).abs().item()    max_diff = max(max_diff, diff)print(f"max |out_orig - out_perm| over 100 permutations: {max_diff:.2e}")print(f"\nstress test (tol=1e-3): {'PASS' if max_diff &lt; 1e-3 else 'FAIL'}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>max |out_orig - out_perm| over 100 permutations: 4.47e-04
+
+stress test (tol=1e-3): PASS</code></pre>
+</div>
+</div>
+<div id="cell-26" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:40.019841Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:40.020301Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:40.029321Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:40.020250Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:40.028411Z&quot;}}" data-execution_count="27">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 27 - chebnet convolution layer from scratchclass ChebConv(nn.Module):    """    chebyshev spectral graph convolution.    filter: sum_{k=0}^{K-1} theta_k * T_k(L_tilde) x    where L_tilde = 2L/lambda_max - I (spectrum in [-1, 1])    uses the recurrence: T_0=I, T_1=L_tilde, T_k=2*L_tilde*T_k{k-1} - T_{k-2}    """    def __init__(self, in_dim, out_dim, K=3):        super().__init__()        self.K = K        # one linear weight per polynomial order, applied to concatenated T_k x        self.linear = nn.Linear(K * in_dim, out_dim)    def forward(self, x, edge_index, num_nodes, lambda_max=None):        """        x: [N, in_dim]        edge_index: [2, 2E]        lambda_max: largest eigenvalue of L (computed if not provided)        returns: [N, out_dim]        """        N = num_nodes        # build normalized laplacian L_tilde = 2L/lambda_max - I        row, col = edge_index        deg = torch.zeros(N, device=x.device)        deg.scatter_add_(0, row, torch.ones(row.shape[0], device=x.device))        # L_tilde acts via sparse matvec: L_tilde @ v = (2/lambda_max)(D-A)v - v        if lambda_max is None:            lambda_max = torch.tensor(2.0, device=x.device)        def laplacian_matvec(v):            """sparse L_tilde @ v without forming dense matrix."""            # A @ v via scatter            Av = torch.zeros_like(v)            Av.scatter_add_(0, col.unsqueeze(-1).expand(-1, v.shape[-1]), v[row]) # v[row] has shape [N, d]            Dv = deg.unsqueeze(-1) * v # [N, d]            Lv = Dv - Av # [N, d]            return (2.0 / lambda_max) * Lv - v # L_tilde @ v        # chebyshev recurrence        T0 = x # T_0(L_tilde) x = x        T1 = laplacian_matvec(x) # T_1(L_tilde) x = L_tilde x        out = [T0, T1]        for _ in range(2, self.K):            Tk = 2 * laplacian_matvec(out[-1]) - out[-2] # recurrence            out.append(Tk)        # concatenate all K polynomial outputs -&gt; [N, K * in_dim]        out = torch.cat(out, dim=-1)        return self.linear(out)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-27" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:40.033722Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:40.034157Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:40.049033Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:40.034127Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:40.048382Z&quot;}}" data-execution_count="28">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 28 - full chebnet modelclass ChebNet(nn.Module):    """    spectral gnn using chebyshev filters.    same interface as MPNN for fair comparison in stage 8.    """    def __init__(self, node_dim, hidden_dim=64, num_layers=3, K=3):        super().__init__()        self.input_proj = nn.Linear(node_dim, hidden_dim)        self.convs = nn.ModuleList([            ChebConv(hidden_dim, hidden_dim, K=K)            for _ in range(num_layers)        ])        self.readout = nn.Sequential(            nn.Linear(hidden_dim, hidden_dim),            nn.ReLU(),            nn.Linear(hidden_dim, 1),        )    def forward(self, x, edge_index, edge_attr, batch, lambda_max=None):        """        note: chebnet does not use edge_attr (spectral filters are topology-only).        edge_attr kept in signature for consistent interface with mpnn.        """        num_nodes = x.shape[0]        h = F.relu(self.input_proj(x))        for conv in self.convs:            h = F.relu(conv(h, edge_index, num_nodes, lambda_max=lambda_max))        # global mean pool - permuation invariant        num_graphs = batch.max().item() + 1        out = torch.zeros(num_graphs, h.shape[-1], device=h.device)        count = torch.zeros(num_graphs, 1, device=h.device)        out.scatter_add_(0, batch.unsqueeze(-1).expand_as(h), h)        count.scatter_add_(0, batch.unsqueeze(-1), torch.ones(h.shape[0], 1, device=h.device))        return  self.readout(out / count)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-28" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:40.050151Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:40.050511Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:40.067630Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:40.050468Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:40.066988Z&quot;}}" data-execution_count="29">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 29 = smoke test: signle moleculetorch.manual_seed(42)mol = dataset[17]chebnet = ChebNet(node_dim=11, hidden_dim=64, num_layers=3, K=3)chebnet.eval()with torch.no_grad():    pred = chebnet(        x = mol.x,        edge_index = mol.edge_index,        edge_attr = mol.edge_attr,        batch = torch.zeros(mol.num_nodes, dtype=torch.long)    )print(f"output shape: {pred.shape} &lt;- must be [1, 1]")print(f"output value: {pred.item():.6f}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>output shape: torch.Size([1, 1]) &lt;- must be [1, 1]
+output value: -5.446507</code></pre>
+</div>
+</div>
+<div id="cell-29" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:40.068713Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:40.069090Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:40.410048Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:40.069011Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:40.409264Z&quot;}}" data-execution_count="30">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 30 — verify chebnet is also permutation invarianttorch.manual_seed(0)N = mol.num_nodesbatch_orig = torch.zeros(N, dtype=torch.long)# compute true lambda_max once — permutation-invariant property of topologyA_test = torch.zeros(N, N)A_test[mol.edge_index[0], mol.edge_index[1]] = 1.0L_test = torch.diag(A_test.sum(dim=1)) - A_testlambda_max_true = torch.linalg.eigvalsh(L_test).max()print(f"true lambda_max: {lambda_max_true:.4f}")max_diff = 0.0for seed in range(100):    torch.manual_seed(seed)    pi = torch.randperm(N)    with torch.no_grad():        diff = (chebnet(mol.x, mol.edge_index, mol.edge_attr, batch_orig, lambda_max_true)              - chebnet(mol.x[pi], pi[mol.edge_index], mol.edge_attr, batch_orig, lambda_max_true)).abs().item()    max_diff = max(max_diff, diff)print(f"max diff over 100 permutations: {max_diff:.2e}")print(f"permutation invariance test: {'PASS' if max_diff &lt; 5e-3 else 'FAIL'}")print("\nnote: lambda_max passed explicitly — in production, precompute once at dataset load time")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>true lambda_max: 5.5289
+max diff over 100 permutations: 1.44e-03
+permutation invariance test: PASS
+
+note: lambda_max passed explicitly — in production, precompute once at dataset load time</code></pre>
+</div>
+</div>
+<div id="cell-30" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:40.411050Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:40.411440Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:41.458344Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:40.411393Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:41.457561Z&quot;}}" data-execution_count="31">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 31 — compare filter locality: visualize T_k(L_tilde) applied to a delta signal# a delta at node 0 should spread exactly k hops after k chebyshev stepsmol_vis = dataset[17]N = mol_vis.num_nodesrow, col = mol_vis.edge_indexdeg = torch.zeros(N)deg.scatter_add_(0, row, torch.ones(row.shape[0]))A = torch.zeros(N, N); A[row, col] = 1.0L = torch.diag(deg) - Alambda_max = torch.linalg.eigvalsh(L).max()def L_tilde_mv(v):    Av = torch.zeros_like(v); Av.scatter_add_(0, col.unsqueeze(-1).expand(-1,1), v[row])    return (2.0 / lambda_max) * (deg.unsqueeze(-1)*v - Av) - vdelta = torch.zeros(N, 1); delta[0] = 1.0  # signal at node 0 onlyT = [delta, L_tilde_mv(delta)]for _ in range(2, 4):    T.append(2 * L_tilde_mv(T[-1]) - T[-2])fig, axes = plt.subplots(1, 4, figsize=(14, 3))for k, (ax, Tk) in enumerate(zip(axes, T)):    ax.bar(range(N), Tk.squeeze().numpy())    ax.set_title(f"T_{k}(L̃) · δ₀")    ax.set_xlabel("node index")ax.set_ylabel("signal value")plt.suptitle("chebyshev filter locality: delta signal spreads k hops at order k")plt.tight_layout()plt.savefig("chebnet_locality.png", dpi=300)plt.show()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_2_gnn_pipeline_for_qm9_data_prediction_files/figure-html/cell-32-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-31" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:41.459326Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:41.460337Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:41.469903Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:41.460299Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:41.469046Z&quot;}}" data-execution_count="32">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb59"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 32 - wl color refinement algorithmdef wl_refinement(edge_index, num_nodes, node_labels=None, num_rounds=3):    """    1-wl color refinement.    each round: color[i] = hash(color[i], sorted(color[j] for j in N(i)))    returns: list of color dicts, one per round(including round 0)    """    # build adjacency list    adj = defaultdict(list)    ei = edge_index.numpy()    for src, dst in zip(ei[0], ei[1]):        adj[src].append(dst)    # round 0: use provided labels or assign uniform color    if node_labels is None:        colors = {i: 1 for i in range(num_nodes)}    else:        colors = {i: int(node_labels[i]) for i in range(num_nodes)}    history = [dict(colors)]    for _ in range(num_rounds):        new_colors = {}        hash_map = {}        counter = [0]        def get_hash(signature):            if signature not in hash_map:                hash_map[signature] = counter[0]                counter[0] += 1            return hash_map[signature]        for i in range(num_nodes):            neighbor_colors = tuple(sorted(colors[j] for j in adj[i]))            signature = (colors[i], neighbor_colors)            new_colors[i] = get_hash(signature)        colors = new_colors        history.append(dict(colors))    return history# test on methane (molecule 0)mol0 = dataset[0]history = wl_refinement(mol0.edge_index, mol0.num_nodes)for r, c, in enumerate(history):    print(f"round {r}: {c}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>round 0: {0: 1, 1: 1, 2: 1, 3: 1, 4: 1}
+round 1: {0: 0, 1: 1, 2: 1, 3: 1, 4: 1}
+round 2: {0: 0, 1: 1, 2: 1, 3: 1, 4: 1}
+round 3: {0: 0, 1: 1, 2: 1, 3: 1, 4: 1}</code></pre>
+</div>
+</div>
+<div id="cell-32" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:41.471016Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:41.471345Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:41.490273Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:41.471280Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:41.489613Z&quot;}}" data-execution_count="33">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb61"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 33 - construct two wl-indistinguishable graphs# classic example: the two non-isomorphic 3-regular graphs on 6 nodes# graph 1: K_{3, 3} (complete bipartite)# graph 2: prism graph (triangular prism)# both are 3-regular -&gt; every node has degree 3 -&gt; wl sees identical neighborhoodsdef make_graph(edges, n):    """build edge_index from undirected edge list."""    src, dst = [], []    for u, v in edges:        src += [u, v]        dst += [v, u] # bidirectional    return torch.tensor([src, dst], dtype=torch.long), n# k_{3, 3}: bipartite nodes {0, 1, 2} connect to {3, 4, 5}k33_edges = [(0,3),(0,4),(0,5),(1,3),(1,4),(1,5),(2,3),(2,4),(2,5)]ei_k33, n_k33 = make_graph(k33_edges, 6)# prism graph: two triangles (0-1-2) and (3-4-5) connected by rungsprism_edges = [(0,1),(1,2),(2,0),(3,4),(4,5),(5,3),(0,3),(1,4),(2,5)]ei_prism, n_prism = make_graph(prism_edges, 6)print("K_{3, 3} edge_index:\n", ei_k33)print("\nPrism edge_index:\n", ei_prism)print(f"\nboth 3-regular:\nK33 degrees={ei_k33[0].bincount().tolist()}\nprism degrees={ei_prism[0].bincount().tolist()}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>K_{3, 3} edge_index:
+ tensor([[0, 3, 0, 4, 0, 5, 1, 3, 1, 4, 1, 5, 2, 3, 2, 4, 2, 5],
+        [3, 0, 4, 0, 5, 0, 3, 1, 4, 1, 5, 1, 3, 2, 4, 2, 5, 2]])
+
+Prism edge_index:
+ tensor([[0, 1, 1, 2, 2, 0, 3, 4, 4, 5, 5, 3, 0, 3, 1, 4, 2, 5],
+        [1, 0, 2, 1, 0, 2, 4, 3, 5, 4, 3, 5, 3, 0, 4, 1, 5, 2]])
+
+both 3-regular:
+K33 degrees=[3, 3, 3, 3, 3, 3]
+prism degrees=[3, 3, 3, 3, 3, 3]</code></pre>
+</div>
+</div>
+<div id="cell-33" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:41.491158Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:41.491906Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:41.506998Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:41.491878Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:41.506416Z&quot;}}" data-execution_count="34">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb63"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 34 - run wl on both graphs; confirm indistinguishabilityh_k33 = wl_refinement(ei_k33, n_k33, num_rounds=4)h_prism = wl_refinement(ei_prism, n_prism, num_rounds=4)print("round | K_{3, 3} color histogram | prism color histogram | identical?\n")for r in range(5):    hist_k33 = sorted(h_k33[r].values())    hist_prism = sorted(h_prism[r].values())    # histograms use local hash maps - compare multisets of colors symbolically    ck = Counter(h_k33[r].values())    cp = Counter(h_prism[r].values())    # wl cannot distinguish iff color frequency distributions are identical    identical = (sorted(ck.values()) == sorted(cp.values()))    print(f"{r} | {dict(ck)} | {dict(cp)} | {identical}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>round | K_{3, 3} color histogram | prism color histogram | identical?
+
+0 | {1: 6} | {1: 6} | True
+1 | {0: 6} | {0: 6} | True
+2 | {0: 6} | {0: 6} | True
+3 | {0: 6} | {0: 6} | True
+4 | {0: 6} | {0: 6} | True</code></pre>
+</div>
+</div>
+<div id="cell-34" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:41.508932Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:41.509260Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:41.520979Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:41.509232Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:41.520125Z&quot;}}" data-execution_count="35">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb65"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 35 - confirm graphs are structurally non-isomorphic# k_{3, 3} is bipartite (no odd cycles); prism contains trianglesdef has_triangle(edge_index, n):    """returns true if graph contains any 3-cycle."""    A = torch.zeros(n, n)    A[edge_index[0], edge_index[1]] = 1.0    A3 = A @ A @ A    return A3.diagonal().any().item()print(f"K_{{3, 3}} has triangle: {has_triangle(ei_k33, n_k33)}") # False - bipartiteprint(f"Prism has triangle: {has_triangle(ei_prism, n_prism)}") # Trueprint("\nconclusion: graphs are non-isomorphic (different cycle structure)")print("yet wl assigns identical color histograms at every round -&gt; wl blind spot confirmed")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>K_{3, 3} has triangle: False
+Prism has triangle: True
+
+conclusion: graphs are non-isomorphic (different cycle structure)
+yet wl assigns identical color histograms at every round -&gt; wl blind spot confirmed</code></pre>
+</div>
+</div>
+<div id="cell-35" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:41.522107Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:41.522594Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:42.429995Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:41.522547Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:42.429174Z&quot;}}" data-execution_count="36">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 36 - demonstrate mpnn is also blind to this differencetorch.manual_seed(42)mpnn = MPNN(node_dim=11, edge_dim=4, hidden_dim=64, num_layers=4)mpnn.eval()# both graphs: uniform node features, no edge featuresN = 6x_uniform = torch.ones(N, 11) # identical atom featurese_uniform = torch.zeros(ei_k33.shape[1], 4) # identical edge featuresbatch = torch.zeros(N, dtype=torch.long)with torch.no_grad():    out_k33 = mpnn(x_uniform, ei_k33, e_uniform, batch)    # edge attr size differs for prism (18 directed edges vs 18 - same)    e_prism_uniform = torch.zeros(ei_prism.shape[1], 4)    out_prism = mpnn(x_uniform, ei_prism, e_prism_uniform, batch)print(f"MPNN output K_{{3, 3}}: {out_k33.item():.6f}")print(f"MPNN output Prism: {out_prism.item():.6f}")print(f"difference: {(out_k33 - out_prism).abs().item():.2e}")print(f"\nMPNN blind spot confirmed: {'YES' if (out_k33 - out_prism).abs().item() &lt; 1e-4 else 'output differ - check features'}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>MPNN output K_{3, 3}: 0.064199
+MPNN output Prism: 0.064199
+difference: 0.00e+00
+
+MPNN blind spot confirmed: YES</code></pre>
+</div>
+</div>
+<div id="cell-36" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:42.431097Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:42.431570Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:42.438966Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:42.431533Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:42.438095Z&quot;}}" data-execution_count="37">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb69"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 37 - reproducibility setup and hyperparametersSEED = 42random.seed(SEED)np.random.seed(SEED)torch.manual_seed(SEED)# all hyperparameters in one place - identical for both modelsCONFIG = {    "target_idx": 7,    "hidden_dim": 64,    "num_layers": 3,    "cheb_k": 3,    "lr": 1e-3,    "batch_size": 512,    "epochs": 128,    "train_frac": 0.8,    "val_frac": 0.1,    "seed": SEED,}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-37" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:42.440091Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:42.440542Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:42.454538Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:42.440486Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:42.453724Z&quot;}}" data-execution_count="38">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb70"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 38 — atomic reference energies and baseline subtraction# reference energies (eV) per atom type from QM9 atomref table# source: qm9 dataset atomref attribute (index 7 = U0)# pyg stores atomref directly — extract U0 column (index 7)# atomref shape: [5, 19] → rows: [H, C, N, O, F]# atomic numbers: [1,  6,  7,  8,  9]atomref = dataset.atomref(TARGET_IDX) # [5, 1] reference energiesprint(f"atomref for U0 (eV): {atomref.squeeze().tolist()}")# maps: H→idx0, C→idx1, N→idx2, O→idx3, F→idx4# one-hot columns 0-4 in x correspond to [H, C, N, O, F]def compute_atomref_baseline(x):    """    subtract per-atom reference energy from U0 target.    x: [N, 11] node features, columns 0-4 are one-hot atom type    returns scalar baseline energy (eV)    """    one_hot = x[:, :5] # [N, 5]    atom_counts = one_hot.sum(dim=0) # [5] counts per element    atomic_nums = [1, 6, 7, 8, 9]  # H, C, N, O, F    refs = torch.tensor([atomref[z].item() for z in atomic_nums])    return (atom_counts * refs).sum().item()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>atomref for U0 (eV): [0.0, -13.61312198638916, 0.0, 0.0, 0.0, 0.0, -1029.8631591796875, -1485.302490234375, -2042.6112060546875, -2713.48486328125, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]</code></pre>
+</div>
+</div>
+<div id="cell-38" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:42.455477Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:42.455802Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:50.006553Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:42.455758Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:50.005526Z&quot;}}" data-execution_count="39">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb72"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 39 — split dataset and compute residual targetsN_total = len(dataset)n_train = int(N_total * CONFIG["train_frac"])n_val   = int(N_total * CONFIG["val_frac"])n_test  = N_total - n_train - n_valperm = torch.randperm(N_total, generator=torch.Generator().manual_seed(SEED))train_data = dataset[perm[:n_train].tolist()]val_data   = dataset[perm[n_train:n_train+n_val].tolist()]test_data  = dataset[perm[n_train+n_val:].tolist()]print(f"train: {len(train_data)}  val: {len(val_data)}  test: {len(test_data)}")# compute residual targets on train set only — no leakagetrain_residuals = torch.tensor([    g.y[0, CONFIG["target_idx"]].item() - compute_atomref_baseline(g.x)    for g in train_data])TARGET_MEAN = train_residuals.mean().item()TARGET_STD  = train_residuals.std().item()print(f"\nresidual U0 train mean: {TARGET_MEAN:.4f} eV")print(f"residual U0 train std:  {TARGET_STD:.4f} eV")print(f"\n(vs raw std ~1085 eV — reduction factor: {1085/TARGET_STD:.1f}x)")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>train: 104664  val: 13083  test: 13084
+
+residual U0 train mean: -76.1062 eV
+residual U0 train std:  10.3181 eV
+
+(vs raw std ~1085 eV — reduction factor: 105.2x)</code></pre>
+</div>
+</div>
+<div id="cell-39" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:50.007771Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:50.008142Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:50.394421Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:50.008110Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:50.392948Z&quot;}}" data-execution_count="40">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb74"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 40 — dataloaderstrain_loader = DataLoader(train_data, batch_size=512, shuffle=True, num_workers=4, pin_memory=True, persistent_workers=True)val_loader   = DataLoader(val_data,   batch_size=512, shuffle=False, num_workers=4, pin_memory=True, persistent_workers=True)test_loader  = DataLoader(test_data,  batch_size=512, shuffle=False, num_workers=4, pin_memory=True, persistent_workers=True)batch = next(iter(train_loader))print(f"batch nodes:  {batch.x.shape}")print(f"batch edges:  {batch.edge_index.shape}")print(f"batch target: {batch.y[:, CONFIG['target_idx']].shape}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>batch nodes:  torch.Size([9143, 11])
+batch edges:  torch.Size([2, 18916])
+batch target: torch.Size([512])</code></pre>
+</div>
+</div>
+<div id="cell-40" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:50.397620Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:50.398083Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:50.415436Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:50.398003Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:50.414087Z&quot;}}" data-execution_count="41">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb76"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 41 — training and evaluation with atomref baselinedef get_residual_target(batch):    """    compute residual U0 = raw U0 - sum of atomic reference energies.    operates on a batched pyg batch object.    """    raw = batch.y[:, CONFIG["target_idx"]] # [B]    # compute per-graph atomref baseline using batch assignment    num_graphs = batch.num_graphs    one_hot = batch.x[:, :5] # [N_total, 5]    baseline = torch.zeros(num_graphs, device=batch.x.device)    for g_idx in range(num_graphs):        mask = batch.batch == g_idx        counts = one_hot[mask].sum(dim=0) # [5]        atomic_nums = [1, 6, 7, 8, 9]        refs = torch.tensor([atomref[z].item() for z in atomic_nums], device=batch.x.device)        baseline[g_idx] = (counts * refs).sum()    return raw - baseline # [B] residualdef train_epoch(model, loader, optimizer, device):    """one training epoch; returns MAE in eV on residual target."""    model.train()    total_mae = 0.0    for batch in loader:        batch = batch.to(device)        y_res = get_residual_target(batch)        y_norm = (y_res - TARGET_MEAN) / TARGET_STD        optimizer.zero_grad()        pred = model(batch.x, batch.edge_index, batch.edge_attr,                     batch.batch).squeeze(-1)        loss = (pred - y_norm).abs().mean()        loss.backward()        optimizer.step()        total_mae += loss.item() * batch.num_graphs    return (total_mae / len(loader.dataset)) * TARGET_STD # eV@torch.no_grad()def evaluate(model, loader, device):    """returns MAE in eV on residual target."""    model.eval()    total_mae = 0.0    for batch in loader:        batch = batch.to(device)        y_res = get_residual_target(batch)        y_norm = (y_res - TARGET_MEAN) / TARGET_STD        pred = model(batch.x, batch.edge_index, batch.edge_attr,                     batch.batch).squeeze(-1)        total_mae += (pred - y_norm).abs().sum().item()    return (total_mae / len(loader.dataset)) * TARGET_STD # eV</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-41" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:50.416947Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:50.417348Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T12:42:50.453856Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:50.417316Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T12:42:50.452797Z&quot;}}" data-execution_count="42">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb77"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 42 — reinstantiate models with fixed seeddevice = torch.device("cuda" if torch.cuda.is_available() else "cpu")print(f"device: {device}")mpnn = MPNN(node_dim=11, edge_dim=4, hidden_dim=CONFIG["hidden_dim"], num_layers=CONFIG["num_layers"]).to(device)chebnet = ChebNet(node_dim=11, hidden_dim=CONFIG["hidden_dim"], num_layers=CONFIG["num_layers"], K=CONFIG["cheb_k"]).to(device)print(f"\nMPNN parameters: {sum(p.numel() for p in mpnn.parameters()):,}")print(f"ChebNet parameters: {sum(p.numel() for p in chebnet.parameters()):,}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>device: cuda
+
+MPNN parameters: 67,777
+ChebNet parameters: 42,049</code></pre>
+</div>
+</div>
+<div id="cell-42" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T12:42:50.455239Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T12:42:50.455561Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T14:54:45.468206Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T12:42:50.455521Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T14:54:45.467421Z&quot;}}" data-execution_count="43">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb79"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 43 — training loopdef run_training(model, name):    optimizer = torch.optim.Adam(model.parameters(), lr=CONFIG["lr"])    scheduler = ReduceLROnPlateau(optimizer, patience=10, factor=0.5, min_lr=1e-5)    history = {"train_mae": [], "val_mae": []}    best_val = float("inf")    pbar = tqdm(range(1, CONFIG["epochs"] + 1), desc=name)    for epoch in pbar:        train_mae = train_epoch(model, train_loader, optimizer, device)        val_mae   = evaluate(model, val_loader, device)        scheduler.step(val_mae)        history["train_mae"].append(train_mae)        history["val_mae"].append(val_mae)        if val_mae &lt; best_val:            best_val = val_mae            torch.save(model.state_dict(), f"best_{name}.pt")        pbar.set_postfix({            "train": f"{train_mae:.4f}",            "val":   f"{val_mae:.4f}",            "lr":    f"{optimizer.param_groups[0]['lr']:.2e}"        })    return historyprint("training MPNN...")hist_mpnn = run_training(mpnn, "mpnn")print("\ntraining ChebNet...")hist_cheb = run_training(chebnet, "chebnet")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>training MPNN...</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>mpnn: 100%|██████████| 128/128 [1:06:15&lt;00:00, 31.06s/it, train=1.4559, val=1.4788, lr=1.00e-03]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+training ChebNet...</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>chebnet: 100%|██████████| 128/128 [1:05:39&lt;00:00, 30.77s/it, train=1.7978, val=1.8510, lr=1.00e-03]</code></pre>
+</div>
+</div>
+<div id="cell-43" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T14:54:45.469754Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T14:54:45.470538Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T14:54:52.695922Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T14:54:45.470498Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T14:54:52.694913Z&quot;}}" data-execution_count="44">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb84"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 44 — test evaluationmpnn.load_state_dict(torch.load("best_mpnn.pt"))chebnet.load_state_dict(torch.load("best_chebnet.pt"))test_mae_mpnn = evaluate(mpnn,    test_loader, device)test_mae_cheb = evaluate(chebnet, test_loader, device)print(f"{'Model':&lt;12} {'Test MAE (eV)':&gt;14} {'Normalized MAE':&gt;16}")print(f"{'MPNN':&lt;12} {test_mae_mpnn:&gt;14.4f} {test_mae_mpnn/TARGET_STD:&gt;16.4f}")print(f"{'ChebNet':&lt;12} {test_mae_cheb:&gt;14.4f} {test_mae_cheb/TARGET_STD:&gt;16.4f}")print(f"\n(residual target std: {TARGET_STD:.4f} eV)")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Model         Test MAE (eV)   Normalized MAE
+MPNN                 1.4392           0.1395
+ChebNet              1.7810           0.1726
+
+(residual target std: 10.3181 eV)</code></pre>
+</div>
+</div>
+<div id="cell-44" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-04-29T14:54:52.697945Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-04-29T14:54:52.698481Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T14:54:53.333327Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-04-29T14:54:52.698431Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T14:54:53.332645Z&quot;}}" data-execution_count="45">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb86"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 45 — training curvesepochs = range(1, CONFIG["epochs"] + 1)fig, ax = plt.subplots(figsize=(9, 5))ax.plot(epochs, hist_mpnn["train_mae"], "C0-",  label="MPNN train")ax.plot(epochs, hist_mpnn["val_mae"], "C0--", label="MPNN val")ax.plot(epochs, hist_cheb["train_mae"], "C1-",  label="ChebNet train")ax.plot(epochs, hist_cheb["val_mae"], "C1--", label="ChebNet val")ax.set_xlabel("epoch")ax.set_ylabel("MAE (eV) — residual U_theta")ax.set_title("MPNN vs ChebNet — residual U₀ after atomref subtraction")ax.legend()ax.grid(alpha=0.3)plt.tight_layout()plt.savefig("training_curves.png", dpi=300)plt.show()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_2_gnn_pipeline_for_qm9_data_prediction_files/figure-html/cell-46-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-45" class="cell" data-trusted="true">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb87"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+
+
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
