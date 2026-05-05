@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>gnn_message_passing – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-edae656eed0715f9081d4b8b291f49ab.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#gnn-message-passing" id="toc-gnn-message-passing" class="nav-link active" data-scroll-target="#gnn-message-passing">GNN Message Passing</a>
+  <ul class="collapse">
+  <li><a href="#roadmap" id="toc-roadmap" class="nav-link" data-scroll-target="#roadmap">Roadmap</a></li>
+  <li><a href="#setup" id="toc-setup" class="nav-link" data-scroll-target="#setup">Setup</a></li>
+  <li><a href="#phase-0-foundations" id="toc-phase-0-foundations" class="nav-link" data-scroll-target="#phase-0-foundations">Phase 0: Foundations</a></li>
+  <li><a href="#phase-c_4-as-a-data-structure" id="toc-phase-c_4-as-a-data-structure" class="nav-link" data-scroll-target="#phase-c_4-as-a-data-structure">Phase : <span class="math inline">\(C_4\)</span> as a Data Structure</a></li>
+  <li><a href="#phase-2---message-computation" id="toc-phase-2---message-computation" class="nav-link" data-scroll-target="#phase-2---message-computation">Phase 2 - Message Computation</a></li>
+  <li><a href="#phase-3---aggregation" id="toc-phase-3---aggregation" class="nav-link" data-scroll-target="#phase-3---aggregation">Phase 3 - Aggregation</a></li>
+  <li><a href="#phase-4---node-update" id="toc-phase-4---node-update" class="nav-link" data-scroll-target="#phase-4---node-update">Phase 4 - Node Update</a></li>
+  <li><a href="#phase-5---full-data-flow" id="toc-phase-5---full-data-flow" class="nav-link" data-scroll-target="#phase-5---full-data-flow">Phase 5 - Full Data Flow</a></li>
+  <li><a href="#phase-6---input-projection" id="toc-phase-6---input-projection" class="nav-link" data-scroll-target="#phase-6---input-projection">Phase 6 - Input Projection</a></li>
+  <li><a href="#phase-7---stacked-message-passing-receptive-field" id="toc-phase-7---stacked-message-passing-receptive-field" class="nav-link" data-scroll-target="#phase-7---stacked-message-passing-receptive-field">Phase 7 - Stacked Message Passing &amp; Receptive Field</a></li>
+  <li><a href="#phase-8---global-mean-pooling" id="toc-phase-8---global-mean-pooling" class="nav-link" data-scroll-target="#phase-8---global-mean-pooling">Phase 8 - Global Mean Pooling</a></li>
+  <li><a href="#phase-9---readout-mlp" id="toc-phase-9---readout-mlp" class="nav-link" data-scroll-target="#phase-9---readout-mlp">Phase 9 - Readout MLP</a></li>
+  <li><a href="#phase-10---full-pipeline-on-c_4" id="toc-phase-10---full-pipeline-on-c_4" class="nav-link" data-scroll-target="#phase-10---full-pipeline-on-c_4">Phase 10 - Full Pipeline on <span class="math inline">\(C_4\)</span></a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<section id="gnn-message-passing" class="level1">
+<h1>GNN Message Passing</h1>
+<section id="roadmap" class="level2">
+<h2 class="anchored" data-anchor-id="roadmap">Roadmap</h2>
+<pre><code>Phase 0 — Foundations
+  └─ 0.1  Concatenation
+  └─ 0.2  Broadcasting
+  └─ 0.3  MLP mathematics
+  └─ 0.4  scatter_add_ (index-based accumulation)
+
+Phase 1 — The C₄ Graph as a Data Structure
+  └─ 1.1  Nodes, edges, and feature matrices
+  └─ 1.2  Edge index representation
+
+Phase 2 — Message Computation
+  └─ 2.1  What a message is and why it's formed this way
+  └─ 2.2  Walking through m₀₁ and m₀₃ by hand
+
+Phase 3 — Aggregation
+  └─ 3.1  scatter_add_ on C₄ step by step
+  └─ 3.2  Why identical neighbors collapse (WL preview)
+
+Phase 4 — Node Update
+  └─ 4.1  The update MLP on node 0 by hand
+
+Phase 5 — Full Data Flow
+  └─ 5.1  Tracing [N,F] → [2E,2F] → [2E,H] → [N,H] → [N,H]
+  └─ 5.2  Intuition: what did one round of message passing actually do?</code></pre>
+<hr>
+</section>
+<section id="setup" class="level2">
+<h2 class="anchored" data-anchor-id="setup">Setup</h2>
+<p><strong>Graph:</strong> <span class="math inline">\(C_4\)</span> — cycle on 4 nodes <span class="math inline">\(\{0,1,2,3\}\)</span>, edges <span class="math inline">\(\{(0,1),(1,2),(2,3),(3,0)\}\)</span></p>
+<p><strong>Node features:</strong> <span class="math inline">\(\mathbf{x} = [2, 1, 1, 1]^\top\)</span></p>
+<p>The number of nodes: <span class="math inline">\(N = 4\)</span>.</p>
+<p><span class="math inline">\(\mathbf{X} \in \mathbb{R}^{N \times F}\)</span> is the node feature matrix, where row <span class="math inline">\(i\)</span> is the feature vector of node <span class="math inline">\(i\)</span>.</p>
+<p>Scalar features, <span class="math inline">\(F=1\)</span>:</p>
+<p><span class="math display">\[\mathbf{X} = \begin{bmatrix} 2 \\\\ 1 \\\\ 1 \\\\ 1 \end{bmatrix} \in \mathbb{R}^{4 \times 1}\]</span></p>
+<hr>
+</section>
+<section id="phase-0-foundations" class="level2">
+<h2 class="anchored" data-anchor-id="phase-0-foundations">Phase 0: Foundations</h2>
+<hr>
+<section id="phase-0.1---concatenation" class="level3">
+<h3 class="anchored" data-anchor-id="phase-0.1---concatenation">Phase 0.1 - Concatenation</h3>
+<p>You know matrix multiplication joins matrices through inner dimensions. Concatenation is simpler — it’s just <strong>physically stacking</strong> values with no arithmetic.</p>
+<p>Given two vectors:</p>
+<p><span class="math display">\[\mathbf{a} = \begin{bmatrix} 2 \end{bmatrix}, \quad \mathbf{b} = \begin{bmatrix} 1 \end{bmatrix}\]</span></p>
+<p>Their concatenation is:</p>
+<p><span class="math display">\[[\mathbf{a} \| \mathbf{b}] = \begin{bmatrix} 2 \\\\ 1 \end{bmatrix}\]</span></p>
+<p>No multiplication, no addition. Just placing them side by side into one longer vector. The <span class="math inline">\(\|\)</span> symbol means exactly that — <strong>join</strong>.</p>
+<p>In our <span class="math inline">\(C_4\)</span> example, node 0 has feature <span class="math inline">\(h_0 = 2\)</span> and node 1 has feature <span class="math inline">\(h_1 = 1\)</span>. Before computing the message on edge <span class="math inline">\(0 \to 1\)</span>, we first form the input to the MLP:</p>
+<p><span class="math display">\[[h_0 \| h_1] = \begin{bmatrix} 2 \\\\ 1 \end{bmatrix} = \mathbf{m}_{01}\]</span></p>
+<p>This is a 2-dimensional vector assembled from two 1-dimensional scalars. If nodes had, say, 4 features each, the concatenation would produce an 8-dimensional vector. The dimension simply adds.</p>
+<p><span class="math display">\[\dim([\mathbf{a} \| \mathbf{b}]) = \dim(\mathbf{a}) + \dim(\mathbf{b})\]</span></p>
+<p>That’s the entirety of concatenation.</p>
+<hr>
+</section>
+<section id="phase-0.2---broadcasting" class="level3">
+<h3 class="anchored" data-anchor-id="phase-0.2---broadcasting">Phase 0.2 - Broadcasting</h3>
+<p>Broadcasting answers one question: <strong>what do you do when an operation requires two tensors of matching shape, but they don’t match?</strong></p>
+<p>Let’s build the need for it concretely first.</p>
+<p><strong>1. The situation</strong></p>
+<p>After computing messages on all edges, you have a <strong>message matrix</strong> — one row per edge:</p>
+<p><span class="math display">\[\text{messages} = \begin{bmatrix} m_{01} \\\\ m_{10} \\\\ m_{12} \\\\ m_{21} \\\\ m_{23} \\\\ m_{32} \\\\ m_{30} \\\\ m_{03} \end{bmatrix} \quad \text{shape: } [8 \times H]\]</span></p>
+<p>where <span class="math inline">\(H\)</span> is the hidden dimension (how many numbers represent each message). Say <span class="math inline">\(H = 4\)</span> for concreteness.</p>
+<p>Each message row needs to be sent to its <strong>destination node</strong>. The destination indices for these 8 edges are:</p>
+<p><span class="math display">\[\text{dst} = \begin{bmatrix} 1 \\\\ 0 \\\\ 2 \\\\ 1 \\\\ 3 \\\\ 2 \\\\ 0 \\\\ 3 \end{bmatrix} \quad \text{shape: } [8]\]</span></p>
+<p>This says: message 0 goes to node 1, message 1 goes to node 0, message 2 goes to node 2, and so on.</p>
+<p><br></p>
+<p><strong>2. The mismatch</strong></p>
+<p>To tell <code>scatter_add_</code> where each message goes, it needs <code>dst</code> and <code>messages</code> to have the <strong>same shape</strong> <span class="math inline">\([8 \times 4]\)</span>.</p>
+<p>But <code>dst</code> is shape <span class="math inline">\([8]\)</span> — just a list of 8 numbers. <code>messages</code> is <span class="math inline">\([8 \times 4]\)</span>.</p>
+<p>They don’t match. Broadcasting fixes this.</p>
+<p><br></p>
+<p><strong>3. What broadcasting does</strong></p>
+<p>It <strong>repeats</strong> the smaller tensor along the missing dimension until shapes align:</p>
+<p><span class="math display">\[\text{dst} = \begin{bmatrix} 1 \\\\ 0 \\\\ 2 \\\\ 1 \\\\ 3 \\\\ 2 \\\\ 0 \\\\ 3 \end{bmatrix} \xrightarrow{\text{expand to } [8 \times 4]} \begin{bmatrix} 1 &amp; 1 &amp; 1 &amp; 1 \\\\ 0 &amp; 0 &amp; 0 &amp; 0 \\\\ 2 &amp; 2 &amp; 2 &amp; 2 \\\\ 1 &amp; 1 &amp; 1 &amp; 1 \\\\ 3 &amp; 3 &amp; 3 &amp; 3 \\\\ 2 &amp; 2 &amp; 2 &amp; 2 \\\\ 0 &amp; 0 &amp; 0 &amp; 0 \\\\ 3 &amp; 3 &amp; 3 &amp; 3 \end{bmatrix}\]</span></p>
+<p>No new data is created. Each destination index is simply <strong>copied across all <span class="math inline">\(H\)</span> columns</strong> — because the same index applies to every dimension of that message row.</p>
+<p>This is what <code>dst.unsqueeze(-1).expand_as(messages)</code> does in code: - <code>unsqueeze(-1)</code> reshapes <span class="math inline">\([8]\)</span> → <span class="math inline">\([8 \times 1]\)</span> - <code>expand_as(messages)</code> stretches <span class="math inline">\([8 \times 1]\)</span> → <span class="math inline">\([8 \times 4]\)</span> by repeating</p>
+<p><strong>The core rule</strong></p>
+<blockquote class="blockquote">
+<p>A dimension of size 1 can be stretched to match any size — because repeating one value across positions costs no new information.</p>
+</blockquote>
+<p><br></p>
+<p><strong>Revision</strong></p>
+<p>That’s actually not quite right — let me show you why before we move on.</p>
+<p><code>unsqueeze(-1)</code> does <strong>one thing only</strong>: it inserts a new dimension of size 1 at the last position.</p>
+<p>So the transformation is:</p>
+<p><span class="math display">\[[6] \xrightarrow{\text{unsqueeze(-1)}} [6 \times 1]\]</span></p>
+<p>The result is — <span class="math inline">\([6 \times 1]\)</span>.</p>
+<p>The expansion to <span class="math inline">\([6 \times 3]\)</span> happens <strong>after</strong>, in the separate <code>expand_as</code> step. These are two distinct operations:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Operation</th>
+<th>Input shape</th>
+<th>Output shape</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>unsqueeze(-1)</code></td>
+<td><span class="math inline">\([6]\)</span></td>
+<td><span class="math inline">\([6 \times 1]\)</span></td>
+</tr>
+<tr class="even">
+<td><code>expand_as(messages)</code></td>
+<td><span class="math inline">\([6 \times 1]\)</span></td>
+<td><span class="math inline">\([6 \times 3]\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>The reason they’re separated: <code>unsqueeze</code> tells PyTorch <em>where</em> the new dimension goes, and <code>expand_as</code> tells it <em>how far</em> to stretch it. One step cannot do both.</p>
+<p>Revisiting the original <span class="math inline">\(C_4\)</span> case with <span class="math inline">\(H=4\)</span>:</p>
+<p><span class="math display">\[[8] \xrightarrow{\text{unsqueeze(-1)}} [8 \times 1] \xrightarrow{\text{expand_as}} [8 \times 4]\]</span></p>
+<hr>
+</section>
+<section id="phase-0.3---mlp-mathematics" class="level3">
+<h3 class="anchored" data-anchor-id="phase-0.3---mlp-mathematics">Phase 0.3 - MLP Mathematics</h3>
+<p>MLP is actually a <strong>strict subset</strong> of what a CNN does.</p>
+<p><strong>1. What you already know from CNN</strong></p>
+<p>Based on the concept of CNN, a convolutional layer does this to a spatial input:</p>
+<p><span class="math display">\[\mathbf{y} = \text{ReLU}(\mathbf{W} * \mathbf{x} + \mathbf{b})\]</span></p>
+<p>where <span class="math inline">\(*\)</span> is the convolution — a sliding dot product across spatial positions.</p>
+<p>Now ask: <strong>what if the input had no spatial dimensions at all — just a single vector?</strong></p>
+<p>The sliding window collapses to a single position. The convolution reduces to a plain dot product. That is an MLP layer.</p>
+<p><br></p>
+<p><strong>2. One MLP layer</strong></p>
+<p><span class="math display">\[\mathbf{y} = \text{ReLU}(\mathbf{W}\mathbf{x} + \mathbf{b})\]</span></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Symbol</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\mathbf{x} \in \mathbb{R}^{d_{in}}\)</span></td>
+<td>input vector</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\mathbf{W} \in \mathbb{R}^{d_{out} \times d_{in}}\)</span></td>
+<td>learned weight matrix</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(\mathbf{b} \in \mathbb{R}^{d_{out}}\)</span></td>
+<td>learned bias vector</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\mathbf{y} \in \mathbb{R}^{d_{out}}\)</span></td>
+<td>output vector</td>
+</tr>
+</tbody>
+</table>
+<p>ReLU is applied <strong>elementwise</strong>: <span class="math inline">\(\text{ReLU}(z) = \max(0, z)\)</span>.</p>
+<p>Stack two such layers and you have a 2-layer MLP — exactly what <span class="math inline">\(\text{MLP}_\text{msg}\)</span> and <span class="math inline">\(\text{MLP}_\text{update}\)</span> are.</p>
+<p><br></p>
+<p><strong>3. Concretely on edge <span class="math inline">\(0 \to 1\)</span></strong></p>
+<p>Input after concatenation: <span class="math inline">\(\mathbf{x} = [2, 1]^\top\)</span>, so <span class="math inline">\(d_{in} = 2\)</span>. Let <span class="math inline">\(d_{out} = H = 2\)</span> for simplicity, with made-up weights:</p>
+<p><span class="math display">\[\mathbf{W} = \begin{bmatrix} 1 &amp; 0 \\\\ 0 &amp; 1 \end{bmatrix}, \quad \mathbf{b} = \begin{bmatrix} 0 \\\\ 0 \end{bmatrix}\]</span></p>
+<p>Then:</p>
+<p><span class="math display">\[\mathbf{m}_{01} = \text{ReLU}\left(\begin{bmatrix} 1 &amp; 0 \\\\ 0 &amp; 1 \end{bmatrix} \begin{bmatrix} 2 \\\\ 1 \end{bmatrix} + \begin{bmatrix} 0 \\\\ 0 \end{bmatrix}\right) = \text{ReLU}\left(\begin{bmatrix} 2 \\\\ 1 \end{bmatrix}\right) = \begin{bmatrix} 2 \\\\ 1 \end{bmatrix}\]</span></p>
+<p>That vector <span class="math inline">\([2, 1]^\top\)</span> <strong>is</strong> the message on edge <span class="math inline">\(0 \to 1\)</span>.</p>
+<hr>
+</section>
+<section id="phase-0.4---scatter_add_-index-based-accumulation" class="level3">
+<h3 class="anchored" data-anchor-id="phase-0.4---scatter_add_-index-based-accumulation">Phase 0.4 - <code>scatter_add_</code> (Index-Based Accumulation)</h3>
+<p><strong>1. The problem it solves</strong></p>
+<p>After computing all 8 messages on <span class="math inline">\(C_4\)</span>, you need to <strong>sum them into their destination nodes</strong>. Node 0 should receive messages from nodes 1 and 3. Node 1 should receive from nodes 0 and 2. And so on.</p>
+<p>You have:</p>
+<p><span class="math display">\[\text{messages} = \begin{bmatrix} \mathbf{m}_{01} \\\\ \mathbf{m}_{10} \\\\ \mathbf{m}_{12} \\\\ \mathbf{m}_{21} \\\\ \mathbf{m}_{23} \\\\ \mathbf{m}_{32} \\\\ \mathbf{m}_{30} \\\\ \mathbf{m}_{03} \end{bmatrix}, \quad \text{dst} = \begin{bmatrix} 1 \\\\ 0 \\\\ 2 \\\\ 1 \\\\ 3 \\\\ 2 \\\\ 0 \\\\ 3 \end{bmatrix}\]</span></p>
+<p><code>scatter_add_</code> reads <code>dst</code> row by row and <strong>adds</strong> each message into the corresponding row of an accumulator matrix <code>agg</code> of shape <span class="math inline">\([N \times H] = [4 \times 2]\)</span>, initialized to zero.</p>
+<p><br></p>
+<p><strong>2. Step-by-step on <span class="math inline">\(C_4\)</span></strong></p>
+<p><span class="math display">\[\text{agg} = \begin{bmatrix} 0 &amp; 0 \\\\ 0 &amp; 0 \\\\ 0 &amp; 0 \\\\ 0 &amp; 0 \end{bmatrix}\]</span></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Step</th>
+<th>Message</th>
+<th>dst</th>
+<th>Operation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td><span class="math inline">\(\mathbf{m}_{01} = [2,1]\)</span></td>
+<td>1</td>
+<td>agg[1] += [2,1]</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td><span class="math inline">\(\mathbf{m}_{10} = [1,2]\)</span></td>
+<td>0</td>
+<td>agg[0] += [1,2]</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td><span class="math inline">\(\mathbf{m}_{12} = [1,1]\)</span></td>
+<td>2</td>
+<td>agg[2] += [1,1]</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td><span class="math inline">\(\mathbf{m}_{21} = [1,1]\)</span></td>
+<td>1</td>
+<td>agg[1] += [1,1]</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td><span class="math inline">\(\mathbf{m}_{23} = [1,1]\)</span></td>
+<td>3</td>
+<td>agg[3] += [1,1]</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td><span class="math inline">\(\mathbf{m}_{32} = [1,1]\)</span></td>
+<td>2</td>
+<td>agg[2] += [1,1]</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td><span class="math inline">\(\mathbf{m}_{30} = [1,2]\)</span></td>
+<td>0</td>
+<td>agg[0] += [1,2]</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td><span class="math inline">\(\mathbf{m}_{03} = [2,1]\)</span></td>
+<td>3</td>
+<td>agg[3] += [2,1]</td>
+</tr>
+</tbody>
+</table>
+<p>Final result:</p>
+<p><span class="math display">\[\text{agg} = \begin{bmatrix} 2 &amp; 4 \\\\ 3 &amp; 2 \\\\ 2 &amp; 2 \\\\ 3 &amp; 2 \end{bmatrix}\]</span></p>
+<p>Row <span class="math inline">\(i\)</span> of <code>agg</code> is exactly <span class="math inline">\(\mathbf{M}_i\)</span> — the aggregated neighborhood summary for node <span class="math inline">\(i\)</span>.</p>
+<p><br></p>
+<p><strong>3. How each operation built the final <code>agg</code></strong></p>
+<p><code>agg</code> starts as a <span class="math inline">\(4 \times 2\)</span> zero matrix — one row per node:</p>
+<p><span class="math display">\[\text{agg} = \begin{bmatrix} 0 &amp; 0 \\\\ 0 &amp; 0 \\\\ 0 &amp; 0 \\\\ 0 &amp; 0 \end{bmatrix} \leftarrow \text{node 0, 1, 2, 3}\]</span></p>
+<p><code>scatter_add_</code> processes messages one at a time. Each message has a destination index — that index tells it <strong>which row</strong> to add into. It’s a running sum, not a replacement.</p>
+<p>Tracing only <strong>node 0’s row</strong> to keep it tight:</p>
+<p><span class="math display">\[\text{agg}[0] = \underbrace{[0,0]}_{\text{init}} \xrightarrow{+\,\mathbf{m}_{10}=[1,2]} [1,2] \xrightarrow{+\,\mathbf{m}_{30}=[1,2]} [2,4]\]</span></p>
+<p>Two messages landed on row 0, both identical because <span class="math inline">\(h_1 = h_3\)</span>. Their sum is <span class="math inline">\([2,4]\)</span>.</p>
+<p>The same accumulation runs independently for every other row — messages destined for node 1 pile into row 1, for node 2 into row 2, and so on. No row interferes with another.</p>
+<p>Full final state:</p>
+<p><span class="math display">\[\text{agg} = \begin{bmatrix} 2 &amp; 4 \\\\ 3 &amp; 2 \\\\ 2 &amp; 2 \\\\ 3 &amp; 2 \end{bmatrix} \leftarrow \mathbf{M}_0,\ \mathbf{M}_1,\ \mathbf{M}_2,\ \mathbf{M}_3\]</span></p>
+<hr>
+</section>
+</section>
+<section id="phase-c_4-as-a-data-structure" class="level2">
+<h2 class="anchored" data-anchor-id="phase-c_4-as-a-data-structure">Phase : <span class="math inline">\(C_4\)</span> as a Data Structure</h2>
+<hr>
+<section id="phase-1.1---nodes-and-feature-matrix" class="level3">
+<h3 class="anchored" data-anchor-id="phase-1.1---nodes-and-feature-matrix">Phase 1.1 - Nodes and Feature Matrix</h3>
+<p><span class="math inline">\(C_4\)</span> is a cycle graph with 4 nodes and 4 edges. You may imagine its structure. The question is: <strong>how does a computer represent it?</strong></p>
+<p>Nodes are represented as rows in a feature matrix <span class="math inline">\(\mathbf{H}\)</span>:</p>
+<p><span class="math display">\[\mathbf{H} = \begin{bmatrix} 2 \\\\ 1 \\\\ 1 \\\\ 1 \end{bmatrix} \quad \text{shape: } [4 \times 1]\]</span></p>
+<p>Row <span class="math inline">\(i\)</span> is the feature vector of node <span class="math inline">\(i\)</span>. Here each node has a single scalar feature, so <span class="math inline">\(F = 1\)</span> and the matrix is <span class="math inline">\([N \times F] = [4 \times 1]\)</span>.</p>
+<p>In general, if each node carried a 16-dimensional feature vector, <span class="math inline">\(\mathbf{H}\)</span> would be <span class="math inline">\([4 \times 16]\)</span>, i.e., 4 nodes and 16 features. The structure is the same–rows are nodes, columns are features.</p>
+<hr>
+</section>
+<section id="phase-1.2---edge-index-representation" class="level3">
+<h3 class="anchored" data-anchor-id="phase-1.2---edge-index-representation">Phase 1.2 - Edge Index Representation</h3>
+<p>Edges are stored as a pair of index lists — <strong>source</strong> and <strong>destination</strong>:</p>
+<p><span class="math display">\[\text{src} = \begin{bmatrix} 0 \\\\ 1 \\\\ 1 \\\\ 2 \\\\ 2 \\\\ 3 \\\\ 3 \\\\ 0 \end{bmatrix}, \quad \text{dst} = \begin{bmatrix} 1 \\\\ 0 \\\\ 2 \\\\ 1 \\\\ 3 \\\\ 2 \\\\ 0 \\\\ 3 \end{bmatrix}\]</span></p>
+<p>Row <span class="math inline">\(k\)</span> of both together describes one directed edge: <span class="math inline">\(\text{src}[k] \to \text{dst}[k]\)</span>. <span class="math inline">\(C_4\)</span> has 4 undirected edges, each stored <strong>twice</strong> — once per direction — giving <span class="math inline">\(2E = 8\)</span> rows.</p>
+<p>Visually:</p>
+<p><span class="math display">\[0 \leftrightarrow 1 \leftrightarrow 2 \leftrightarrow 3 \leftrightarrow 0\]</span></p>
+<p>Every node has exactly 2 neighbors. That means every node will receive exactly <strong>2 messages</strong> per round — which you already saw in the <code>scatter_add_</code> table.</p>
+<p><br></p>
+<p><strong>Question: If <span class="math inline">\(C_4\)</span> had edge features <span class="math inline">\(\mathbf{e}_{ij}\)</span> of dimension <span class="math inline">\(F_e = 3\)</span>, what would the shape of the edge feature matrix be?</strong></p>
+<p>Not quite — let’s think through it carefully.</p>
+<p>The edge feature matrix stores <strong>one feature vector per edge</strong>. How many edges does <span class="math inline">\(C_4\)</span> have in its directed representation?</p>
+<p>4 undirected edges, each stored twice, giving <span class="math inline">\(2E = 8\)</span> directed edges.</p>
+<p>So the matrix needs <strong>8 rows</strong> — one per directed edge — and 3 columns for the <span class="math inline">\(F_e = 3\)</span> features.</p>
+<p>That makes the answer <strong>: <span class="math inline">\([8 \times 3]\)</span></strong>.</p>
+<blockquote class="blockquote">
+<p>Anything indexed by <strong>nodes</strong> has <span class="math inline">\(N\)</span> rows. Anything indexed by <strong>edges</strong> has <span class="math inline">\(2E\)</span> rows.</p>
+</blockquote>
+<p><br></p>
+<p><strong>Question: The message matrix (output of <span class="math inline">\(\text{MLP}_\text{msg}\)</span>) lives in which category — node-indexed or edge-indexed — and what is its shape on <span class="math inline">\(C_4\)</span> with <span class="math inline">\(H = 4\)</span>?</strong></p>
+<blockquote class="blockquote">
+<p>The MLP<span class="math inline">\(_\text{msg}\)</span> takes one concatenated input <strong>per edge</strong> and produces one output <strong>per edge</strong>. So is the output indexed by nodes or by edges?</p>
+</blockquote>
+<p>And separately:</p>
+<blockquote class="blockquote">
+<p>On <span class="math inline">\(C_4\)</span> with <span class="math inline">\(2E = 8\)</span> directed edges and hidden dimension <span class="math inline">\(H = 4\)</span>, how many rows must the message matrix have?</p>
+</blockquote>
+<p>Using those two observations — we get <span class="math inline">\([8 \times 4]\)</span> shape.</p>
+<p><br></p>
+<p><strong>Revision</strong></p>
+<p>You now have the full data structure picture:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Object</th>
+<th>Shape</th>
+<th>Indexed by</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\mathbf{H}\)</span></td>
+<td><span class="math inline">\([4 \times 1]\)</span></td>
+<td>nodes</td>
+</tr>
+<tr class="even">
+<td><code>src</code>, <code>dst</code></td>
+<td><span class="math inline">\([8]\)</span></td>
+<td>directed edges</td>
+</tr>
+<tr class="odd">
+<td>messages</td>
+<td><span class="math inline">\([8 \times H]\)</span></td>
+<td>directed edges</td>
+</tr>
+<tr class="even">
+<td><code>agg</code> <span class="math inline">\(\mathbf{M}\)</span></td>
+<td><span class="math inline">\([4 \times H]\)</span></td>
+<td>nodes</td>
+</tr>
+</tbody>
+</table>
+<p>Every shape in the full data flow reduces to one of these two categories — node-indexed or edge-indexed. Keep that table in mind as we proceed.</p>
+<hr>
+</section>
+</section>
+<section id="phase-2---message-computation" class="level2">
+<h2 class="anchored" data-anchor-id="phase-2---message-computation">Phase 2 - Message Computation</h2>
+<hr>
+<section id="phase-2.1---what-a-message-is-why-its-formed-this-way" class="level3">
+<h3 class="anchored" data-anchor-id="phase-2.1---what-a-message-is-why-its-formed-this-way">Phase 2.1 - What a message is &amp; why it’s formed this way?</h3>
+<p>From CNN — a convolutional filter looks at a <strong>local neighborhood</strong> of pixels to extract spatial patterns. Message passing is the graph analogue: each edge carries information from its local neighborhood — the two endpoint nodes — into a learned representation.</p>
+<p>Formally, for every directed edge <span class="math inline">\(i \to j\)</span>:</p>
+<p><span class="math display">\[\mathbf{m}_{ij} = \text{MLP}_\text{msg}([\mathbf{h}_i \| \mathbf{h}_j])\]</span></p>
+<p>The input is the concatenation of <strong>both</strong> endpoints. Why both? Because the message should capture not just who is sending, but the <strong>relationship</strong> between sender and receiver. This is strictly richer than classic GCN which only uses <span class="math inline">\(\mathbf{h}_i\)</span>.</p>
+<hr>
+</section>
+<section id="phase-2.2---computing-mathbfm_01-and-mathbfm_03" class="level3">
+<h3 class="anchored" data-anchor-id="phase-2.2---computing-mathbfm_01-and-mathbfm_03">Phase 2.2 - Computing <span class="math inline">\(\mathbf{m}_{01}\)</span> and <span class="math inline">\(\mathbf{m}_{03}\)</span></h3>
+<p>For <span class="math inline">\(C_4\)</span> with <span class="math inline">\(\mathbf{h} = [2,1,1,1]^\top\)</span> and the same identity weights from Phase 0.3:</p>
+<p><span class="math display">\[\mathbf{W} = \begin{bmatrix} 1 &amp; 0 \\\\ 0 &amp; 1 \end{bmatrix}, \quad \mathbf{b} = \begin{bmatrix} 0 \\\\ 0 \end{bmatrix}\]</span></p>
+<p><strong>Edge <span class="math inline">\(0 \to 1\)</span>:</strong></p>
+<p><span class="math display">\[\mathbf{m}_{01} = \text{ReLU}\left(\mathbf{W}[h_0 \| h_1] + \mathbf{b}\right) = \text{ReLU}\left(\begin{bmatrix}1&amp;0 \\\\ 0&amp;1\end{bmatrix}\begin{bmatrix}2 \\\\ 1\end{bmatrix}\right) = \begin{bmatrix}2 \\\\ 1\end{bmatrix}\]</span></p>
+<p><strong>Edge <span class="math inline">\(0 \to 3\)</span>:</strong></p>
+<p><span class="math display">\[\mathbf{m}_{03} = \text{ReLU}\left(\mathbf{W}[h_0 \| h_3] + \mathbf{b}\right) = \text{ReLU}\left(\begin{bmatrix}1&amp;0 \\\\ 0&amp;1\end{bmatrix}\begin{bmatrix}2 \\\\ 1\end{bmatrix}\right) = \begin{bmatrix}2 \\\\ 1\end{bmatrix}\]</span></p>
+<p>Identical inputs → identical outputs. This is not a coincidence — it is a <strong>structural fact</strong> about <span class="math inline">\(C_4\)</span>.</p>
+<p><br></p>
+<p><strong>1. The WL Limit — First Encounter</strong></p>
+<p>Node 0 sends the same message to both its neighbors because <span class="math inline">\(h_1 = h_3 = 1\)</span>. Now flip the question:</p>
+<blockquote class="blockquote">
+<p>From node 0’s perspective — can it tell nodes 1 and 3 apart based on what it sends them?</p>
+</blockquote>
+<p>It cannot. And more critically — when node 0 <strong>receives</strong> messages back from nodes 1 and 3 in the next phase, those will also be identical. Node 0 cannot distinguish its two neighbors.</p>
+<p>This is the Weisfeiler-Lehman expressiveness limit: <strong>if two nodes have identical neighborhood structure and features, no standard message passing GNN can distinguish them.</strong> We’ll see this collapse explicitly in Phase 3.</p>
+<hr>
+</section>
+</section>
+<section id="phase-3---aggregation" class="level2">
+<h2 class="anchored" data-anchor-id="phase-3---aggregation">Phase 3 - Aggregation</h2>
+<hr>
+<section id="phase-3.1---scatter_add_-on-c_4" class="level3">
+<h3 class="anchored" data-anchor-id="phase-3.1---scatter_add_-on-c_4">Phase 3.1 - <code>scatter_add_</code> on <span class="math inline">\(C_4\)</span></h3>
+<p>You’ve already seen this mechanics in Phase 0.4. Now we run it with <strong>real messages</strong> from Phase 2.</p>
+<p>First, the full message matrix. Using identity weights, each message <span class="math inline">\(\mathbf{m}_{ij} = [h_i, h_j]^\top\)</span>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Edge</th>
+<th>src → dst</th>
+<th>Message <span class="math inline">\((m_{src \to dst})\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(0\to1\)</span></td>
+<td>0 → 1</td>
+<td><span class="math inline">\([2,1]\)</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(1\to0\)</span></td>
+<td>1 → 0</td>
+<td><span class="math inline">\([1,2]\)</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(1\to2\)</span></td>
+<td>1 → 2</td>
+<td><span class="math inline">\([1,1]\)</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(2\to1\)</span></td>
+<td>2 → 1</td>
+<td><span class="math inline">\([1,1]\)</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(2\to3\)</span></td>
+<td>2 → 3</td>
+<td><span class="math inline">\([1,1]\)</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(3\to2\)</span></td>
+<td>3 → 2</td>
+<td><span class="math inline">\([1,1]\)</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(3\to0\)</span></td>
+<td>3 → 0</td>
+<td><span class="math inline">\([1,2]\)</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(0\to3\)</span></td>
+<td>0 → 3</td>
+<td><span class="math inline">\([2,1]\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>Accumulating into <code>agg</code> by destination:</p>
+<p><span class="math display">\[\mathbf{M}_0 = \mathbf{m}_{10} + \mathbf{m}_{30} = [1,2]+[1,2] = [2,4]\]</span> <span class="math display">\[\mathbf{M}_1 = \mathbf{m}_{01} + \mathbf{m}_{21} = [2,1]+[1,1] = [3,2]\]</span> <span class="math display">\[\mathbf{M}_2 = \mathbf{m}_{12} + \mathbf{m}_{32} = [1,1]+[1,1] = [2,2]\]</span> <span class="math display">\[\mathbf{M}_3 = \mathbf{m}_{23} + \mathbf{m}_{03} = [1,1]+[2,1] = [3,2]\]</span></p>
+<p><span class="math display">\[\text{agg} = \begin{bmatrix} 2&amp;4 \\\\ 3&amp;2 \\\\ 2&amp;2 \\\\ 3&amp;2 \end{bmatrix}\]</span></p>
+<hr>
+</section>
+<section id="phase-3.2---the-wl-collapse" class="level3">
+<h3 class="anchored" data-anchor-id="phase-3.2---the-wl-collapse">Phase 3.2 - The WL Collapse</h3>
+<p>Look at rows 1 and 3:</p>
+<p><span class="math display">\[\mathbf{M}_1 = \mathbf{M}_3 = [3,2]\]</span></p>
+<p>After one full round of message passing, <strong>nodes 1 and 3 have identical aggregated summaries.</strong> Any GNN update applied to these identical <span class="math inline">\(\mathbf{M}\)</span> values will produce identical updated features — the network provably cannot distinguish them.</p>
+<p>This isn’t a weight-tuning problem. No training fixes it. It’s a structural limitation — the neighborhood of node 1 and node 3 look identical from the graph’s perspective.</p>
+<hr>
+</section>
+</section>
+<section id="phase-4---node-update" class="level2">
+<h2 class="anchored" data-anchor-id="phase-4---node-update">Phase 4 - Node Update</h2>
+<hr>
+<section id="phase-4.1---why-concatenate-mathbfh_i-before-updating" class="level3">
+<h3 class="anchored" data-anchor-id="phase-4.1---why-concatenate-mathbfh_i-before-updating">Phase 4.1 - Why concatenate <span class="math inline">\(\mathbf{h}_i\)</span> before updating?</h3>
+<p>Before the math — think about what <span class="math inline">\(\mathbf{M}_i\)</span> alone contains.</p>
+<p><span class="math inline">\(\mathbf{M}_0 = [2,4]\)</span> summarizes <strong>node 0’s neighborhood</strong>. But it contains no information about node 0 itself. If you replaced <span class="math inline">\(\mathbf{h}_0\)</span> with <span class="math inline">\(\mathbf{M}_0\)</span> directly, node 0 would forget it ever had feature <span class="math inline">\(h_0 = 2\)</span>.</p>
+<p>The fix is to concatenate before updating:</p>
+<p><span class="math display">\[\mathbf{h}_i' = \text{MLP}_\text{update}([\mathbf{h}_i \| \mathbf{M}_i])\]</span></p>
+<p>The node retains its own identity <strong>alongside</strong> its neighborhood summary. The update MLP then learns how to blend the two.</p>
+<hr>
+</section>
+<section id="phase-4.2---computing-mathbfh_0" class="level3">
+<h3 class="anchored" data-anchor-id="phase-4.2---computing-mathbfh_0">Phase 4.2 - Computing <span class="math inline">\(\mathbf{h}_0'\)</span></h3>
+<p>For node 0, using the same identity weights and <span class="math inline">\(H=2\)</span>, but now <span class="math inline">\(d_{in} = 3\)</span> because <span class="math inline">\([\mathbf{h}_0 \| \mathbf{M}_0] = [2 \| 2, 4] = [2, 2, 4]^\top\)</span>:</p>
+<p><span class="math display">\[\mathbf{W}_\text{update} = \begin{bmatrix} 1&amp;0&amp;0 \\\\ 0&amp;1&amp;0 \end{bmatrix}, \quad \mathbf{b} = \begin{bmatrix}0 \\\\ 0\end{bmatrix}\]</span></p>
+<p><span class="math display">\[\mathbf{h}_0' = \text{ReLU}\left(\begin{bmatrix}1&amp;0&amp;0 \\\\ 0&amp;1&amp;0\end{bmatrix}\begin{bmatrix}2 \\\\ 2 \\\\ 4\end{bmatrix}\right) = \text{ReLU}\left(\begin{bmatrix}2 \\\\ 2\end{bmatrix}\right) = \begin{bmatrix}2 \\\\ 2\end{bmatrix}\]</span></p>
+<hr>
+</section>
+<section id="phase-4.3---all-four-updated-nodes" class="level3">
+<h3 class="anchored" data-anchor-id="phase-4.3---all-four-updated-nodes">Phase 4.3 - All Four Updated Nodes</h3>
+<p>Applying the same procedure to every node:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Node</th>
+<th><span class="math inline">\(\mathbf{h}_i\)</span></th>
+<th><span class="math inline">\(\mathbf{M}_i\)</span></th>
+<th><span class="math inline">\([\mathbf{h}_i \Vert \mathbf{M}_i]\)</span></th>
+<th><span class="math inline">\(\mathbf{h}_i'\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td><span class="math inline">\([2]\)</span></td>
+<td><span class="math inline">\([2,4]\)</span></td>
+<td><span class="math inline">\([2,2,4]\)</span></td>
+<td><span class="math inline">\([2,2]\)</span></td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td><span class="math inline">\([1]\)</span></td>
+<td><span class="math inline">\([3,2]\)</span></td>
+<td><span class="math inline">\([1,3,2]\)</span></td>
+<td><span class="math inline">\([1,3]\)</span></td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td><span class="math inline">\([1]\)</span></td>
+<td><span class="math inline">\([2,2]\)</span></td>
+<td><span class="math inline">\([1,2,2]\)</span></td>
+<td><span class="math inline">\([1,2]\)</span></td>
+</tr>
+<tr class="even">
+<td>3</td>
+<td><span class="math inline">\([1]\)</span></td>
+<td><span class="math inline">\([3,2]\)</span></td>
+<td><span class="math inline">\([1,3,2]\)</span></td>
+<td><span class="math inline">\([1,3]\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>Notice nodes 1 and 3 produce <strong>identical</strong> <span class="math inline">\(\mathbf{h}'\)</span> — the WL collapse persists through the update, exactly as predicted.</p>
+<p><br></p>
+<p><strong>Question: Node 2 received from nodes 1 and 3, both with <span class="math inline">\(h=1\)</span>. Why is <span class="math inline">\(\mathbf{h}_2'\)</span> different from <span class="math inline">\(\mathbf{h}_1'\)</span> despite all three nodes starting with <span class="math inline">\(h=1\)</span>?</strong></p>
+<p>Because, node 2’s neighbors both have <span class="math inline">\(h=1\)</span>, while node 1’s neighbors have <span class="math inline">\(h=2\)</span> and <span class="math inline">\(h=1\)</span></p>
+<p><br></p>
+<p><strong>On <span class="math inline">\(\mathbf{W}_\text{update}\)</span></strong></p>
+<p><span class="math inline">\(\mathbf{W}_\text{update}\)</span> — was assummed to be such and chosen deliberately to keep the arithmetic transparent. In a real GNN, <span class="math inline">\(\mathbf{W}_\text{update}\)</span> is <strong>learned</strong> during training via backpropagation, just like CNN filter weights.</p>
+<p>The <span class="math inline">\([2 \times 3]\)</span> shape comes directly from the dimensions of the input and output:</p>
+<p><span class="math display">\[\mathbf{W}_\text{update} \in \mathbb{R}^{d_{out} \times d_{in}}\]</span></p>
+<p>Here:</p>
+<ul>
+<li><span class="math inline">\(d_{in} = 3\)</span> because <span class="math inline">\([\mathbf{h}_i \| \mathbf{M}_i]\)</span> concatenates a scalar <span class="math inline">\(\mathbf{h}_i \in \mathbb{R}^1\)</span> with <span class="math inline">\(\mathbf{M}_i \in \mathbb{R}^2\)</span>, giving a 3-dimensional input</li>
+<li><span class="math inline">\(d_{out} = 2\)</span> because we chose hidden dimension <span class="math inline">\(H = 2\)</span></li>
+</ul>
+<p>So the matrix must be <span class="math inline">\([2 \times 3]\)</span> to satisfy the matrix multiplication <span class="math inline">\(\mathbf{W}_\text{update} \cdot [\mathbf{h}_i \| \mathbf{M}_i]\)</span>:</p>
+<p><span class="math display">\[[2 \times 3] \cdot [3 \times 1] = [2 \times 1]\]</span></p>
+<p>The general rule — consistent with everything you’ve seen so far:</p>
+<p><span class="math display">\[\mathbf{W} \in \mathbb{R}^{d_{out} \times d_{in}}, \quad d_{in} = F + H, \quad d_{out} = H\]</span></p>
+<hr>
+</section>
+</section>
+<section id="phase-5---full-data-flow" class="level2">
+<h2 class="anchored" data-anchor-id="phase-5---full-data-flow">Phase 5 - Full Data Flow</h2>
+<hr>
+<section id="phase-5.1---the-complete-shape-trace" class="level3">
+<h3 class="anchored" data-anchor-id="phase-5.1---the-complete-shape-trace">Phase 5.1 - The Complete Shape Trace</h3>
+<p>Every transformation in one pipeline, using <span class="math inline">\(C_4\)</span> values throughout:</p>
+<p><span class="math display">\[[N, F] \xrightarrow{\text{gather}} [2E,\ 2F] \xrightarrow{\text{MLP}_\text{msg}} [2E, H] \xrightarrow{\text{scatter_add}} [N, H] \xrightarrow{\text{MLP}_\text{update}} [N, H]\]</span></p>
+<p>Substituting <span class="math inline">\(N=4,\ F=1,\ E=4,\ H=2\)</span>:</p>
+<p><span class="math display">\[[4,1] \xrightarrow{\text{gather}} [8,2] \xrightarrow{\text{MLP}_\text{msg}} [8,2] \xrightarrow{\text{scatter_add}} [4,2] \xrightarrow{\text{MLP}_\text{update}} [4,2]\]</span></p>
+<p>Each arrow is one operation. Let’s nail what happens at each boundary.</p>
+<p><br></p>
+<p><strong>Step 1 — Gather:</strong> <span class="math inline">\([4,1] \to [8,2]\)</span></p>
+<p>For every directed edge, look up the features of its source and destination node from <span class="math inline">\(\mathbf{H}\)</span>, then concatenate them:</p>
+<p><span class="math display">\[\text{edge } k: \quad [\mathbf{h}_{\text{src}[k]} \| \mathbf{h}_{\text{dst}[k]}]\]</span></p>
+<p>8 edges × 2 concatenated scalars = <span class="math inline">\([8 \times 2]\)</span>. No arithmetic yet — pure lookup and concatenation.</p>
+<p><br></p>
+<p><strong>Step 2 — <span class="math inline">\(\text{MLP}_\text{msg}\)</span>:</strong> <span class="math inline">\([8,2] \to [8,2]\)</span></p>
+<p>Each of the 8 rows passes independently through the same MLP. Shape stays <span class="math inline">\([8 \times 2]\)</span> because <span class="math inline">\(d_{in} = 2F = 2\)</span> and <span class="math inline">\(d_{out} = H = 2\)</span>.</p>
+<p><br></p>
+<p><strong>Step 3 — <code>scatter_add_</code>:</strong> <span class="math inline">\([8,2] \to [4,2]\)</span></p>
+<p>8 edge-indexed messages collapse into 4 node-indexed aggregations. Edge dimension <span class="math inline">\(\to\)</span> node dimension. This is the only step that <strong>reduces</strong> the number of rows.</p>
+<p><br></p>
+<p><strong>Step 4 — <span class="math inline">\(\text{MLP}_\text{update}\)</span>:</strong> <span class="math inline">\([4,2] \to [4,2]\)</span></p>
+<p>Each node concatenates its own feature <span class="math inline">\(\mathbf{h}_i \in \mathbb{R}^1\)</span> with <span class="math inline">\(\mathbf{M}_i \in \mathbb{R}^2\)</span> internally, giving <span class="math inline">\(d_{in} = 3\)</span>, <span class="math inline">\(d_{out} = H = 2\)</span>. The 4 nodes pass independently through the same MLP. Output is the new feature matrix <span class="math inline">\(\mathbf{H}' \in [4 \times 2]\)</span>.</p>
+<hr>
+</section>
+<section id="phase-5.2---what-did-one-round-actually-accomplish" class="level3">
+<h3 class="anchored" data-anchor-id="phase-5.2---what-did-one-round-actually-accomplish">Phase 5.2 - What did one round actually accomplish?</h3>
+<p>Before message passing, every node knew only itself:</p>
+<p><span class="math display">\[\mathbf{h}_0 = 2, \quad \mathbf{h}_1 = \mathbf{h}_2 = \mathbf{h}_3 = 1\]</span></p>
+<p>After one round, every node knows itself <strong>plus a summary of its immediate neighbors</strong>:</p>
+<p><span class="math display">\[\mathbf{h}_0' = [2,2], \quad \mathbf{h}_1' = \mathbf{h}_3' = [1,3], \quad \mathbf{h}_2' = [1,2]\]</span></p>
+<p>Each updated feature vector encodes a <strong>1-hop neighborhood summary</strong>. Stack another round on top, and every node would encode a 2-hop summary. This is how GNNs build up global graph awareness — one hop at a time.</p>
+<hr>
+<p><strong>Question: The table shows node 0 on <span class="math inline">\(C_4\)</span> sees nodes 1 and 3 after layer 1, then node 2 after layer 2. Why does it take two layers to reach node 2, not one?</strong></p>
+<p><strong>Receptive field grows by exactly one hop per layer.</strong></p>
+<p>Node 0’s neighbors are <span class="math inline">\(\{1, 3\}\)</span> — one hop away. Node 2 is two hops away via <span class="math inline">\(0\to1\to2\)</span> or <span class="math inline">\(0\to3\to2\)</span>. One layer reaches one hop. Two layers reach two hops. This is purely graph distance.</p>
+<p>This is called the <strong>receptive field</strong> — directly analogous to CNN receptive field, where stacking convolutional layers expands the spatial region each output pixel “sees.”</p>
+<p><strong>Question: The portion says mean pooling is preferred over sum because it’s invariant to graph size. Can you think of a scenario where sum pooling would actually lose information that mean pooling preserves, or vice versa?</strong></p>
+<ul>
+<li>Graph A: 3 nodes, all with feature value 1 <span class="math inline">\(\to\)</span> sum = 3; mean = 1</li>
+<li>Graph B: 6 nodes, all with feature value 1 <span class="math inline">\(\to\)</span> sum = 6; mean = 1</li>
+</ul>
+<p>If energy scales with atom count, sum is the natural choice — bigger molecule, larger sum, larger prediction. Mean would wash that out.</p>
+<p>QM9 uses mean specifically <strong>because</strong> the model handles variable-size molecules and needs stable training — scale invariance is prioritized over size-sensitivity. Neither is universally correct — it’s a design choice driven by the task.</p>
+<hr>
+<p><strong>The new concepts to focus are:</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Concept</th>
+<th>Core idea</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Receptive field</td>
+<td>depth = hops seen</td>
+</tr>
+<tr class="even">
+<td>Global pooling</td>
+<td>nodes → single graph vector</td>
+</tr>
+<tr class="odd">
+<td>Permutation invariance</td>
+<td>addition commutes, so node ordering doesn’t matter</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="phase-6---input-projection" class="level2">
+<h2 class="anchored" data-anchor-id="phase-6---input-projection">Phase 6 - Input Projection</h2>
+<hr>
+<section id="phase-6.1---why-project-at-all" class="level3">
+<h3 class="anchored" data-anchor-id="phase-6.1---why-project-at-all">Phase 6.1 - Why project at all?</h3>
+<p>You have raw node features <span class="math inline">\(\mathbf{X}\)</span> going into the network. On QM9, each atom carries 11 chemically meaningful features — atom type, charge, etc. On <span class="math inline">\(C_4\)</span>, each node carries a scalar, so <span class="math inline">\(F=1\)</span>.</p>
+<p>The problem: every MPNN layer operates in a <strong>uniform hidden space</strong> of dimension <span class="math inline">\(H=64\)</span>. You cannot feed a 1-dimensional or 11-dimensional vector directly into a layer expecting 64-dimensional inputs.</p>
+<p>The fix is a single linear projection — one MLP layer with no hidden depth:</p>
+<p><span class="math display">\[\mathbf{H}^{(0)} = \text{ReLU}(\mathbf{X}\mathbf{W}_\text{in})\]</span></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Symbol</th>
+<th>Shape</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\mathbf{X}\)</span></td>
+<td><span class="math inline">\([N \times F]\)</span></td>
+<td>raw features</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\mathbf{W}_\text{in}\)</span></td>
+<td><span class="math inline">\([F \times H]\)</span></td>
+<td>learned projection</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(\mathbf{H}^{(0)}\)</span></td>
+<td><span class="math inline">\([N \times H]\)</span></td>
+<td>projected features</td>
+</tr>
+</tbody>
+</table>
+<p>On <span class="math inline">\(C_4\)</span> with <span class="math inline">\(F=1\)</span>, <span class="math inline">\(H=2\)</span> for simplicity:</p>
+<p><span class="math display">\[\mathbf{W}_\text{in} = \begin{bmatrix} 1 &amp; 1 \end{bmatrix}, \quad \mathbf{X} = \begin{bmatrix} 2 \\\\ 1 \\\\ 1 \\\\ 1 \end{bmatrix}\]</span></p>
+<p><span class="math display">\[\mathbf{H}^{(0)} = \text{ReLU}\left(\begin{bmatrix}2 \\\\ 1 \\\\ 1 \\\\ 1\end{bmatrix}\begin{bmatrix}1&amp;1\end{bmatrix}\right) = \text{ReLU}\left(\begin{bmatrix}2&amp;2 \\\\ 1&amp;1 \\\\ 1&amp;1 \\\\ 1&amp;1\end{bmatrix}\right) = \begin{bmatrix}2&amp;2 \\\\ 1&amp;1 \\\\ 1&amp;1 \\\\ 1&amp;1\end{bmatrix}\]</span></p>
+<p>Every node is now living in <span class="math inline">\(\mathbb{R}^2\)</span> — same space, ready for message passing.</p>
+<hr>
+<p>Correct. The matrix multiplication requires:</p>
+<p><span class="math display">\[[N \times F] \cdot [F \times H] = [N \times H]\]</span></p>
+<p>so <span class="math inline">\(\mathbf{W}_\text{in}\)</span> must be <span class="math inline">\([F \times H] = [11 \times 64]\)</span> — inner dimensions must match.</p>
+<hr>
+</section>
+</section>
+<section id="phase-7---stacked-message-passing-receptive-field" class="level2">
+<h2 class="anchored" data-anchor-id="phase-7---stacked-message-passing-receptive-field">Phase 7 - Stacked Message Passing &amp; Receptive Field</h2>
+<hr>
+<section id="phase-7.1---what-stacking-means" class="level3">
+<h3 class="anchored" data-anchor-id="phase-7.1---what-stacking-means">Phase 7.1 - What stacking means</h3>
+<p>Every node now lives in a uniform <span class="math inline">\(H\)</span>-dimensional space. A single MPNN layer — everything you built in Phases 2–4 — expands each node’s awareness by exactly <strong>one hop</strong>. Stacking <span class="math inline">\(L\)</span> layers expands it by <span class="math inline">\(L\)</span> hops.</p>
+<p>Formally, each layer takes the current hidden state and produces the next:</p>
+<p><span class="math display">\[\mathbf{H}^{(l+1)} = \text{MPNNLayer}\left(\mathbf{H}^{(l)},\ \mathcal{E}\right)\]</span></p>
+<p>The superscript tracks <strong>depth</strong>, not time. <span class="math inline">\(\mathbf{H}^{(0)}\)</span> is the projection output. <span class="math inline">\(\mathbf{H}^{(1)}\)</span> encodes 1-hop neighborhoods. <span class="math inline">\(\mathbf{H}^{(2)}\)</span> encodes 2-hop neighborhoods. And so on.</p>
+<hr>
+</section>
+<section id="phase-7.2---receptive-field-on-c_4" class="level3">
+<h3 class="anchored" data-anchor-id="phase-7.2---receptive-field-on-c_4">Phase 7.2 - Receptive Field on <span class="math inline">\(C_4\)</span></h3>
+<p>Tracing node 0 specifically across <span class="math inline">\(L=3\)</span> layers:</p>
+<p><strong>Layer 0 → 1:</strong> Node 0 aggregates from <span class="math inline">\(\{1, 3\}\)</span>. Its new state <span class="math inline">\(\mathbf{h}_0^{(1)}\)</span> encodes itself plus its direct neighbors.</p>
+<p><strong>Layer 1 → 2:</strong> Now <span class="math inline">\(\mathbf{h}_1^{(1)}\)</span> already encodes node 1’s neighborhood <span class="math inline">\(\{0,2\}\)</span>. When node 0 aggregates from node 1 at layer 2, it <strong>indirectly</strong> pulls in node 2’s information. Node 0 has now seen 2 hops.</p>
+<p><strong>Layer 2 → 3:</strong> <span class="math inline">\(\mathbf{h}_2^{(2)}\)</span> already encodes node 2’s neighborhood <span class="math inline">\(\{1,3\}\)</span>, which itself encoded <span class="math inline">\(\{0,2\}\)</span>. Node 0 now sees the full graph.</p>
+<p>The receptive field table makes this concrete:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Layer</th>
+<th>Node 0 sees</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td><span class="math inline">\(\{0\}\)</span></td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td><span class="math inline">\(\{0,1,3\}\)</span></td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td><span class="math inline">\(\{0,1,2,3\}\)</span></td>
+</tr>
+<tr class="even">
+<td>3</td>
+<td>full graph</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math inline">\(C_4\)</span> has diameter 2 — any node reaches any other in at most 2 hops — so <span class="math inline">\(L=2\)</span> already saturates the receptive field here. Layer 3 adds no new nodes but <strong>re-encodes</strong> richer higher-order structure.</p>
+<hr>
+</section>
+<section id="phase-7.3---the-cnn-analogy" class="level3">
+<h3 class="anchored" data-anchor-id="phase-7.3---the-cnn-analogy">Phase 7.3 - The CNN Analogy</h3>
+<p>This is exactly your CNN receptive field intuition:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>CNN</th>
+<th>GNN</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Stacking conv layers</td>
+<td>Stacking MPNN layers</td>
+</tr>
+<tr class="even">
+<td>Spatial neighborhood grows</td>
+<td>Graph neighborhood grows</td>
+</tr>
+<tr class="odd">
+<td>Kernel size controls hop width</td>
+<td>Aggregation controls hop width</td>
+</tr>
+<tr class="even">
+<td>Deep = sees more pixels</td>
+<td>Deep = sees more nodes</td>
+</tr>
+</tbody>
+</table>
+<p>The difference: CNN neighborhoods are <strong>regular grids</strong>. GNN neighborhoods are <strong>irregular graphs</strong> — each node can have a different number of neighbors.</p>
+<p><br></p>
+<p><strong>Question: On a path graph</strong> <span class="math inline">\(0\leftrightarrow1\leftrightarrow2\leftrightarrow3\leftrightarrow4\)</span> <strong>with <span class="math inline">\(L=2\)</span> layers, which nodes can node 0 see?</strong></p>
+<p>The node 0 can see: <span class="math inline">\(\{0,1,2\}\)</span>.</p>
+<hr>
+<p>Correct — two hops from node 0 on a path graph reaches nodes <span class="math inline">\(\{0,1,2\}\)</span>. Node 3 is 3 hops away, node 4 is 4 hops — both out of reach with <span class="math inline">\(L=2\)</span>.</p>
+<hr>
+</section>
+</section>
+<section id="phase-8---global-mean-pooling" class="level2">
+<h2 class="anchored" data-anchor-id="phase-8---global-mean-pooling">Phase 8 - Global Mean Pooling</h2>
+<hr>
+<section id="phase-8.1---the-problem-it-solves" class="level3">
+<h3 class="anchored" data-anchor-id="phase-8.1---the-problem-it-solves">Phase 8.1 - The problem it solves</h3>
+<p>After <span class="math inline">\(L\)</span> layers, you have <span class="math inline">\(\mathbf{H}^{(L)} \in [N \times H]\)</span> — one rich vector per node. But the task is <strong>graph-level</strong> regression: predict a single number <span class="math inline">\(U_0\)</span> for the entire molecule.</p>
+<p>You need to compress <span class="math inline">\(N\)</span> node vectors into <strong>one graph vector</strong>. This is pooling — same concept as spatial pooling in CNN, but over graph nodes instead of pixel grids.</p>
+<hr>
+</section>
+<section id="phase-8.2---mean-pooling-on-c_4" class="level3">
+<h3 class="anchored" data-anchor-id="phase-8.2---mean-pooling-on-c_4">Phase 8.2 - Mean Pooling on <span class="math inline">\(C_4\)</span></h3>
+<p><span class="math display">\[\mathbf{g} = \frac{1}{4}\left(\mathbf{h}_0^{(L)} + \mathbf{h}_1^{(L)} + \mathbf{h}_2^{(L)} + \mathbf{h}_3^{(L)}\right)\]</span></p>
+<p>Using our <span class="math inline">\(H=2\)</span> updated states from Phase 4:</p>
+<p><span class="math display">\[\mathbf{g} = \frac{1}{4}\left(\begin{bmatrix}2 \\\\ 2\end{bmatrix} + \begin{bmatrix}1 \\\\3 \end{bmatrix} + \begin{bmatrix}1 \\\\ 2\end{bmatrix} + \begin{bmatrix}1 \\\\ 3\end{bmatrix}\right) = \frac{1}{4}\begin{bmatrix}5 \\\\ 10\end{bmatrix} = \begin{bmatrix}1.25 \\\\ 2.5\end{bmatrix}\]</span></p>
+<p>One vector summarizing the entire graph.</p>
+<hr>
+</section>
+<section id="phase-8.3---the-batch-tensor" class="level3">
+<h3 class="anchored" data-anchor-id="phase-8.3---the-batch-tensor">Phase 8.3 - The Batch Tensor</h3>
+<p>In practice, a training batch contains <strong>multiple graphs</strong> packed together. Nodes from different graphs sit in the same matrix but must pool <strong>separately</strong>.</p>
+<p>The <code>batch</code> tensor handles this — it maps every node to its graph index:</p>
+<p><span class="math display">\[\texttt{batch} = [0,0,0,1,1]\]</span></p>
+<p>This says nodes <span class="math inline">\(\{0,1,2\}\)</span> belong to graph 0, nodes <span class="math inline">\(\{3,4\}\)</span> belong to graph 1. <code>scatter_add_</code> then accumulates by graph index — exactly the same mechanic as Phase 0.4, but now the index is a <strong>graph label</strong> instead of a <strong>node label</strong>.</p>
+<p><span class="math display">\[\mathbf{g}_0 = \frac{\mathbf{h}_0+\mathbf{h}_1+\mathbf{h}_2}{3}, \quad \mathbf{g}_1 = \frac{\mathbf{h}_3+\mathbf{h}_4}{2}\]</span></p>
+<p>Two graphs, two pooled vectors, computed in one pass.</p>
+<p><br></p>
+<p><strong>Question: If a batch contains three graphs with 4, 2, and 6 nodes respectively, what does <code>batch</code> look like and what shape is the pooled output?</strong></p>
+<p>One entry per node, grouped by graph, one pooled vector per graph, i.e.:</p>
+<p><code>batch</code> <span class="math inline">\(= [0,0,0,0,1,1,2,2,2,2,2,2]\)</span>, output <span class="math inline">\([3 \times H]\)</span></p>
+<hr>
+</section>
+</section>
+<section id="phase-9---readout-mlp" class="level2">
+<h2 class="anchored" data-anchor-id="phase-9---readout-mlp">Phase 9 - Readout MLP</h2>
+<hr>
+<section id="phase-9.1---what-it-does" class="level3">
+<h3 class="anchored" data-anchor-id="phase-9.1---what-it-does">Phase 9.1 - What it does</h3>
+<p>You now have a single graph vector <span class="math inline">\(\mathbf{g} \in \mathbb{R}^H\)</span> summarizing the entire molecule.</p>
+<p>You have <span class="math inline">\(\mathbf{g} \in \mathbb{R}^{64}\)</span> — a rich graph-level summary. The final step compresses it to a single scalar <span class="math inline">\(\hat{y}\)</span>:</p>
+<p><span class="math display">\[\hat{y} = \mathbf{W}_2\,\text{ReLU}(\mathbf{W}_1\mathbf{g} + \mathbf{b}_1) + \mathbf{b}_2\]</span></p>
+<p>Two MLP layers — nothing new mathematically. Just the same affine-then-nonlinearity chain from Phase 0.3, applied twice.</p>
+<p>Tracing shapes with <span class="math inline">\(H=2\)</span> and an intermediate dimension of 2:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Step</th>
+<th>Operation</th>
+<th>Shape</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Input</td>
+<td><span class="math inline">\(\mathbf{g}\)</span></td>
+<td><span class="math inline">\([2]\)</span></td>
+</tr>
+<tr class="even">
+<td>Layer 1</td>
+<td><span class="math inline">\(\mathbf{W}_1\mathbf{g}+\mathbf{b}_1\)</span></td>
+<td><span class="math inline">\([2\times2]\cdot[2]=[2]\)</span></td>
+</tr>
+<tr class="odd">
+<td>ReLU</td>
+<td>elementwise</td>
+<td><span class="math inline">\([2]\)</span></td>
+</tr>
+<tr class="even">
+<td>Layer 2</td>
+<td><span class="math inline">\(\mathbf{W}_2(\cdot)+\mathbf{b}_2\)</span></td>
+<td><span class="math inline">\([1\times2]\cdot[2]=[1]\)</span></td>
+</tr>
+<tr class="odd">
+<td>Output</td>
+<td><span class="math inline">\(\hat{y}\)</span></td>
+<td>scalar</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="phase-9.2---permutation-invariance" class="level3">
+<h3 class="anchored" data-anchor-id="phase-9.2---permutation-invariance">Phase 9.2 - Permutation Invariance</h3>
+<p>This is the final architectural guarantee worth understanding precisely.</p>
+<p>Suppose you relabel <span class="math inline">\(C_4\)</span>’s nodes — swap node 0 and node 2. Does <span class="math inline">\(\hat{y}\)</span> change?</p>
+<p>It doesn’t — and here’s exactly why, tracing back through the pipeline:</p>
+<ul>
+<li><strong>Mean pooling</strong> sums node vectors and divides. Addition commutes — order of summation is irrelevant. <span class="math inline">\(\mathbf{g}\)</span> is identical regardless of node ordering.</li>
+<li><strong>MPNN layers</strong> aggregate via <code>scatter_add_</code> — also a sum, also commutative.</li>
+<li><strong>Readout MLP</strong> is deterministic given <span class="math inline">\(\mathbf{g}\)</span> — same input, same output.</li>
+</ul>
+<p>The invariance is <strong>structural</strong>, not learned. No amount of training could break it — it is baked into the choice of sum/mean as the aggregation operator.</p>
+<p>This matters physically: a molecule’s energy <span class="math inline">\(U_0\)</span> is a property of its atomic structure, not of how you number its atoms.</p>
+<hr>
+</section>
+</section>
+<section id="phase-10---full-pipeline-on-c_4" class="level2">
+<h2 class="anchored" data-anchor-id="phase-10---full-pipeline-on-c_4">Phase 10 - Full Pipeline on <span class="math inline">\(C_4\)</span></h2>
+<hr>
+<p>Putting everything together in one trace:</p>
+<p><span class="math display">\[\underbrace{\begin{bmatrix}2 \\\\ 1 \\\\ 1 \\\\ 1\end{bmatrix}}_{\mathbf{X}\ [4\times1]} \xrightarrow{\mathbf{W}_\text{in}} \underbrace{\begin{bmatrix}2&amp;2 \\\\ 1&amp;1 \\\\ 1&amp;1 \\\\ 1&amp;1\end{bmatrix}}_{\mathbf{H}^{(0)}\ [4\times2]} \xrightarrow{L\times\text{MPNN}} \underbrace{\begin{bmatrix}2&amp;2 \\\\ 1&amp;3 \\\\ 1&amp;2 \\\\ 1&amp;3\end{bmatrix}}_{\mathbf{H}^{(L)}\ [4\times2]} \xrightarrow{\text{mean}} \underbrace{\begin{bmatrix}1.25 \\\\ 2.5\end{bmatrix}}_{\mathbf{g}\ [2]} \xrightarrow{\text{MLP}} \underbrace{\hat{y}}_{\text{scalar}}\]</span></p>
+<p>Every shape transition follows one rule: node-indexed <span class="math inline">\([N\times H]\)</span> or edge-indexed <span class="math inline">\([2E\times H]\)</span>, collapsing to a single vector at pooling.</p>
+<hr>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
