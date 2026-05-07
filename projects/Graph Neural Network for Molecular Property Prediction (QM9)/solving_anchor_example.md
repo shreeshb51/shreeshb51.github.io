@@ -35,7 +35,7 @@ No values array needed here because every edge has value 1.
 
 $C_4$ has $E=4$ undirected edges, so $2E=8$ directed edges. The COO tensor is:
 
-$$\text{edge_index} = \begin{bmatrix} 0&1&1&2&2&3&3&0 \\\\ 1&0&2&1&3&2&0&3 \end{bmatrix}$$
+$$\text{edge\_index} = \begin{bmatrix} 0&1&1&2&2&3&3&0 \\\\ 1&0&2&1&3&2&0&3 \end{bmatrix}$$
 
 Simply: Row 0 = sources, Row 1 = destinations.
 
@@ -666,7 +666,7 @@ The node retains its own state $\mathbf{h}_i$ alongside the aggregated neighborh
 
 **Full data flow summary**
 
-$$[N, F] \xrightarrow{\text{concat neighbors+edges}} [2E,\ 2F+F_e] \xrightarrow{\text{MLP}_{\text{msg}}} [2E, H] \xrightarrow{\text{scatter_add}} [N, H] \xrightarrow{\text{MLP}_{\text{update}}} [N, H]$$
+$$[N, F] \xrightarrow{\text{concat neighbors+edges}} [2E,\ 2F+F_e] \xrightarrow{\text{MLP}_{\text{msg}}} [2E, H] \xrightarrow{\text{scatter\_add}} [N, H] \xrightarrow{\text{MLP}_{\text{update}}} [N, H]$$
 
 <br>
 
@@ -700,7 +700,7 @@ In QM9 specifically, the node feature matrix $\mathbf{X}$ already contains atom-
 
 <br>
 
-> THE COMPLETE CHRONOLOGICAL FLOW OF GNN MESSAGE PASSING WITH ITS UNDERLYING MATHEMATICS IS EXPLAINED IN [CATW/GNN Message Passing](url_here)
+> THE COMPLETE CHRONOLOGICAL FLOW OF GNN MESSAGE PASSING WITH ITS UNDERLYING MATHEMATICS IS EXPLAINED IN [CATW/GNN Message Passing](https://shreeshb51.github.io/catw/GNN%20Message%20Passing/)
 
 ---
 
@@ -803,7 +803,7 @@ In code: `x_perm = mol.x[pi]` — row $i$ of `x_perm` is row $\pi(i)$ of `mol.x`
 $$\mathbf{A}_\pi = \mathbf{P}_\pi \mathbf{A} \mathbf{P}_\pi^\top$$
 
 **3. Edge index (COO):** each node id $i$ in `edge_index` is replaced by $\pi(i)$:
-$$\texttt{edge_index_perm} = \pi(\texttt{edge_index})$$
+$$\texttt{edge\_index\_perm} = \pi(\texttt{edge\_index})$$
 
 <br>
 
@@ -1095,7 +1095,7 @@ $$2[1.5,1,1.5,1]^\top - [2,1,1,1]^\top = [3,2,3,2]^\top - [2,1,1,1]^\top = [1,\ 
 
 $$\text{out} = [T_0 \| T_1 \| T_2] = \begin{bmatrix}2&-1&1 \\\\ 1&-1.5&1 \\\\ 1&-1&2 \\\\ 1&-1.5&1\end{bmatrix} \in \mathbb{R}^{4\times 3}$$
 
-Then `self.linear` applies $\mathbf{W} \in \mathbb{R}^{3 \cdot \text{in_dim} \times \text{out_dim}}$ to map each row to the output dimension.
+Then `self.linear` applies $\mathbf{W} \in \mathbb{R}^{3 \cdot \text{in\_dim} \times \text{out\_dim}}$ to map each row to the output dimension.
 
 <br>
 
@@ -1314,5 +1314,464 @@ $$[0, -1, 0, -1]^\top - [0, -0.5, 0, -0.5]^\top = [0, -0.5, 0, -0.5]^\top$$
 
 ---
 
-## Step 15: 
+## Step 15: WL Color Refinement on $C_4$
 
+We now implement the **1-Weisfeiler-Lehman (1-WL) color refinement** algorithm — the theoretical backbone of message passing expressiveness. Each round, a node's color is updated by hashing its current color together with its neighbors' colors (sorted for permutation invariance).
+
+$$\text{color}_i^{(t+1)} = \text{hash}\!\left(\text{color}_i^{(t)},\ \text{sort}\!\left\{\text{color}_j^{(t)} : j \in \mathcal{N}(i)\right\}\right)$$
+
+<br>
+
+**Initialization**
+
+No labels provided $\to$ all nodes get color 1:
+
+$$\text{colors}^{(0)} = \{0:1,\ 1:1,\ 2:1,\ 3:1\}$$
+
+<br>
+
+**Round 1**
+
+For each node, form signature $(\text{color}_i,\ \text{sorted neighbor colors})$, then assign a hash integer.
+
+Adjacency of $C_4$: $\mathcal{N}(0)=\{1,3\},\ \mathcal{N}(1)=\{0,2\},\ \mathcal{N}(2)=\{1,3\},\ \mathcal{N}(3)=\{0,2\}$
+
+| Node | $\text{color}_i^{(0)}$ | Neighbor colors | Signature | Hash |
+|---|---|---|---|---|
+| 0 | 1 | $\{1,1\}$ | $(1,(1,1))$ | 0 |
+| 1 | 1 | $\{1,1\}$ | $(1,(1,1))$ | 0 |
+| 2 | 1 | $\{1,1\}$ | $(1,(1,1))$ | 0 |
+| 3 | 1 | $\{1,1\}$ | $(1,(1,1))$ | 0 |
+
+$$\text{colors}^{(1)} = \{0:0,\ 1:0,\ 2:0,\ 3:0\}$$
+
+All nodes still identical — uniform initialization on a regular graph produces uniform colors.
+
+<br>
+
+**Round 2**
+
+All colors are 0, all degrees are 2, all neighbor colors are $\{0,0\}$:
+
+| Node | Signature | Hash |
+|---|---|---|
+| 0 | $(0,(0,0))$ | 0 |
+| 1 | $(0,(0,0))$ | 0 |
+| 2 | $(0,(0,0))$ | 0 |
+| 3 | $(0,(0,0))$ | 0 |
+
+$$\text{colors}^{(2)} = \{0:0,\ 1:0,\ 2:0,\ 3:0\}$$
+
+The actual computation is just:
+
+- Every node has color 0 (from Round 1)
+- Every node's neighbors also have color 0
+- So every node forms signature (0, (0,0)) — identical across all nodes
+
+<br>
+
+**Round 3**
+
+Identical to Round 2 — colors have **stabilized**:
+
+$$\text{colors}^{(3)} = \{0:0,\ 1:0,\ 2:0,\ 3:0\}$$
+
+<br>
+
+**28. What this result demonstrates?**
+
+1-WL **cannot distinguish any node in $C_4$** from any other when initialized uniformly. Every node sees two neighbors of the same color at every round — the signatures are always identical.
+
+This directly connects to Step 7's observation: node 0 receives identical messages from nodes 1 and 3 because **those nodes are WL-indistinguishable**. Message passing is exactly 1-WL, so it inherits this blindness.
+
+$$\mathbf{M}_0 = \mathbf{m}_{10} + \mathbf{m}_{30}$$
+
+With $h_1 = h_3$ (identical features), $\mathbf{m}_{10} = \mathbf{m}_{30}$ — exactly the same failure mode as WL producing identical signatures. **MPNN and WL fail on precisely the same graphs.**
+
+The fix — injecting distinct initial features (like QM9's atom types) — is precisely what breaks this symmetry and allows the network to differentiate nodes.
+
+---
+
+## Step 16: WL-Indistinguishable Graphs: $K_{3,3}$ vs Prism
+
+We construct a **concrete counterexample** to 1-WL's discriminative power: two non-isomorphic graphs that are provably identical under all rounds of WL refinement.
+
+**The two graphs**
+
+**$K_{3,3}$** — complete bipartite: every node in $\{0,1,2\}$ connects to every node in $\{3,4,5\}$.
+
+**Prism** — triangular prism: two triangles $(0\text{-}1\text{-}2)$ and $(3\text{-}4\text{-}5)$ joined by rungs $(0\text{-}3),(1\text{-}4),(2\text{-}5)$.
+
+Both are **3-regular** — every node has exactly 3 neighbors.
+
+<br>
+
+**WL on $K_{3,3}$**
+
+**Round 0**
+
+Uniform initialization:
+
+$$\text{colors}^{(0)} = \{0:1,\ 1:1,\ 2:1,\ 3:1,\ 4:1,\ 5:1\}$$
+
+<br>
+
+**Round 1 — $K_{3,3}$**
+
+Every node has 3 neighbors, all color 1:
+
+| Node | Signature | Hash |
+|---|---|---|
+| 0 | $(1,(1,1,1))$ | 0 |
+| 1 | $(1,(1,1,1))$ | 0 |
+| 2 | $(1,(1,1,1))$ | 0 |
+| 3 | $(1,(1,1,1))$ | 0 |
+| 4 | $(1,(1,1,1))$ | 0 |
+| 5 | $(1,(1,1,1))$ | 0 |
+
+$$\text{colors}^{(1)}_{K_{3,3}} = \{0:0,\ 1:0,\ 2:0,\ 3:0,\ 4:0,\ 5:0\}$$
+
+<br>
+
+**Round 1 — Prism**
+
+Every node also has 3 neighbors, all color 1:
+
+| Node | Neighbors | Signature | Hash |
+|---|---|---|---|
+| 0 | $\{1,2,3\}$ | $(1,(1,1,1))$ | 0 |
+| 1 | $\{0,2,4\}$ | $(1,(1,1,1))$ | 0 |
+| 2 | $\{0,1,5\}$ | $(1,(1,1,1))$ | 0 |
+| 3 | $\{0,4,5\}$ | $(1,(1,1,1))$ | 0 |
+| 4 | $\{1,3,5\}$ | $(1,(1,1,1))$ | 0 |
+| 5 | $\{2,3,4\}$ | $(1,(1,1,1))$ | 0 |
+
+$$\text{colors}^{(1)}_{\text{prism}} = \{0:0,\ 1:0,\ 2:0,\ 3:0,\ 4:0,\ 5:0\}$$
+
+<br>
+
+**Rounds 2 & 3**
+
+Both graphs: all colors 0, all nodes have 3 neighbors of color 0 → signature $(0,(0,0,0))$ → hash 0 for everyone. Colors stabilize identically on both graphs for all subsequent rounds.
+
+$$\text{colors}^{(t)}_{K_{3,3}} = \text{colors}^{(t)}_{\text{prism}} \quad \forall\, t \geq 1$$
+
+<br>
+
+_THE PUNCHLINE_
+
+1-WL assigns **identical color histograms** to both graphs at every round, yet they are structurally different — $K_{3,3}$ has no triangles, the prism has two. Any GNN that is bounded by 1-WL expressiveness (i.e. standard MPNN and ChebNet from this project) **cannot distinguish these two molecules** and would predict the same $U_0$ for both, regardless of depth.
+
+<br>
+
+**29. Given that both graphs fool 1-WL, think of a simple structural property (computable from the graph) that would differentiate them?**
+
+**Triangle count.**
+
+$K_{3,3}$ contains zero triangles — it's bipartite, so no odd cycles exist. The prism contains exactly two triangles (the two faces $0\text{-}1\text{-}2$ and $3\text{-}4\text{-}5$).
+
+Triangle count is computable as $\frac{1}{6}\text{tr}(\mathbf{A}^3)$ — a property detectable by 3-node subgraph counting but invisible to 1-WL, which only aggregates 1-hop neighborhood color histograms and therefore cannot detect closed loops of any length.
+
+<br>
+
+**Triangle Detection via $\mathbf{A}^3$**
+
+The key mathematical operation:
+
+```python
+A3 = A @ A @ A
+return A3.diagonal().any().item()
+```
+
+$(\mathbf{A}^3)_{ii}$ counts the number of closed walks of length 3 starting and ending at node $i$ — exactly the number of triangles involving node $i$.
+
+$$(\mathbf{A}^3)_{ii} = \sum_{j,k} A_{ij}A_{jk}A_{ki}$$
+
+A nonzero diagonal entry means node $i$ participates in at least one triangle.
+
+<br>
+
+**On $K_{3,3}$:**
+
+$$\mathbf{A}_{K_{3,3}} = \begin{bmatrix} 0&0&0&1&1&1 \\\\ 0&0&0&1&1&1 \\\\ 0&0&0&1&1&1 \\\\ 1&1&1&0&0&0 \\\\ 1&1&1&0&0&0 \\\\ 1&1&1&0&0&0 \end{bmatrix}$$
+
+$(\mathbf{A}^2)_{00} = \sum_k A_{0k}A_{k0} = A_{03}^2+A_{04}^2+A_{05}^2 = 3$
+
+$(\mathbf{A}^3)_{00} = \sum_j A_{0j}(\mathbf{A}^2)_{j0}$.
+
+Node 0 only connects to $\{3,4,5\}$, and,
+
+$(\mathbf{A}^2)_{30} = \sum_k A_{3k}A_{k0} = A_{30}A_{00}+A_{31}A_{10}+A_{32}A_{20} = 0$ since $A_{00}=A_{10}=A_{20}=0$.
+
+$$(\mathbf{A}^3)_{00} = 0 \implies \text{no triangles}$$
+
+<br>
+
+**On the Prism**
+
+Check node 0 with neighbors $\{1,2,3\}$:
+
+$$(\mathbf{A}^3)_{00} = \sum_{j,k}A_{0j}A_{jk}A_{k0}$$
+
+Only paths that return to 0 contribute. One such path: $0\to1\to2\to0$:
+
+$$A_{01}A_{12}A_{20} = 1\cdot1\cdot1 = 1$$
+
+Triangle $0\text{-}1\text{-}2$ confirmed — diagonal is nonzero.
+
+<br>
+
+_TYING IT BACK TO WL_
+
+Step 15 showed WL assigns identical histograms to both graphs. Yet $\text{tr}(\mathbf{A}^3) = 0$ for $K_{3,3}$ and $> 0$ for the prism — a quantity **invisible to 1-WL** but trivially computable from $\mathbf{A}$. This is precisely why higher-order GNNs (which explicitly count subgraph patterns) strictly dominate 1-WL in expressive power.
+
+<br>
+
+**MPNN Blindness to $K_{3,3}$ vs Prism**
+
+An MPNN with uniform input features produces identical outputs for two structurally different graphs, confirming it is bounded by 1-WL.
+
+<br>
+
+**30. Why uniform features are essential here?**
+
+If atom types differed, the network could trivially distinguish graphs via input features alone — that would not test WL expressiveness. Setting $\mathbf{X} = \mathbf{1}_{6\times11}$ replicates the uniform initialization of Step 15, isolating **topology** as the only distinguishing factor.
+
+<br>
+
+**The mathematical argument**
+
+From Step 15, WL with uniform initialization produces identical color histograms for both graphs at every round. Since MPNN exactly simulates 1-WL (each message passing round = one WL refinement step), the node states after $L$ layers are identical:
+
+$$\mathbf{h}_i^{(L)}\big|_{K_{3,3}} = \mathbf{h}_i^{(L)}\big|_{\text{prism}} \quad \forall\, i$$
+
+Mean pooling over identical node states gives identical graph embeddings:
+
+$$\mathbf{g}_{K_{3,3}} = \mathbf{g}_{\text{prism}}$$
+
+Therefore $\hat{y}_{K_{3,3}} = \hat{y}_{\text{prism}}$ exactly — difference should be $\approx 0$.
+
+<br>
+
+**On $C_4$**
+
+Recall from Step 15: uniform initialization on $C_4$ produced all-identical colors at every round. The same mechanism operates here at graph level — uniform features + symmetric topology = indistinguishable under message passing.
+
+<br>
+
+**31. What is the minimum change to this experiment that would cause the MPNN to produce different outputs for the two graphs?**
+
+Assign at least one distinct initial node feature — breaking the uniform $\mathbf{X} = \mathbf{1}$ assumption so that WL round 0 already sees non-identical colors, forcing divergent signatures from the very first message passing step.
+
+---
+
+## Step 17: Atomic Reference Energies and Baseline Subtraction
+
+$U_0$ (internal energy at 0K) for a molecule is **dominated by atomic contributions** — the energy each atom carries independently of its bonding environment. Subtracting these reference energies leaves only the **interaction energy**, which is what the GNN actually needs to learn.
+
+<br>
+
+**The decomposition**
+
+$$U_0^{\text{molecule}} = \underbrace{\sum_{i \in \mathcal{V}} \epsilon_{z_i}}_{\text{atomic baseline}} + \underbrace{\Delta U_0}_{\text{interaction energy}}$$
+
+where $\epsilon_{z_i}$ is the reference energy for atom type $z_i \in \{\text{H, C, N, O, F}\}$.
+
+<br>
+
+On the anchor $C_4$, suppose all 4 nodes are carbon ($z_i = \text{C}$, index 1):
+
+$$\text{baseline} = 4 \times \epsilon_{\text{C}}$$
+
+From the atomref table, $\epsilon_{\text{C}} \approx -37.8\ \text{eV}$, so baseline $\approx -151.2\ \text{eV}$.
+
+<br>
+
+**`compute_atomref_baseline` — line by line**
+
+`one_hot = x[:, :5]` — extracts columns 0–4 from $\mathbf{X}$, the atom-type one-hots: $\in \mathbb{R}^{N\times 5}$.
+
+`atom_counts = one_hot.sum(dim=0)` — sums each column, giving a 5-dim vector of element counts. On the anchor (4 carbons):
+
+$$\text{atom\_counts} = [0, 4, 0, 0, 0]$$
+
+`refs` — reference energies $[\epsilon_H, \epsilon_C, \epsilon_N, \epsilon_O, \epsilon_F]$ as a tensor.
+
+`(atom_counts * refs).sum()` — dot product:
+
+$$\text{baseline} = \sum_{k=0}^{4} \text{count}_k \cdot \epsilon_k = 0\cdot\epsilon_H + 4\cdot\epsilon_C + 0 + 0 + 0 = 4\epsilon_C$$
+
+<br>
+
+**32. Why this matters for training?**
+
+Without subtraction, the model must learn that a 10-carbon molecule has $U_0 \approx -378\ \text{eV}$ just from atom counting — a trivial but large signal that drowns out the chemically interesting interaction term $\Delta U_0$. Subtracting the baseline reduces the regression target variance dramatically, making the GNN's job purely about **learning bonding interactions**.
+
+---
+
+## Step 18: Target Normalization
+
+We compute normalization statistics **from training data only** to avoid data leakage.
+
+<br>
+
+$$N_{\text{total}} = 130831, \quad N_{\text{train}} = 0.8 \times N_{\text{total}},\quad N_{\text{val}} = 0.1 \times N_{\text{total}},\quad N_{\text{test}} = \text{remainder}$$
+
+A seeded `randperm` shuffles indices before slicing — ensures class/size balance is random but reproducible.
+
+<br>
+
+**Target normalization — WHY TRAINING DATA ONLY?**
+
+The residual for molecule $g$ is:
+
+$$r_g = U_0^{(g)} - \sum_{i \in \mathcal{V}_g} \epsilon_{z_i}$$
+
+From Step 17. Then:
+
+$$\hat{r}_g = \frac{r_g - \mu_{\text{train}}}{\sigma_{\text{train}}}$$
+
+$\mu_{\text{train}}$ and $\sigma_{\text{train}}$ are computed **exclusively from training residuals**. Applying those same statistics to val/test data is correct — using val/test statistics to compute them would constitute **data leakage**, artificially inflating performance.
+
+<br>
+
+**Variance reduction on $C_4$**
+
+Suppose $C_4$ has 4 carbons, $\epsilon_C \approx -37.8\ \text{eV}$:
+
+$$r_{C_4} = U_0^{C_4} - 4\times(-37.8) = U_0^{C_4} + 151.2\ \text{eV}$$
+
+The raw $U_0$ range across QM9 spans ~$1085\ \text{eV}$ — dominated by atom counting. After subtracting atomref, $\sigma_{\text{train}}$ drops to $\sim 10\ \text{eV}$, a **~100x reduction** that makes the regression target tractable.
+
+---
+
+## Step 19: Training Loop: Residual Targets, Normalization, MAE Loss
+
+We implement the full supervised learning loop. Three mathematical operations chain together: baseline subtraction (Step 17) $\to$ z-score normalization $\to$ MAE loss in normalized space $\to$ denormalize for reporting.
+
+`get_residual_target` — batched baseline subtraction
+
+Extends Step 17's per-molecule computation to a full batch. For each graph $g$ in the batch:
+
+$$r_g = U_0^{(g)} - \sum_{i \in \mathcal{V}_g} \epsilon_{z_i}$$
+
+`batch.batch == g_idx` is a boolean mask selecting rows of `x` belonging to graph $g$. Then `one_hot[mask].sum(dim=0)` counts atom types exactly as in Step 17.
+
+<br>
+
+**On $C_4$ (4 carbons, $\epsilon_C \approx -37.8\ \text{eV}$):**
+
+$$r_{C_4} = U_0^{C_4} - 4\times(-37.8) = U_0^{C_4} + 151.2\ \text{eV}$$
+
+<br>
+
+**`train_epoch` — normalization and loss**
+
+**1. Z-score normalization** of the residual target:
+
+$$\tilde{r}_g = \frac{r_g - \mu_{\text{train}}}{\sigma_{\text{train}}}$$
+
+The model predicts $\hat{\tilde{r}}_g \in \mathbb{R}$ in normalized space. Loss is **MAE** (mean absolute error):
+
+$$\mathcal{L} = \frac{1}{B}\sum_{g=1}^{B}|\hat{\tilde{r}}_g - \tilde{r}_g|$$
+
+**2. Denormalization** for human-readable reporting:
+
+$$\text{MAE}_{\text{eV}} = \mathcal{L} \times \sigma_{\text{train}}$$
+
+<br>
+
+On $C_4$ — suppose $\sigma_{\text{train}} = 10\ \text{eV}$, $\mu_{\text{train}} = 0.5\ \text{eV}$, and $r_{C_4} = 1.5\ \text{eV}$:
+
+$$\tilde{r}_{C_4} = \frac{1.5 - 0.5}{10} = 0.1$$
+
+If model predicts $\hat{\tilde{r}} = 0.15$:
+
+$$\mathcal{L} = |0.15 - 0.1| = 0.05 \implies \text{MAE}_{\text{eV}} = 0.05 \times 10 = 0.5\ \text{eV}$$
+
+<br>
+
+**33. Why MAE over MSE?**
+
+MSE penalizes large errors quadratically — a single outlier molecule dominates training. QM9 contains molecules spanning a wide size range; MAE treats all residual errors equally regardless of magnitude, producing more robust training.
+
+<br>
+
+**`evaluate` — `.sum()` vs `.mean()`**
+
+Training uses `.mean()` per batch (normalized by batch size). Evaluation uses `.sum()` accumulated across all batches, then divides by `len(loader.dataset)` — this correctly handles the last batch being smaller than 512 without bias.
+
+The MPNN has more parameters ($\sim$67k) than ChebNet ($\sim$42k). This is because the MPNN uses an Edge Network (a small MLP) to process bond features for every message, whereas ChebNet uses a shared Chebyshev weight matrix for each polynomial order.
+
+---
+
+## Step 20: Training Loop: Adam + ReduceLROnPlateau
+
+We wire together the training infrastructure. Two mathematical objects govern optimization: the **Adam update rule** and the **learning rate schedule**.
+
+<br>
+
+**Adam optimizer**
+
+For each parameter $\theta$, Adam maintains running estimates of the first and second moments of the gradient:
+
+$$m_t = \beta_1 m_{t-1} + (1-\beta_1)g_t \quad \text{(mean)}$$
+$$v_t = \beta_2 v_{t-1} + (1-\beta_2)g_t^2 \quad \text{(variance)}$$
+
+**Bias-corrected update:**
+
+$$\theta_t = \theta_{t-1} - \frac{\eta}{\sqrt{\hat{v}_t} + \epsilon}\hat{m}_t$$
+
+With `lr=1e-3`, $\beta_1=0.9$, $\beta_2=0.999$ (PyTorch defaults). The effective step size adapts per-parameter — parameters with consistently large gradients get smaller updates automatically.
+
+<br>
+
+**ReduceLROnPlateau**
+
+Monitors `val_mae`. If it fails to improve for `patience=10` consecutive epochs:
+
+$$\eta \leftarrow \eta \times 0.5$$
+
+until `min_lr=1e-5`. On a training run of 128 epochs, this can trigger ~2–3 times, walking $\eta$ from $10^{-3}$ down toward $10^{-5}$ as the model approaches convergence.
+
+<br>
+
+**34. Why these choices suit QM9?**
+
+Adam's adaptive per-parameter learning rates handle the heterogeneous gradient scales across node MLP weights, edge MLP weights, and readout layers. ReduceLROnPlateau avoids premature convergence without requiring a fixed schedule — it responds to actual validation behavior rather than a predetermined decay curve.
+
+<br>
+
+**35. Why validation MAE (rather than training MAE) is passed to `scheduler.step()`?**
+
+Training MAE measures how well the model fits data it has already seen — it will keep decreasing even as the model overfits. Validation MAE measures performance on unseen data, so when it plateaus, it signals the model has genuinely stopped improving in a generalizable sense — which is exactly when reducing the learning rate to take finer steps makes sense.
+
+---
+
+## Code Output
+
+**Output Interpretation:**
+
+*   **MPNN (1.4392 eV):** Outperforms ChebNet by approximately **19%**. In the context of QM9, this performance gap is largely attributed to the MPNN's **spatial edge processing**, which explicitly models bond types (single, double, triple, aromatic).
+*   **ChebNet (1.7810 eV):** While higher than MPNN, it captures over **82%** of the target variance using only graph connectivity and spectral filters.
+*   **Normalized MAE (0.1395 vs 0.1726):** Both models demonstrate strong predictive power, staying well below a normalized error of 1.0 (which would be equivalent to just guessing the mean).
+
+<br>
+
+**Final Comparison Summary:**
+
+| Feature | MPNN (Spatial) | ChebNet (Spectral) |
+| :--- | :--- | :--- |
+| **Test MAE** | 1.4392 eV (Winner) | 1.7810 eV |
+| **Parameters** | 67,777 | 42,049 (Efficient) |
+| **Input Usage** | Nodes + Edge Features | Nodes + Graph Laplacian |
+| **Inductive Bias** | Local Message Passing | Spectral Frequency Filtering |
+
+<br>
+
+**Final Project Conclusion**
+
+This project successfully implemented a side-by-side comparison of Spectral vs. Spatial GNNs. By applying the 1-WL test, we identified the mathematical "blind spots" of these architectures. Through Delta Learning (atomref subtraction), we reduced problem complexity by 105$\times$, ultimately proving that while spectral methods like ChebNet are parameter-efficient, spatial methods like MPNN remain superior for molecular property prediction due to their ability to explicitly integrate bond chemistry.
+
+---
+---
