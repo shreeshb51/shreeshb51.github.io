@@ -235,7 +235,13 @@ window.Quarto = {
   <li><a href="#step-12-full-chebnet-model" id="toc-step-12-full-chebnet-model" class="nav-link" data-scroll-target="#step-12-full-chebnet-model">Step 12: Full ChebNet Model</a></li>
   <li><a href="#step-13-chebnet-permutation-invariance-why-lambda_max-must-be-precomputed" id="toc-step-13-chebnet-permutation-invariance-why-lambda_max-must-be-precomputed" class="nav-link" data-scroll-target="#step-13-chebnet-permutation-invariance-why-lambda_max-must-be-precomputed">Step 13: ChebNet Permutation Invariance + Why <span class="math inline">\(\lambda_{\max}\)</span> must be precomputed</a></li>
   <li><a href="#step-14-chebyshev-filter-locality-delta-signal-propagation" id="toc-step-14-chebyshev-filter-locality-delta-signal-propagation" class="nav-link" data-scroll-target="#step-14-chebyshev-filter-locality-delta-signal-propagation">Step 14: Chebyshev Filter Locality: Delta Signal Propagation</a></li>
-  <li><a href="#step-15" id="toc-step-15" class="nav-link" data-scroll-target="#step-15">Step 15:</a></li>
+  <li><a href="#step-15-wl-color-refinement-on-c_4" id="toc-step-15-wl-color-refinement-on-c_4" class="nav-link" data-scroll-target="#step-15-wl-color-refinement-on-c_4">Step 15: WL Color Refinement on <span class="math inline">\(C_4\)</span></a></li>
+  <li><a href="#step-16-wl-indistinguishable-graphs-k_33-vs-prism" id="toc-step-16-wl-indistinguishable-graphs-k_33-vs-prism" class="nav-link" data-scroll-target="#step-16-wl-indistinguishable-graphs-k_33-vs-prism">Step 16: WL-Indistinguishable Graphs: <span class="math inline">\(K_{3,3}\)</span> vs Prism</a></li>
+  <li><a href="#step-17-atomic-reference-energies-and-baseline-subtraction" id="toc-step-17-atomic-reference-energies-and-baseline-subtraction" class="nav-link" data-scroll-target="#step-17-atomic-reference-energies-and-baseline-subtraction">Step 17: Atomic Reference Energies and Baseline Subtraction</a></li>
+  <li><a href="#step-18-target-normalization" id="toc-step-18-target-normalization" class="nav-link" data-scroll-target="#step-18-target-normalization">Step 18: Target Normalization</a></li>
+  <li><a href="#step-19-training-loop-residual-targets-normalization-mae-loss" id="toc-step-19-training-loop-residual-targets-normalization-mae-loss" class="nav-link" data-scroll-target="#step-19-training-loop-residual-targets-normalization-mae-loss">Step 19: Training Loop: Residual Targets, Normalization, MAE Loss</a></li>
+  <li><a href="#step-20-training-loop-adam-reducelronplateau" id="toc-step-20-training-loop-adam-reducelronplateau" class="nav-link" data-scroll-target="#step-20-training-loop-adam-reducelronplateau">Step 20: Training Loop: Adam + ReduceLROnPlateau</a></li>
+  <li><a href="#code-output" id="toc-code-output" class="nav-link" data-scroll-target="#code-output">Code Output</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -269,7 +275,7 @@ window.Quarto = {
 </ul>
 <p>No values array needed here because every edge has value 1.</p>
 <p><span class="math inline">\(C_4\)</span> has <span class="math inline">\(E=4\)</span> undirected edges, so <span class="math inline">\(2E=8\)</span> directed edges. The COO tensor is:</p>
-<p><span class="math display">\[\text{edge_index} = \begin{bmatrix} 0&amp;1&amp;1&amp;2&amp;2&amp;3&amp;3&amp;0 \\\\ 1&amp;0&amp;2&amp;1&amp;3&amp;2&amp;0&amp;3 \end{bmatrix}\]</span></p>
+<p><span class="math display">\[\text{edge\_index} = \begin{bmatrix} 0&amp;1&amp;1&amp;2&amp;2&amp;3&amp;3&amp;0 \\\\ 1&amp;0&amp;2&amp;1&amp;3&amp;2&amp;0&amp;3 \end{bmatrix}\]</span></p>
 <p>Simply: Row 0 = sources, Row 1 = destinations.</p>
 <pre><code>In 'edge_index' tensor: node 0 is connected to node 1 (first column); node 1 is connected to node 0 (second column)... and so on.</code></pre>
 <p><span class="math inline">\(C_4\)</span> has 4 undirected edges. PyG stores <strong>both directions</strong>, giving 8 directed edges:</p>
@@ -966,7 +972,7 @@ window.Quarto = {
 <p>The node retains its own state <span class="math inline">\(\mathbf{h}_i\)</span> alongside the aggregated neighborhood summary <span class="math inline">\(\mathbf{M}_i\)</span> — this prevents the node from “forgetting” who it is after aggregation.</p>
 <p><br></p>
 <p><strong>Full data flow summary</strong></p>
-<p><span class="math display">\[[N, F] \xrightarrow{\text{concat neighbors+edges}} [2E,\ 2F+F_e] \xrightarrow{\text{MLP}_{\text{msg}}} [2E, H] \xrightarrow{\text{scatter_add}} [N, H] \xrightarrow{\text{MLP}_{\text{update}}} [N, H]\]</span></p>
+<p><span class="math display">\[[N, F] \xrightarrow{\text{concat neighbors+edges}} [2E,\ 2F+F_e] \xrightarrow{\text{MLP}_{\text{msg}}} [2E, H] \xrightarrow{\text{scatter\_add}} [N, H] \xrightarrow{\text{MLP}_{\text{update}}} [N, H]\]</span></p>
 <p><br></p>
 <p><strong>16. In Step 1, we obtained <span class="math inline">\(m_{01}\)</span> and <span class="math inline">\(m_{03}\)</span>. In Step 2, we used <span class="math inline">\(m_{10}\)</span> and <span class="math inline">\(m_{30}\)</span>. There seems to be mismatch of subscript. Is that a typo or does it not matter in which order we write?</strong></p>
 <p>Not a typo — it matters and here’s why.</p>
@@ -987,7 +993,7 @@ window.Quarto = {
 <p>In QM9 specifically, the node feature matrix <span class="math inline">\(\mathbf{X}\)</span> already contains atom-type one-hots — if nodes 1 and 3 are different atom types, the problem vanishes naturally. The WL limit bites hardest on symmetric molecules with identical atom types at symmetric positions.</p>
 <p><br></p>
 <blockquote class="blockquote">
-<p>THE COMPLETE CHRONOLOGICAL FLOW OF GNN MESSAGE PASSING WITH ITS UNDERLYING MATHEMATICS IS EXPLAINED IN <a href="url_here">CATW/GNN Message Passing</a></p>
+<p>THE COMPLETE CHRONOLOGICAL FLOW OF GNN MESSAGE PASSING WITH ITS UNDERLYING MATHEMATICS IS EXPLAINED IN <a href="https://shreeshb51.github.io/catw/GNN%20Message%20Passing/">CATW/GNN Message Passing</a></p>
 </blockquote>
 <hr>
 </section>
@@ -1070,7 +1076,7 @@ window.Quarto = {
 <p><span class="math display">\[P_{ij} = \begin{cases} 1 &amp; \text{if } \pi(j) = i \\\\ 0 &amp; \text{otherwise} \end{cases}\]</span></p>
 <p>In code: <code>x_perm = mol.x[pi]</code> — row <span class="math inline">\(i\)</span> of <code>x_perm</code> is row <span class="math inline">\(\pi(i)\)</span> of <code>mol.x</code>.</p>
 <p><strong>2. Adjacency matrix:</strong> <span class="math display">\[\mathbf{A}_\pi = \mathbf{P}_\pi \mathbf{A} \mathbf{P}_\pi^\top\]</span></p>
-<p><strong>3. Edge index (COO):</strong> each node id <span class="math inline">\(i\)</span> in <code>edge_index</code> is replaced by <span class="math inline">\(\pi(i)\)</span>: <span class="math display">\[\texttt{edge_index_perm} = \pi(\texttt{edge_index})\]</span></p>
+<p><strong>3. Edge index (COO):</strong> each node id <span class="math inline">\(i\)</span> in <code>edge_index</code> is replaced by <span class="math inline">\(\pi(i)\)</span>: <span class="math display">\[\texttt{edge\_index\_perm} = \pi(\texttt{edge\_index})\]</span></p>
 <p><br></p>
 <p><strong>On the anchor <span class="math inline">\(C_4\)</span></strong></p>
 <p>Let <span class="math inline">\(\pi = [2, 0, 3, 1]\)</span> — meaning node 0 becomes node 2, node 1 becomes node 0, etc.</p>
@@ -1310,7 +1316,7 @@ window.Quarto = {
 <p><br></p>
 <p><strong>Final concatenation and linear layer</strong></p>
 <p><span class="math display">\[\text{out} = [T_0 \| T_1 \| T_2] = \begin{bmatrix}2&amp;-1&amp;1 \\\\ 1&amp;-1.5&amp;1 \\\\ 1&amp;-1&amp;2 \\\\ 1&amp;-1.5&amp;1\end{bmatrix} \in \mathbb{R}^{4\times 3}\]</span></p>
-<p>Then <code>self.linear</code> applies <span class="math inline">\(\mathbf{W} \in \mathbb{R}^{3 \cdot \text{in_dim} \times \text{out_dim}}\)</span> to map each row to the output dimension.</p>
+<p>Then <code>self.linear</code> applies <span class="math inline">\(\mathbf{W} \in \mathbb{R}^{3 \cdot \text{in\_dim} \times \text{out\_dim}}\)</span> to map each row to the output dimension.</p>
 <p><br></p>
 <p><strong>Key insight: locality via polynomial order</strong></p>
 <p><span class="math inline">\(T_k(\tilde{\mathbf{L}})\mathbf{x}\)</span> at node <span class="math inline">\(i\)</span> depends on nodes within <span class="math inline">\(k\)</span> hops — the polynomial order <strong>directly controls the receptive field</strong>, exactly like MPNN layers. ChebNet with <span class="math inline">\(K=3\)</span> sees the same neighborhood as 3 MPNN rounds, but via spectral filtering rather than spatial aggregation.</p>
@@ -1495,8 +1501,431 @@ window.Quarto = {
 <p><strong>The locality guarantee holds exactly</strong>: <span class="math inline">\(T_k\)</span> is nonzero only within <span class="math inline">\(k\)</span> hops of the source. At <span class="math inline">\(k=3\)</span>, the signal bounces back — this is the <strong>oscillatory nature of Chebyshev polynomials</strong> reflecting the graph’s spectral structure.</p>
 <hr>
 </section>
-<section id="step-15" class="level2">
-<h2 class="anchored" data-anchor-id="step-15">Step 15:</h2>
+<section id="step-15-wl-color-refinement-on-c_4" class="level2">
+<h2 class="anchored" data-anchor-id="step-15-wl-color-refinement-on-c_4">Step 15: WL Color Refinement on <span class="math inline">\(C_4\)</span></h2>
+<p>We now implement the <strong>1-Weisfeiler-Lehman (1-WL) color refinement</strong> algorithm — the theoretical backbone of message passing expressiveness. Each round, a node’s color is updated by hashing its current color together with its neighbors’ colors (sorted for permutation invariance).</p>
+<p><span class="math display">\[\text{color}_i^{(t+1)} = \text{hash}\!\left(\text{color}_i^{(t)},\ \text{sort}\!\left\{\text{color}_j^{(t)} : j \in \mathcal{N}(i)\right\}\right)\]</span></p>
+<p><br></p>
+<p><strong>Initialization</strong></p>
+<p>No labels provided <span class="math inline">\(\to\)</span> all nodes get color 1:</p>
+<p><span class="math display">\[\text{colors}^{(0)} = \{0:1,\ 1:1,\ 2:1,\ 3:1\}\]</span></p>
+<p><br></p>
+<p><strong>Round 1</strong></p>
+<p>For each node, form signature <span class="math inline">\((\text{color}_i,\ \text{sorted neighbor colors})\)</span>, then assign a hash integer.</p>
+<p>Adjacency of <span class="math inline">\(C_4\)</span>: <span class="math inline">\(\mathcal{N}(0)=\{1,3\},\ \mathcal{N}(1)=\{0,2\},\ \mathcal{N}(2)=\{1,3\},\ \mathcal{N}(3)=\{0,2\}\)</span></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Node</th>
+<th><span class="math inline">\(\text{color}_i^{(0)}\)</span></th>
+<th>Neighbor colors</th>
+<th>Signature</th>
+<th>Hash</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td>1</td>
+<td><span class="math inline">\(\{1,1\}\)</span></td>
+<td><span class="math inline">\((1,(1,1))\)</span></td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>1</td>
+<td><span class="math inline">\(\{1,1\}\)</span></td>
+<td><span class="math inline">\((1,(1,1))\)</span></td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td>1</td>
+<td><span class="math inline">\(\{1,1\}\)</span></td>
+<td><span class="math inline">\((1,(1,1))\)</span></td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>3</td>
+<td>1</td>
+<td><span class="math inline">\(\{1,1\}\)</span></td>
+<td><span class="math inline">\((1,(1,1))\)</span></td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math display">\[\text{colors}^{(1)} = \{0:0,\ 1:0,\ 2:0,\ 3:0\}\]</span></p>
+<p>All nodes still identical — uniform initialization on a regular graph produces uniform colors.</p>
+<p><br></p>
+<p><strong>Round 2</strong></p>
+<p>All colors are 0, all degrees are 2, all neighbor colors are <span class="math inline">\(\{0,0\}\)</span>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Node</th>
+<th>Signature</th>
+<th>Hash</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td><span class="math inline">\((0,(0,0))\)</span></td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td><span class="math inline">\((0,(0,0))\)</span></td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td><span class="math inline">\((0,(0,0))\)</span></td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>3</td>
+<td><span class="math inline">\((0,(0,0))\)</span></td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math display">\[\text{colors}^{(2)} = \{0:0,\ 1:0,\ 2:0,\ 3:0\}\]</span></p>
+<p>The actual computation is just:</p>
+<ul>
+<li>Every node has color 0 (from Round 1)</li>
+<li>Every node’s neighbors also have color 0</li>
+<li>So every node forms signature (0, (0,0)) — identical across all nodes</li>
+</ul>
+<p><br></p>
+<p><strong>Round 3</strong></p>
+<p>Identical to Round 2 — colors have <strong>stabilized</strong>:</p>
+<p><span class="math display">\[\text{colors}^{(3)} = \{0:0,\ 1:0,\ 2:0,\ 3:0\}\]</span></p>
+<p><br></p>
+<p><strong>28. What this result demonstrates?</strong></p>
+<p>1-WL <strong>cannot distinguish any node in <span class="math inline">\(C_4\)</span></strong> from any other when initialized uniformly. Every node sees two neighbors of the same color at every round — the signatures are always identical.</p>
+<p>This directly connects to Step 7’s observation: node 0 receives identical messages from nodes 1 and 3 because <strong>those nodes are WL-indistinguishable</strong>. Message passing is exactly 1-WL, so it inherits this blindness.</p>
+<p><span class="math display">\[\mathbf{M}_0 = \mathbf{m}_{10} + \mathbf{m}_{30}\]</span></p>
+<p>With <span class="math inline">\(h_1 = h_3\)</span> (identical features), <span class="math inline">\(\mathbf{m}_{10} = \mathbf{m}_{30}\)</span> — exactly the same failure mode as WL producing identical signatures. <strong>MPNN and WL fail on precisely the same graphs.</strong></p>
+<p>The fix — injecting distinct initial features (like QM9’s atom types) — is precisely what breaks this symmetry and allows the network to differentiate nodes.</p>
+<hr>
+</section>
+<section id="step-16-wl-indistinguishable-graphs-k_33-vs-prism" class="level2">
+<h2 class="anchored" data-anchor-id="step-16-wl-indistinguishable-graphs-k_33-vs-prism">Step 16: WL-Indistinguishable Graphs: <span class="math inline">\(K_{3,3}\)</span> vs Prism</h2>
+<p>We construct a <strong>concrete counterexample</strong> to 1-WL’s discriminative power: two non-isomorphic graphs that are provably identical under all rounds of WL refinement.</p>
+<p><strong>The two graphs</strong></p>
+<p><strong><span class="math inline">\(K_{3,3}\)</span></strong> — complete bipartite: every node in <span class="math inline">\(\{0,1,2\}\)</span> connects to every node in <span class="math inline">\(\{3,4,5\}\)</span>.</p>
+<p><strong>Prism</strong> — triangular prism: two triangles <span class="math inline">\((0\text{-}1\text{-}2)\)</span> and <span class="math inline">\((3\text{-}4\text{-}5)\)</span> joined by rungs <span class="math inline">\((0\text{-}3),(1\text{-}4),(2\text{-}5)\)</span>.</p>
+<p>Both are <strong>3-regular</strong> — every node has exactly 3 neighbors.</p>
+<p><br></p>
+<p><strong>WL on <span class="math inline">\(K_{3,3}\)</span></strong></p>
+<p><strong>Round 0</strong></p>
+<p>Uniform initialization:</p>
+<p><span class="math display">\[\text{colors}^{(0)} = \{0:1,\ 1:1,\ 2:1,\ 3:1,\ 4:1,\ 5:1\}\]</span></p>
+<p><br></p>
+<p><strong>Round 1 — <span class="math inline">\(K_{3,3}\)</span></strong></p>
+<p>Every node has 3 neighbors, all color 1:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Node</th>
+<th>Signature</th>
+<th>Hash</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td><span class="math inline">\((1,(1,1,1))\)</span></td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td><span class="math inline">\((1,(1,1,1))\)</span></td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td><span class="math inline">\((1,(1,1,1))\)</span></td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>3</td>
+<td><span class="math inline">\((1,(1,1,1))\)</span></td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>4</td>
+<td><span class="math inline">\((1,(1,1,1))\)</span></td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>5</td>
+<td><span class="math inline">\((1,(1,1,1))\)</span></td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math display">\[\text{colors}^{(1)}_{K_{3,3}} = \{0:0,\ 1:0,\ 2:0,\ 3:0,\ 4:0,\ 5:0\}\]</span></p>
+<p><br></p>
+<p><strong>Round 1 — Prism</strong></p>
+<p>Every node also has 3 neighbors, all color 1:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Node</th>
+<th>Neighbors</th>
+<th>Signature</th>
+<th>Hash</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td><span class="math inline">\(\{1,2,3\}\)</span></td>
+<td><span class="math inline">\((1,(1,1,1))\)</span></td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td><span class="math inline">\(\{0,2,4\}\)</span></td>
+<td><span class="math inline">\((1,(1,1,1))\)</span></td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td><span class="math inline">\(\{0,1,5\}\)</span></td>
+<td><span class="math inline">\((1,(1,1,1))\)</span></td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>3</td>
+<td><span class="math inline">\(\{0,4,5\}\)</span></td>
+<td><span class="math inline">\((1,(1,1,1))\)</span></td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>4</td>
+<td><span class="math inline">\(\{1,3,5\}\)</span></td>
+<td><span class="math inline">\((1,(1,1,1))\)</span></td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>5</td>
+<td><span class="math inline">\(\{2,3,4\}\)</span></td>
+<td><span class="math inline">\((1,(1,1,1))\)</span></td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math display">\[\text{colors}^{(1)}_{\text{prism}} = \{0:0,\ 1:0,\ 2:0,\ 3:0,\ 4:0,\ 5:0\}\]</span></p>
+<p><br></p>
+<p><strong>Rounds 2 &amp; 3</strong></p>
+<p>Both graphs: all colors 0, all nodes have 3 neighbors of color 0 → signature <span class="math inline">\((0,(0,0,0))\)</span> → hash 0 for everyone. Colors stabilize identically on both graphs for all subsequent rounds.</p>
+<p><span class="math display">\[\text{colors}^{(t)}_{K_{3,3}} = \text{colors}^{(t)}_{\text{prism}} \quad \forall\, t \geq 1\]</span></p>
+<p><br></p>
+<p><em>THE PUNCHLINE</em></p>
+<p>1-WL assigns <strong>identical color histograms</strong> to both graphs at every round, yet they are structurally different — <span class="math inline">\(K_{3,3}\)</span> has no triangles, the prism has two. Any GNN that is bounded by 1-WL expressiveness (i.e.&nbsp;standard MPNN and ChebNet from this project) <strong>cannot distinguish these two molecules</strong> and would predict the same <span class="math inline">\(U_0\)</span> for both, regardless of depth.</p>
+<p><br></p>
+<p><strong>29. Given that both graphs fool 1-WL, think of a simple structural property (computable from the graph) that would differentiate them?</strong></p>
+<p><strong>Triangle count.</strong></p>
+<p><span class="math inline">\(K_{3,3}\)</span> contains zero triangles — it’s bipartite, so no odd cycles exist. The prism contains exactly two triangles (the two faces <span class="math inline">\(0\text{-}1\text{-}2\)</span> and <span class="math inline">\(3\text{-}4\text{-}5\)</span>).</p>
+<p>Triangle count is computable as <span class="math inline">\(\frac{1}{6}\text{tr}(\mathbf{A}^3)\)</span> — a property detectable by 3-node subgraph counting but invisible to 1-WL, which only aggregates 1-hop neighborhood color histograms and therefore cannot detect closed loops of any length.</p>
+<p><br></p>
+<p><strong>Triangle Detection via <span class="math inline">\(\mathbf{A}^3\)</span></strong></p>
+<p>The key mathematical operation:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>A3 <span class="op">=</span> A <span class="op">@</span> A <span class="op">@</span> A</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="cf">return</span> A3.diagonal().<span class="bu">any</span>().item()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><span class="math inline">\((\mathbf{A}^3)_{ii}\)</span> counts the number of closed walks of length 3 starting and ending at node <span class="math inline">\(i\)</span> — exactly the number of triangles involving node <span class="math inline">\(i\)</span>.</p>
+<p><span class="math display">\[(\mathbf{A}^3)_{ii} = \sum_{j,k} A_{ij}A_{jk}A_{ki}\]</span></p>
+<p>A nonzero diagonal entry means node <span class="math inline">\(i\)</span> participates in at least one triangle.</p>
+<p><br></p>
+<p><strong>On <span class="math inline">\(K_{3,3}\)</span>:</strong></p>
+<p><span class="math display">\[\mathbf{A}_{K_{3,3}} = \begin{bmatrix} 0&amp;0&amp;0&amp;1&amp;1&amp;1 \\\\ 0&amp;0&amp;0&amp;1&amp;1&amp;1 \\\\ 0&amp;0&amp;0&amp;1&amp;1&amp;1 \\\\ 1&amp;1&amp;1&amp;0&amp;0&amp;0 \\\\ 1&amp;1&amp;1&amp;0&amp;0&amp;0 \\\\ 1&amp;1&amp;1&amp;0&amp;0&amp;0 \end{bmatrix}\]</span></p>
+<p><span class="math inline">\((\mathbf{A}^2)_{00} = \sum_k A_{0k}A_{k0} = A_{03}^2+A_{04}^2+A_{05}^2 = 3\)</span></p>
+<p><span class="math inline">\((\mathbf{A}^3)_{00} = \sum_j A_{0j}(\mathbf{A}^2)_{j0}\)</span>.</p>
+<p>Node 0 only connects to <span class="math inline">\(\{3,4,5\}\)</span>, and,</p>
+<p><span class="math inline">\((\mathbf{A}^2)_{30} = \sum_k A_{3k}A_{k0} = A_{30}A_{00}+A_{31}A_{10}+A_{32}A_{20} = 0\)</span> since <span class="math inline">\(A_{00}=A_{10}=A_{20}=0\)</span>.</p>
+<p><span class="math display">\[(\mathbf{A}^3)_{00} = 0 \implies \text{no triangles}\]</span></p>
+<p><br></p>
+<p><strong>On the Prism</strong></p>
+<p>Check node 0 with neighbors <span class="math inline">\(\{1,2,3\}\)</span>:</p>
+<p><span class="math display">\[(\mathbf{A}^3)_{00} = \sum_{j,k}A_{0j}A_{jk}A_{k0}\]</span></p>
+<p>Only paths that return to 0 contribute. One such path: <span class="math inline">\(0\to1\to2\to0\)</span>:</p>
+<p><span class="math display">\[A_{01}A_{12}A_{20} = 1\cdot1\cdot1 = 1\]</span></p>
+<p>Triangle <span class="math inline">\(0\text{-}1\text{-}2\)</span> confirmed — diagonal is nonzero.</p>
+<p><br></p>
+<p><em>TYING IT BACK TO WL</em></p>
+<p>Step 15 showed WL assigns identical histograms to both graphs. Yet <span class="math inline">\(\text{tr}(\mathbf{A}^3) = 0\)</span> for <span class="math inline">\(K_{3,3}\)</span> and <span class="math inline">\(&gt; 0\)</span> for the prism — a quantity <strong>invisible to 1-WL</strong> but trivially computable from <span class="math inline">\(\mathbf{A}\)</span>. This is precisely why higher-order GNNs (which explicitly count subgraph patterns) strictly dominate 1-WL in expressive power.</p>
+<p><br></p>
+<p><strong>MPNN Blindness to <span class="math inline">\(K_{3,3}\)</span> vs Prism</strong></p>
+<p>An MPNN with uniform input features produces identical outputs for two structurally different graphs, confirming it is bounded by 1-WL.</p>
+<p><br></p>
+<p><strong>30. Why uniform features are essential here?</strong></p>
+<p>If atom types differed, the network could trivially distinguish graphs via input features alone — that would not test WL expressiveness. Setting <span class="math inline">\(\mathbf{X} = \mathbf{1}_{6\times11}\)</span> replicates the uniform initialization of Step 15, isolating <strong>topology</strong> as the only distinguishing factor.</p>
+<p><br></p>
+<p><strong>The mathematical argument</strong></p>
+<p>From Step 15, WL with uniform initialization produces identical color histograms for both graphs at every round. Since MPNN exactly simulates 1-WL (each message passing round = one WL refinement step), the node states after <span class="math inline">\(L\)</span> layers are identical:</p>
+<p><span class="math display">\[\mathbf{h}_i^{(L)}\big|_{K_{3,3}} = \mathbf{h}_i^{(L)}\big|_{\text{prism}} \quad \forall\, i\]</span></p>
+<p>Mean pooling over identical node states gives identical graph embeddings:</p>
+<p><span class="math display">\[\mathbf{g}_{K_{3,3}} = \mathbf{g}_{\text{prism}}\]</span></p>
+<p>Therefore <span class="math inline">\(\hat{y}_{K_{3,3}} = \hat{y}_{\text{prism}}\)</span> exactly — difference should be <span class="math inline">\(\approx 0\)</span>.</p>
+<p><br></p>
+<p><strong>On <span class="math inline">\(C_4\)</span></strong></p>
+<p>Recall from Step 15: uniform initialization on <span class="math inline">\(C_4\)</span> produced all-identical colors at every round. The same mechanism operates here at graph level — uniform features + symmetric topology = indistinguishable under message passing.</p>
+<p><br></p>
+<p><strong>31. What is the minimum change to this experiment that would cause the MPNN to produce different outputs for the two graphs?</strong></p>
+<p>Assign at least one distinct initial node feature — breaking the uniform <span class="math inline">\(\mathbf{X} = \mathbf{1}\)</span> assumption so that WL round 0 already sees non-identical colors, forcing divergent signatures from the very first message passing step.</p>
+<hr>
+</section>
+<section id="step-17-atomic-reference-energies-and-baseline-subtraction" class="level2">
+<h2 class="anchored" data-anchor-id="step-17-atomic-reference-energies-and-baseline-subtraction">Step 17: Atomic Reference Energies and Baseline Subtraction</h2>
+<p><span class="math inline">\(U_0\)</span> (internal energy at 0K) for a molecule is <strong>dominated by atomic contributions</strong> — the energy each atom carries independently of its bonding environment. Subtracting these reference energies leaves only the <strong>interaction energy</strong>, which is what the GNN actually needs to learn.</p>
+<p><br></p>
+<p><strong>The decomposition</strong></p>
+<p><span class="math display">\[U_0^{\text{molecule}} = \underbrace{\sum_{i \in \mathcal{V}} \epsilon_{z_i}}_{\text{atomic baseline}} + \underbrace{\Delta U_0}_{\text{interaction energy}}\]</span></p>
+<p>where <span class="math inline">\(\epsilon_{z_i}\)</span> is the reference energy for atom type <span class="math inline">\(z_i \in \{\text{H, C, N, O, F}\}\)</span>.</p>
+<p><br></p>
+<p>On the anchor <span class="math inline">\(C_4\)</span>, suppose all 4 nodes are carbon (<span class="math inline">\(z_i = \text{C}\)</span>, index 1):</p>
+<p><span class="math display">\[\text{baseline} = 4 \times \epsilon_{\text{C}}\]</span></p>
+<p>From the atomref table, <span class="math inline">\(\epsilon_{\text{C}} \approx -37.8\ \text{eV}\)</span>, so baseline <span class="math inline">\(\approx -151.2\ \text{eV}\)</span>.</p>
+<p><br></p>
+<p><strong><code>compute_atomref_baseline</code> — line by line</strong></p>
+<p><code>one_hot = x[:, :5]</code> — extracts columns 0–4 from <span class="math inline">\(\mathbf{X}\)</span>, the atom-type one-hots: <span class="math inline">\(\in \mathbb{R}^{N\times 5}\)</span>.</p>
+<p><code>atom_counts = one_hot.sum(dim=0)</code> — sums each column, giving a 5-dim vector of element counts. On the anchor (4 carbons):</p>
+<p><span class="math display">\[\text{atom\_counts} = [0, 4, 0, 0, 0]\]</span></p>
+<p><code>refs</code> — reference energies <span class="math inline">\([\epsilon_H, \epsilon_C, \epsilon_N, \epsilon_O, \epsilon_F]\)</span> as a tensor.</p>
+<p><code>(atom_counts * refs).sum()</code> — dot product:</p>
+<p><span class="math display">\[\text{baseline} = \sum_{k=0}^{4} \text{count}_k \cdot \epsilon_k = 0\cdot\epsilon_H + 4\cdot\epsilon_C + 0 + 0 + 0 = 4\epsilon_C\]</span></p>
+<p><br></p>
+<p><strong>32. Why this matters for training?</strong></p>
+<p>Without subtraction, the model must learn that a 10-carbon molecule has <span class="math inline">\(U_0 \approx -378\ \text{eV}\)</span> just from atom counting — a trivial but large signal that drowns out the chemically interesting interaction term <span class="math inline">\(\Delta U_0\)</span>. Subtracting the baseline reduces the regression target variance dramatically, making the GNN’s job purely about <strong>learning bonding interactions</strong>.</p>
+<hr>
+</section>
+<section id="step-18-target-normalization" class="level2">
+<h2 class="anchored" data-anchor-id="step-18-target-normalization">Step 18: Target Normalization</h2>
+<p>We compute normalization statistics <strong>from training data only</strong> to avoid data leakage.</p>
+<p><br></p>
+<p><span class="math display">\[N_{\text{total}} = 130831, \quad N_{\text{train}} = 0.8 \times N_{\text{total}},\quad N_{\text{val}} = 0.1 \times N_{\text{total}},\quad N_{\text{test}} = \text{remainder}\]</span></p>
+<p>A seeded <code>randperm</code> shuffles indices before slicing — ensures class/size balance is random but reproducible.</p>
+<p><br></p>
+<p><strong>Target normalization — WHY TRAINING DATA ONLY?</strong></p>
+<p>The residual for molecule <span class="math inline">\(g\)</span> is:</p>
+<p><span class="math display">\[r_g = U_0^{(g)} - \sum_{i \in \mathcal{V}_g} \epsilon_{z_i}\]</span></p>
+<p>From Step 17. Then:</p>
+<p><span class="math display">\[\hat{r}_g = \frac{r_g - \mu_{\text{train}}}{\sigma_{\text{train}}}\]</span></p>
+<p><span class="math inline">\(\mu_{\text{train}}\)</span> and <span class="math inline">\(\sigma_{\text{train}}\)</span> are computed <strong>exclusively from training residuals</strong>. Applying those same statistics to val/test data is correct — using val/test statistics to compute them would constitute <strong>data leakage</strong>, artificially inflating performance.</p>
+<p><br></p>
+<p><strong>Variance reduction on <span class="math inline">\(C_4\)</span></strong></p>
+<p>Suppose <span class="math inline">\(C_4\)</span> has 4 carbons, <span class="math inline">\(\epsilon_C \approx -37.8\ \text{eV}\)</span>:</p>
+<p><span class="math display">\[r_{C_4} = U_0^{C_4} - 4\times(-37.8) = U_0^{C_4} + 151.2\ \text{eV}\]</span></p>
+<p>The raw <span class="math inline">\(U_0\)</span> range across QM9 spans ~<span class="math inline">\(1085\ \text{eV}\)</span> — dominated by atom counting. After subtracting atomref, <span class="math inline">\(\sigma_{\text{train}}\)</span> drops to <span class="math inline">\(\sim 10\ \text{eV}\)</span>, a <strong>~100x reduction</strong> that makes the regression target tractable.</p>
+<hr>
+</section>
+<section id="step-19-training-loop-residual-targets-normalization-mae-loss" class="level2">
+<h2 class="anchored" data-anchor-id="step-19-training-loop-residual-targets-normalization-mae-loss">Step 19: Training Loop: Residual Targets, Normalization, MAE Loss</h2>
+<p>We implement the full supervised learning loop. Three mathematical operations chain together: baseline subtraction (Step 17) <span class="math inline">\(\to\)</span> z-score normalization <span class="math inline">\(\to\)</span> MAE loss in normalized space <span class="math inline">\(\to\)</span> denormalize for reporting.</p>
+<p><code>get_residual_target</code> — batched baseline subtraction</p>
+<p>Extends Step 17’s per-molecule computation to a full batch. For each graph <span class="math inline">\(g\)</span> in the batch:</p>
+<p><span class="math display">\[r_g = U_0^{(g)} - \sum_{i \in \mathcal{V}_g} \epsilon_{z_i}\]</span></p>
+<p><code>batch.batch == g_idx</code> is a boolean mask selecting rows of <code>x</code> belonging to graph <span class="math inline">\(g\)</span>. Then <code>one_hot[mask].sum(dim=0)</code> counts atom types exactly as in Step 17.</p>
+<p><br></p>
+<p><strong>On <span class="math inline">\(C_4\)</span> (4 carbons, <span class="math inline">\(\epsilon_C \approx -37.8\ \text{eV}\)</span>):</strong></p>
+<p><span class="math display">\[r_{C_4} = U_0^{C_4} - 4\times(-37.8) = U_0^{C_4} + 151.2\ \text{eV}\]</span></p>
+<p><br></p>
+<p><strong><code>train_epoch</code> — normalization and loss</strong></p>
+<p><strong>1. Z-score normalization</strong> of the residual target:</p>
+<p><span class="math display">\[\tilde{r}_g = \frac{r_g - \mu_{\text{train}}}{\sigma_{\text{train}}}\]</span></p>
+<p>The model predicts <span class="math inline">\(\hat{\tilde{r}}_g \in \mathbb{R}\)</span> in normalized space. Loss is <strong>MAE</strong> (mean absolute error):</p>
+<p><span class="math display">\[\mathcal{L} = \frac{1}{B}\sum_{g=1}^{B}|\hat{\tilde{r}}_g - \tilde{r}_g|\]</span></p>
+<p><strong>2. Denormalization</strong> for human-readable reporting:</p>
+<p><span class="math display">\[\text{MAE}_{\text{eV}} = \mathcal{L} \times \sigma_{\text{train}}\]</span></p>
+<p><br></p>
+<p>On <span class="math inline">\(C_4\)</span> — suppose <span class="math inline">\(\sigma_{\text{train}} = 10\ \text{eV}\)</span>, <span class="math inline">\(\mu_{\text{train}} = 0.5\ \text{eV}\)</span>, and <span class="math inline">\(r_{C_4} = 1.5\ \text{eV}\)</span>:</p>
+<p><span class="math display">\[\tilde{r}_{C_4} = \frac{1.5 - 0.5}{10} = 0.1\]</span></p>
+<p>If model predicts <span class="math inline">\(\hat{\tilde{r}} = 0.15\)</span>:</p>
+<p><span class="math display">\[\mathcal{L} = |0.15 - 0.1| = 0.05 \implies \text{MAE}_{\text{eV}} = 0.05 \times 10 = 0.5\ \text{eV}\]</span></p>
+<p><br></p>
+<p><strong>33. Why MAE over MSE?</strong></p>
+<p>MSE penalizes large errors quadratically — a single outlier molecule dominates training. QM9 contains molecules spanning a wide size range; MAE treats all residual errors equally regardless of magnitude, producing more robust training.</p>
+<p><br></p>
+<p><strong><code>evaluate</code> — <code>.sum()</code> vs <code>.mean()</code></strong></p>
+<p>Training uses <code>.mean()</code> per batch (normalized by batch size). Evaluation uses <code>.sum()</code> accumulated across all batches, then divides by <code>len(loader.dataset)</code> — this correctly handles the last batch being smaller than 512 without bias.</p>
+<p>The MPNN has more parameters ($<span class="math inline">\(67k) than ChebNet (\)</span>$42k). This is because the MPNN uses an Edge Network (a small MLP) to process bond features for every message, whereas ChebNet uses a shared Chebyshev weight matrix for each polynomial order.</p>
+<hr>
+</section>
+<section id="step-20-training-loop-adam-reducelronplateau" class="level2">
+<h2 class="anchored" data-anchor-id="step-20-training-loop-adam-reducelronplateau">Step 20: Training Loop: Adam + ReduceLROnPlateau</h2>
+<p>We wire together the training infrastructure. Two mathematical objects govern optimization: the <strong>Adam update rule</strong> and the <strong>learning rate schedule</strong>.</p>
+<p><br></p>
+<p><strong>Adam optimizer</strong></p>
+<p>For each parameter <span class="math inline">\(\theta\)</span>, Adam maintains running estimates of the first and second moments of the gradient:</p>
+<p><span class="math display">\[m_t = \beta_1 m_{t-1} + (1-\beta_1)g_t \quad \text{(mean)}\]</span> <span class="math display">\[v_t = \beta_2 v_{t-1} + (1-\beta_2)g_t^2 \quad \text{(variance)}\]</span></p>
+<p><strong>Bias-corrected update:</strong></p>
+<p><span class="math display">\[\theta_t = \theta_{t-1} - \frac{\eta}{\sqrt{\hat{v}_t} + \epsilon}\hat{m}_t\]</span></p>
+<p>With <code>lr=1e-3</code>, <span class="math inline">\(\beta_1=0.9\)</span>, <span class="math inline">\(\beta_2=0.999\)</span> (PyTorch defaults). The effective step size adapts per-parameter — parameters with consistently large gradients get smaller updates automatically.</p>
+<p><br></p>
+<p><strong>ReduceLROnPlateau</strong></p>
+<p>Monitors <code>val_mae</code>. If it fails to improve for <code>patience=10</code> consecutive epochs:</p>
+<p><span class="math display">\[\eta \leftarrow \eta \times 0.5\]</span></p>
+<p>until <code>min_lr=1e-5</code>. On a training run of 128 epochs, this can trigger ~2–3 times, walking <span class="math inline">\(\eta\)</span> from <span class="math inline">\(10^{-3}\)</span> down toward <span class="math inline">\(10^{-5}\)</span> as the model approaches convergence.</p>
+<p><br></p>
+<p><strong>34. Why these choices suit QM9?</strong></p>
+<p>Adam’s adaptive per-parameter learning rates handle the heterogeneous gradient scales across node MLP weights, edge MLP weights, and readout layers. ReduceLROnPlateau avoids premature convergence without requiring a fixed schedule — it responds to actual validation behavior rather than a predetermined decay curve.</p>
+<p><br></p>
+<p><strong>35. Why validation MAE (rather than training MAE) is passed to <code>scheduler.step()</code>?</strong></p>
+<p>Training MAE measures how well the model fits data it has already seen — it will keep decreasing even as the model overfits. Validation MAE measures performance on unseen data, so when it plateaus, it signals the model has genuinely stopped improving in a generalizable sense — which is exactly when reducing the learning rate to take finer steps makes sense.</p>
+<hr>
+</section>
+<section id="code-output" class="level2">
+<h2 class="anchored" data-anchor-id="code-output">Code Output</h2>
+<p><strong>Output Interpretation:</strong></p>
+<ul>
+<li><strong>MPNN (1.4392 eV):</strong> Outperforms ChebNet by approximately <strong>19%</strong>. In the context of QM9, this performance gap is largely attributed to the MPNN’s <strong>spatial edge processing</strong>, which explicitly models bond types (single, double, triple, aromatic).</li>
+<li><strong>ChebNet (1.7810 eV):</strong> While higher than MPNN, it captures over <strong>82%</strong> of the target variance using only graph connectivity and spectral filters.</li>
+<li><strong>Normalized MAE (0.1395 vs 0.1726):</strong> Both models demonstrate strong predictive power, staying well below a normalized error of 1.0 (which would be equivalent to just guessing the mean).</li>
+</ul>
+<p><br></p>
+<p><strong>Final Comparison Summary:</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Feature</th>
+<th style="text-align: left;">MPNN (Spatial)</th>
+<th style="text-align: left;">ChebNet (Spectral)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Test MAE</strong></td>
+<td style="text-align: left;">1.4392 eV (Winner)</td>
+<td style="text-align: left;">1.7810 eV</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Parameters</strong></td>
+<td style="text-align: left;">67,777</td>
+<td style="text-align: left;">42,049 (Efficient)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Input Usage</strong></td>
+<td style="text-align: left;">Nodes + Edge Features</td>
+<td style="text-align: left;">Nodes + Graph Laplacian</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Inductive Bias</strong></td>
+<td style="text-align: left;">Local Message Passing</td>
+<td style="text-align: left;">Spectral Frequency Filtering</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+<p><strong>Final Project Conclusion</strong></p>
+<p>This project successfully implemented a side-by-side comparison of Spectral vs.&nbsp;Spatial GNNs. By applying the 1-WL test, we identified the mathematical “blind spots” of these architectures. Through Delta Learning (atomref subtraction), we reduced problem complexity by 105<span class="math inline">\(\times\)</span>, ultimately proving that while spectral methods like ChebNet are parameter-efficient, spatial methods like MPNN remain superior for molecular property prediction due to their ability to explicitly integrate bond chemistry.</p>
 
 
 </section>
