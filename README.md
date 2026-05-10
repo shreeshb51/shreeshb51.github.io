@@ -75,6 +75,41 @@ Repo → Settings → Actions → General → Workflow permissions → **Read an
 
 ---
 
+## Annual Token Renewal & Maintenance
+
+### Token Renewal (every 1 year)
+1. GitHub → Settings → Developer Settings → Personal access tokens → Fine-grained tokens → Generate new token (`repo` scope, 1 year expiry)
+2. Store token in a password manager — **never paste it in code or terminal while inside the repo directory**
+3. Set remote URL with token temporarily:
+   ```bash
+   git remote set-url origin https://shreeshb51:YOUR_TOKEN@github.com/shreeshb51/shreeshb51.github.io.git
+   ```
+4. Run `quarto publish gh-pages`
+5. Immediately reset remote URL:
+   ```bash
+   git remote set-url origin https://github.com/shreeshb51/shreeshb51.github.io.git
+   ```
+6. Delete the token from hand/notes; GitHub auto-revokes if exposed
+
+### If push is blocked (secret scanning violation)
+- Visit the unblock URL shown in the terminal error and allow the secret
+- Retry `quarto publish gh-pages`
+- Revoke the exposed token immediately and generate a fresh one
+
+### What NOT to do
+- Never leave token in remote URL after publishing
+- Never commit `_site/` — it contains rendered HTML that may embed the remote URL with token
+- Never commit to `gh-pages` branch manually — Quarto manages it
+
+### `.gitignore` must include
+```
+/.quarto/
+**/*.quarto_ipynb
+_site/
+```
+
+---
+
 ## Workflow
 
 1. Create a new subfolder inside `projects/`, `catw/`, or `papers/`
