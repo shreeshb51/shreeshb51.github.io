@@ -46,7 +46,7 @@ The project is designed to demonstrate a system that can "read" a molecule's sha
 
 ---
 
-### Stage 1 - Environment and Dataset Inspection:
+### Stage 1 - Environment and Dataset Inspection
 
 Before any model touches data, we need to understand exactly what a molecular graph is as a tensor object in PyTorch Geometric (PyG). QM9 contains 134k small organic molecules; each is a graph where atoms are nodes and bonds are edges, labeled with 19 quantum-chemical properties. We're targeting **index 7: $U_0$ (internal energy at 0K)**, often called formation energy in this context.
 
@@ -380,7 +380,7 @@ We embed each molecule's atoms into 2D using the two Fiedler-adjacent eigenvecto
 
 <br>
 
-### Questions 3:
+### Questions [3]:
 
 Two parts:
 
@@ -390,7 +390,7 @@ Two parts:
 
 <br>
 
-### Answers 3:
+### Answers [3]:
 
 **1. The Laplacian Eigenmap Objective**
 
@@ -972,7 +972,7 @@ We are now building a reproducible, benchmark-quality training loop. Both models
 
 <br>
 
-### Question 8:
+### Question [8]:
 
 $U_{\theta}$ has mean $\approx−11,178 eV$ and std $\approx1,085 eV$.
 
@@ -982,7 +982,7 @@ $U_{\theta}$ has mean $\approx−11,178 eV$ and std $\approx1,085 eV$.
 
 <br>
 
-### Answers 8:
+### Answers [8]:
 
 In the QM9 dataset, the target values ($U_{\theta}$) are numerically massive compared to the tiny weights typically found in a neural network. This gap creates significant training hurdles.
 
