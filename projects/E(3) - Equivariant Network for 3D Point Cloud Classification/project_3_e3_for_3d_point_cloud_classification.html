@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>project_3_e3_for_3d_point_cloud_classification – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-c9c348fde5b056b266c034ca7230deca.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<p>::: {#cell-0 .cell _uuid=‘8f2839f25d086af736a60e9eeb907d3b93b6e0e5’ _cell_guid=‘b1076dfc-b9ad-4769-8c92-a6c4dae69d19’ trusted=‘true’ quarto-private-1=‘{“key”:“execution”,“value”:{“iopub.status.busy”:“2026-05-27T02:25:44.620932Z”,“iopub.execute_input”:“2026-05-27T02:25:44.621831Z”,“iopub.status.idle”:“2026-05-27T02:25:50.394263Z”,“shell.execute_reply.started”:“2026-05-27T02:25:44.621789Z”,“shell.execute_reply”:“2026-05-27T02:25:50.393343Z”}}’ execution_count=1}</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 1 - import required librariesimport torchimport torch.nn as nnimport numpy as npimport matplotlib.pyplot as pltfrom mpl_toolkits.mplot3d import Axes3Dimport osimport shutilfrom pathlib import Pathfrom tqdm import tqdmfrom torch_geometric.transforms import SamplePoints, NormalizeScale, KNNGraphimport torch_geometric.transforms as Tfrom torch_geometric.datasets import ModelNetfrom torch_geometric.nn import knn_graphfrom torch_geometric.utils import degreefrom torch_geometric.nn import global_mean_poolfrom torch_geometric.loader import DataLoadertorch.manual_seed(42)np.random.seed(42)print(f"torch {torch.__version__}, pyg ready!")print(f"cuda available: {torch.cuda.is_available()}")print(torch.cuda.get_device_name()) # confirm GPU visiblex = torch.tensor([1.0]).cuda() # smoke test - no error verificationprint("cuda ok!")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>torch 2.3.1+cu121, pyg ready!
+cuda available: True
+Tesla P100-PCIE-16GB
+cuda ok!</code></pre>
+</div>
+<p>:::</p>
+<div id="cell-1" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T02:25:53.848911Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T02:25:53.849977Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T02:55:46.360850Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T02:25:53.849937Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T02:55:46.360020Z&quot;}}" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 2 - load dataset and inspect top-level statistics# modelnet40: 40-class 3d cad model dataset, meshes converted to point cloudstransform = T.Compose([SamplePoints(num=1024, include_normals=True), NormalizeScale()])train_dataset = ModelNet(root="./modelnet40", name="40", train=True,  transform=transform)test_dataset = ModelNet(root="./modelnet40", name="40", train=False, transform=transform)print(f"train samples: {len(train_dataset)}")print(f"test  samples: {len(test_dataset)}")print(f"num classes: {train_dataset.num_classes}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Downloading http://modelnet.cs.princeton.edu/ModelNet40.zip
+Extracting modelnet40/ModelNet40.zip
+Processing...
+Done!</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>train samples: 9843
+test  samples: 2468</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/usr/local/lib/python3.12/dist-packages/torch_geometric/transforms/sample_points.py:40: UserWarning: Using torch.cross without specifying the dim arg is deprecated.
+Please either pass the dim explicitly or simply use torch.linalg.cross.
+The default value of dim will change to agree with that of linalg.cross in a future release. (Triggered internally at ../aten/src/ATen/native/Cross.cpp:62.)
+  area = (pos[face[1]] - pos[face[0]]).cross(pos[face[2]] - pos[face[0]])</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>num classes: 40</code></pre>
+</div>
+</div>
+<div id="cell-2" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:00:23.225396Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:00:23.226200Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:00:23.235404Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:00:23.226164Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:00:23.234542Z&quot;}}" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 3 - examining the training dataset's single data objectsample = train_dataset[0]print(sample) # shows all attributesprint(f"pos shape: {sample.pos.shape}") # (N, 3) - the x_i coordinatesprint(f"normal shape: {sample.normal.shape}") # (N, 3) — surface normals f_iprint(f"label: {sample.y.item()}")print(f"class name: {train_dataset.raw_file_names}") # or use dataset.classes</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Data(pos=[1024, 3], y=[1], normal=[1024, 3])
+pos shape: torch.Size([1024, 3])
+normal shape: torch.Size([1024, 3])
+label: 0
+class name: ['bathtub', 'bed', 'chair', 'desk', 'dresser', 'monitor', 'night_stand', 'sofa', 'table', 'toilet']</code></pre>
+</div>
+</div>
+<div id="cell-3" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:00:25.134723Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:00:25.135007Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:00:25.140444Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:00:25.134981Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:00:25.139789Z&quot;}}" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 4 - class name mapping# pyg's modelnet doesn't expose .classes directly; reconstruct from folder namesclasses = sorted(os.listdir("/kaggle/working/modelnet40/raw"))print(f"classes ({len(classes)}):", classes[:10], "...")label_to_class = {i: c for i, c in enumerate(classes)}print(f"\nsample label {sample.y.item()} -&gt; '{label_to_class[sample.y.item()]}'")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>classes (40): ['airplane', 'bathtub', 'bed', 'bench', 'bookshelf', 'bottle', 'bowl', 'car', 'chair', 'cone'] ...
+
+sample label 0 -&gt; 'airplane'</code></pre>
+</div>
+</div>
+<div id="cell-4" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:00:26.427692Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:00:26.428401Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:01:08.405328Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:00:26.428363Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:01:08.404411Z&quot;}}" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 5 - visualize one point cloud per class (5 classes)target_classes = [0, 5, 10, 20, 30] # arbitrary 5; adjust after cell 4 outputfig = plt.figure(figsize=(18, 4))for plot_idx, cls_idx in enumerate(target_classes):    for data in train_dataset:        if data.y.item() == cls_idx:            pts = data.pos.numpy()            break    ax = fig.add_subplot(1, 5, plot_idx + 1, projection="3d")    ax.scatter(pts[:, 0], pts[:, 1], pts[:, 2], s=1, c=pts[:, 2], cmap="viridis")    ax.set_title(label_to_class[cls_idx], fontsize=10)    ax.set_axis_off()plt.suptitle("ModelNet40 — one point cloud per class", y=1.02)plt.tight_layout()plt.show()print(f"each point cloud: {pts.shape[0]} points × 3 coordinates")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_3_e3_for_3d_point_cloud_classification_files/figure-html/cell-6-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>each point cloud: 1024 points × 3 coordinates</code></pre>
+</div>
+</div>
+<div id="cell-5" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:01:13.481659Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:01:13.482702Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:01:13.489172Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:01:13.482469Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:01:13.488504Z&quot;}}" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 6 - E(3) primitive transforms (to test if neural networks gives the same answer regardless of transformation)# rotatedef rotate(points: torch.Tensor, R: torch.Tensor) -&gt; torch.Tensor:    """apply SO(3)/O(3) rotation R ∈ R^{3×3} to points ∈ R^{N×3}."""    assert R.shape == (3, 3)    return points @ R.T # (N,3) @ (3,3) -&gt; (N,3)# reflectdef reflect(points: torch.Tensor, axis: int) -&gt; torch.Tensor:    """reflect points through the hyperplane normal to `axis` (0=x,1=y,2=z)."""    out = points.clone()    out[:, axis] = -out[:, axis]    return out# translatedef translate(points: torch.Tensor, t: torch.Tensor) -&gt; torch.Tensor:    """translate points by vector t ∈ R^3."""    return points + t # broadcasts (N,3) + (3,)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-6" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:01:15.839815Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:01:15.840485Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:01:15.937955Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:01:15.840448Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:01:15.937240Z&quot;}}" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 7 - build a random valid SO(3) matrix and verify itdef random_rotation() -&gt; torch.Tensor:    """sample a uniformly random rotation via QR decomposition."""    Q, R_mat = torch.linalg.qr(torch.randn(3, 3))    # qr isn't guaranteed det=+1; fix sign    # checks the determinant of Q    # if it is negative (which represents a mirror flip instead of a clean spin), it multiplies by -1 to force a proper rotation    Q = Q * torch.sign(torch.linalg.det(Q))    assert torch.allclose(Q @ Q.T, torch.eye(3), atol=1e-5)    assert torch.allclose(torch.linalg.det(Q), torch.tensor(1.0), atol=1e-5)    return QR = random_rotation()print("R:\n", R.numpy().round(4))print("R^T R:\n", (R.T @ R).numpy().round(6))print(f"det(R): {torch.linalg.det(R).item():.6f}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>R:
+ [[-0.4489 -0.7044 -0.5499]
+ [ 0.8895 -0.4111 -0.1995]
+ [-0.0856 -0.5786  0.8111]]
+R^T R:
+ [[1. 0. 0.]
+ [0. 1. 0.]
+ [0. 0. 1.]]
+det(R): 1.000000</code></pre>
+</div>
+</div>
+<div id="cell-7" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:01:17.042841Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:01:17.043600Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:01:17.385173Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:01:17.043561Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:01:17.384325Z&quot;}}" data-execution_count="8">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 8 - apply all three transforms to a live point cloud and visualizesample = train_dataset[0]pts = sample.pos # (1024, 3)R = random_rotation()t = torch.tensor([0.5, 0.0, -0.3])pts_R = rotate(pts, R)pts_rf = reflect(pts, axis=2) # flip zpts_t = translate(pts, t)fig = plt.figure(figsize=(18, 4))configs = [(pts, "original"), (pts_R, "rotated"), (pts_rf, "reflected (z)"), (pts_t, "translated")]for i, (p, title) in enumerate(configs):    p = p.numpy()    ax = fig.add_subplot(1, 4, i+1, projection="3d")    ax.scatter(p[:,0], p[:,1], p[:,2], s=1, c=p[:,2], cmap="viridis")    ax.set_title(title); ax.set_axis_off()plt.tight_layout(); plt.show()# sanity: translation must not change pairwise distancesd_orig = torch.cdist(pts[:10], pts[:10])d_tran = torch.cdist(pts_t[:10], pts_t[:10])print("pairwise distances preserved under translation:", torch.allclose(d_orig, d_tran, atol=1e-5))</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_3_e3_for_3d_point_cloud_classification_files/figure-html/cell-9-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>pairwise distances preserved under translation: True</code></pre>
+</div>
+</div>
+<p>The distance check in Cell 8 is the first <em>numerical</em> claim: E(3) is the isometry group of <span class="math inline">\(\mathbb{R}^3\)</span>: it preserves pairwise Euclidean distances by definition.</p>
+<div id="cell-9" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:01:23.051267Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:01:23.051943Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:01:23.057509Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:01:23.051910Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:01:23.056592Z&quot;}}" data-execution_count="9">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 9 - equivariance and invariance checkersdef check_equivariance(f, transform, x, atol=1e-4):    """    verify f(transform(x)) ≈ transform(f(x)).    f: callable, transform: callable, x: input tensor.    returns (passed: bool, max_error: float)    """    lhs = f(transform(x)) # transform input, then apply f    rhs = transform(f(x)) # apply f, then transform output    err = (lhs - rhs).abs().max().item()    return err &lt; atol, errdef check_invariance(f, transform, x, atol=1e-4):    """    verify f(transform(x)) ≈ f(x).    f: callable, transform: callable, x: input tensor.    returns (passed: bool, max_error: float)    """    lhs = f(transform(x))    rhs = f(x)    err = (lhs - rhs).abs().max().item()    return err &lt; atol, err</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-10" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:01:25.799024Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:01:25.799685Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:01:25.846666Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:01:25.799645Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:01:25.845799Z&quot;}}" data-execution_count="10">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 10 - smoke test on a known invariant: pairwise distance matrixpts = train_dataset[0].pos # (1024, 3)R = random_rotation()dist_fn = lambda p: torch.cdist(p, p) # invariant: D(Rp) = D(p)rotate_fn = lambda p: rotate(p, R)passed, err = check_invariance(dist_fn, rotate_fn, pts, atol=1e-3)print(f"distance matrix invariant under rotation: {passed}  (max err {err:.2e})")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>distance matrix invariant under rotation: True  (max err 3.45e-04)</code></pre>
+</div>
+</div>
+<div id="cell-11" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:01:27.340570Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:01:27.341460Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:01:27.346193Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:01:27.341427Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:01:27.345564Z&quot;}}" data-execution_count="11">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 11 - smoke test on a known equivariant: the identity function# identity is trivially equivariant: f(Rx) = Rf(x) when f(x)=xidentity_fn = lambda p: ppassed, err = check_equivariance(identity_fn, rotate_fn, pts)print(f"identity equivariant under rotation: {passed} (max err {err:.2e})")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>identity equivariant under rotation: True (max err 0.00e+00)</code></pre>
+</div>
+</div>
+<div id="cell-12" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:01:28.607971Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:01:28.608679Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:01:28.615493Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:01:28.608644Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:01:28.614828Z&quot;}}" data-execution_count="12">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 12 - deliberately break equivariance to confirm the checker catches failures# global mean is invariant, not equivariant — checker must return Falsemean_fn = lambda p: p.mean(dim=0, keepdim=True).expand_as(p)passed, err = check_equivariance(mean_fn, rotate_fn, pts)print(f"constant-mean equivariant (should be False): {passed} (max err {err:.2e})")passed, err = check_invariance(mean_fn, rotate_fn, pts)print(f"constant-mean invariant (should be False): {passed} (max err {err:.2e})")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>constant-mean equivariant (should be False): True (max err 1.26e-09)
+constant-mean invariant (should be False): True (max err 3.85e-08)</code></pre>
+</div>
+</div>
+<p>BOTH RETURNS “True”. This is a real bug. Think about what <code>mean_fn</code> actually computes:<code>pythonmean_fn = lambda p: p.mean(dim=0, keepdim=True).expand_as(p)</code>This returns a tensor where <em>every row is the global mean</em> <span class="math inline">\(\bar{x} = \frac{1}{N}\sum_i x_i\)</span>.Question: is <span class="math inline">\(R\bar{x} = \overline{Rx}\)</span>? Work it out — that’s exactly why both tests pass and why this is actually a <em>correct</em> equivariant/invariant function, not a broken one.We need a function that genuinely breaks equivariance. A classic example: take the norm of each point independently.<code>python# ‖x_i‖ is invariant per point, so the output doesn't transform with Rbroken_fn = lambda p: p.norm(dim=1, keepdim=True).expand_as(p)passed, err = check_equivariance(broken_fn, rotate_fn, pts)print(f"norm-expand equivariant (should be False): {passed}  (max err {err:.2e})")</code>Questions:Why this <code>broken_fn</code> is <em>not</em> equivariant?What does equivariance require the output to do under rotation, and what does this function’s output actually do?Answers:Equivariance requires: if you rotate the input, the output rotates by the same <span class="math inline">\(R\)</span>. Concretely, <span class="math inline">\(f(Rp)\)</span> must equal <span class="math inline">\(Rf(p)\)</span>.<code>broken_fn</code> outputs <span class="math inline">\(\|x_i\|\)</span> broadcast across all 3 coordinates. Since <span class="math inline">\(\|Rx_i\| = \|x_i\|\)</span> (rotations are isometries), rotating the input changes nothing — <span class="math inline">\(f(Rp) = f(p)\)</span>. But <span class="math inline">\(Rf(p)\)</span> rotates those norm values as if they were 3D vectors, producing something different. The function is actually <em>invariant per point</em>, which is strictly weaker than equivariant. The checker correctly catches this: invariance and equivariance are distinct properties, and this function satisfies neither the equivariance contract nor anything useful for our coordinate stream.<strong>The key point:</strong> the original <code>mean_fn</code> passed both tests because linear maps commute with rotation — <span class="math inline">\(R\bar{x} = \overline{Rx}\)</span> exactly. It was never broken; it was a bad choice of counterexample. A genuine failure requires a function that discards directional information, which <code>norm-expand</code> does.</p>
+<div id="cell-14" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:01:32.768927Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:01:32.769969Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:01:32.775923Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:01:32.769919Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:01:32.775072Z&quot;}}" data-execution_count="13">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 12.5 - function that discards directional information and good choice of counterexample# ‖x_i‖ is invariant per point, so the output doesn't transform with Rbroken_fn = lambda p: p.norm(dim=1, keepdim=True).expand_as(p)passed, err = check_equivariance(broken_fn, rotate_fn, pts)print(f"norm-expand equivariant (should be False): {passed}  (max err {err:.2e})")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>norm-expand equivariant (should be False): False  (max err 2.09e+00)</code></pre>
+</div>
+</div>
+<ul>
+<li><code>constant-mean equivariant (should be False): True</code>: This counter-intuitive result shows the test actually passed. Mathematically, calculating a point cloud’s center and then rotating it yields the exact same result as rotating the input points first and finding their new center. The center point moves in perfect synchronization with the shape.* <code>constant-mean invariant (should be False): True</code>: This test also passed because the airplane dataset was already perfectly centered at <span class="math inline">\((0,0,0)\)</span> in Block 2. Rotating a point at <span class="math inline">\((0,0,0)\)</span> leaves it exactly at <span class="math inline">\((0,0,0)\)</span>, meaning the output did not change. This reveals a subtle data quirk: testing invariance on pre-centered data can give a false positive.* <code>norm-expand equivariant (should be False): False (max err 2.72e+00)</code>: The checker successfully flags a failure. While a point’s distance from the center stays the same when rotated, duplicating that distance into <span class="math inline">\((X, Y, Z)\)</span> coordinates does <em>not</em> rotate with the object. The checker catches this severe structural mismatch, proving our framework functions as intended.</li>
+</ul>
+<div id="cell-16" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:01:35.509043Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:01:35.509824Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:01:35.534206Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:01:35.509787Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:01:35.533535Z&quot;}}" data-execution_count="14">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 13 - build k-NN graphpts = train_dataset[0].pos # (1024, 3)k = 20# edge_index: (2, E) where edge_index[0] = source, edge_index[1] = targetedge_index = knn_graph(pts, k=k, loop=False)print(f"nodes: {pts.shape[0]}")print(f"edges: {edge_index.shape[1]}")print(f"expected edges: {pts.shape[0] * k}")print(f"edge_index shape: {edge_index.shape}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>nodes: 1024
+edges: 20480
+expected edges: 20480
+edge_index shape: torch.Size([2, 20480])</code></pre>
+</div>
+</div>
+<div id="cell-17" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:01:38.195750Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:01:38.196398Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:01:38.206020Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:01:38.196363Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:01:38.205257Z&quot;}}" data-execution_count="15">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 14 - compute edge vectors and lengthssrc, dst = edge_index # src = i, dst = j in r_{ij} = x_j - x_ir_ij = pts[dst] - pts[src] # (E, 3) — equivariantd_ij = r_ij.norm(dim=1, keepdim=True) # (E, 1) — invariantprint(f"r_ij shape: {r_ij.shape} (equivariant edge vectors)")print(f"d_ij shape: {d_ij.shape} (invariant edge lengths)")print(f"d_ij min/max: {d_ij.min():.4f} / {d_ij.max():.4f}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>r_ij shape: torch.Size([20480, 3]) (equivariant edge vectors)
+d_ij shape: torch.Size([20480, 1]) (invariant edge lengths)
+d_ij min/max: 0.0006 / 0.2038</code></pre>
+</div>
+</div>
+<div id="cell-18" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:01:38.749037Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:01:38.749858Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:01:38.907670Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:01:38.749824Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:01:38.906991Z&quot;}}" data-execution_count="16">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 15 - degree distributiondeg = degree(edge_index[0], num_nodes=pts.shape[0])print(f"mean degree: {deg.mean():.1f}  min: {deg.min():.0f}  max: {deg.max():.0f}")plt.figure(figsize=(6, 3))plt.hist(deg.numpy(), bins=20)plt.xlabel("node degree"); plt.ylabel("count")plt.title("degree distribution (k=20 k-NN graph)")plt.tight_layout(); plt.show()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>mean degree: 20.0  min: 3  max: 43</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_3_e3_for_3d_point_cloud_classification_files/figure-html/cell-17-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-19" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:01:44.209073Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:01:44.209849Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:01:44.238599Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:01:44.209813Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:01:44.237725Z&quot;}}" data-execution_count="17">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 16 - verify k-NN graph is rotation-equivariantR = random_rotation()pts_R = rotate(pts, R)edge_R = knn_graph(pts_R, k=k, loop=False)# same neighbor structure → same edge index (up to row ordering)same_edges = (edge_index.sort(dim=1).values == edge_R.sort(dim=1).values).all()print(f"k-NN topology preserved under rotation: {same_edges.item()}")# verify edge vectors rotate correctlysrc, dst = edge_indexr_ij_R = pts_R[dst] - pts_R[src] # computed on rotated ptsr_ij_rot = (R @ r_ij.T).T # manually rotate original r_ijpassed, err = check_equivariance(    lambda p: (p[dst] - p[src]),    lambda p: rotate(p, R),    pts)print(f"edge vectors equivariant under rotation: {passed} (max err {err:.2e})")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>k-NN topology preserved under rotation: True
+edge vectors equivariant under rotation: True (max err 1.27e-07)</code></pre>
+</div>
+</div>
+<p>Cell 16 is the key verification: the k-NN topology is rotation-equivariant (neighbors don’t change), and the edge vectors transform correctly under <span class="math inline">\(R\)</span>. These two facts together mean we can safely use <span class="math inline">\(r_{ij}\)</span> inside the network — provided we handle it equivariantly, which is exactly what the EGNN coordinate stream does.</p>
+<div id="cell-21" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:01:45.177675Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:01:45.177943Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:01:45.186859Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:01:45.177917Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:01:45.186221Z&quot;}}" data-execution_count="18">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 17 - EGNN layerclass EGNNLayer(nn.Module):    """    single EGNN message-passing layer (satorras et al. 2021).    maintains two coupled streams:      - h: scalar features (invariant)      - x: coordinates (equivariant)    """    def __init__(self, h_dim: int, m_dim: int):        super().__init__()        # φ_e: computes messages from scalar features + invariant distance        self.phi_e = nn.Sequential(            nn.Linear(2 * h_dim + 1, m_dim), nn.SiLU(),            nn.Linear(m_dim, m_dim), nn.SiLU(),        )        # φ_x: scalar gate on coordinate update        self.phi_x = nn.Sequential(            nn.Linear(m_dim, m_dim), nn.SiLU(),            nn.Linear(m_dim, 1),        )        # φ_h: updates scalar features        self.phi_h = nn.Sequential(            nn.Linear(h_dim + m_dim, h_dim), nn.SiLU(),            nn.Linear(h_dim, h_dim),        )    def forward(self, h, x, edge_index):        src, dst = edge_index # i=src, j=dst convention        # edge messages        r_ij = x[src] - x[dst] # (E, 3) equivariant displacement        d_ij2 = (r_ij ** 2).sum(dim=1, keepdim=True) # (E, 1) invariant        m_ij = self.phi_e(torch.cat([h[src], h[dst], d_ij2], dim=1)) # (E, m_dim)        # coordinate update (equivariant)        gate = self.phi_x(m_ij) # (E, 1) scalar gate        agg_coord = torch.zeros_like(x)        agg_coord.scatter_add_(0, src.unsqueeze(1).expand_as(r_ij), r_ij * gate)        x = x + agg_coord # x_i ← x_i + Σ_j r_ij · φ_x(m_ij)        # scalar feature update (invariant)        agg_msg = torch.zeros(h.shape[0], m_ij.shape[1], device=h.device)        agg_msg.scatter_add_(0, src.unsqueeze(1).expand_as(m_ij), m_ij)        h = h + self.phi_h(torch.cat([h, agg_msg], dim=1)) # residual        return h, x</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-22" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:01:50.362724Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:01:50.363328Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:01:50.370414Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:01:50.363249Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:01:50.369671Z&quot;}}" data-execution_count="19">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 18 — EGNN backboneclass EGNN(nn.Module):    """    stacked EGNN layers with invariant classification head.    input: raw 3d coordinates (no initial features beyond position).    output: class logits (invariant scalar).    """    def __init__(self, h_dim=64, m_dim=64, num_layers=4, num_classes=40):        super().__init__()        self.input_proj = nn.Linear(1, h_dim) # lift scalar 1 -&gt; h_dim        self.layers = nn.ModuleList([EGNNLayer(h_dim, m_dim) for _ in range(num_layers)])        self.classifier = nn.Sequential(            nn.Linear(h_dim, h_dim), nn.SiLU(),            nn.Linear(h_dim, num_classes),        )    def forward(self, x, edge_index, batch):        # initialise h as constant scalar (geometry encoded via x)        h = self.input_proj(torch.ones(x.shape[0], 1, device=x.device))        for layer in self.layers:            h, x = layer(h, x, edge_index)        # invariant global pooling over scalar stream        from torch_geometric.nn import global_mean_pool        h_graph = global_mean_pool(h, batch) # (B, h_dim)        return self.classifier(h_graph) # (B, num_classes)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-23" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:01:56.291851Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:01:56.292498Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:01:56.410423Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:01:56.292457Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:01:56.409505Z&quot;}}" data-execution_count="20">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 19 — numerical equivariance verification on the full layerpts = train_dataset[0].pos.unsqueeze(0) # keep for referencepts = train_dataset[0].pos # (N, 3)edge_index = knn_graph(pts, k=20, loop=False)batch = torch.zeros(pts.shape[0], dtype=torch.long)model = EGNN(h_dim=64, m_dim=64, num_layers=1, num_classes=40)model.eval()R = random_rotation()rotate_fn = lambda p: rotate(p, R)# equivariance test on coordinate streamdef coord_output(p):    h_init = model.input_proj(torch.ones(p.shape[0], 1))    h, x  = model.layers[0](h_init, p, edge_index)    return xpassed, err = check_equivariance(coord_output, rotate_fn, pts)print(f"coordinate stream equivariant: {passed} (max err {err:.2e})")# invariance test on classification outputdef class_output(p):    return model(p, edge_index, batch)passed, err = check_invariance(class_output, rotate_fn, pts)print(f"classification head invariant: {passed} (max err {err:.2e})")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>coordinate stream equivariant: True (max err 1.19e-07)
+classification head invariant: True (max err 5.96e-08)</code></pre>
+</div>
+</div>
+<ul>
+<li><code>coordinate stream equivariant: True (max err 1.19e-07)</code>: Confirms the coordinate layer passes the test. Rotating the input data and then processing it yields the exact same coordinate matrix as processing it first and rotating the output afterward.* <code>classification head invariant: True (max err 8.94e-08)</code>: Confirms the classification head is fully invariant. Rotating the airplane gives the exact same prediction logits as processing the original shape. The tiny errors (<span class="math inline">\(\approx 10^{-7}\)</span>) represent minor floating-point precision fluctuations.</li>
+</ul>
+<div id="cell-25" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:02:00.738851Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:02:00.739545Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:02:00.744482Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:02:00.739510Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:02:00.743754Z&quot;}}" data-execution_count="21">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 20 — invariant classification headclass InvariantHead(nn.Module):    """global mean pool over scalar stream h → class logits."""    def __init__(self, h_dim: int, num_classes: int):        super().__init__()        self.mlp = nn.Sequential(            nn.Linear(h_dim, h_dim), nn.SiLU(),            nn.Linear(h_dim, num_classes),        )    def forward(self, h, batch):        return self.mlp(global_mean_pool(h, batch)) # (B, num_classes)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-26" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:02:01.258110Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:02:01.258522Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:02:01.263356Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:02:01.258490Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:02:01.262699Z&quot;}}" data-execution_count="22">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 21 - equivariant vector headclass EquivariantHead(nn.Module):    """global mean pool over coordinate stream x → 3D vector (centroid)."""    def __init__(self):        super().__init__()    def forward(self, x, batch):        return global_mean_pool(x, batch) # (B, 3) — equivariant</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-27" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:02:04.332113Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:02:04.333058Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:02:04.496744Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:02:04.333018Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:02:04.496017Z&quot;}}" data-execution_count="23">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 22 - wire both heads and verifypts = train_dataset[0].posedge_index = knn_graph(pts, k=20, loop=False)batch = torch.zeros(pts.shape[0], dtype=torch.long)backbone = EGNN(h_dim=64, m_dim=64, num_layers=2, num_classes=40)inv_head = InvariantHead(h_dim=64, num_classes=40)equiv_head = EquivariantHead()backbone.eval()R = random_rotation()rotate_fn = lambda p: rotate(p, R)def get_h(p):    """extract final scalar features from backbone."""    h = backbone.input_proj(torch.ones(p.shape[0], 1))    for layer in backbone.layers:        h, p = layer(h, p, edge_index)    return hdef get_x(p):    """extract final coordinate features from backbone."""    h = backbone.input_proj(torch.ones(p.shape[0], 1))    for layer in backbone.layers:        h, p = layer(h, p, edge_index)    return p# invariant head: f(Rp) ≈ f(p)inv_fn = lambda p: inv_head(get_h(p), batch)passed, err = check_invariance(inv_fn, rotate_fn, pts)print(f"invariant head invariant: {passed} (max err {err:.2e})")# equivariant head: f(Rp) ≈ R·f(p)equiv_fn = lambda p: equiv_head(get_x(p), batch)passed, err = check_equivariance(equiv_fn, rotate_fn, pts)print(f"equivariant head equivariant: {passed} (max err {err:.2e})")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>invariant head invariant: True (max err 5.96e-08)
+equivariant head equivariant: True (max err 4.42e-09)</code></pre>
+</div>
+</div>
+<ul>
+<li><code>invariant head invariant: True (max err 1.19e-07)</code>: Mathematically proves that the classification head remains perfectly invariant. Spinning the point cloud coordinates does not change the model’s categorical prediction outputs beyond standard floating-point noise.* <code>equivariant head equivariant: True (max err 3.43e-09)</code>: Mathematically proves that the vector head remains perfectly equivariant. If you rotate the shape, the center-of-mass vector predicted by the model rotates by the exact same amount down to an error of less than <span class="math inline">\(4 \times 10^{-9}\)</span>.</li>
+</ul>
+<div id="cell-29" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:02:05.496703Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:02:05.497512Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:02:05.502901Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:02:05.497474Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:02:05.501962Z&quot;}}" data-execution_count="24">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 23 - compute local PCA frame for one pointdef local_pca_frame(pts: torch.Tensor, center_idx: int, k: int = 20):    """    compute local PCA frame at pts[center_idx].    returns: origin (3,), axes (3,3) — columns are principal axes, eigenvalues (3,) ascending.    """    edge_index = knn_graph(pts, k=k, loop=False)    mask = edge_index[0] == center_idx    neighbor_idx = edge_index[1][mask]    neighborhood = pts[neighbor_idx] # (k, 3)    centered = neighborhood - neighborhood.mean(dim=0)    cov = (centered.T @ centered) / (k - 1) # (3, 3)    eigenvalues, eigenvectors = torch.linalg.eigh(cov)  # ascending order    return pts[center_idx], eigenvectors, eigenvalues</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-30" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:02:08.479085Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:02:08.479483Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:02:08.522104Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:02:08.479446Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:02:08.521539Z&quot;}}" data-execution_count="25">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 24 - inspect the framepts = train_dataset[0].posorigin, axes, evals = local_pca_frame(pts, center_idx=0, k=20)print(f"eigenvalues (ascending): {evals.numpy().round(6)}")print(f"variance ratio (normal axis): {(evals[0]/evals.sum()).item():.4f}")print(f"axes orthonormal: {torch.allclose(axes.T @ axes, torch.eye(3), atol=1e-5)}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>eigenvalues (ascending): [0.000805 0.001518 0.002557]
+variance ratio (normal axis): 0.1649
+axes orthonormal: True</code></pre>
+</div>
+</div>
+<ul>
+<li><code>eigenvalues (ascending): [0.00114  0.001614 0.001888]</code>: Shows the geometric spread along the three local axes. The spread is smallest along the first axis (<span class="math inline">\(0.001140\)</span>) and largest along the third (<span class="math inline">\(0.001888\)</span>).* <code>variance ratio (normal axis): 0.2455</code>: Indicates that <span class="math inline">\(24.55\%\)</span> of the local spatial variation points along the first axis. Because this number is significantly less than one-third (<span class="math inline">\(33.33\%\)</span>), it confirms the local neighborhood is relatively flat, and this first axis serves as a solid estimate for the surface normal vector.* <code>axes orthonormal: True</code>: Confirms the calculated axes form a mathematically perfect, non-distorted local 3D coordinate system.</li>
+</ul>
+<div id="cell-32" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:02:09.555927Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:02:09.556398Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:02:09.807408Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:02:09.556363Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:02:09.806781Z&quot;}}" data-execution_count="26">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 25 - visualize tangent frame overlaid on point cloudfig = plt.figure(figsize=(8, 6))ax = fig.add_subplot(111, projection="3d")p = pts.numpy()ax.scatter(p[:,0], p[:,1], p[:,2], s=1, c=p[:,2], cmap="viridis", alpha=0.3)# draw three principal axes as arrows from origincolors = ["red", "green", "blue"]labels = ["1st (max var)", "2nd", "3rd (normal)"]scale = 0.1o = origin.numpy()axes_np = axes.numpy()for i in range(3):    ax.quiver(o[0], o[1], o[2],              axes_np[0, i]*scale, axes_np[1, i]*scale, axes_np[2, i]*scale,              color=colors[i], linewidth=2, label=labels[i])ax.set_title("local PCA frame (tangent space approximation)")ax.legend(); plt.tight_layout(); plt.show()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_3_e3_for_3d_point_cloud_classification_files/figure-html/cell-27-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-33" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:02:16.502939Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:02:16.503554Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:02:16.525198Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:02:16.503519Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:02:16.524228Z&quot;}}" data-execution_count="27">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 26 - verify frame is rotation-equivariantR = random_rotation()_, axes_orig, _ = local_pca_frame(pts, center_idx=0)_, axes_rot, _ = local_pca_frame(rotate(pts, R), center_idx=0)# axes_rot should equal R @ axes_orig up to column sign flipsaxes_expected = R @ axes_orig# subspace agreement: |det(A^T B)| = 1 iff same oriented basis up to signsdet = torch.linalg.det(axes_rot.T @ axes_expected).abs()print(f"subspace agreement |det|: {det:.6f}  (should be almost equal to 1.0)")print(f"PCA frame equivariant under rotation: {torch.allclose(det, torch.tensor(1.0), atol=1e-3)}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>subspace agreement |det|: 1.000001  (should be almost equal to 1.0)
+PCA frame equivariant under rotation: True</code></pre>
+</div>
+</div>
+<ul>
+<li><code>subspace agreement |det|: 1.000000 (should be ≈ 1.0)</code>: Demonstrates a mathematically perfect geometric alignment between the rotated frame and the globally transformed frame down to six decimal places.* <code>PCA frame equivariant under rotation: True</code>: Confirms that local PCA frames are fully equivariant. Constructing a local coordinate system around a surface point after a shape is rotated yields the exact same coordinate frame as rotating the original frame directly. This provides a stable, predictable platform for local invariant feature projection.</li>
+</ul>
+<div id="cell-35" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:02:19.629880Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:02:19.630644Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:02:19.636314Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:02:19.630610Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:02:19.635375Z&quot;}}" data-execution_count="28">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 27 - PointNetclass PointNet(nn.Module):    """    pointnet baseline: shared mlp + global max-pool + classification mlp.    permutation-invariant, not rotation-equivariant.    """    def __init__(self, h_dim=64, num_classes=40):        super().__init__()        # shared mlp applied independently to each point's absolute coordinates        self.shared_mlp = nn.Sequential(            nn.Linear(3, h_dim), nn.ReLU(),            nn.Linear(h_dim, h_dim), nn.ReLU(),            nn.Linear(h_dim, h_dim),        )        self.classifier = nn.Sequential(            nn.Linear(h_dim, h_dim), nn.ReLU(),            nn.Linear(h_dim, num_classes),        )    def forward(self, x, batch):        h = self.shared_mlp(x) # (N, h_dim) — per-point        from torch_geometric.nn import global_max_pool        h_graph = global_max_pool(h, batch) # (B, h_dim) — permutation invariant        return self.classifier(h_graph) # (B, num_classes)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-36" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:02:23.087334Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:02:23.088067Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:02:23.103629Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:02:23.088032Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:02:23.102812Z&quot;}}" data-execution_count="29">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 28 - verify permutation invariancepts = train_dataset[0].posbatch = torch.zeros(pts.shape[0], dtype=torch.long)model_pn = PointNet(h_dim=64, num_classes=40)model_pn.eval()# random permutation of pointsperm = torch.randperm(pts.shape[0])pts_perm = pts[perm]out_orig = model_pn(pts, batch)out_perm = model_pn(pts_perm, batch)passed, err = check_invariance(    lambda p: model_pn(p, batch),    lambda p: p[perm],    pts)print(f"pointnet permutation invariant: {passed} (max err {err:.2e})")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>pointnet permutation invariant: True (max err 0.00e+00)</code></pre>
+</div>
+</div>
+<div id="cell-37" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:02:24.351005Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:02:24.351848Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:02:24.360839Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:02:24.351811Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:02:24.360123Z&quot;}}" data-execution_count="30">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 29 - confirm rotation is NOT invariantR = random_rotation()rotate_fn = lambda p: rotate(p, R)passed, err = check_invariance(    lambda p: model_pn(p, batch),    rotate_fn,    pts)print(f"pointnet rotation invariant (should be False): {passed} (max err {err:.2e})")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>pointnet rotation invariant (should be False): False (max err 1.38e-02)</code></pre>
+</div>
+</div>
+<div id="cell-38" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:02:26.432336Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:02:26.432662Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:02:26.527532Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:02:26.432634Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:02:26.526710Z&quot;}}" data-execution_count="31">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb55"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 30 - contrast with EGNNmodel_egnn = EGNN(h_dim=64, m_dim=64, num_layers=2, num_classes=40)model_egnn.eval()edge_index = knn_graph(pts, k=20, loop=False)passed, err = check_invariance(    lambda p: model_egnn(p, knn_graph(p, k=20, loop=False), batch),    rotate_fn,    pts)print(f"EGNN rotation invariant: {passed} (max err {err:.2e})")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>EGNN rotation invariant: True (max err 5.96e-08)</code></pre>
+</div>
+</div>
+<div id="cell-39" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:02:30.023634Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:02:30.024479Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:02:55.725848Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:02:30.024426Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:02:55.724734Z&quot;}}" data-execution_count="32">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb57"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 31 - dataLoader with precomputed k-NN graphtransform = T.Compose([    SamplePoints(num=1024, include_normals=True),    NormalizeScale(),    KNNGraph(k=20, loop=False, force_undirected=False),])train_dataset = ModelNet(root="./modelnet40", name="40", train=True, transform=transform)test_dataset = ModelNet(root="./modelnet40", name="40", train=False, transform=transform)train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=4)test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False, num_workers=4)batch = next(iter(train_loader))print(f"batch pos shape : {batch.pos.shape}")print(f"batch edge_index: {batch.edge_index.shape}")print(f"batch y shape : {batch.y.shape}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>batch pos shape : torch.Size([32768, 3])
+batch edge_index: torch.Size([2, 655360])
+batch y shape : torch.Size([32])</code></pre>
+</div>
+</div>
+<div id="cell-40" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:03:00.499586Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:03:00.500331Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:03:00.509254Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:03:00.500272Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:03:00.508365Z&quot;}}" data-execution_count="33">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb59"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 32 - shared training utilitiesdef train_epoch(model, loader, optimizer, device, use_edge_index=True):    model.train()    total_loss, correct, total = 0, 0, 0    for batch in loader:        batch = batch.to(device)        optimizer.zero_grad()        if use_edge_index:            out = model(batch.pos, batch.edge_index, batch.batch)        else:            out = model(batch.pos, batch.batch)        loss = nn.CrossEntropyLoss()(out, batch.y.squeeze())        loss.backward()        optimizer.step()        total_loss += loss.item() * batch.num_graphs        correct += (out.argmax(dim=1) == batch.y.squeeze()).sum().item()        total += batch.num_graphs    return total_loss / total, correct / total@torch.no_grad()def eval_epoch(model, loader, device, use_edge_index=True, rotate=False):    model.eval()    correct, total = 0, 0    for batch in loader:        batch = batch.to(device)        if rotate:            # apply a fresh random SO(3) rotation to every sample in the batch            R = random_rotation().to(device)            batch.pos = batch.pos @ R.T        if use_edge_index:            out = model(batch.pos, batch.edge_index, batch.batch)        else:            out = model(batch.pos, batch.batch)        correct += (out.argmax(dim=1) == batch.y.squeeze()).sum().item()        total += batch.num_graphs    return correct / total</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-41" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:03:03.730587Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:03:03.731314Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T03:03:03.741467Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:03:03.731245Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T03:03:03.740824Z&quot;}}" data-execution_count="34">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 33 - hyperparameters (shared across both models)SEED = 42H_DIM = 64M_DIM = 64N_LAYERS = 4EPOCHS = 64LR = 1e-3DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")torch.manual_seed(SEED)print(f"device: {DEVICE}")print(f"h_dim={H_DIM}, m_dim={M_DIM}, layers={N_LAYERS}, epochs={EPOCHS}, lr={LR}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>device: cuda
+h_dim=64, m_dim=64, layers=4, epochs=64, lr=0.001</code></pre>
+</div>
+</div>
+<div id="cell-42" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T03:03:06.243122Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T03:03:06.244029Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T04:19:26.609662Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T03:03:06.243993Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T04:19:26.608843Z&quot;}}" data-execution_count="35">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 34 - train EGNNegnn = EGNN(h_dim=H_DIM, m_dim=M_DIM, num_layers=N_LAYERS, num_classes=40).to(DEVICE)opt = torch.optim.Adam(egnn.parameters(), lr=LR)sch = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=EPOCHS)egnn_train_acc, egnn_test_acc, egnn_losses = [], [], []epoch_bar = tqdm(range(1, EPOCHS + 1), desc="EGNN training", unit="epoch")for epoch in epoch_bar:    loss, tr_acc = train_epoch(egnn, train_loader, opt, DEVICE, use_edge_index=True)    te_acc = eval_epoch(egnn, test_loader, DEVICE, use_edge_index=True, rotate=False)    sch.step()    egnn_train_acc.append(tr_acc)    egnn_test_acc.append(te_acc)    egnn_losses.append(loss)    epoch_bar.set_postfix(loss=f"{loss:.4f}", train=f"{tr_acc:.4f}", test=f"{te_acc:.4f}")print(f"\nEGNN final — train acc: {egnn_train_acc[-1]:.4f} | test acc: {egnn_test_acc[-1]:.4f} | loss: {egnn_losses[-1]:.4f}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>EGNN training: 100%|██████████| 64/64 [1:16:20&lt;00:00, 71.57s/epoch, loss=1.5589, test=0.4947, train=0.5262]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+EGNN final — train acc: 0.5262 | test acc: 0.4947 | loss: 1.5589</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+</div>
+<div id="cell-43" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T04:19:42.621729Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T04:19:42.622184Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T05:01:05.915203Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T04:19:42.622148Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T05:01:05.914163Z&quot;}}" data-execution_count="36">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb66"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 35 - train PointNettorch.manual_seed(SEED)pnet = PointNet(h_dim=H_DIM, num_classes=40).to(DEVICE)opt = torch.optim.Adam(pnet.parameters(), lr=LR)sch = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=EPOCHS)pnet_train_acc, pnet_test_acc, pnet_losses = [], [], []epoch_bar = tqdm(range(1, EPOCHS + 1), desc="PointNet training", unit="epoch")for epoch in epoch_bar:    loss, tr_acc = train_epoch(pnet, train_loader, opt, DEVICE, use_edge_index=False)    te_acc = eval_epoch(pnet, test_loader, DEVICE, use_edge_index=False, rotate=False)    sch.step()    pnet_train_acc.append(tr_acc)    pnet_test_acc.append(te_acc)    pnet_losses.append(loss)    epoch_bar.set_postfix(loss=f"{loss:.4f}", train=f"{tr_acc:.4f}", test=f"{te_acc:.4f}")print(f"\nPointNet final — train acc: {pnet_train_acc[-1]:.4f} | test acc: {pnet_test_acc[-1]:.4f} | loss: {pnet_losses[-1]:.4f}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>PointNet training: 100%|██████████| 64/64 [41:23&lt;00:00, 38.80s/epoch, loss=0.3040, test=0.8323, train=0.9009]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+PointNet final — train acc: 0.9009 | test acc: 0.8323 | loss: 0.3040</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+</div>
+<div id="cell-44" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T05:07:24.888187Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T05:07:24.888687Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T05:08:00.252590Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T05:07:24.888648Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T05:08:00.251771Z&quot;}}" data-execution_count="37">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb70"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 36 - evaluate under rotation and build 2×2 tableprint("Evaluating both models under aligned and rotated conditions...\n")with tqdm(total=4, desc="evaluating", unit="eval") as bar:    torch.manual_seed(SEED)    egnn_acc_aligned = eval_epoch(egnn, test_loader, DEVICE, use_edge_index=True, rotate=False)    bar.set_postfix(done="EGNN aligned"); bar.update(1)    egnn_acc_rotated = eval_epoch(egnn, test_loader, DEVICE, use_edge_index=True, rotate=True)    bar.set_postfix(done="EGNN rotated"); bar.update(1)    pnet_acc_aligned = eval_epoch(pnet, test_loader, DEVICE, use_edge_index=False, rotate=False)    bar.set_postfix(done="PointNet aligned"); bar.update(1)    pnet_acc_rotated = eval_epoch(pnet, test_loader, DEVICE, use_edge_index=False, rotate=True)    bar.set_postfix(done="PointNet rotated"); bar.update(1)gap_egnn = egnn_acc_aligned - egnn_acc_rotatedgap_pnet = pnet_acc_aligned - pnet_acc_rotatedprint("\n" + "="*52)print(f"{'':22s} {'Aligned':&gt;10s} {'Rotated':&gt;10s}")print("-"*52)print(f"{'EGNN':22s} {egnn_acc_aligned:&gt;10.4f} {egnn_acc_rotated:&gt;10.4f}")print(f"{'PointNet':22s} {pnet_acc_aligned:&gt;10.4f} {pnet_acc_rotated:&gt;10.4f}")print("-"*52)print(f"{'Degradation (Δ)':22s} {gap_egnn:&gt;10.4f} {gap_pnet:&gt;10.4f}")print("="*52)print(f"\nPointNet degrades {gap_pnet/max(gap_egnn, 1e-6):.1f}x more than EGNN under rotation.")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Evaluating both models under aligned and rotated conditions...
+</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>evaluating: 100%|██████████| 4/4 [00:35&lt;00:00,  8.84s/eval, done=PointNet rotated]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+====================================================
+                          Aligned    Rotated
+----------------------------------------------------
+EGNN                       0.4935     0.4931
+PointNet                   0.8310     0.0778
+----------------------------------------------------
+Degradation (Δ)            0.0004     0.7532
+====================================================
+
+PointNet degrades 1859.0x more than EGNN under rotation.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+</div>
+<div id="cell-45" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-05-27T05:08:00.254353Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-05-27T05:08:00.254615Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-27T05:08:00.769613Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-05-27T05:08:00.254585Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-27T05:08:00.768936Z&quot;}}" data-execution_count="38">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb75"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 37 - training curvesfig, axes = plt.subplots(1, 2, figsize=(12, 4))axes[0].plot(egnn_train_acc, label="EGNN train")axes[0].plot(egnn_test_acc, label="EGNN test")axes[0].plot(pnet_train_acc, label="PointNet train")axes[0].plot(pnet_test_acc, label="PointNet test")axes[0].set_xlabel("epoch"); axes[0].set_ylabel("accuracy")axes[0].set_title("training curves"); axes[0].legend()models = ["EGNN", "PointNet"]aligned = [egnn_acc_aligned, pnet_acc_aligned]rotated = [egnn_acc_rotated, pnet_acc_rotated]x = range(len(models))axes[1].bar([i - 0.2 for i in x], aligned, width=0.4, label="aligned")axes[1].bar([i + 0.2 for i in x], rotated, width=0.4, label="rotated")axes[1].set_xticks(list(x)); axes[1].set_xticklabels(models)axes[1].set_ylabel("accuracy"); axes[1].set_title("aligned vs rotated")axes[1].legend()plt.tight_layout()plt.show()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_3_e3_for_3d_point_cloud_classification_files/figure-html/cell-39-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-46" class="cell" data-trusted="true">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb76"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+
+
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

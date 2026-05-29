@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2026-05-27">
+
+<title>E(3) - Equivariant Network for 3D Point Cloud Classification – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-c9c348fde5b056b266c034ca7230deca.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">E(3) - Equivariant Network for 3D Point Cloud Classification</li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#e3-equivariant-graph-neural-network-for-3d-point-cloud-classification" id="toc-e3-equivariant-graph-neural-network-for-3d-point-cloud-classification" class="nav-link active" data-scroll-target="#e3-equivariant-graph-neural-network-for-3d-point-cloud-classification">E(3)-Equivariant Graph Neural Network for 3D Point Cloud Classification</a>
+  <ul class="collapse">
+  <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#intuitive-explanation" id="toc-intuitive-explanation" class="nav-link" data-scroll-target="#intuitive-explanation">Intuitive Explanation</a></li>
+  <li><a href="#mathematical-foundations" id="toc-mathematical-foundations" class="nav-link" data-scroll-target="#mathematical-foundations">Mathematical Foundations</a></li>
+  <li><a href="#tangent-bundle-interpretation" id="toc-tangent-bundle-interpretation" class="nav-link" data-scroll-target="#tangent-bundle-interpretation">Tangent Bundle Interpretation</a></li>
+  <li><a href="#why-symmetry-matters-a-quantitative-comparison" id="toc-why-symmetry-matters-a-quantitative-comparison" class="nav-link" data-scroll-target="#why-symmetry-matters-a-quantitative-comparison">Why Symmetry Matters: A Quantitative Comparison</a></li>
+  <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">Results</a></li>
+  <li><a href="#key-insights" id="toc-key-insights" class="nav-link" data-scroll-target="#key-insights">Key Insights</a></li>
+  <li><a href="#implementation-notes" id="toc-implementation-notes" class="nav-link" data-scroll-target="#implementation-notes">Implementation Notes</a></li>
+  <li><a href="#dependencies" id="toc-dependencies" class="nav-link" data-scroll-target="#dependencies">Dependencies</a></li>
+  <li><a href="#note" id="toc-note" class="nav-link" data-scroll-target="#note">Note</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">E(3) - Equivariant Network for 3D Point Cloud Classification</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">GDL</div>
+  </div>
+  </div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">May 27, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="e3-equivariant-graph-neural-network-for-3d-point-cloud-classification" class="level1">
+<h1>E(3)-Equivariant Graph Neural Network for 3D Point Cloud Classification</h1>
+<p><img src="https://img.shields.io/badge/PyTorch-2.3.1-ee4c2c?logo=pytorch" class="img-fluid" alt="PyTorch"> <img src="https://img.shields.io/badge/PyTorch_Geometric-latest-3c8dbc.png" class="img-fluid" alt="PyG"> <img src="https://img.shields.io/badge/CUDA-12.1-76b900?logo=nvidia" class="img-fluid" alt="CUDA"> <img src="https://img.shields.io/badge/Dataset-ModelNet40-blue.png" class="img-fluid" alt="Dataset"></p>
+<hr>
+<section id="overview" class="level2">
+<h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<p>This project builds an E(3)-Equivariant Graph Neural Network (EGNN) from scratch for 3D object classification on ModelNet40 — 40 classes, 9,843 training point clouds, 1,024 points each — without using any equivariant layer libraries. The EGNN maintains two coupled message-passing streams: an invariant scalar feature stream and an equivariant coordinate stream, with E(3)-equivariance verified numerically at every architectural stage before training. The project’s central contribution is a controlled quantitative comparison against a non-equivariant PointNet baseline under random SO(3) rotations at test time, demonstrating that architectural symmetry constraints provide robustness guarantees that no amount of training on aligned data can replicate.</p>
+<p><strong>Core implementations covered:</strong></p>
+<ul>
+<li>E(3) group primitives (<code>rotate</code>, <code>reflect</code>, <code>translate</code>) with numerical verification</li>
+<li>Formal equivariance and invariance checkers reused as ground-truth tests throughout</li>
+<li>k-NN graph construction with verified rotation-equivariant topology</li>
+<li>EGNN message passing from scratch: coupled scalar stream <span class="math inline">\(h_i\)</span> and coordinate stream <span class="math inline">\(x_i\)</span></li>
+<li>Invariant classification head (global mean-pool over <span class="math inline">\(h_i\)</span>) and equivariant vector head (mean-pool over <span class="math inline">\(x_i\)</span>)</li>
+<li>Local PCA tangent frame computation and visualization</li>
+<li>PointNet baseline from scratch: shared MLP + global max-pool</li>
+<li>Full training run with 2×2 accuracy table under aligned and rotated test conditions</li>
+</ul>
+<hr>
+</section>
+<section id="intuitive-explanation" class="level2">
+<h2 class="anchored" data-anchor-id="intuitive-explanation">Intuitive Explanation</h2>
+<p><strong>1. What is a Point Cloud?</strong></p>
+<p>Imagine scanning a physical chair with a depth camera. The output is not a photograph — it is a cloud of thousands of (x, y, z) coordinate measurements scattered across the chair’s surface, with no edges, no faces, and no ordering. This is a point cloud: an unordered set of 3D positions, sometimes augmented with surface normals or color values at each point.</p>
+<p>Formally, a point cloud is <span class="math inline">\(\mathcal{P} = \{(x_i, f_i) \mid x_i \in \mathbb{R}^3, f_i \in \mathbb{R}^D\}\)</span>, where <span class="math inline">\(x_i\)</span> are spatial coordinates and <span class="math inline">\(f_i\)</span> are per-point features. Because it is an unordered set, any algorithm processing it must be insensitive to the arbitrary indexing of points — and ideally, to arbitrary rotations and translations of the object in space. Point cloud classification is the task of assigning a semantic label (chair, airplane, table) to such a set, and it is the central task of this project.</p>
+<hr>
+<p><strong>2. What is E(3)-Equivariance?</strong></p>
+<p>Consider a coffee mug. Whether it sits upright, lies on its side, or is held upside down, it is still a mug. A human recognizes it instantly regardless of orientation. A naive neural network, trained only on upright mugs, will fail on the rotated ones — because it learned to recognize “mug-shaped coordinates,” not “mug-shaped geometry.”</p>
+<p>E(3)-equivariance is the mathematical property that formalizes this orientation-independence. The group E(3) — the Euclidean group in three dimensions — contains all rotations, reflections, and translations of 3D space. A network is E(3)-equivariant if transforming its input by any element of E(3) produces a predictably transformed output, rather than an arbitrary one. For classification, where the output is a scalar label, this reduces to invariance: rotating the input object must not change the predicted class. This project builds that guarantee directly into the architecture — not by augmenting training data, but by making the violation of symmetry algebraically impossible.</p>
+<hr>
+<p><strong>3. Why Does Symmetry Matter in Neural Networks?</strong></p>
+<p>Standard neural networks learn symmetry statistically: show them enough rotated chairs during training, and they will eventually generalize. But statistical symmetry is fragile — it depends on coverage of the training distribution and fails at test-time orientations that were underrepresented. Architectural symmetry is different in kind, not just degree. When equivariance is encoded into the message-passing equations themselves, the network cannot produce a different output for a rotated input, regardless of what orientations it saw during training. This project makes the distinction concrete: PointNet learns symmetry statistically (and collapses under out-of-distribution rotations), while EGNN enforces it algebraically (and degrades by less than 0.1% under the same rotations).</p>
+<hr>
+</section>
+<section id="mathematical-foundations" class="level2">
+<h2 class="anchored" data-anchor-id="mathematical-foundations">Mathematical Foundations</h2>
+<section id="the-e3-group" class="level3">
+<h3 class="anchored" data-anchor-id="the-e3-group">1. The E(3) Group</h3>
+<p>The Euclidean group <span class="math inline">\(E(3)\)</span> is the group of all distance-preserving transformations of <span class="math inline">\(\mathbb{R}^3\)</span>. It is formally the semidirect product:</p>
+<p><span class="math display">\[E(3) = \mathbb{R}^3 \rtimes O(3)\]</span></p>
+<p>where <span class="math inline">\(O(3)\)</span> is the orthogonal group (rotations and reflections) and <span class="math inline">\(\mathbb{R}^3\)</span> is the translation group. The semidirect product — not direct product — reflects the fact that translations and rotations do not commute. A general E(3) transformation applied to a point <span class="math inline">\(x \in \mathbb{R}^3\)</span> takes the form:</p>
+<p><span class="math display">\[x \mapsto Rx + t, \quad R \in O(3), \quad t \in \mathbb{R}^3\]</span></p>
+<p>The subgroup <span class="math inline">\(SO(3) \subset O(3)\)</span> restricts to orientation-preserving transformations (rotations only), defined by two conditions:</p>
+<p><span class="math display">\[R^T R = I \quad \text{(orthogonality)} \qquad \det(R) = +1 \quad \text{(orientation-preserving)}\]</span></p>
+<p>Reflections satisfy <span class="math inline">\(R^T R = I\)</span> but <span class="math inline">\(\det(R) = -1\)</span>, placing them in <span class="math inline">\(O(3) \setminus SO(3)\)</span>.</p>
+<hr>
+</section>
+<section id="equivariance-and-invariance" class="level3">
+<h3 class="anchored" data-anchor-id="equivariance-and-invariance">2. Equivariance and Invariance</h3>
+<p>Let <span class="math inline">\(G\)</span> be a group acting on input space <span class="math inline">\(X\)</span> via <span class="math inline">\(\rho_X\)</span> and on output space <span class="math inline">\(Y\)</span> via <span class="math inline">\(\rho_Y\)</span>. A function <span class="math inline">\(f: X \to Y\)</span> is <strong><span class="math inline">\(G\)</span>-equivariant</strong> if:</p>
+<p><span class="math display">\[f(\rho_X(g) \cdot x) = \rho_Y(g) \cdot f(x) \quad \forall\, g \in G,\; x \in X\]</span></p>
+<p>Transforming the input and then applying <span class="math inline">\(f\)</span> yields the same result as applying <span class="math inline">\(f\)</span> and then transforming the output. <strong>Invariance</strong> is the special case where <span class="math inline">\(\rho_Y(g) = \text{id}\)</span> for all <span class="math inline">\(g\)</span>:</p>
+<p><span class="math display">\[f(\rho_X(g) \cdot x) = f(x) \quad \forall\, g \in G,\; x \in X\]</span></p>
+<p>In this project, the classification head is <span class="math inline">\(E(3)\)</span>-<strong>invariant</strong> (rotating a chair must not change its predicted label), while the coordinate stream is <span class="math inline">\(E(3)\)</span>-<strong>equivariant</strong> (rotating the input rotates the internal coordinate representations by the same <span class="math inline">\(R\)</span>).</p>
+<hr>
+</section>
+<section id="egnn-message-passing" class="level3">
+<h3 class="anchored" data-anchor-id="egnn-message-passing">3. EGNN Message Passing</h3>
+<p>The EGNN maintains two coupled streams per layer: scalar node features <span class="math inline">\(h_i \in \mathbb{R}^{d}\)</span> (invariant) and coordinate embeddings <span class="math inline">\(x_i \in \mathbb{R}^3\)</span> (equivariant). Each layer applies three sequential updates:</p>
+<p><strong>Edge messages</strong> — computed from invariant quantities only:</p>
+<p><span class="math display">\[m_{ij} = \phi_e\!\left(h_i,\, h_j,\, \|x_i - x_j\|^2\right)\]</span></p>
+<p><strong>Coordinate update</strong> — equivariant by construction:</p>
+<p><span class="math display">\[x_i \leftarrow x_i + \sum_{j \in \mathcal{N}(i)} (x_i - x_j)\, \phi_x(m_{ij})\]</span></p>
+<p><strong>Scalar feature update</strong> — invariant aggregation:</p>
+<p><span class="math display">\[h_i \leftarrow \phi_h\!\left(h_i,\, \sum_{j \in \mathcal{N}(i)} m_{ij}\right)\]</span></p>
+<p>where <span class="math inline">\(\phi_e\)</span>, <span class="math inline">\(\phi_x\)</span>, <span class="math inline">\(\phi_h\)</span> are learned MLPs, and <span class="math inline">\(\phi_x(m_{ij}) \in \mathbb{R}\)</span> is a scalar gate. The equivariance of the coordinate update follows from two facts: (1) <span class="math inline">\(\|x_i - x_j\|^2\)</span> is rotation-invariant, so <span class="math inline">\(m_{ij}\)</span> and <span class="math inline">\(\phi_x(m_{ij})\)</span> are unchanged under rotation; (2) <span class="math inline">\(R\)</span> is linear, so it factors out of the sum:</p>
+<p><span class="math display">\[Rx_i + \sum_j R(x_i - x_j)\,\phi_x(m_{ij}) = R\!\left(x_i + \sum_j (x_i - x_j)\,\phi_x(m_{ij})\right)\]</span></p>
+<hr>
+</section>
+</section>
+<section id="tangent-bundle-interpretation" class="level2">
+<h2 class="anchored" data-anchor-id="tangent-bundle-interpretation">Tangent Bundle Interpretation</h2>
+<p>For a smooth manifold <span class="math inline">\(M\)</span>, the tangent bundle <span class="math inline">\(TM = \bigsqcup_{p \in M} T_pM\)</span> assigns to every point <span class="math inline">\(p\)</span> a tangent space <span class="math inline">\(T_pM\)</span> — the flat linear space of all velocity vectors of smooth curves passing through <span class="math inline">\(p\)</span>. For a 2D surface embedded in <span class="math inline">\(\mathbb{R}^3\)</span>, <span class="math inline">\(T_pM\)</span> is the tangent plane at <span class="math inline">\(p\)</span>, spanned by two basis vectors encoding local surface directions, with a third orthogonal axis corresponding to the surface normal.</p>
+<p>A point cloud has no smooth structure, but local PCA recovers a discrete approximation. For each point <span class="math inline">\(x_i\)</span>, we collect its <span class="math inline">\(k\)</span>-nearest neighbors, center them, and compute the <span class="math inline">\(3 \times 3\)</span> covariance matrix. Its three eigenvectors — ordered by ascending eigenvalue — form a local orthonormal frame: the two high-variance axes approximate the tangent plane <span class="math inline">\(T_{x_i}M\)</span>, and the minimum-variance axis approximates the surface normal. This frame is verified to be rotation-equivariant: rotating the point cloud rotates each local frame by the same <span class="math inline">\(R\)</span>, consistent with <span class="math inline">\(TM\)</span> transforming covariantly under isometries of the ambient space. In the context of EGNN, the equivariant coordinate stream <span class="math inline">\(x_i\)</span> implicitly tracks these local frames across layers — each coordinate update aggregates displacement vectors <span class="math inline">\((x_i - x_j)\)</span> from the neighborhood, which span precisely this local tangent structure.</p>
+<hr>
+</section>
+<section id="why-symmetry-matters-a-quantitative-comparison" class="level2">
+<h2 class="anchored" data-anchor-id="why-symmetry-matters-a-quantitative-comparison">Why Symmetry Matters: A Quantitative Comparison</h2>
+<section id="accuracy-table" class="level3">
+<h3 class="anchored" data-anchor-id="accuracy-table">Accuracy Table</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 13%">
+<col style="width: 30%">
+<col style="width: 32%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Model</th>
+<th>Aligned (no rotation)</th>
+<th>Rotated (random SO(3))</th>
+<th>Degradation (Δ)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>EGNN</td>
+<td>0.4935</td>
+<td>0.4931</td>
+<td><strong>0.0004</strong></td>
+</tr>
+<tr class="even">
+<td>PointNet</td>
+<td>0.8310</td>
+<td>0.0778</td>
+<td><strong>0.7532</strong></td>
+</tr>
+</tbody>
+</table>
+<p><em>Both models trained for 64 epochs, h_dim=64, 4 layers, lr=1e-3, seed=42.</em></p>
+<hr>
+</section>
+<section id="training-curves" class="level3">
+<h3 class="anchored" data-anchor-id="training-curves">Training Curves</h3>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="training_curves.png" class="img-fluid figure-img"></p>
+<figcaption>Training Curves</figcaption>
+</figure>
+</div>
+<p><em>Training and test accuracy over 64 epochs for both models on aligned ModelNet40. PointNet converges faster and to a higher ceiling; EGNN converges more slowly, reflecting the cost of enforcing a hard symmetry constraint at h_dim=64.</em></p>
+<hr>
+</section>
+<section id="analysis" class="level3">
+<h3 class="anchored" data-anchor-id="analysis">Analysis</h3>
+<p>The table above is not primarily a performance comparison — it is a controlled experiment in what architectural symmetry buys versus what it costs. EGNN’s accuracy drops by 0.0004 under arbitrary SO(3) rotations. PointNet’s drops by 0.7532, from 83% to 8% — barely above the 2.5% random baseline for 40 classes. The cause is not a difference in training data, optimizer, or capacity: both models share identical hyperparameters. The cause is structural. EGNN’s message computation uses only <span class="math inline">\(\|x_i - x_j\|^2\)</span> — a rotation-invariant quantity — so rotating the input leaves every <span class="math inline">\(m_{ij}\)</span> unchanged. PointNet’s shared MLP receives raw <span class="math inline">\((x, y, z)\)</span> coordinates directly; rotating the input replaces every coordinate with a different value, and the network has no mechanism to recognize the transformed geometry as the same object.</p>
+<p>PointNet’s 83% aligned accuracy is best understood as coordinate memorization, not geometric understanding. Trained on ModelNet40’s consistently upright and forward-facing objects, the shared MLP learns axis-aligned decision boundaries: points with high <span class="math inline">\(z\)</span> and centered <span class="math inline">\(x, y\)</span> signal the top of a chair; points near <span class="math inline">\((0, 0, -0.5)\)</span> signal a table leg. These rules are precise and effective — within the training distribution. Under a random SO(3) rotation, every axis-aligned rule is violated simultaneously. The global max-pool operation, which provides permutation invariance, offers no protection here: it selects the maximum activations across points, but those activations are computed from corrupted absolute coordinates. The result is a feature vector that no longer corresponds to any object the network was trained to recognize.</p>
+<p>EGNN’s robustness is not statistical — it is algebraic. The proof is in the coordinate update equation: substituting <span class="math inline">\(Rx_k\)</span> for every <span class="math inline">\(x_k\)</span>, the rotation matrix <span class="math inline">\(R\)</span> factors out of the sum by linearity and cancels against the input, leaving the update identical to the unrotated case up to the same rotation <span class="math inline">\(R\)</span> applied globally. This holds for any <span class="math inline">\(R \in O(3)\)</span>, for any input, after any number of layers, without requiring the network to have seen that rotation during training. The equivariance check passing at <span class="math inline">\(1.19 \times 10^{-7}\)</span> error — float32 noise floor — confirms this is an exact architectural property, not an approximation.</p>
+<p>The accuracy gap on aligned data (49% vs 83%) reflects a real cost: enforcing equivariance constrains the function class the network can represent. At h_dim=64 and 4 layers, EGNN cannot exploit coordinate shortcuts that PointNet uses freely. A deeper EGNN with larger hidden dimensions would close this gap while preserving the rotation robustness guarantee — but the gap would never reverse the fundamental tradeoff: PointNet’s aligned accuracy is purchased at the price of complete fragility to orientation change.</p>
+<hr>
+</section>
+</section>
+<section id="results" class="level2">
+<h2 class="anchored" data-anchor-id="results">Results</h2>
+<section id="equivariance-verification" class="level3">
+<h3 class="anchored" data-anchor-id="equivariance-verification">Equivariance Verification</h3>
+<p>All checks performed on a single ModelNet40 point cloud (1,024 points), random SO(3) rotation, float32 precision.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 17%">
+<col style="width: 28%">
+<col style="width: 22%">
+<col style="width: 31%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Test</th>
+<th>Expected</th>
+<th>Passed</th>
+<th>Max Error</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Distance matrix invariant under rotation</td>
+<td>invariant</td>
+<td>✓</td>
+<td>3.45e-04</td>
+</tr>
+<tr class="even">
+<td>Identity function equivariant under rotation</td>
+<td>equivariant</td>
+<td>✓</td>
+<td>0.00e+00</td>
+</tr>
+<tr class="odd">
+<td><code>norm-expand</code> equivariant (deliberate failure)</td>
+<td>✗</td>
+<td>✗</td>
+<td>2.09e+00</td>
+</tr>
+<tr class="even">
+<td>k-NN topology preserved under rotation</td>
+<td>invariant</td>
+<td>✓</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td>Edge vectors equivariant under rotation</td>
+<td>equivariant</td>
+<td>✓</td>
+<td>1.27e-07</td>
+</tr>
+<tr class="even">
+<td>EGNN coordinate stream equivariant</td>
+<td>equivariant</td>
+<td>✓</td>
+<td>1.19e-07</td>
+</tr>
+<tr class="odd">
+<td>EGNN classification head invariant</td>
+<td>invariant</td>
+<td>✓</td>
+<td>5.96e-08</td>
+</tr>
+<tr class="even">
+<td>Invariant head invariant</td>
+<td>invariant</td>
+<td>✓</td>
+<td>5.96e-08</td>
+</tr>
+<tr class="odd">
+<td>Equivariant head equivariant</td>
+<td>equivariant</td>
+<td>✓</td>
+<td>4.42e-09</td>
+</tr>
+<tr class="even">
+<td>PCA frame equivariant (subspace, |det|≈1)</td>
+<td>equivariant</td>
+<td>✓</td>
+<td>1e-06</td>
+</tr>
+<tr class="odd">
+<td>PointNet permutation invariant</td>
+<td>invariant</td>
+<td>✓</td>
+<td>0.00e+00</td>
+</tr>
+<tr class="even">
+<td>PointNet rotation invariant (deliberate failure)</td>
+<td>✗</td>
+<td>✗</td>
+<td>1.38e-02</td>
+</tr>
+<tr class="odd">
+<td>EGNN rotation invariant</td>
+<td>invariant</td>
+<td>✓</td>
+<td>5.96e-08</td>
+</tr>
+</tbody>
+</table>
+<p><em>Errors at ~1e-07 are float32 rounding accumulated over 1,024-point operations — not symmetry violations.</em></p>
+<hr>
+</section>
+<section id="figures" class="level3">
+<h3 class="anchored" data-anchor-id="figures">Figures</h3>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="airplane_cloud_transformations.png" class="img-fluid figure-img"></p>
+<figcaption>Airplane Point Cloud Transformations</figcaption>
+</figure>
+</div>
+<p><em>An airplane point cloud under the four E(3) primitives: original, rotated (random SO(3)), reflected (z-axis), translated. Pairwise distances are verified preserved across all transforms.</em></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="tangent_space_approximation.png" class="img-fluid figure-img"></p>
+<figcaption>Tangent Space Approximation</figcaption>
+</figure>
+</div>
+<p><em>Local PCA frame at one point on an airplane point cloud. Red: first principal axis (max variance). Green: second principal axis. Blue: third axis (min variance) — the surface normal approximation. The two high-variance axes span the discrete tangent plane <span class="math inline">\(T_{x_i}M\)</span>.</em></p>
+<hr>
+</section>
+</section>
+<section id="key-insights" class="level2">
+<h2 class="anchored" data-anchor-id="key-insights">Key Insights</h2>
+<p><strong>1. What the Equivariant Coordinate Stream Encodes That Scalar MPNNs Cannot</strong></p>
+<p>A standard message-passing network operating only on scalar features <span class="math inline">\(h_i\)</span> can capture distances, angles, and local density — but it cannot track how geometric structure <em>transforms</em> across layers. The EGNN coordinate stream <span class="math inline">\(x_i\)</span> carries the full 3D positional embedding of each node through every layer, updated by aggregating displacement vectors <span class="math inline">\((x_i - x_j)\)</span> weighted by learned scalar gates. This means each layer’s coordinate representation encodes not just local neighborhood statistics, but the oriented spatial arrangement of the entire receptive field — information that is strictly inaccessible to scalar-only MPNNs. A scalar MPNN cannot distinguish a left-handed helix from a right-handed one if their distance profiles match; the coordinate stream can, because it preserves directional structure that survives rotation equivariantly rather than collapsing it into invariant scalars prematurely.</p>
+<hr>
+<p><strong>2. Why PointNet’s Accuracy Is a Shortcut, Not a Capability</strong></p>
+<p>PointNet achieves 83% aligned accuracy with a remarkably simple architecture — shared MLP plus global max-pool. This performance is real, but its source is coordinate memorization: the network partitions absolute 3D space into regions associated with object classes, learned from a consistently oriented training set. The failure is not a bug in PointNet’s design; it is a direct consequence of feeding raw <span class="math inline">\((x, y, z)\)</span> coordinates into a function that has no mechanism to recognize geometric equivalence under rotation. The 83% ceiling is a shortcut available only when the test distribution matches the training orientation. The moment that assumption breaks — a single random SO(3) rotation per test sample — the accuracy collapses to 8%, exposing that the network learned pose-specific texture in coordinate space, not pose-invariant geometric structure.</p>
+<hr>
+<p><strong>3. Architectural Symmetry vs.&nbsp;Learned Symmetry</strong></p>
+<p>There are two ways to make a network robust to rotations: train on enough rotated examples (learned symmetry) or build the rotation constraint into the architecture (architectural symmetry). These are not equivalent. Learned symmetry is probabilistic — it improves with more augmentation but can always fail on underrepresented orientations. Architectural symmetry is a hard guarantee: the equivariance proof in Stage 5 holds for <em>any</em> <span class="math inline">\(R \in O(3)\)</span>, for <em>any</em> input, after <em>any</em> number of layers, without any training examples at all. The verification checks in this project — all passing at float32 noise floor before a single training step — are the concrete expression of this guarantee. The cost is real: constraining the function class reduces the model’s ability to exploit coordinate shortcuts, which is why EGNN’s aligned accuracy (49%) sits below PointNet’s (83%) at equal capacity. But this cost is predictable and closeable by scaling; PointNet’s fragility under rotation is structural and cannot be closed without changing the architecture.</p>
+<hr>
+</section>
+<section id="implementation-notes" class="level2">
+<h2 class="anchored" data-anchor-id="implementation-notes">Implementation Notes</h2>
+<ul>
+<li><p><strong>No equivariant layer libraries.</strong> EGNN message passing, coordinate updates, and output heads are implemented from scratch in pure PyTorch. PyG is used only for data loading and k-NN graph construction via <code>KNNGraph</code>.</p></li>
+<li><p><strong>Equivariance tested before training.</strong> <code>check_equivariance</code> and <code>check_invariance</code> are implemented in Stage 3 and reused at every architectural stage. Every symmetry claim is backed by a passing numerical test visible as a cell output before any model is trained.</p></li>
+<li><p><strong>k-NN graph precomputed via transform.</strong> <code>KNNGraph(k=20)</code> is applied as a dataset transform at load time, avoiding repeated graph construction during training. The graph topology is verified rotation-equivariant: rotating the point cloud permutes edges but does not change the neighbor set.</p></li>
+<li><p><strong>Constant node feature initialization.</strong> EGNN node features <span class="math inline">\(h_i\)</span> are initialized as a constant scalar (ones) projected to h_dim via a linear layer. All geometric information enters through the coordinate stream <span class="math inline">\(x_i\)</span>, keeping the invariant/equivariant separation clean.</p></li>
+<li><p><strong>float32 tolerances.</strong> Equivariance checks use <code>atol=1e-4</code> for single operations and <code>atol=1e-3</code> for large aggregations (e.g., 1024×1024 distance matrices). Errors at ~1e-7 to ~1e-4 are float32 rounding, not symmetry violations.</p></li>
+<li><p><strong>Shared hyperparameters across models.</strong> Both EGNN and PointNet use h_dim=64, 4 layers, Adam optimizer, lr=1e-3, CosineAnnealingLR, 64 epochs, seed=42 — ensuring the accuracy comparison is architectural, not hyperparameter-driven.</p></li>
+<li><p><strong>Eigenvector sign ambiguity in PCA frames.</strong> <code>torch.linalg.eigh</code> returns eigenvectors defined up to sign flip and column swap when eigenvalues are close. Equivariance of PCA frames is verified via <span class="math inline">\(|\det(A^T B)| \approx 1\)</span> (subspace agreement) rather than elementwise comparison.</p></li>
+</ul>
+<hr>
+</section>
+<section id="dependencies" class="level2">
+<h2 class="anchored" data-anchor-id="dependencies">Dependencies</h2>
+<pre><code>torch==2.3.1              # core deep learning framework
+torch-geometric           # data loading, KNNGraph transform, global pooling
+torch-scatter             # scatter_add for EGNN message aggregation
+torch-sparse              # sparse graph operations
+numpy                     # numerical utilities
+matplotlib                # point cloud and training curve visualization
+tqdm                      # training progress bars</code></pre>
+<p><strong>INSTALL COMMANDS [Kaggle Notebook <span class="math inline">\(\rightarrow\)</span> Add-ons <span class="math inline">\(\rightarrow\)</span> Install Dependencies]</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install torch==2.3.1+cu121 torchvision==0.18.1+cu121 <span class="dt">\</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">--index-url</span> https://download.pytorch.org/whl/cu121</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install torch-geometric==2.5.3</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install pyg_lib==0.4.0 torch_scatter==2.1.2 <span class="dt">\</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    torch_sparse==0.6.18 torch_cluster==1.6.3 <span class="dt">\</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">-f</span> https://data.pyg.org/whl/torch-2.3.0+cu121.html</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+<section id="note" class="level2">
+<h2 class="anchored" data-anchor-id="note">Note</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 100%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: center;">The notebook was developed and tested on a Kaggle environment with a NVIDIA P100 16GB GPU, Python 3.12, and CUDA 12.1. All cells run end-to-end from a clean kernel without any external dependencies beyond those listed above.</th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+<hr>
+<hr>
+<ul>
+<li><a href="">Project Notebook (Code)</a></li>
+<li><a href="../../projects/E(3) - Equivariant Network for 3D Point Cloud Classification/mathematical_framework.html">Mathematical Framework</a></li>
+<li><a href="../../projects/E(3) - Equivariant Network for 3D Point Cloud Classification/solving_anchor_example.html">Solving an Anchor Example</a></li>
+</ul>
+<hr>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
