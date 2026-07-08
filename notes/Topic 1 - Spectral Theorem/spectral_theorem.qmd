@@ -1,0 +1,384 @@
+# Topic 1 - Spectral Theorem: Eigendecomposition of Symmetric Matrices
+
+## Introduction
+
+You have computed eigenvalues and eigenvectors before. In MATH 103, you found them by solving $\det(A - \lambda I) = 0$, extracting the roots of the characteristic polynomial, and then solving the homogeneous system $(A - \lambda I)v = 0$ for each root. The computation was mechanical — a sequence of steps that produced a list of numbers and vectors. What you did not yet have was a complete answer to the geometric question that eigenvalues and eigenvectors are answering.
+
+The question is this: given a symmetric matrix $A$ acting on vectors in $\mathbb{R}^n$, what is the simplest possible description of what $A$ does geometrically to every vector in the space?
+
+The answer is the Spectral Theorem, and it is one of the most beautiful results in all of mathematics. It says: every symmetric real matrix is, in the right coordinate system, simply a rescaling. Nothing more. It does not rotate the space. It does not shear it. It does not mix coordinates together in complicated ways. In its eigenvector coordinate system, it just stretches or compresses each axis independently, by the corresponding eigenvalue. The matrix is diagonalizable, its eigenvectors are orthogonal, and the entire action of the matrix is captured by the list of eigenvalues.
+
+This sounds like a theorem about computation. It is actually a theorem about geometry. The spectral theorem says that every symmetric matrix defines a preferred set of axes — the eigenvectors — and in those axes, the matrix acts as purely as possible: independently along each axis, with no cross-coupling between axes. The eigenvectors are the directions in which the matrix acts most simply, and the eigenvalues are the magnitudes of that action.
+
+This topic has three subtopics that build the complete picture.
+
+The first subtopic is **eigenvalues and eigenvectors of symmetric matrices** — what they are, why symmetric matrices always have real eigenvalues (a nontrivial fact), and why eigenvectors corresponding to distinct eigenvalues are always orthogonal (a beautiful fact). The orthogonality of eigenvectors is the geometric core of the spectral theorem: symmetric matrices have perpendicular preferred axes, which is what makes their action so clean.
+
+The second subtopic is the **spectral decomposition** $A = Q\Lambda Q^T$ — the explicit formula that decomposes a symmetric matrix into orthogonal rotation times diagonal stretch times orthogonal rotation back. This formula is the computational form of the spectral theorem, and it is the tool you will use throughout the roadmap. Reading this formula geometrically: $Q^T$ rotates the input vector into the eigenvector coordinate system, $\Lambda$ rescales each coordinate by the corresponding eigenvalue, and $Q$ rotates back. The matrix acts as a pure rescaling in its natural coordinate system.
+
+The third subtopic is **the variational characterization of eigenvalues** — the Rayleigh quotient and the min-max theorem. The largest eigenvalue of $A$ is the maximum of the Rayleigh quotient $\lambda_{\max}(A) = \max_{\|v\|=1} v^TAv$, and the smallest eigenvalue is the minimum $\lambda_{\min}(A) = \min_{\|v\|=1} v^TAv$. This variational characterization connects eigenvalues to optimization — the eigenvalues are the extreme values of the quadratic form $v^TAv$ on the unit sphere — and it is the foundation of the Courant-Fischer theorem, the Weyl inequalities, and the spectral methods in graph neural networks of Phase 2.
+
+By the end of this topic, when you see a symmetric matrix — a covariance matrix, a Hessian, a graph Laplacian, a Fisher information matrix — you will immediately see its geometric content: a set of preferred orthogonal axes with associated stretching factors, a pure rescaling in its natural coordinate system, and a quadratic form whose extreme values on the unit sphere are the eigenvalues. The spectral theorem transforms matrices from arrays of numbers into geometric objects with intrinsic structure.
+
+**ALL THREE SUBTOPICS ARE TREATED AS A SINGLE TOPIC FOR EASY COMPREHENSION.**
+
+---
+
+## Layer 1 (Story)
+
+You are the head structural engineer at the Department of Urban Development in Kathmandu, and you have been handed a critical assignment: assess the seismic vulnerability of a new high-rise building under construction in Durbarmarg. The building has just been fitted with an array of sensitive accelerometers — sensors that measure ground motion and structural vibration in every direction simultaneously. During a test, the engineering team generates a controlled vibration and records the response at each sensor point. The result is a large matrix of numbers: every row represents a sensor, every column represents a time step, and every entry is an acceleration reading in some direction.
+
+Your task is to make sense of this matrix. It is enormous — hundreds of sensors, thousands of time steps — and looking at the raw numbers tells you almost nothing. The building's true mechanical behavior is hidden somewhere inside the matrix. What you need is a way to find the matrix's natural structure: the directions in which the building actually vibrates, and the intensities of vibration in each of those directions.
+
+Your senior engineer — a veteran of post-earthquake assessments across the Kathmandu valley — sits down with you and explains the approach that structural engineers have used for decades. She draws three pictures on the whiteboard.
+
+---
+
+**The first picture: the building has preferred directions**
+
+The building is not a shapeless blob. It has structure: columns running vertically, floors spanning horizontally, shear walls stiffening certain bays. Because of this structure, the building vibrates most naturally in certain preferred directions — its **modes of vibration**. In the first mode, the entire building sways north-south together. In the second mode, it sways east-west. In the third, it twists around its vertical axis. These modes are the building's natural languages of motion.
+
+Each mode is a vector — a pattern of displacements across all the sensors simultaneously. In the north-south sway mode, every sensor records motion predominantly in the north-south direction, with the top sensors moving more than the bottom ones. This pattern is the eigenvector of the building's stiffness matrix in that mode. The eigenvalue tells you the frequency of that mode: a stiff building has high eigenvalue frequencies, a flexible building has low eigenvalue frequencies.
+
+The crucial geometric insight is this: the vibration modes are **orthogonal**. The north-south sway and the east-west sway are perpendicular. The torsional mode is perpendicular to both translational modes. This orthogonality is not an accident of this particular building — it is a theorem. The structural stiffness matrix is symmetric — the force required to move sensor $i$ due to a displacement at sensor $j$ equals the force required to move sensor $j$ due to a displacement at sensor $i$, by Newton's third law. And symmetric matrices always have orthogonal eigenvectors. The orthogonality of the vibration modes is the Spectral Theorem, expressed in the language of structural mechanics.
+
+**The second picture: the matrix is a pure stretch in its natural coordinates**
+
+Your senior engineer now draws the key geometric picture. Take any vibration pattern of the building — any vector $v$ describing the displacement of every sensor simultaneously. Express this vector in the coordinate system of the vibration modes: how much north-south sway, how much east-west sway, how much torsion, and so on. In this coordinate system, the stiffness matrix does something beautifully simple: it scales each mode independently, by the mode's eigenvalue. The north-south component gets multiplied by the north-south eigenvalue. The east-west component gets multiplied by the east-west eigenvalue. There is no mixing between modes.
+
+This is the spectral decomposition in its geometric form. The stiffness matrix $A$ first rotates any input vector into the modal coordinate system — the coordinate system of the building's natural vibration modes — then scales each coordinate independently by the corresponding eigenvalue, then rotates back to the original sensor coordinate system. Written as a formula: $Av = Q(\Lambda(Q^Tv))$, or equivalently $A = Q\Lambda Q^T$. The matrix $Q$ is the rotation into modal coordinates, the matrix $\Lambda$ is the diagonal scaling by eigenvalues, and $Q^T$ is the rotation back.
+
+In the building's natural coordinates, the stiffness matrix does nothing complicated. It is just a rescaling. The complexity of the full matrix — the hundreds-by-hundreds array of cross-coupling stiffness numbers — is entirely explained by two simple operations: a rotation and a scaling.
+
+**The third picture: the eigenvalues are the extremes of a quadratic form**
+
+Your senior engineer draws her final picture. She plots the quadratic form $v^TAv$ — the structural energy stored when the building is displaced according to the pattern $v$ — on the surface of the unit sphere in displacement space. This is the **Rayleigh quotient**: $R(v) = v^TAv / v^Tv$ for a unit vector $v$.
+
+She points to two special points on the sphere. The maximum of $R(v)$ over all unit vectors $v$ is the largest eigenvalue $\lambda_{\max}$ — achieved when $v$ is the eigenvector corresponding to $\lambda_{\max}$, the vibration mode that stores the most energy per unit displacement. The minimum of $R(v)$ is the smallest eigenvalue $\lambda_{\min}$ — achieved in the direction of least energy storage per unit displacement. Every other eigenvalue is a saddle point of $R(v)$ restricted to the corresponding eigenspace.
+
+She says: every time you ask "what is the maximum of a quadratic form on the unit sphere?", the answer is an eigenvalue. Every time you ask "what direction maximizes this quadratic form?", the answer is an eigenvector. The spectral theorem tells you that these extremal problems always have solutions, they are always perpendicular to each other, and they completely decompose the quadratic form into independent pieces.
+
+---
+
+**Building the intuition for symmetry**
+
+The orthogonality of eigenvectors — the fact that the building's vibration modes are perpendicular — requires explanation, because it is not obvious why symmetry of the matrix should force the eigenvectors to be perpendicular.
+
+Here is the key argument, told in the building's language.
+
+Suppose the building has two distinct vibration modes: the north-south sway with mode shape $u$ and eigenvalue $\lambda_1$, and the east-west sway with mode shape $v$ and eigenvalue $\lambda_2$, with $\lambda_1 \neq \lambda_2$. The stiffness matrix $A$ tells you: when the building is in mode $u$, the restoring force is $Au = \lambda_1 u$. When it is in mode $v$, the restoring force is $Av = \lambda_2 v$.
+
+Now compute the mechanical work done by the restoring force of mode $u$ when the building is displaced in mode $v$: this is $v \cdot (Au) = v \cdot (\lambda_1 u) = \lambda_1 (u \cdot v)$. And compute the work done by the restoring force of mode $v$ when displaced in mode $u$: this is $u \cdot (Av) = u \cdot (\lambda_2 v) = \lambda_2 (u \cdot v)$.
+
+But by the symmetry of $A$ — Newton's third law — these two work quantities must be equal: $v \cdot (Au) = u \cdot (Av)$. Therefore $\lambda_1 (u \cdot v) = \lambda_2 (u \cdot v)$. Since $\lambda_1 \neq \lambda_2$, the only possibility is $u \cdot v = 0$ — the two modes are orthogonal.
+
+The orthogonality of eigenvectors corresponding to distinct eigenvalues of a symmetric matrix is not a computational coincidence. It is the consequence of the matrix's symmetry — the reciprocity principle that the work done by force 1 through displacement 2 equals the work done by force 2 through displacement 1. Symmetry in the matrix is physical reciprocity, and physical reciprocity forces orthogonality of modes.
+
+---
+
+**The break moment: repeated eigenvalues and degenerate modes**
+
+Here is the break moment. The story so far has assumed all eigenvalues are distinct — each vibration mode has a unique frequency. In that case, the orthogonality argument works perfectly: modes with different frequencies are automatically orthogonal.
+
+But what if two vibration modes have exactly the same frequency? This happens when the building has certain symmetries: a perfectly square floor plan, for instance, has the same north-south and east-west stiffness, so the north-south and east-west sway modes have exactly the same eigenvalue. In this case, any linear combination of the two modes is also a valid mode — there is a whole two-dimensional plane of mode shapes, all with the same eigenvalue.
+
+The naive assumption is that this degeneracy causes the orthogonality to fail: if any vector in the plane is a valid eigenvector, you can certainly choose two non-orthogonal eigenvectors from that plane.
+
+This assumption is correct — you can choose non-orthogonal eigenvectors — but it does not cause the spectral theorem to fail. The theorem says that orthogonal eigenvectors always exist and always provide a complete decomposition. When eigenvalues are repeated, you have freedom to choose the eigenvectors within the degenerate eigenspace, and the theorem guarantees you can always choose them to be orthogonal. The Gram-Schmidt process — which you learned in MATH 103 — provides the explicit construction: given any basis for the degenerate eigenspace, apply Gram-Schmidt to produce an orthonormal basis. The resulting orthonormal basis is a valid set of eigenvectors, all with the same eigenvalue, all mutually orthogonal.
+
+The spectral theorem is not just the statement that eigenvectors of distinct eigenvalues are orthogonal. It is the stronger statement that there always exists a complete set of $n$ orthonormal eigenvectors spanning all of $\mathbb{R}^n$, regardless of whether eigenvalues are repeated. The freedom in the degenerate case is not a bug — it is a feature, reflecting the physical symmetry of the building.
+
+---
+
+**The spectral theorem and the covariance matrix**
+
+Now your senior engineer reveals the connection to data analysis. The accelerometer data from the building test is a matrix $X$ with each row representing a sensor reading and each column representing a time step. The covariance matrix of the sensor data is $C = \frac{1}{T-1} XX^T$ — a symmetric positive semidefinite matrix encoding how each pair of sensors moves together. Large off-diagonal entries mean those sensors move in correlated ways; small entries mean they move independently.
+
+The spectral theorem decomposes $C = Q\Lambda Q^T$, where the eigenvectors $Q$ are the principal modes of motion and the eigenvalues $\Lambda$ are the variances along each mode. The eigenvector with the largest eigenvalue — the first principal component — is the direction of maximum variance, the mode that accounts for most of the building's total motion energy. The eigenvector with the second-largest eigenvalue is the direction of maximum remaining variance, orthogonal to the first. And so on.
+
+This is Principal Component Analysis (PCA) — the most widely used dimensionality reduction technique in data science, and a direct consequence of the spectral theorem applied to the covariance matrix. The spectral theorem says the covariance matrix has orthogonal principal directions and associated variances. PCA extracts those directions and discards the ones with small variance — compressing the high-dimensional sensor data into a low-dimensional representation capturing the building's most important modes of motion.
+
+The Laplacian eigenmaps of Phase 2 — the spectral method for embedding graph-structured data into low-dimensional Euclidean space — are the same construction applied to the graph Laplacian matrix. The graph Laplacian is symmetric positive semidefinite, its spectral theorem gives orthogonal eigenvectors, and the eigenvectors corresponding to the smallest nonzero eigenvalues are the smoothest functions on the graph — the natural low-dimensional coordinates. Every spectral method in machine learning is the spectral theorem applied to a carefully constructed symmetric matrix.
+
+---
+
+Hold three pictures simultaneously.
+
+The building's vibration modes: orthogonal directions of natural motion, each with an associated frequency (eigenvalue), together spanning the full space of possible displacements — the spectral theorem as structural mechanics.
+
+The matrix as a pure stretch in its natural coordinates: rotate into the eigenvector basis, scale independently along each axis by the eigenvalue, rotate back — $A = Q\Lambda Q^T$ as geometric decomposition.
+
+The Rayleigh quotient on the unit sphere: a quadratic function on the sphere whose maximum is the largest eigenvalue and whose maximum direction is the corresponding eigenvector — the spectral theorem as variational optimization.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the precise statement of the spectral theorem for symmetric matrices, the proof strategy via the Rayleigh quotient, the spectral decomposition and its properties, the variational characterization of eigenvalues via the Courant-Fischer theorem, the functional calculus for symmetric matrices, and the connection to quadratic forms and positive definiteness that bridges to the next topic.
+
+### Definitions and Setup
+
+Let $A \in \mathbb{R}^{n \times n}$ be a **symmetric matrix**: $A = A^T$, equivalently $a_{ij} = a_{ji}$ for all $i,j$. The symmetric matrices form a vector space of dimension $\frac{n(n+1)}{2}$ — the number of independent entries in the upper triangle.
+
+An **eigenvalue** of $A$ is a scalar $\lambda \in \mathbb{C}$ and a nonzero vector $v \in \mathbb{C}^n$ satisfying:
+
+$$Av = \lambda v$$
+
+The vector $v$ is an **eigenvector** corresponding to $\lambda$. The set of all eigenvalues is the **spectrum** of $A$, written $\sigma(A)$.
+
+**Theorem (Real Eigenvalues of Symmetric Matrices).** Every eigenvalue of a symmetric real matrix $A \in \mathbb{R}^{n\times n}$ is real.
+
+**Proof.** Suppose $Av = \lambda v$ with $v \in \mathbb{C}^n$ nonzero. Taking the conjugate transpose of both sides: $\bar{v}^T A^T = \bar\lambda \bar{v}^T$, so $\bar{v}^T A = \bar\lambda \bar{v}^T$ (using $A^T = A$). Multiply the original equation on the left by $\bar{v}^T$: $\bar{v}^T A v = \lambda \bar{v}^T v$. Multiply the conjugated equation on the right by $v$: $\bar{v}^T A v = \bar\lambda \bar{v}^T v$. Therefore $\lambda \bar{v}^T v = \bar\lambda \bar{v}^T v$. Since $\bar{v}^T v = \sum_i |v_i|^2 > 0$, we get $\lambda = \bar\lambda$ — $\lambda$ is real. $\square$
+
+**Theorem (Orthogonality of Eigenvectors).** If $A$ is symmetric and $u, v$ are eigenvectors corresponding to distinct eigenvalues $\lambda_1 \neq \lambda_2$, then $u \perp v$: $\langle u, v\rangle = 0$.
+
+**Proof.** $\lambda_1 \langle u, v\rangle = \langle \lambda_1 u, v\rangle = \langle Au, v\rangle = \langle u, A^T v\rangle = \langle u, Av\rangle = \langle u, \lambda_2 v\rangle = \lambda_2 \langle u, v\rangle$. Since $\lambda_1 \neq \lambda_2$, we conclude $\langle u,v\rangle = 0$. $\square$
+
+---
+
+### The Spectral Theorem
+
+**Theorem (Spectral Theorem for Real Symmetric Matrices).** Let $A \in \mathbb{R}^{n\times n}$ be symmetric. Then:
+
+$$\text{(i) All eigenvalues of } A \text{ are real.}$$
+$$\text{(ii) There exists an orthonormal basis of } \mathbb{R}^n \text{ consisting of eigenvectors of } A.$$
+$$\text{(iii) } A \text{ is orthogonally diagonalizable: } A = Q\Lambda Q^T$$
+
+where $Q \in \mathbb{R}^{n\times n}$ is orthogonal ($Q^T Q = QQ^T = I$) with columns $q_1, \ldots, q_n$ being the orthonormal eigenvectors, and $\Lambda = \text{diag}(\lambda_1, \ldots, \lambda_n)$ is the diagonal matrix of eigenvalues.
+
+**Proof strategy via induction on $n$.** The key step is showing that $A$ has at least one real eigenvector. Consider the Rayleigh quotient $R(v) = \frac{v^T Av}{v^T v}$ on $\mathbb{R}^n \setminus \{0\}$. Restricting to the unit sphere $S^{n-1}$, we want to maximize $f(v) = v^T Av$ subject to $\|v\|_2 = 1$. The unit sphere is compact and $f$ is continuous, so the maximum is attained at some $q_1 \in S^{n-1}$.
+
+At the maximum, the KKT conditions give $\nabla_v (v^TAv) = \lambda_1 \nabla_v (v^Tv)$, which yields $2Aq_1 = 2\lambda_1 q_1$ — so $q_1$ is an eigenvector with eigenvalue $\lambda_1 = q_1^T A q_1$.
+
+Now restrict $A$ to the orthogonal complement $q_1^\perp = \{v : \langle v, q_1\rangle = 0\}$, which is an $(n-1)$-dimensional subspace invariant under $A$ (by symmetry: if $\langle v, q_1\rangle = 0$, then $\langle Av, q_1\rangle = \langle v, Aq_1\rangle = \lambda_1 \langle v,q_1\rangle = 0$). Apply the same argument to the restriction $A|_{q_1^\perp}$, obtaining $q_2$ and $\lambda_2$. Continue by induction. $\square$
+
+---
+
+### The Spectral Decomposition
+
+The orthogonal diagonalization $A = Q\Lambda Q^T$ can be written as an outer product expansion:
+
+$$A = Q\Lambda Q^T = \sum_{i=1}^n \lambda_i q_i q_i^T$$
+
+where $q_i q_i^T \in \mathbb{R}^{n\times n}$ is the **rank-1 projection matrix** onto the span of $q_i$. Each term $\lambda_i q_i q_i^T$ is the component of $A$ in the $i$-th eigendirection.
+
+The action of $A$ on any vector $v \in \mathbb{R}^n$ is:
+
+$$Av = \sum_{i=1}^n \lambda_i (q_i^T v) q_i = \sum_{i=1}^n \lambda_i \langle v, q_i\rangle q_i$$
+
+This says: decompose $v$ into its components along each eigenvector, scale each component by the corresponding eigenvalue, and reassemble. The matrix $A$ acts independently on each eigendirection — it is a pure rescaling in the eigenvector coordinate system.
+
+**Properties of the spectral decomposition:**
+
+$$\text{tr}(A) = \sum_{i=1}^n \lambda_i \quad \text{(trace equals sum of eigenvalues)}$$
+
+$$\det(A) = \prod_{i=1}^n \lambda_i \quad \text{(determinant equals product of eigenvalues)}$$
+
+$$\text{rank}(A) = |\{i : \lambda_i \neq 0\}| \quad \text{(rank equals number of nonzero eigenvalues)}$$
+
+$$\|A\|_2 = \max_i |\lambda_i| \quad \text{(spectral norm equals largest absolute eigenvalue)}$$
+
+$$\|A\|_F^2 = \sum_{i=1}^n \lambda_i^2 \quad \text{(Frobenius norm squared equals sum of squared eigenvalues)}$$
+
+where the **Frobenius norm** is $\|A\|_F = \sqrt{\sum_{i,j} a_{ij}^2} = \sqrt{\text{tr}(A^TA)}$.
+
+---
+
+### The Rayleigh Quotient
+
+The **Rayleigh quotient** of $A$ at a nonzero vector $v$ is:
+
+$$R_A(v) = \frac{v^T A v}{v^T v}$$
+
+For a unit vector $v$, $R_A(v) = v^T Av$.
+
+**Properties.** Using the spectral decomposition $A = \sum_i \lambda_i q_i q_i^T$ and writing $v = \sum_i c_i q_i$ with $\|v\|^2 = \sum_i c_i^2 = 1$:
+
+$$R_A(v) = v^T A v = \sum_{i=1}^n \lambda_i c_i^2$$
+
+Since $\sum_i c_i^2 = 1$ and $c_i^2 \geq 0$, the Rayleigh quotient is a convex combination of the eigenvalues:
+
+$$\lambda_{\min}(A) \leq R_A(v) \leq \lambda_{\max}(A) \quad \forall v \neq 0$$
+
+with equality on the right achieved at $v = q_n$ (eigenvector of $\lambda_{\max}$) and equality on the left at $v = q_1$ (eigenvector of $\lambda_{\min}$, assuming eigenvalues are ordered $\lambda_1 \leq \cdots \leq \lambda_n$).
+
+---
+
+### The Courant-Fischer Min-Max Theorem
+
+The variational characterization extends to all eigenvalues, not just the extreme ones.
+
+**Theorem (Courant-Fischer).** With eigenvalues ordered $\lambda_1 \leq \lambda_2 \leq \cdots \leq \lambda_n$:
+
+$$\lambda_k = \min_{\substack{S \subseteq \mathbb{R}^n \\ \dim S = k}} \max_{v \in S, v \neq 0} R_A(v) = \max_{\substack{S \subseteq \mathbb{R}^n \\ \dim S = n-k+1}} \min_{v \in S, v \neq 0} R_A(v)$$
+
+The $k$-th smallest eigenvalue is the minimum over all $k$-dimensional subspaces of the maximum Rayleigh quotient on that subspace, and simultaneously the maximum over all $(n-k+1)$-dimensional subspaces of the minimum Rayleigh quotient.
+
+**Special cases:**
+
+$$\lambda_1 = \min_{v \neq 0} R_A(v) = \min_{\|v\|=1} v^T A v$$
+
+$$\lambda_n = \max_{v \neq 0} R_A(v) = \max_{\|v\|=1} v^T A v$$
+
+$$\lambda_2 = \min_{\substack{v \perp q_1 \\ v \neq 0}} R_A(v) \quad \text{(second eigenvalue as constrained minimum)}$$
+
+**Weyl's inequality.** For symmetric matrices $A$ and $B$:
+
+$$\lambda_k(A) + \lambda_1(B) \leq \lambda_k(A+B) \leq \lambda_k(A) + \lambda_n(B)$$
+
+The eigenvalues of a sum are bounded by the sums of eigenvalues. This is used throughout the roadmap to control how eigenvalues change under perturbation.
+
+---
+
+### Functional Calculus
+
+The spectral decomposition enables the definition of **matrix functions** for symmetric matrices. For any function $f: \mathbb{R} \to \mathbb{R}$, define:
+
+$$f(A) = Q \, \text{diag}(f(\lambda_1), \ldots, f(\lambda_n)) \, Q^T = \sum_{i=1}^n f(\lambda_i) q_i q_i^T$$
+
+The function is applied to the eigenvalues, and the eigenvectors remain unchanged. Important instances:
+
+**Matrix square root.** For $A \succeq 0$ (positive semidefinite, $\lambda_i \geq 0$):
+
+$$A^{1/2} = \sum_{i=1}^n \sqrt{\lambda_i} \, q_i q_i^T, \qquad (A^{1/2})^2 = A$$
+
+**Matrix inverse.** For $A \succ 0$ (positive definite, $\lambda_i > 0$):
+
+$$A^{-1} = \sum_{i=1}^n \frac{1}{\lambda_i} q_i q_i^T = Q \, \text{diag}(\lambda_1^{-1}, \ldots, \lambda_n^{-1}) \, Q^T$$
+
+**Matrix exponential.** For any symmetric $A$:
+
+$$e^A = \sum_{i=1}^n e^{\lambda_i} q_i q_i^T = Q \, \text{diag}(e^{\lambda_1}, \ldots, e^{\lambda_n}) \, Q^T$$
+
+The matrix exponential is always positive definite: $e^A \succ 0$ for any symmetric $A$. This is used in information geometry to parameterize positive definite matrices.
+
+**Matrix logarithm.** For $A \succ 0$:
+
+$$\log A = \sum_{i=1}^n \log(\lambda_i) \, q_i q_i^T$$
+
+The matrix logarithm maps positive definite matrices to symmetric matrices — it is the inverse of the matrix exponential, and together they provide a parameterization of the manifold of positive definite matrices as a Riemannian manifold.
+
+**Operator norm.** The spectral norm (operator norm) of $A$ is:
+
+$$\|A\|_2 = \sigma_{\max}(A) = \max_{\|v\|=1} \|Av\|_2 = \max_i |\lambda_i|$$
+
+For symmetric matrices, the singular values equal the absolute values of the eigenvalues (since $A = Q\Lambda Q^T$ gives $A^TA = Q\Lambda^2 Q^T$, and the singular values are $\sqrt{\lambda_i^2} = |\lambda_i|$).
+
+---
+
+### Symmetric Matrices and Quadratic Forms
+
+A **quadratic form** on $\mathbb{R}^n$ is a function $Q: \mathbb{R}^n \to \mathbb{R}$ of the form:
+
+$$Q(v) = v^T A v = \sum_{i,j=1}^n a_{ij} v^i v^j$$
+
+for a symmetric matrix $A$. Every quadratic form corresponds to a unique symmetric matrix, and conversely every symmetric matrix defines a quadratic form.
+
+Using the spectral decomposition with coordinates $c_i = \langle v, q_i\rangle$:
+
+$$Q(v) = v^T A v = \sum_{i=1}^n \lambda_i c_i^2$$
+
+In the eigenvector coordinate system, the quadratic form is a sum of squares — each term $\lambda_i c_i^2$ involves only the $i$-th coordinate. The spectral theorem diagonalizes the quadratic form.
+
+**Classification of quadratic forms:**
+- $Q$ is **positive definite** iff $\lambda_i > 0$ for all $i$ iff $Q(v) > 0$ for all $v \neq 0$
+- $Q$ is **positive semidefinite** iff $\lambda_i \geq 0$ for all $i$ iff $Q(v) \geq 0$ for all $v$
+- $Q$ is **negative definite** iff $\lambda_i < 0$ for all $i$
+- $Q$ is **indefinite** iff $A$ has both positive and negative eigenvalues
+
+The level sets of a quadratic form — $\{v : v^TAv = c\}$ for $c > 0$ and $A \succ 0$ — are **ellipsoids** whose principal axes are the eigenvectors $q_i$ and whose axis half-lengths are $\sqrt{c/\lambda_i}$. Large eigenvalues produce short axes (the form grows quickly in those directions), and small eigenvalues produce long axes.
+
+---
+
+### The Spectral Theorem in Infinite Dimensions
+
+The spectral theorem extends to self-adjoint operators on Hilbert spaces — the infinite-dimensional generalization of symmetric matrices. For a self-adjoint operator $T: H \to H$ on a Hilbert space $H$ satisfying $\langle Tu, v\rangle = \langle u, Tv\rangle$ for all $u, v \in H$, the **spectral theorem** states that $T$ has a spectral decomposition:
+
+$$T = \int_{\sigma(T)} \lambda \, dE(\lambda)$$
+
+where $E$ is a projection-valued measure on the spectrum $\sigma(T) \subseteq \mathbb{R}$, and the integral is the spectral integral. For compact self-adjoint operators (like the graph Laplacian and the covariance operator in infinite-dimensional spaces), the spectrum consists of a sequence of real eigenvalues $\lambda_1 \geq \lambda_2 \geq \cdots \to 0$ with orthonormal eigenvectors $\{q_i\}$ forming a basis for $H$:
+
+$$T = \sum_{i=1}^\infty \lambda_i q_i \otimes q_i$$
+
+This is the functional analytic foundation of the Laplacian eigenmaps in Phase 2 and the kernel PCA in the feature space of a kernel method.
+
+---
+
+### Graph Laplacian Spectral Theory — Preview of Phase 2
+
+The **graph Laplacian** $L = D - W$ of a weighted graph with adjacency matrix $W$ and degree matrix $D = \text{diag}(\sum_j w_{ij})$ is symmetric positive semidefinite. Its spectral theorem gives:
+
+$$L = Q\Lambda Q^T, \quad \lambda_1 = 0 \leq \lambda_2 \leq \cdots \leq \lambda_n$$
+
+The smallest eigenvalue is always $0$ with eigenvector $\mathbf{1}/\sqrt{n}$ (the constant vector). The **Fiedler value** $\lambda_2 > 0$ (when the graph is connected) is the **algebraic connectivity** — the Rayleigh quotient characterization gives:
+
+$$\lambda_2 = \min_{\substack{v \perp \mathbf{1} \\ v \neq 0}} \frac{v^T L v}{v^T v} = \min_{\substack{v \perp \mathbf{1} \\ v \neq 0}} \frac{\sum_{(i,j) \in E} w_{ij}(v_i - v_j)^2}{\sum_i v_i^2}$$
+
+The Fiedler eigenvector — the eigenvector of $\lambda_2$ — is the smoothest nontrivial function on the graph, varying as slowly as possible across edges. Laplacian eigenmaps embed the graph in $\mathbb{R}^d$ using the $d$ eigenvectors corresponding to the $d$ smallest nonzero eigenvalues — the smoothest $d$ functions on the graph — producing a low-dimensional embedding that respects the graph's connectivity structure.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 103 (Linear Algebra), you computed eigenvalues by solving $\det(A - \lambda I) = 0$ and eigenvectors by solving $(A-\lambda I)v = 0$. The spectral theorem guarantees that for symmetric $A$, this process always produces $n$ real eigenvalues (counting multiplicity) and $n$ orthonormal eigenvectors, even though the general theory only guarantees complex eigenvalues for non-symmetric matrices. In MATH 302 (Matrix Theory), you studied the Jordan normal form — the most general decomposition of an arbitrary matrix. The spectral theorem is the Jordan form for symmetric matrices: since all eigenvalues are real and all eigenvectors are orthonormal, the Jordan blocks all have size 1 (no generalized eigenvectors needed) and the transformation matrix is orthogonal (not just invertible). The spectral theorem is the strongest possible form of the Jordan decomposition, valid precisely because of symmetry. In MATH 208 (Statistics and Probability), the covariance matrix $\Sigma = \mathbb{E}[(X-\mu)(X-\mu)^T]$ is symmetric positive semidefinite — the spectral theorem gives $\Sigma = Q\Lambda Q^T$ with nonneg eigenvalues, and the eigenvectors are the principal components of PCA. The Mahalanobis distance $d_\Sigma(x,y) = \sqrt{(x-y)^T\Sigma^{-1}(x-y)}$ is the Riemannian distance on $\mathbb{R}^n$ equipped with the metric $\Sigma^{-1}$ — the inverse covariance matrix as a Riemannian metric, with eigenvectors providing the principal axes of the distance ellipsoid.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Durbarmarg building vibration story has a precise mathematical address. Let us walk through them one by one, until the accelerometers, the vibration modes, the Rayleigh quotient, and the full formal apparatus are completely fused into a single picture.
+
+---
+
+**The Durbarmarg high-rise building — the physical structure whose mechanical behavior is being analyzed — is the vector space $\mathbb{R}^n$ together with the symmetric matrix $A$ acting on it.** The vector space $\mathbb{R}^n$ is the space of all possible displacement patterns across the $n$ sensors — each vector $v \in \mathbb{R}^n$ describes a simultaneous displacement of every sensor. The symmetric matrix $A$ is the stiffness matrix — the linear operator that maps each displacement pattern to the corresponding restoring force pattern. The symmetry $A = A^T$ is Newton's third law expressed algebraically: the force on sensor $i$ due to displacement at sensor $j$ equals the force on sensor $j$ due to displacement at sensor $i$. The entire mechanical behavior of the building under linear elastic deformation is encoded in this single symmetric matrix.
+
+**The vibration modes of the building — the natural patterns of displacement that the building prefers — are the eigenvectors $q_1, q_2, \ldots, q_n$ of the stiffness matrix $A$.** Each eigenvector $q_i \in \mathbb{R}^n$ is a displacement pattern satisfying $Aq_i = \lambda_i q_i$ — when the building is displaced in the pattern $q_i$, the restoring force is exactly $\lambda_i q_i$, proportional to the displacement and in the same direction. The mode is self-consistent: displacing the building in a natural mode produces a restoring force in that same mode. The north-south sway mode, the east-west sway mode, and the torsional mode are all eigenvectors — they are the displacement patterns that do not couple to other modes under the action of the stiffness matrix.
+
+**The frequencies of each vibration mode — how fast each mode oscillates — are the eigenvalues $\lambda_1, \lambda_2, \ldots, \lambda_n$.** A stiff mode has a large eigenvalue and oscillates quickly; a flexible mode has a small eigenvalue and oscillates slowly. The reality of the eigenvalues — guaranteed by the theorem that symmetric matrices have real eigenvalues — is the physical statement that every natural vibration mode has a well-defined real frequency. If the eigenvalues were complex, the modes would grow or decay exponentially rather than oscillating — an unphysical behavior for a conservative elastic structure. The symmetry of the stiffness matrix, enforced by Newton's third law, guarantees that all frequencies are real.
+
+---
+
+**The orthogonality of the vibration modes — the north-south sway, east-west sway, and torsion modes being perpendicular to each other — is the theorem that eigenvectors of a symmetric matrix corresponding to distinct eigenvalues are orthogonal: $\langle q_i, q_j\rangle = 0$ for $\lambda_i \neq \lambda_j$.** The proof in the story's language was: the work done by the restoring force of mode $i$ through displacement in mode $j$ equals the work done by the restoring force of mode $j$ through displacement in mode $i$, because the stiffness matrix is symmetric. This gives $\lambda_i \langle q_i, q_j\rangle = \lambda_j \langle q_i, q_j\rangle$. Since $\lambda_i \neq \lambda_j$, the inner product must vanish. The formal proof — $\lambda_1\langle u,v\rangle = \langle Au,v\rangle = \langle u,Av\rangle = \lambda_2\langle u,v\rangle$ — is the same argument expressed in the language of inner products and adjoints. The symmetry of $A$ is the algebraic encoding of physical reciprocity, and physical reciprocity forces the modes to be perpendicular.
+
+**The break moment — repeated eigenvalues and the square building with equal north-south and east-west stiffness — is the degenerate case where the eigenspace has dimension greater than one.** When two eigenvalues coincide — $\lambda_i = \lambda_{i+1}$ — any linear combination of the corresponding eigenvectors is also an eigenvector. The two-dimensional eigenspace is the mathematical expression of the building's rotational symmetry: any direction in the horizontal plane is a valid vibration mode with the same frequency. The spectral theorem does not fail in this case — it guarantees that you can always choose an orthonormal basis within the degenerate eigenspace, using Gram-Schmidt orthogonalization. The freedom to choose any orthonormal basis within the eigenspace is the mathematical manifestation of the building's physical symmetry: the building does not prefer north-south over east-west, so neither does the mathematics.
+
+---
+
+**The spectral decomposition $A = Q\Lambda Q^T = \sum_{i=1}^n \lambda_i q_i q_i^T$ is the complete mechanical description of the building.** The matrix $Q = [q_1 | q_2 | \cdots | q_n]$ is the orthogonal matrix whose columns are the normalized vibration modes — the change-of-basis matrix from sensor coordinates to modal coordinates. The matrix $\Lambda = \text{diag}(\lambda_1, \ldots, \lambda_n)$ is the diagonal matrix of modal frequencies. The outer product sum $\sum_i \lambda_i q_i q_i^T$ decomposes the stiffness matrix into $n$ rank-1 contributions, one per mode: the term $\lambda_i q_i q_i^T$ is the piece of the stiffness matrix associated with the $i$-th mode, contributing stiffness $\lambda_i$ in the direction $q_i$ and zero in all orthogonal directions.
+
+**The geometric reading of $Av = Q(\Lambda(Q^Tv))$ — rotate into modal coordinates, scale, rotate back — is the three-step description of what the stiffness matrix does to any displacement pattern $v$.** The operation $Q^Tv$ decomposes $v$ into its modal components: $(Q^Tv)_i = \langle v, q_i\rangle$ is the component of $v$ in the direction of the $i$-th mode. The operation $\Lambda(Q^Tv)$ scales each modal component by the corresponding eigenvalue: $\lambda_i\langle v, q_i\rangle$ is the scaled $i$-th component. The operation $Q(\Lambda Q^Tv)$ reassembles the scaled components back into sensor coordinates: $\sum_i \lambda_i \langle v, q_i\rangle q_i$ is the restoring force in sensor coordinates. The matrix $A$ is a pure rescaling in modal coordinates — diagonal in the basis of its eigenvectors — and all the apparent complexity of the off-diagonal entries in sensor coordinates is just the consequence of expressing this simple diagonal action in the wrong coordinate system.
+
+---
+
+**The Rayleigh quotient $R_A(v) = v^TAv / v^Tv$ — the structural energy stored per unit displacement in direction $v$ — is the quadratic form normalized by the squared length of the displacement.** In the building story: $v^TAv$ is the total elastic strain energy stored in the building when displaced according to pattern $v$. Dividing by $v^Tv$ normalizes for the displacement amplitude, giving the energy per unit of displacement squared — the effective stiffness in direction $v$. The Rayleigh quotient lies between the smallest and largest eigenvalues for all nonzero $v$: $\lambda_{\min} \leq v^TAv/v^Tv \leq \lambda_{\max}$. In the modal coordinate expansion $v = \sum_i c_i q_i$ with $\sum_i c_i^2 = 1$, the Rayleigh quotient is $R_A(v) = \sum_i \lambda_i c_i^2$ — a convex combination of eigenvalues weighted by the squared modal components. The maximum is achieved when all weight is on the largest eigenvalue ($v = q_n$), and the minimum when all weight is on the smallest ($v = q_1$).
+
+**The Courant-Fischer theorem $\lambda_k = \min_{\dim S = k}\max_{v \in S}R_A(v)$ is the variational characterization of intermediate vibration frequencies as optimization problems over subspaces.** The $k$-th eigenvalue is the minimum over all $k$-dimensional subspaces of the worst-case (maximum) Rayleigh quotient on that subspace. In the building story: $\lambda_k$ is the answer to the question "what is the most flexible $k$-dimensional subspace of displacement patterns?" — the subspace that has the smallest possible maximum stiffness. This variational characterization is used in Phase 2 to show that the Fiedler value of the graph Laplacian is the minimum of the Rayleigh quotient over functions orthogonal to the constant — the optimization problem whose solution gives the smoothest nontrivial function on the graph.
+
+---
+
+**The functional calculus — $f(A) = \sum_i f(\lambda_i) q_i q_i^T$ — is the tool for applying any function to a symmetric matrix by applying it to the eigenvalues.** In the building story: the matrix exponential $e^A$ is the stiffness matrix with every eigenvalue replaced by its exponential — a positive definite matrix that parameterizes the exponential of the elastic energy. The matrix square root $A^{1/2}$ replaces each eigenvalue with its square root — used in whitening transformations and in computing Mahalanobis distances. The matrix inverse $A^{-1}$ replaces each eigenvalue with its reciprocal — used in solving the linear system $Ax = b$ through $x = A^{-1}b = \sum_i \lambda_i^{-1} (q_i^Tb) q_i$, projecting the right-hand side onto each mode and dividing by the eigenvalue. The functional calculus is the computational power of the spectral theorem: any matrix computation that can be expressed as a function of the eigenvalues is trivially computed in the eigenvector basis.
+
+**The matrix logarithm $\log A$ and exponential $e^A$ parameterize the manifold of positive definite matrices as a Riemannian manifold.** The space $\mathbb{S}^n_{++}$ of positive definite matrices is a smooth manifold — the topic of the next subtopic on positive definite matrices. The matrix exponential maps the vector space of symmetric matrices (the tangent space at the identity) to $\mathbb{S}^n_{++}$, and the matrix logarithm is its inverse. The Riemannian metric on $\mathbb{S}^n_{++}$ in these coordinates is the affine-invariant metric $\langle \Delta_1, \Delta_2\rangle_A = \text{tr}(A^{-1/2}\Delta_1 A^{-1/2} \cdot A^{-1/2}\Delta_2 A^{-1/2})$, which uses the matrix square root — an application of the functional calculus. Computing geodesics on $\mathbb{S}^n_{++}$ requires the matrix exponential and logarithm at every step — a direct application of the spectral theorem's functional calculus.
+
+---
+
+**The covariance matrix of the sensor data $C = \frac{1}{T-1}XX^T$ and its spectral decomposition $C = Q\Lambda Q^T$ are Principal Component Analysis (PCA).** The matrix $X \in \mathbb{R}^{n \times T}$ is the accelerometer data with sensors as rows and time steps as columns. The covariance matrix $C$ is symmetric positive semidefinite — the spectral theorem gives real non-negative eigenvalues $\lambda_1 \geq \lambda_2 \geq \cdots \geq \lambda_n \geq 0$ and orthonormal eigenvectors $q_1, \ldots, q_n$. Each eigenvector $q_i$ is a principal mode of motion — the direction of maximum variance given orthogonality to all previous modes. Each eigenvalue $\lambda_i$ is the variance in that direction — the amount of the building's total motion energy captured by that mode. PCA keeps the $k$ largest eigenvalues and their eigenvectors, projecting the high-dimensional sensor data onto the $k$-dimensional modal subspace: $\hat{X} = Q_k Q_k^T X$ where $Q_k = [q_1|\cdots|q_k]$. The Eckart-Young theorem (proved in the SVD topic) guarantees this is the best $k$-dimensional approximation to $X$ in Frobenius norm.
+
+**The graph Laplacian spectral theory — the Fiedler value $\lambda_2$ as algebraic connectivity and the Laplacian eigenvectors as smooth graph functions — is the spectral theorem applied to the graph's geometry.** The graph Laplacian $L = D - W$ is symmetric positive semidefinite with smallest eigenvalue $\lambda_1 = 0$ and eigenvector $\mathbf{1}/\sqrt{n}$ — the constant function on the graph. The Fiedler value $\lambda_2 = \min_{v\perp\mathbf{1}} v^TLv/v^Tv = \min_{v\perp\mathbf{1}} \sum_{(i,j)}w_{ij}(v_i-v_j)^2 / \sum_i v_i^2$ is the Rayleigh quotient minimization over functions orthogonal to the constant. The Fiedler eigenvector $q_2$ is the smoothest nontrivial function on the graph — the one that varies most gradually across edges — and it provides the best one-dimensional embedding of the graph that separates clusters. Laplacian eigenmaps use $q_2, \ldots, q_{d+1}$ to embed the graph in $\mathbb{R}^d$, producing a low-dimensional representation that respects the graph's geometry. This is PCA on the graph: the first $d$ nontrivial eigenvectors of the graph Laplacian play the same role as the first $d$ principal components of the data covariance matrix.
+
+---
+
+**The connection to MATH 103 (Linear Algebra) is now total.** Every eigenvalue computation you performed — solving $\det(A-\lambda I) = 0$, finding the characteristic polynomial, solving the null space — was computing the spectrum of a matrix whose deepest structure is the spectral theorem. The diagonalization $A = PDP^{-1}$ that you found for diagonalizable matrices is the spectral decomposition $A = Q\Lambda Q^T$ in the special case where $A$ is symmetric — the change-of-basis matrix $P$ becomes the orthogonal matrix $Q$, and its inverse $P^{-1}$ becomes $Q^T$. The Gram-Schmidt orthogonalization process you applied to produce orthonormal bases is the tool used to handle degenerate eigenspaces — it converts any basis for the eigenspace into the orthonormal basis guaranteed by the spectral theorem. The positive definiteness test — checking all eigenvalues are positive — is the link to the next topic: positive definite matrices are exactly the symmetric matrices whose spectral theorem gives all positive eigenvalues.
+
+**The connection to MATH 302 (Matrix Theory) runs through the Jordan normal form.** The Jordan normal form is the most general decomposition of a square matrix: $A = PJP^{-1}$ where $J$ is block diagonal with Jordan blocks on the diagonal. For a symmetric real matrix, the spectral theorem says all Jordan blocks have size $1 \times 1$ — there are no generalized eigenvectors, only genuine eigenvectors — and the change-of-basis matrix $P$ is orthogonal: $P = Q$, $P^{-1} = Q^T$. The spectral theorem is the Jordan normal form theorem in its most favorable case, where symmetry eliminates all algebraic complexity and leaves only the geometric picture of orthogonal diagonalization.
+
+**The connection to MATH 208 (Statistics and Probability) closes through covariance matrices and PCA.** The covariance matrix $\Sigma = \mathbb{E}[(X-\mu)(X-\mu)^T]$ of a random vector $X \in \mathbb{R}^n$ is symmetric positive semidefinite. The spectral theorem gives $\Sigma = Q\Lambda Q^T$ with non-negative eigenvalues and orthonormal eigenvectors. The eigenvalues are the variances along the principal directions, and the eigenvectors are the principal directions themselves. The Mahalanobis distance $d_\Sigma(x,y) = \sqrt{(x-y)^T\Sigma^{-1}(x-y)}$ uses the inverse covariance matrix $\Sigma^{-1} = Q\Lambda^{-1}Q^T$ as the Riemannian metric — it measures distance in units of standard deviations in each principal direction. The whitened random variable $Z = \Lambda^{-1/2}Q^T(X-\mu)$ has identity covariance $\mathbb{E}[ZZ^T] = I$ — the spectral theorem's functional calculus applied to the covariance matrix produces the whitening transformation.
+
+---
+
+**Looking forward across the roadmap**, the spectral theorem is the engine behind every spectral method. In Phase 1, the dual potential functions of the Kantorovich problem are the eigenfunctions of the cost kernel operator — the spectral theorem applied to an integral operator. The Sinkhorn algorithm's convergence analysis uses the spectral radius of the Sinkhorn operator — the largest absolute eigenvalue — to bound the convergence rate. In Phase 2, the graph Laplacian eigenvectors are the coordinate functions for Laplacian eigenmaps, and the Weisfeiler-Lehman hierarchy of GNN expressivity is analyzed using spectral graph theory — the spectral properties of the graph adjacency and Laplacian matrices. The ChebNet spectral GNN approximates the graph filter using Chebyshev polynomials of the graph Laplacian — a direct application of the functional calculus to the graph Laplacian's spectral decomposition. In Phase 3, the Hessian of the score matching objective is a symmetric positive definite operator on the function space of score functions — its eigenvalues control the conditioning of the score matching problem, and preconditioning with the inverse Hessian (natural gradient descent) uses the functional calculus to scale the gradient by the inverse square root of the Hessian.
+
+The vibration modes of the Durbarmarg building — orthogonal, independent, each with its own frequency — are the eigenvectors and eigenvalues of the stiffness matrix. The spectral theorem says that this mode decomposition always exists for symmetric matrices, the modes are always orthogonal, and the frequencies are always real. Every symmetric matrix in the roadmap — covariance, Laplacian, Hessian, Fisher information, Riemannian metric — has this complete mode decomposition, and understanding it geometrically and computationally is the foundation of every spectral method in machine learning.
+
+---
+---

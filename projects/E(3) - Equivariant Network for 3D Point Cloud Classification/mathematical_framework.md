@@ -84,7 +84,7 @@ A point cloud is often described as "a set of 3D points." But sets have no struc
 
 <br>
 
-### Answers[1]
+### Answers [1]
 
 **1. Mathematical Object vs. Practical Structure**
 
@@ -119,8 +119,6 @@ In Stage 1, the initial setup and data inspection phase, we have verified and es
 * **Data Representation:** Raw 3D meshes are converted into uniform, normalized point clouds. Each individual object in the dataset is structured as a PyTorch Geometric `Data` object containing two critical arrays:
 * `pos`: A matrix of shape `[1024, 3]` tracking the precise $(X, Y, Z)$ coordinates of 1,024 points sampled from the object's surface, automatically centered and scaled.
 * `normal`: A matrix of shape `[1024, 3]` tracking the surface normal vectors, providing the network with crucial local geometric context about surface orientation.
-
-
 
 With the environment verified, data pipeline structured, and spatial dimensions audited via 3D visualization, the data is officially ready to be fed into a geometric deep learning model.
 

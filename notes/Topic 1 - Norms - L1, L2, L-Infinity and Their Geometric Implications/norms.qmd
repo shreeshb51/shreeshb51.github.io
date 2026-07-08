@@ -1,0 +1,340 @@
+# Topic 1 - Norms
+
+## Introduction
+
+You have already encountered norms in two places in this roadmap. In Topic 1 of Chapter 1, when building Banach and Hilbert spaces, you saw that a norm is a function $\|\cdot\|: V \to [0,\infty)$ satisfying positive definiteness, absolute homogeneity, and the triangle inequality — and that every norm induces a metric by $d(u,v) = \|u - v\|$. In Topic 3, you saw the $L^p$ norms defined by $\|f\|_{L^p} = (\int |f|^p \, d\mu)^{1/p}$, and you proved that $L^p$ spaces are Banach spaces and $L^2$ is a Hilbert space. You have the definitions. What you do not yet have is the geometry.
+
+A norm is not just a measuring instrument. It is a shape. Every norm on a vector space defines a unit ball — the set of all vectors with norm at most 1 — and the shape of that unit ball is the complete geometric fingerprint of the norm. Different norms have different unit ball shapes, and those shapes encode profoundly different notions of what it means for a function or a vector to be "small," "sparse," or "smooth." The choice of norm in an optimization problem is not a technicality — it is a design decision that determines the qualitative character of the solutions you find.
+
+This topic has three subtopics, one for each of the three norms the roadmap names.
+
+The first subtopic is the **$L_1$ norm**. Its unit ball is a diamond — a cross-polytope in higher dimensions — with sharp corners along the coordinate axes. Those corners are what make $L_1$ optimization produce sparse solutions: when you minimize a function subject to an $L_1$ constraint, the optimal solution tends to land on a corner of the diamond, where most coordinates are zero. This is the mathematical reason behind LASSO regression, compressed sensing, and the sparsity-promoting regularizers used throughout machine learning.
+
+The second subtopic is the **$L_2$ norm**. Its unit ball is a sphere — perfectly round and symmetric in every direction. The smoothness and rotational symmetry of the $L_2$ ball is what makes $L_2$ optimization produce smooth, evenly distributed solutions with no preference for any particular direction. This is the norm that underlies least squares regression, ridge regularization, the Hilbert space geometry of $L^2$, and the Euclidean distance that appears in the quadratic cost of the Wasserstein-2 distance in Phase 1.
+
+The third subtopic is the **$L_\infty$ norm**. Its unit ball is a hypercube — a box with flat faces aligned with the coordinate axes. The $L_\infty$ norm measures the worst-case coordinate — the maximum absolute value among all components — and $L_\infty$ optimization controls the largest deviation anywhere, making it the right tool for minimax problems, uniform approximation, and robustness guarantees.
+
+Beneath all three subtopics runs a single unifying theme: the geometry of the unit ball is not decoration. It is the mechanism by which the norm shapes the solutions of every optimization problem it governs. By the end of this topic, when you see a norm appear in a loss function, a constraint, or a distance definition, you will immediately see the shape of its unit ball — and from that shape, you will be able to read off the qualitative character of the optimal solution.
+
+**ALL THREE SUBTOPICS ARE TREATED AS A SINGLE SUBTOPIC FOR EASY COMPREHENSION.**
+
+---
+
+# Subtopic - $L_1$, $L_2$, $L_\infty$ and Their Geometric Implications
+
+## Layer 1 (Story)
+
+You are the head of the urban planning department of Kathmandu Metropolitan City, and you have been handed three different mandates by three different ministers, each asking you to measure the same thing — the total deviation of the city's water pressure from the ideal target pressure — but each insisting on a different philosophy of what "total deviation" should mean.
+
+The city has exactly $n$ measurement stations, one in each ward. At each station $i$, you measure the actual pressure $p_i$ and compare it to the ideal target pressure $t_i$. The deviation at station $i$ is the signed difference $x_i = p_i - t_i$ — positive if the actual pressure is too high, negative if too low. You have a vector of deviations $x = (x_1, x_2, \ldots, x_n)$, and you want a single number that summarizes how bad the total situation is.
+
+The three ministers have three completely different ideas about what that number should be.
+
+---
+
+**The First Minister: Count Every Rupee of Waste**
+
+The first minister is a fiscal conservative. He does not care about the direction of the deviation — too high and too low are equally wasteful. He wants to know the total absolute deviation across all stations: simply add up $|x_1| + |x_2| + \cdots + |x_n|$. Every unit of deviation, regardless of where it occurs or in which direction, contributes equally to the total. A station that is 10 units off contributes exactly 10 to the total. A station that is 1 unit off contributes exactly 1. Ten stations each 1 unit off are equally as bad as one station 10 units off.
+
+This is the **$L_1$ norm**: $\|x\|_1 = \sum_{i=1}^n |x_i|$.
+
+The geometry of this norm is a diamond. In two dimensions, the set of all deviation vectors with $L_1$ norm equal to 1 — the unit ball — is the square rotated 45 degrees, with vertices at $(1,0)$, $(-1,0)$, $(0,1)$, and $(0,-1)$. The ball has sharp corners at the coordinate axes. And those corners are the key feature.
+
+Here is why. Suppose the minister wants to improve the pressure system subject to a budget constraint — he can only reduce the total absolute deviation by a fixed amount. He is asking: among all deviation vectors with $L_1$ norm at most some budget $B$, which one best fits some other criterion? The answer will almost always land on a corner of the diamond. And the corners of the diamond are exactly the points where one coordinate is nonzero and all others are zero — the sparse vectors. The $L_1$ norm has a geometric preference for sparsity. Not because sparsity was requested, but because the sharp corners of the diamond are the points where the constraint surface touches the level sets of almost any smooth objective function. The corners stick out, and solutions land on them.
+
+This is the mathematical reason why every regularization technique that promotes sparsity — LASSO regression, compressed sensing, sparse signal recovery — uses an $L_1$ penalty. The sparsity is not imposed by fiat. It is the geometric consequence of optimizing over a diamond-shaped constraint set.
+
+---
+
+**The Second Minister: Penalize Large Deviations Harshly**
+
+The second minister is an engineer. She is worried not about the total waste, but about large deviations causing pipe damage. She wants small deviations to be forgiven and large deviations to be penalized severely — the penalty should grow faster than linearly. She proposes summing the squared deviations: $x_1^2 + x_2^2 + \cdots + x_n^2$. A station 10 units off contributes 100 to the total. A station 1 unit off contributes only 1. Ten stations each 1 unit off contribute only 10 in total — far better than one station 10 units off, which contributes 100. Large deviations are disproportionately punished.
+
+This is the **$L_2$ norm**: $\|x\|_2 = \sqrt{\sum_{i=1}^n x_i^2}$ — the square root of what the minister proposed, but with the same geometric character.
+
+The geometry of this norm is a perfect sphere. In two dimensions, the unit ball is the standard circle: all points at Euclidean distance 1 from the origin. The ball is perfectly round, with no preferred directions, no corners, no flat faces. Every direction is treated identically. This rotational symmetry is the geometric expression of the engineer's philosophy: no single station is more important than any other, and the norm responds equally to deviations in any direction.
+
+The smoothness of the $L_2$ ball has an important consequence for optimization. Because there are no corners, the optimal solution under an $L_2$ constraint tends to spread its nonzero components evenly rather than concentrating them. If you must keep the $L_2$ norm small, the cheapest strategy is to distribute the budget across many small components rather than putting everything into one large one — because squaring penalizes large components disproportionately. This is the mathematical reason why ridge regression produces dense, evenly spread solutions rather than sparse ones. The sphere has no corners to land on.
+
+The $L_2$ norm is also the norm that makes the inner product work. The angle between two vectors $x$ and $y$ is defined through the $L_2$ norm via $\cos\theta = \frac{\langle x, y\rangle}{\|x\|_2 \|y\|_2}$. The $L_2$ norm is the unique norm compatible with an inner product, which is why $L^2$ is a Hilbert space while $L^1$ and $L^\infty$ are merely Banach spaces. The sphere is the geometry of the inner product, and the inner product is what gives you angles, projections, and orthogonality — the full geometric toolkit of linear algebra.
+
+---
+
+**The Third Minister: Guarantee No Station Is Left Catastrophically Wrong**
+
+The third minister is a city councillor from a ward that was badly flooded last year due to a pressure spike at one station. He does not care about averages or totals. He cares about the worst case. He wants a guarantee that no single station has a catastrophically large deviation. His measure of total badness is simply the maximum deviation across all stations: $\max(|x_1|, |x_2|, \ldots, |x_n|)$. Everything below the maximum is irrelevant — only the worst station matters.
+
+This is the **$L_\infty$ norm**: $\|x\|_\infty = \max_i |x_i|$.
+
+The geometry of this norm is a hypercube. In two dimensions, the unit ball is the square with vertices at $(\pm 1, \pm 1)$ — a box with flat faces aligned with the coordinate axes. The ball has flat faces rather than corners or curves, and it treats all stations below the maximum as if they do not exist. Once the maximum deviation is fixed, you can redistribute the remaining budget among all other stations freely without changing the norm at all.
+
+This flat-face geometry has a consequence for optimization that is the opposite of the $L_1$ case. Under an $L_\infty$ constraint, the optimal solution tends to equalize all components — to make all deviations as equal as possible — because the norm only sees the maximum, and the best strategy for reducing the maximum is to spread deviations as uniformly as possible. This is the mathematical reason why $L_\infty$ optimization appears in minimax problems, Chebyshev approximation, and robust optimization: you are minimizing the worst-case error, and the optimal solution equalizes all errors to the same level.
+
+---
+
+Now here is the break moment. The naive assumption — shared by almost every student who has seen only the $L_2$ norm — is that all norms are essentially the same, differing only in scale. After all, there is a theorem in functional analysis that says all norms on a finite-dimensional space are equivalent: if a sequence converges in one norm, it converges in every norm. So what does the choice of norm actually matter?
+
+The equivalence of norms in finite dimensions means that norms agree on which sequences converge — on the topology. It says nothing about the geometry of the unit balls, the shape of the constraint sets, or the character of the solutions that optimization produces. Two norms can be equivalent in the topological sense while producing qualitatively completely different optimal solutions. The LASSO and ridge regression use equivalent norms on the same finite-dimensional space, but LASSO produces sparse solutions and ridge produces dense ones — not because the norms disagree on convergence, but because their unit balls have completely different shapes.
+
+In infinite dimensions — the $L^p$ function spaces that house probability densities and neural networks — the equivalence of norms fails entirely. $L^1$, $L^2$, and $L^\infty$ are genuinely different spaces in infinite dimensions: a function can be in $L^2$ without being in $L^1$, can be in $L^\infty$ without being in $L^2$, and the three spaces have entirely different completions, different duals, and different functional-analytic properties. The choice of norm is not a preference about scaling. It is a fundamental decision about which functions exist, which sequences converge, and which optimization problems are well-posed.
+
+---
+
+There is one more geometric picture that unifies all three norms and will serve you throughout the roadmap. Consider the family of $L^p$ norms for $p \in [1, \infty]$. As $p$ increases from 1 to $\infty$, the unit ball continuously morphs:
+
+At $p = 1$: a diamond — sharp corners at the coordinate axes, flat faces at 45 degrees.
+
+At $p = 2$: a perfect sphere — no corners, no flat faces, perfect rotational symmetry.
+
+As $p \to \infty$: a hypercube — flat faces aligned with the axes, corners at $(\pm 1, \pm 1, \ldots, \pm 1)$.
+
+The sphere is the transition point — the unique norm whose unit ball has no preferred directions whatsoever. Below $p = 2$, the ball has corners that promote sparsity. Above $p = 2$, the ball has flat faces that promote equalization. At $p = 2$, the ball is perfectly balanced. The three ministers' philosophies are not three arbitrary choices — they are three points on a continuous spectrum of geometric attitudes toward deviation, and the sphere sits exactly at the center of that spectrum.
+
+---
+
+Hold all three pictures simultaneously. The fiscal conservative's diamond, counting every rupee of waste equally, with sharp corners that force sparse solutions. The engineer's sphere, penalizing large deviations disproportionately, with smooth roundness that spreads solutions evenly. The councillor's hypercube, caring only about the worst case, with flat faces that equalize all components. Three ministers, three geometries, three qualitatively different answers to the same question: what does it mean for a deviation vector to be small?
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the general norm axioms revisited in the optimization context, the precise definitions and unit balls of the three norms, the $L^p$ interpolation inequalities that connect them, the duality relationships between the norms, the infinite-dimensional $L^p$ function spaces and their distinctions, and finally the role of each norm in optimization problems.
+
+### The Norm Axioms — Revisited in the Optimization Context
+
+Recall from Chapter 1 that a norm on a vector space $V$ over $\mathbb{R}$ is a function $\|\cdot\|: V \to [0,\infty)$ satisfying:
+
+$$\text{(i) } \|v\| = 0 \iff v = 0 \quad \text{(positive definiteness)}$$
+$$\text{(ii) } \|\lambda v\| = |\lambda| \|v\| \quad \forall \lambda \in \mathbb{R} \quad \text{(absolute homogeneity)}$$
+$$\text{(iii) } \|u + v\| \leq \|u\| + \|v\| \quad \text{(triangle inequality)}$$
+
+The new perspective in Chapter 2 is that a norm defines a **unit ball**:
+
+$$B_{\|\cdot\|}(0, 1) = \{v \in V : \|v\| \leq 1\}$$
+
+and the unit ball completely determines the norm — given the unit ball, you can recover $\|v\|$ as the smallest $\lambda > 0$ such that $v/\lambda$ lies in the ball. The shape of the unit ball is therefore the complete geometric fingerprint of the norm, and every optimization problem involving a norm constraint is a problem of intersecting the level sets of an objective with the boundary of the unit ball.
+
+---
+
+### The Three Norms — Precise Definitions
+
+**The $L_1$ Norm.** For $x = (x_1, \ldots, x_n) \in \mathbb{R}^n$:
+
+$$\|x\|_1 = \sum_{i=1}^n |x_i|$$
+
+The unit ball is the **cross-polytope** (diamond in $\mathbb{R}^2$, octahedron in $\mathbb{R}^3$):
+
+$$B_1 = \{x \in \mathbb{R}^n : \|x\|_1 \leq 1\} = \left\{x : \sum_{i=1}^n |x_i| \leq 1\right\}$$
+
+It is a convex polytope with $2n$ vertices located at $\pm e_i$ — the positive and negative standard basis vectors. Every vertex of $B_1$ is a maximally sparse vector: exactly one coordinate is nonzero.
+
+**The $L_2$ Norm.** For $x \in \mathbb{R}^n$:
+
+$$\|x\|_2 = \sqrt{\sum_{i=1}^n x_i^2} = \sqrt{\langle x, x \rangle}$$
+
+where $\langle x, y \rangle = \sum_{i=1}^n x_i y_i$ is the standard Euclidean inner product. The unit ball is the **Euclidean ball**:
+
+$$B_2 = \{x \in \mathbb{R}^n : \|x\|_2 \leq 1\}$$
+
+It is the unique norm ball that is invariant under all orthogonal transformations — if $Q$ is an orthogonal matrix ($Q^T Q = I$), then $\|Qx\|_2 = \|x\|_2$. This rotational invariance is the geometric expression of the $L_2$ norm's democratic treatment of all directions.
+
+**The $L_\infty$ Norm.** For $x \in \mathbb{R}^n$:
+
+$$\|x\|_\infty = \max_{1 \leq i \leq n} |x_i|$$
+
+The unit ball is the **hypercube**:
+
+$$B_\infty = \{x \in \mathbb{R}^n : \|x\|_\infty \leq 1\} = [-1,1]^n$$
+
+It is a convex polytope with $2^n$ vertices at $\{\pm 1\}^n$ — the corners of the unit hypercube. Every face of $B_\infty$ is a flat set where one coordinate achieves the maximum absolute value.
+
+---
+
+### The General $L^p$ Norm and the Interpolation Family
+
+All three norms are members of a one-parameter family. For $p \in [1, \infty)$ and $x \in \mathbb{R}^n$:
+
+$$\|x\|_p = \left(\sum_{i=1}^n |x_i|^p\right)^{1/p}$$
+
+and for $p = \infty$:
+
+$$\|x\|_\infty = \lim_{p \to \infty} \|x\|_p = \max_{1 \leq i \leq n} |x_i|$$
+
+The limit $\lim_{p\to\infty} \|x\|_p = \max_i |x_i|$ can be verified directly: if $M = \max_i |x_i|$, then $M = (M^p)^{1/p} \leq (\sum_i |x_i|^p)^{1/p} \leq (n M^p)^{1/p} = n^{1/p} M$, and $n^{1/p} \to 1$ as $p \to \infty$.
+
+The restriction $p \geq 1$ is necessary for the triangle inequality to hold. For $p < 1$, the function $\|x\|_p = (\sum_i |x_i|^p)^{1/p}$ fails the triangle inequality — it is a quasi-norm, not a norm — and the corresponding unit ball is non-convex. The convexity of the unit ball is equivalent to the triangle inequality, and it fails precisely when $p < 1$.
+
+The three norms satisfy the following chain of inequalities for all $x \in \mathbb{R}^n$:
+
+$$\|x\|_\infty \leq \|x\|_2 \leq \|x\|_1 \leq \sqrt{n} \|x\|_2 \leq n \|x\|_\infty$$
+
+These are the norm equivalence inequalities in finite dimensions. They confirm that all $L^p$ norms on $\mathbb{R}^n$ are equivalent in the topological sense — they define the same convergent sequences — but they say nothing about the geometric structure of the unit balls, which differ fundamentally.
+
+---
+
+### Hölder's Inequality and Dual Norms
+
+The most important relationship between the three norms is the **duality** between $L^p$ and $L^q$ for conjugate exponents. Two exponents $p, q \in [1, \infty]$ are **conjugate** if:
+
+$$\frac{1}{p} + \frac{1}{q} = 1$$
+
+The conjugate pairs are: $(1, \infty)$, $(2, 2)$, $(\infty, 1)$, and more generally $(p, \frac{p}{p-1})$ for any $p \in (1,\infty)$. The $L_2$ norm is self-dual. The $L_1$ and $L_\infty$ norms are dual to each other.
+
+**Hölder's Inequality** (finite-dimensional form). For conjugate exponents $p$ and $q$:
+
+$$|\langle x, y \rangle| = \left|\sum_{i=1}^n x_i y_i\right| \leq \|x\|_p \|y\|_q$$
+
+The special case $p = q = 2$ is the **Cauchy-Schwarz inequality**: $|\langle x, y \rangle| \leq \|x\|_2 \|y\|_2$. The case $p = 1$, $q = \infty$ gives: $|\langle x, y \rangle| \leq \|x\|_1 \|y\|_\infty$, which is the statement that the inner product is bounded by the sum of absolute values of $x$ times the maximum absolute value of $y$.
+
+The **dual norm** of $\|\cdot\|_p$ is defined as:
+
+$$\|y\|_{p^*} = \sup_{\|x\|_p \leq 1} \langle x, y \rangle$$
+
+It measures the maximum inner product that $y$ can achieve against any unit vector in the $p$-norm. The dual norm of $\|\cdot\|_1$ is $\|\cdot\|_\infty$, the dual norm of $\|\cdot\|_\infty$ is $\|\cdot\|_1$, and the dual norm of $\|\cdot\|_2$ is $\|\cdot\|_2$ — the $L_2$ norm is self-dual, which is a direct consequence of the symmetry of the inner product in the $L_2$ setting.
+
+The duality relationship is the algebraic expression of a geometric fact: the unit ball of the dual norm is the **polar dual** of the unit ball of the primal norm. The polar dual of the diamond $B_1$ is the hypercube $B_\infty$, and vice versa. The polar dual of the sphere $B_2$ is again the sphere $B_2$. Geometrically, the polar dual of a convex body is obtained by inverting the roles of faces and vertices: the vertices of $B_1$ become the faces of $B_\infty$, and the faces of $B_1$ become the vertices of $B_\infty$.
+
+---
+
+### Infinite-Dimensional $L^p$ Spaces — The Genuine Distinctions
+
+In infinite dimensions, the three norms define genuinely different spaces with different members, different duals, and different functional-analytic properties. Let $(\Omega, \mathcal{F}, \mu)$ be a measure space. Recall from Chapter 1:
+
+$$L^p(\mu) = \left\{f: \Omega \to \mathbb{R} \text{ measurable} : \int_\Omega |f|^p \, d\mu < \infty\right\} \Big/ \sim$$
+
+with norm $\|f\|_{L^p} = (\int |f|^p \, d\mu)^{1/p}$, and:
+
+$$L^\infty(\mu) = \left\{f: \Omega \to \mathbb{R} \text{ measurable} : \text{ess}\sup_\Omega |f| < \infty \right\} \Big/ \sim$$
+
+with norm $\|f\|_{L^\infty} = \text{ess}\sup_\Omega |f|$.
+
+The containment relationships between these spaces depend critically on whether $\mu(\Omega)$ is finite or infinite.
+
+**For finite measure spaces** ($\mu(\Omega) < \infty$), the containment is:
+
+$$L^\infty(\mu) \subsetneq L^p(\mu) \subsetneq L^q(\mu) \subsetneq L^1(\mu) \quad \text{for } 1 \leq q < p \leq \infty$$
+
+Larger $p$ means stronger integrability requirement — $L^\infty$ functions are the most constrained, $L^1$ functions the least. On a finite measure space, if you control the worst-case behavior of $f$, you automatically control all average behaviors.
+
+**For infinite measure spaces** (like $\mathbb{R}$ with Lebesgue measure), no containment holds in general. The function $f(x) = \frac{1}{1+x^2}$ on $\mathbb{R}$ is in $L^1$ but not $L^\infty$. The function $g(x) = \frac{1}{1+|x|^{1/2}}$ on $\mathbb{R}$ is in $L^\infty$ but not $L^1$. The spaces genuinely separate.
+
+The **dual space** of $L^p(\mu)$ for $1 < p < \infty$ is $L^q(\mu)$ where $\frac{1}{p} + \frac{1}{q} = 1$ — the Riesz Representation Theorem for $L^p$ spaces. Every bounded linear functional on $L^p$ is of the form $f \mapsto \int fg \, d\mu$ for some unique $g \in L^q$. The dual of $L^1$ is $L^\infty$. The dual of $L^\infty$ is strictly larger than $L^1$ — it includes finitely additive measures that are not countably additive — which is one reason $L^\infty$ is technically harder to work with than $L^1$ or $L^2$.
+
+---
+
+### The Geometry of Optimization — Why the Shape of the Ball Matters
+
+The connection between the shape of the unit ball and the character of optimal solutions can now be made completely precise. Consider the canonical constrained optimization problem:
+
+$$\min_{x \in \mathbb{R}^n} f(x) \quad \text{subject to} \quad \|x\|_p \leq R$$
+
+for some smooth convex objective $f$ and radius $R > 0$. The optimal solution is found at the point where the level set $\{x : f(x) = c\}$ first touches the constraint ball $\{x : \|x\|_p \leq R\}$ as $c$ decreases. The geometry of the contact point determines the character of the solution.
+
+**$L_1$ constraint — sparse solutions.** The boundary of $B_1$ consists of flat faces in the interior and sharp vertices at the coordinate axes. The level sets of a generic smooth convex $f$ are smooth curved surfaces. When a smooth surface first touches a polytope, it almost surely touches a vertex — because vertices are the lowest-dimensional faces and there are far more directions from which they can be approached than from which a flat face can be tangentially touched. A vertex of $B_1$ is a point $\pm R e_i$ for some coordinate $i$ — a maximally sparse vector with exactly one nonzero component. This geometric argument is why $L_1$-constrained optimization produces sparse solutions with high probability for generic objectives.
+
+The **subdifferential** of the $L_1$ norm at a point $x$ is the set of all subgradients — the generalization of the gradient to non-smooth functions. At a point where $x_i \neq 0$:
+
+$$\frac{\partial \|x\|_1}{\partial x_i} = \text{sign}(x_i)$$
+
+At a point where $x_i = 0$, the subdifferential in the $i$-th coordinate is the interval $[-1, 1]$. The non-smoothness of the $L_1$ norm at zero is the algebraic expression of its sharp corners — and it is what allows the optimality conditions for $L_1$-regularized problems to produce exact zeros in the solution.
+
+**$L_2$ constraint — smooth solutions.** The boundary of $B_2$ is the sphere — smooth everywhere, with no preferred directions. The level sets of a smooth convex $f$ are also smooth. Two smooth surfaces generically touch at a single point, and there is no preferred direction for that contact. The $L_2$ norm is smooth at every nonzero point, with gradient:
+
+$$\nabla \|x\|_2 = \frac{x}{\|x\|_2}$$
+
+The optimality condition for $L_2$-regularized problems — the Karush-Kuhn-Tucker condition, which we will develop fully in the Lagrangian Duality topic — produces solutions where every component is generally nonzero but small, spread evenly across all coordinates.
+
+**$L_\infty$ constraint — equalized solutions.** The boundary of $B_\infty$ is a hypercube — flat faces aligned with the axes, corners at $\{\pm 1\}^n$. When a smooth level set touches the boundary of $B_\infty$, it generically touches a flat face — because faces are the highest-dimensional boundary pieces and they dominate the contact geometry. A point on a flat face of $B_\infty$ has all coordinates bounded by $R$ and at least one coordinate achieving $\pm R$. The optimal solution thus tends to have all coordinates equalized to $\pm R$ — the minimax character of $L_\infty$ optimization.
+
+---
+
+### The Regularized Formulation — Lagrangian Equivalence
+
+The constrained formulation $\min_x f(x)$ subject to $\|x\|_p \leq R$ is equivalent, via the Lagrangian duality of the next topic, to the unconstrained regularized formulation:
+
+$$\min_{x \in \mathbb{R}^n} f(x) + \lambda \|x\|_p$$
+
+for some $\lambda > 0$ depending on $R$. The term $\lambda \|x\|_p$ is the **regularizer** — it penalizes solutions with large $p$-norm. The equivalence between the constrained and regularized formulations is a consequence of the KKT conditions, which we will derive precisely in the Lagrangian Duality topic.
+
+In machine learning, this regularized form is how norms appear in practice:
+
+$$\text{LASSO: } \min_\beta \|y - X\beta\|_2^2 + \lambda \|\beta\|_1 \quad \text{(promotes sparsity)}$$
+
+$$\text{Ridge: } \min_\beta \|y - X\beta\|_2^2 + \lambda \|\beta\|_2^2 \quad \text{(promotes small dense solutions)}$$
+
+$$\text{Chebyshev: } \min_\beta \|y - X\beta\|_\infty \quad \text{(minimizes worst-case error)}$$
+
+The first term in each case is the data fidelity — how well the model fits the data. The second term is the regularizer — the norm penalty that encodes the geometric preference. The ratio $\lambda$ controls the trade-off between fitting the data and respecting the geometric preference.
+
+---
+
+### WHY THIS MATTERS
+
+Each of the three norms plays a specific and irreplaceable role in the phases ahead.
+
+The **$L_1$ norm** appears in Phase 1 as the Wasserstein-1 distance: $W_1(\mu, \nu) = \inf_\pi \int \|x - y\|_1 \, d\pi(x,y)$, whose Kantorovich dual has a particularly clean form involving 1-Lipschitz functions. The $L_1$ norm also appears in the total variation distance between probability measures: $\text{TV}(\mu, \nu) = \frac{1}{2}\|\mu - \nu\|_{L^1}$.
+
+The **$L_2$ norm** is the norm of the Hilbert space $L^2$ — the space of probability densities, score functions, and neural network outputs. The Wasserstein-2 distance, defined with quadratic cost $c(x,y) = \|x-y\|_2^2$, is the most important Wasserstein distance in the roadmap, and it is the one whose geodesics and barycenters are most tractable. The score function $\nabla \log p(x)$ is estimated by minimizing an $L^2$ loss.
+
+The **$L_\infty$ norm** appears in the Kantorovich duality of Phase 1 through the constraint that the potential functions $\phi$ and $\psi$ satisfy $\phi(x) + \psi(y) \leq c(x,y)$ — a uniform constraint that controls the worst-case violation across all pairs $(x,y)$. It also appears in the definition of Lipschitz functions: $f$ is $L$-Lipschitz if $|f(x) - f(y)| \leq L\|x-y\|$ for all $x,y$, which is a constraint on the $L_\infty$ norm of the gradient.
+
+In MATH 103 (Linear Algebra), you computed $\|x\|_2$ as the Euclidean length of a vector and used it to define angles, projections, and orthonormal bases. Every one of those operations used the rotational symmetry of the $L_2$ ball. In MATH 201 (Advanced Calculus), the norm $\|x\|_2$ appeared implicitly in every distance computation, every gradient, and every epsilon-delta argument. In MATH 208 (Statistics and Probability), least squares regression minimizes $\|y - X\beta\|_2^2$ — an $L_2$ fidelity term — and the normal equations $X^T X \beta = X^T y$ are the optimality conditions for that $L_2$ problem. In MSCS 202 (Numerical Methods), the condition number of a matrix is defined using operator norms induced by vector norms, and the choice of norm determines which perturbations are considered large. Every norm you have used in your curriculum was implicitly the $L_2$ norm. What you have now is the explicit recognition that it was a choice — one of infinitely many possible norms — and that other choices produce qualitatively different geometric consequences.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the three ministers' story has a precise mathematical address. Let us walk through them one by one, until the water pressure deviations, the three geometries, and the full formal apparatus are completely fused into a single picture.
+
+---
+
+**The city's $n$ measurement stations and their deviation readings are the vector $x = (x_1, x_2, \ldots, x_n) \in \mathbb{R}^n$.** Each component $x_i = p_i - t_i$ is the signed deviation at station $i$ — positive for overpressure, negative for underpressure. The vector $x$ is the object whose size the three ministers want to measure. The three norms are three different answers to the question: what is the size of this deviation vector? The fact that three reasonable ministers give three different answers is the story's way of saying that "size" is not a unique concept — it depends on which geometric properties you care about, and different choices produce fundamentally different measurement instruments.
+
+**The fiscal conservative's philosophy — count every unit of deviation equally regardless of direction — is the $L_1$ norm $\|x\|_1 = \sum_{i=1}^n |x_i|$.** The absolute value $|x_i|$ is the minister's refusal to let positive and negative deviations cancel — waste in either direction is waste. The sum is his aggregation rule: total waste is the sum of individual wastes, with no nonlinearity, no penalty for concentration, no preference for smoothness. The $L_1$ norm is the most democratic aggregation possible: every unit of deviation contributes exactly one unit to the total, regardless of which station it comes from or how large the deviation already is.
+
+**The engineer's philosophy — penalize large deviations disproportionately — is the $L_2$ norm $\|x\|_2 = \sqrt{\sum_{i=1}^n x_i^2}$.** The squaring inside the sum is the disproportionate penalty: a deviation of 10 contributes 100 to the sum-of-squares, while ten deviations of 1 contribute only 10. Large deviations are punished quadratically. The square root is the normalization that makes the result scale correctly with the magnitude of $x$ — it ensures $\|\lambda x\|_2 = |\lambda| \|x\|_2$, the absolute homogeneity axiom. The engineer's philosophy is encoded entirely in the shape of the squaring function and its asymmetric punishment of large values. The $L_2$ norm is the formal expression of "large errors are disproportionately bad."
+
+**The councillor's philosophy — care only about the worst station — is the $L_\infty$ norm $\|x\|_\infty = \max_i |x_i|$.** The maximum operation discards all information about the non-maximal stations entirely. Once you know the worst deviation, everything else is irrelevant to the norm. This is the formal expression of a minimax philosophy: the quality of the system is determined entirely by its weakest link. The councillor does not care that 99 stations are perfect if one station is catastrophically wrong. The $\max$ operation is the algebraic encoding of that indifference to averages.
+
+---
+
+**The diamond, sphere, and hypercube — the three unit balls — are the geometric fingerprints of the three norms.** Each unit ball $B_p = \{x \in \mathbb{R}^n : \|x\|_p \leq 1\}$ is the complete geometric object associated with its norm. The norm can be recovered from the ball: $\|v\|_p$ is the smallest $\lambda > 0$ such that $v/\lambda \in B_p$. The ball is therefore not a consequence of the norm — it is an equivalent representation of it. Understanding the ball is understanding the norm.
+
+**The sharp corners of the diamond $B_1$ at the coordinate axes $\pm e_i$ are the vertices of the cross-polytope — and they are the geometric reason why $L_1$ optimization produces sparse solutions.** A vertex $\pm e_i$ is a point where exactly one coordinate is nonzero — a maximally sparse vector. When a smooth objective function's level set descends and first touches $B_1$, it almost surely contacts a vertex rather than a face, because vertices are the lowest-dimensional boundary pieces and there are infinitely more approach directions pointing at a vertex than tangentially along a face. The mathematical precision of "almost surely" is captured by the subdifferential at zero: the $L_1$ norm is non-smooth at every point where some $x_i = 0$, with subdifferential $[-1,1]$ in the $i$-th coordinate. The non-smoothness is the algebraic expression of the corner. The corner is the geometric reason for sparsity. The sparsity is the practical consequence that makes $L_1$ regularization — LASSO, compressed sensing, sparse recovery — the tool of choice whenever you want solutions with many exact zeros.
+
+**The perfect roundness of the sphere $B_2$ — its invariance under all orthogonal transformations $\|Qx\|_2 = \|x\|_2$ — is the geometric expression of the $L_2$ norm's democratic treatment of all directions.** No coordinate is preferred. No direction is singled out. The optimal solution under an $L_2$ constraint touches the sphere at a point determined entirely by the objective's gradient direction — not by any preferred coordinate structure. This is why $L_2$ optimization produces dense solutions: the sphere has no corners to attract sparse vectors, and the gradient of the objective points in a generic direction that has nonzero components along every coordinate axis. The smoothness of the sphere also means the $L_2$ norm is differentiable everywhere except the origin, with gradient $\nabla \|x\|_2 = x / \|x\|_2$ — the unit vector pointing in the direction of $x$. The smoothness of the gradient is the algebraic expression of the geometric roundness.
+
+**The flat faces of the hypercube $B_\infty$ — aligned with the coordinate axes, covering the entire boundary between the vertices $\{\pm 1\}^n$ — are the geometric reason why $L_\infty$ optimization equalizes all components.** A flat face of $B_\infty$ is the set $\{x : x_i = 1, |x_j| \leq 1 \text{ for all } j \neq i\}$ for some fixed coordinate $i$ — all points where coordinate $i$ achieves the maximum and all other coordinates are free. When a smooth objective touches the boundary of $B_\infty$, it almost surely contacts a flat face rather than a vertex, because faces are the highest-dimensional boundary pieces. A point on a flat face has its maximum coordinate fixed and all others unconstrained — which means the objective can equalize all other coordinates freely. The optimal solution is the one that spreads deviation equally across all stations, all achieving the same maximum absolute value. This equalization is the minimax principle in geometric clothing.
+
+---
+
+**The Hölder inequality $|\langle x, y \rangle| \leq \|x\|_p \|y\|_q$ for conjugate exponents $\frac{1}{p} + \frac{1}{q} = 1$ is the three ministers' budget accounting identity.** The inner product $\langle x, y \rangle = \sum_i x_i y_i$ is the total revenue generated when the deviation vector $x$ meets a pricing vector $y$ — each station $i$ generates revenue $x_i y_i$. Hölder's inequality says: the total revenue is bounded by the product of the $p$-norm of the deviations and the $q$-norm of the prices. The $L_1$-$L_\infty$ case gives $|\sum_i x_i y_i| \leq \|x\|_1 \|y\|_\infty$ — total revenue is bounded by total absolute deviation times the maximum price. The $L_2$-$L_2$ case is Cauchy-Schwarz: $|\sum_i x_i y_i| \leq \|x\|_2 \|y\|_2$ — the familiar dot product inequality from MATH 103. The $L_\infty$-$L_1$ case gives $|\sum_i x_i y_i| \leq \|x\|_\infty \|y\|_1$ — the maximum deviation times the total absolute price.
+
+**The duality between $L_1$ and $L_\infty$ norms — that the dual norm of $\|\cdot\|_1$ is $\|\cdot\|_\infty$ and vice versa — is the geometric statement that the polar dual of the diamond is the hypercube.** The polar dual of a convex body $K$ is $K^\circ = \{y : \langle x, y\rangle \leq 1 \text{ for all } x \in K\}$ — the set of all vectors whose inner product with every element of $K$ is at most 1. The polar dual of the diamond $B_1$ — the set of all $y$ satisfying $\sum_i x_i y_i \leq 1$ for all $x$ with $\sum_i |x_i| \leq 1$ — is exactly the hypercube $B_\infty = [-1,1]^n$. The faces and vertices exchange roles: the $2n$ vertices of the diamond become the $2n$ faces of the hypercube, and the $2^n$ vertices of the hypercube become the $2^n$ faces of the diamond. The $L_2$ ball is self-dual — the sphere is its own polar dual — which is the geometric expression of the self-duality $\frac{1}{2} + \frac{1}{2} = 1$ of the $L_2$ norm.
+
+---
+
+**The $L^p$ interpolation inequalities $\|x\|_\infty \leq \|x\|_2 \leq \|x\|_1 \leq \sqrt{n}\|x\|_2 \leq n\|x\|_\infty$ are the three ministers' reconciliation theorem in finite dimensions.** They say: in a finite city with $n$ stations, the three ministers' measurements are all comparable — they can never differ by more than a factor of $\sqrt{n}$ or $n$. This is the topological equivalence of norms in finite dimensions: they define the same open sets, the same convergent sequences, the same notion of closeness. But the inequalities also reveal the scaling: the factors $\sqrt{n}$ and $n$ grow with the dimension, which means that in very high-dimensional spaces — the million-dimensional parameter spaces of large neural networks — the three norms can differ by enormous multiplicative factors even while remaining equivalent in the topological sense. Equivalence does not mean equality. It means comparability, with a dimension-dependent constant that can be arbitrarily large.
+
+**The failure of containment relationships in infinite-dimensional $L^p$ spaces is the formal proof that the break moment is real.** The function $f(x) = \frac{1}{1+x^2}$ on $\mathbb{R}$ is in $L^1(\mathbb{R})$ — it integrates to $\pi$ — but not in $L^\infty(\mathbb{R})$ — it achieves value 1 at $x = 0$, so it is bounded, actually in $L^\infty$. Let us use a better example: $f(x) = |x|^{-1/2} \mathbf{1}_{[0,1]}(x)$ is in $L^1([0,1])$ — it integrates to 2 — but not in $L^2([0,1])$ — $\int_0^1 x^{-1} dx$ diverges. And $g(x) = 1$ on $\mathbb{R}$ is in $L^\infty(\mathbb{R})$ but not in $L^1(\mathbb{R})$. The three spaces have genuinely different members in infinite dimensions. A probability density can be in $L^1$ without being in $L^2$. A score function can fail to be in $L^\infty$. The choice of norm determines which functions are admissible, and in infinite dimensions that choice is irreversible.
+
+---
+
+**The LASSO formula $\min_\beta \|y - X\beta\|_2^2 + \lambda\|\beta\|_1$ is the fiscal conservative minister's regularizer applied to regression.** The data fidelity term $\|y - X\beta\|_2^2$ is the engineer's squared error — measuring how well the regression vector $\beta$ fits the data in the $L_2$ sense. The regularizer $\lambda\|\beta\|_1$ is the fiscal conservative's penalty — measuring the total absolute magnitude of the regression coefficients. The tension between the two terms produces a solution where the data fidelity pushes $\beta$ toward the least squares solution and the $L_1$ regularizer pushes $\beta$ toward the sparse corners of the diamond. The parameter $\lambda$ controls the trade-off. The result is a sparse $\beta$ — a regression model that uses only a few predictors, with all others set to exactly zero. This is not an approximation. The zeros are exact, because the $L_1$ ball's corners produce exact zeros in the optimality conditions, not merely small values.
+
+**The ridge regression formula $\min_\beta \|y - X\beta\|_2^2 + \lambda\|\beta\|_2^2$ is the engineer minister's regularizer applied to regression.** Both terms are $L_2$ — the fidelity and the regularizer measure the same geometry. The optimal solution is the closed-form expression $\hat\beta = (X^TX + \lambda I)^{-1} X^T y$, which you can derive by setting the gradient to zero. This solution is dense — every component of $\hat\beta$ is generally nonzero — because the sphere has no corners. The $\lambda I$ term adds a small positive value to every diagonal entry of $X^TX$, regularizing the matrix to be positive definite and preventing the numerical instability that arises when $X^TX$ is nearly singular. The $L_2$ regularizer is simultaneously a geometric statement about the solution's character and a numerical stability tool for the linear system.
+
+---
+
+**The connection to MATH 103 (Linear Algebra) is now total.** Every computation you did with the Euclidean norm — finding the length of a vector, computing dot products, projecting onto subspaces, performing Gram-Schmidt orthogonalization — was a computation in the geometry of the $L_2$ ball. The Cauchy-Schwarz inequality $|\langle x, y\rangle| \leq \|x\|_2 \|y\|_2$ was Hölder's inequality for $p = q = 2$. The projection formula $\hat x = \frac{\langle x, v\rangle}{\|v\|_2^2} v$ was the Hilbert projection theorem applied to the $L_2$ Hilbert space $\mathbb{R}^n$. What you have now is the recognition that every one of those tools was specific to the $L_2$ ball — to the sphere — and that the diamond and hypercube generate analogous but geometrically different toolkits whose optimization consequences are qualitatively different.
+
+**The connection to MATH 208 (Statistics and Probability) closes through the least squares interpretation.** The ordinary least squares estimator $\hat\beta = (X^TX)^{-1} X^T y$ is the solution to $\min_\beta \|y - X\beta\|_2^2$ — the pure $L_2$ fidelity problem with no regularizer. It is the point where the $L_2$ level set $\{y - X\beta : \|y - X\beta\|_2 = c\}$ achieves its minimum, which is the point of closest approach of the line $\{X\beta : \beta \in \mathbb{R}^n\}$ to $y$ in the $L_2$ geometry. The normal equations $X^T X \beta = X^T y$ are the first-order optimality conditions — the KKT conditions for an unconstrained $L_2$ problem — which we will derive precisely in the Lagrangian Duality topic. Every regression formula in MATH 208 was a computation in $L_2$ geometry.
+
+---
+
+**Looking forward across the roadmap**, the three norms are the measuring instruments of every phase. In Phase 1, the Wasserstein-1 distance uses the $L_1$ norm as its ground cost, and its Kantorovich dual — characterized by 1-Lipschitz functions — is a statement about $L_\infty$ control of the gradient. The Wasserstein-2 distance uses the squared $L_2$ norm as its ground cost, and its optimal transport map is the gradient of a convex potential — a computation that lives entirely in $L_2$ geometry. The Sinkhorn algorithm's entropic regularization adds a KL divergence term, which is an $L^1$-type penalty on the transport plan. In Phase 2, the Laplacian eigenmaps minimize a weighted $L_2$ norm of the gradient of the embedding function, producing smooth low-dimensional representations. The equivariance conditions of graph neural networks are stated using $L_2$ norms on the feature spaces. In Phase 3, the score matching objective $\mathbb{E}[\|\nabla \log p_\theta(x) - \nabla \log p(x)\|_2^2]$ is an $L^2$ distance between score functions, minimized in the Hilbert space $L^2(p)$. The flow matching loss is also an $L^2$ regression — learning the velocity field that generates the optimal transport map.
+
+The three ministers did not disagree about the facts. They disagreed about geometry. That geometric disagreement — diamond versus sphere versus hypercube — is the disagreement that produces LASSO versus ridge, Wasserstein-1 versus Wasserstein-2, total variation versus $L^2$ regularization. Every choice of norm in the roadmap is one minister's philosophy, encoded in the shape of a ball.
+
+---
+---

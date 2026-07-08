@@ -1,0 +1,401 @@
+# Topic 1 - Spatial GNNs: The Message Passing Framework
+
+## Introduction
+
+The Schur's lemma derivation of Chapter 1 ended with a striking result. The most general $S_n$-equivariant linear map on scalar node features is $h_i \mapsto \alpha h_i + \beta \sum_j h_j$ — a self-weight plus a sum over all other nodes. This is correct, but it is too broad to be useful. It aggregates information from every node in the graph equally, regardless of whether those nodes are connected by an edge or separated by a hundred hops. A social network where every person influences every other person equally, regardless of whether they have ever interacted, is not a model of a social network — it is a model of a fully connected mean field. Real graphs are sparse. Real relationships are local. The structure of the graph — which nodes are connected to which — is the most important piece of information you have, and a globally aggregating equivariant layer throws it away entirely.
+
+The message passing framework is the resolution of this tension. It preserves $S_n$-equivariance exactly, as demanded by Chapter 1's group theory, while restricting aggregation to the local neighborhood defined by the graph's edges. The result is a family of architectures that are simultaneously principled — derived from symmetry constraints — and practical — exploiting the sparse local structure that makes graphs computationally tractable and statistically meaningful.
+
+The central intuition is one you already know from your own academic experience. When you are trying to understand a new concept — say, the Radon-Nikodym theorem from Phase 0 — you do not consult every mathematician who has ever lived. You consult your immediate intellectual neighborhood: your professor, the textbooks on your shelf, the papers that paper cites. Each of those sources has its own neighborhood. Over multiple rounds of consultation, information from distant sources reaches you, but it arrives filtered and transformed through intermediate nodes in your academic graph. This is message passing: local aggregation iterated over multiple rounds to propagate information across the graph.
+
+Formally, a single message passing layer performs three operations in sequence. First, for every directed edge $(j, i)$ in the graph, a message function computes a vector $m_{ji}$ from the features of the sender node $j$, the receiver node $i$, and optionally the edge feature $e_{ji}$. Second, for every node $i$, an aggregation function combines all incoming messages $\{m_{ji} : j \in \mathcal{N}(i)\}$ from the neighborhood $\mathcal{N}(i)$ into a single aggregated message $\bar{m}_i$. Third, an update function computes the new node feature $h_i^{(k+1)}$ from the aggregated message $\bar{m}_i$ and the current node feature $h_i^{(k)}$. Stacking $K$ such layers produces a network where each node's final feature encodes information from its entire $K$-hop neighborhood.
+
+This topic has three components that correspond to the three architectural choices embedded in the message passing framework.
+
+The first component examines the **message function** — the operation that decides what information a node sends to its neighbors. The simplest message function is $m_{ji} = h_j^{(k)}$: send your current feature unchanged. More expressive choices apply a learned linear transformation $m_{ji} = W h_j^{(k)}$, or concatenate sender and receiver features $m_{ji} = \phi(h_j^{(k)}, h_i^{(k)})$, or incorporate edge features $m_{ji} = \phi(h_j^{(k)}, h_i^{(k)}, e_{ji})$. The choice of message function determines what information flows along each edge and is the primary site of architectural expressiveness in the spatial GNN framework.
+
+The second component examines the **aggregation function** — the operation that combines incoming messages at each node. The aggregation must be $S_n$-equivariant and permutation-invariant over the set of incoming messages (since the neighbors of a node have no canonical ordering). The canonical choices are sum aggregation $\bar{m}_i = \sum_{j \in \mathcal{N}(i)} m_{ji}$, mean aggregation $\bar{m}_i = \frac{1}{|\mathcal{N}(i)|}\sum_{j \in \mathcal{N}(i)} m_{ji}$, and max aggregation $\bar{m}_i = \max_{j \in \mathcal{N}(i)} m_{ji}$. The choice of aggregation function has profound consequences for expressive power — a fact that the Weisfeiler-Lehman analysis of Topic 3 will make precise. Sum aggregation is strictly more expressive than mean or max aggregation, for a reason that will become clear when you see which graph structures each aggregation can and cannot distinguish.
+
+The third component examines the **update function** — the operation that incorporates the aggregated neighborhood information into the node's own feature. The simplest update is $h_i^{(k+1)} = \sigma(W \bar{m}_i)$ — apply a learned linear transformation to the aggregated message and pass through a nonlinearity. More sophisticated updates use gating mechanisms, residual connections, or recurrent update functions. The Graph Attention Network (GAT) places the attention mechanism inside the message and aggregation steps — weighting each neighbor's message by a learned attention coefficient $\alpha_{ji}$ that depends on the features of both the sender and receiver — producing a weighted aggregation $\bar{m}_i = \sum_{j \in \mathcal{N}(i)} \alpha_{ji} m_{ji}$ where the weights are data-dependent rather than fixed.
+
+The connection to your existing curriculum is direct and bilateral. Your COMP 202 course on Data Structures and Algorithms introduced graphs as adjacency lists and adjacency matrices, and gave you the two canonical graph traversal algorithms: breadth-first search and depth-first search. Message passing is differentiable breadth-first search. In BFS, you explore the $k$-hop neighborhood of a node by iteratively expanding the frontier one hop at a time. In message passing, you do exactly the same thing, but instead of marking nodes as visited, you compute and aggregate differentiable feature vectors at each hop. The neighborhood expansion logic is identical; the difference is that message passing is end-to-end differentiable, so the information aggregated at each hop is learned rather than hand-coded.
+
+Your COMP 323 course on Graph Theory introduced the Laplacian matrix $L = D - A$, the adjacency spectrum, and the connection between graph structure and algebraic properties. The message passing framework aggregates over the adjacency structure directly — the neighborhood $\mathcal{N}(i)$ in the message passing update is precisely the set of nodes adjacent to $i$ in the adjacency matrix $A$. The normalized adjacency matrix $\hat{A} = D^{-1/2}AD^{-1/2}$ that appears in the Graph Convolutional Network (GCN) of Kipf and Welling is the normalized version of the same adjacency matrix from your Graph Theory course, with the degree normalization ensuring that the aggregation does not blow up for high-degree nodes. The spectral interpretation of this normalization — why $\hat{A}$ is the correct normalization rather than $D^{-1}A$ or $A$ itself — is the content of Topic 2.
+
+By the end of this topic, the message passing framework will feel not like a black box architecture but like the unique sensible answer to the question: how do you build an $S_n$-equivariant neural network that respects the sparse local structure of a graph? The answer is: compute local messages along edges, aggregate them symmetrically over neighborhoods, and update node features iteratively. Every subsequent GNN architecture — from GraphSAGE to GAT to MPNN to PNA — is a special case of this framework, varying only in the specific choice of message, aggregation, and update functions. The framework is the constant; the architectural variants are the parameters.
+
+---
+
+## Layer 1 (Story)
+
+Imagine it is the early 1980s, before telephone lines reached the mountain villages of Nepal. The Government of Nepal has commissioned you — a young engineer freshly graduated from what would become Pulchowk Campus — to design a communication system for the high Himalayan districts. The system must allow any village to send information to any other village, but the terrain makes direct connections impossible. You cannot build a road from Namche Bazaar directly to Jumla. The mountains, the rivers, the passes — they dictate which villages can be directly connected and which cannot. What you can build is a network of postal relay stations: each village can send a letter to its immediate neighbors, and those neighbors can forward the letter onward.
+
+You build the network. Namche Bazaar connects to Phakding and Tengboche. Phakding connects to Lukla and Namche Bazaar. Lukla connects to Phakding and the airstrip at Rumjatar. Tengboche connects to Namche Bazaar and Dingboche. The network is a graph — nodes are villages, edges are postal routes. No village is directly connected to every other village. The connections are sparse and local, dictated entirely by geography.
+
+Now the Government gives you a harder task. It is no longer enough to deliver letters. You must build an intelligence system. Every village has a profile — its population, its altitude, its food stock, its current disease burden. The Government wants to know, for every village, whether it is at risk of a supply crisis in the coming winter. The prediction for each village must incorporate not just that village's own profile but the profiles of the villages around it, because a supply crisis in Namche Bazaar affects Phakding and Tengboche whether they know it yet or not.
+
+You cannot send every village's profile to a central office in Kathmandu and compute everything there. The communication bandwidth is too limited, and the network is too large. You need a distributed algorithm — one that propagates information locally, hop by hop, until every village has accumulated enough intelligence about its surroundings to make a reliable prediction.
+
+---
+
+**Round Zero: Everyone knows only themselves.**
+
+At the start of the winter assessment, each village holds only its own profile vector. Namche Bazaar knows its own population, altitude, food stock, and disease burden. It knows nothing about Phakding or Tengboche yet. Every village is an island of local information.
+
+This is the initialization of the network. Before any message passing has occurred, the feature vector of each node encodes only local, self-contained information. In the language of the system you are building, this is Layer 0: $h_i^{(0)} = x_i$, where $x_i$ is the raw feature vector of village $i$.
+
+---
+
+**Round One: Every village sends a letter to its neighbors.**
+
+You instruct every village postmaster to do three things. First, prepare a message summarizing your village's current situation — not your raw profile, but a transformed summary, because raw numbers from different villages are not directly comparable. The postmaster in Namche Bazaar (at 3440 metres) and the postmaster in Lukla (at 2860 metres) have different baseline conditions, and a single linear transformation applied uniformly across all villages normalizes for these differences. This transformation is the message function: it converts each village's current feature vector into a message suitable for transmission to neighbors.
+
+Second, collect all the letters that arrive from your neighboring villages. Namche Bazaar receives letters from Phakding and Tengboche. It does not receive a letter directly from Lukla, because Lukla is not an immediate neighbor — the postal route does not connect them directly. The collection of incoming letters is the aggregation step: for each village, you gather all messages from its immediate neighborhood.
+
+Third, read all the letters you have received, combine the information in them with what you already know about your own village, and update your profile accordingly. Namche Bazaar now knows its own situation plus a summary of Phakding's and Tengboche's situations. This is the update step: the new feature vector of each village is a function of its old feature vector and the aggregated neighborhood messages.
+
+After Round One, every village has a feature vector that encodes information from its immediate one-hop neighborhood. Namche Bazaar's updated profile reflects conditions in Phakding and Tengboche. Phakding's updated profile reflects conditions in Namche Bazaar and Lukla. But Namche Bazaar still knows nothing about Lukla — Lukla is two hops away, and only one round of message passing has occurred.
+
+---
+
+**Round Two: The second round of letters.**
+
+In Round Two, the same three steps repeat. But now the messages that each village sends are based on its Round One feature vector — which already encodes one-hop neighborhood information. When Phakding sends its Round Two message to Namche Bazaar, that message implicitly contains information about Lukla, because Phakding's Round One update incorporated Lukla's Round Zero profile. Namche Bazaar, upon receiving Phakding's Round Two message, now has indirect access to Lukla's information — mediated through Phakding.
+
+After Round Two, every village has a feature vector encoding information from its two-hop neighborhood. After Round Three, three hops. After $K$ rounds, every village has aggregated information from its entire $K$-hop neighborhood. If the diameter of the postal network — the longest shortest path between any two villages — is $D$, then after $D$ rounds of message passing, every village has, in principle, been influenced by every other village in the network, through chains of message relaying.
+
+This is the central computational mechanism of Graph Neural Networks: $K$ rounds of local message passing produce node features that encode $K$-hop neighborhood information, with the information propagating outward from each node like ripples on a pond.
+
+---
+
+**The three decisions of the postmaster.**
+
+Every round of message passing requires three decisions from every postmaster, and the quality of the entire system depends on getting these decisions right.
+
+**Decision One: What do you put in the letter?**
+
+The naive postmaster puts everything in the letter — the full raw profile of the village. But this is wasteful and noisy. A wiser postmaster applies judgment: they transform the raw profile into a concise, informative summary that is relevant to the recipient. In Namche Bazaar's case, the relevant information for its neighbors is not its absolute food stock (5000 kg) but its food stock relative to its population and the expected winter duration — a transformed, normalized signal.
+
+Different postmasters might apply different transformations depending on who they are writing to. Namche Bazaar might send a different summary to Phakding (lower altitude, different supply dynamics) than to Tengboche (higher altitude, similar conditions). This is the attention mechanism: the message sent along edge $(j, i)$ depends not just on the sender $j$ but also on the receiver $i$, allowing the network to learn which aspects of a neighbor's profile are most relevant for each specific relationship.
+
+**Decision Two: How do you combine the letters you receive?**
+
+Several letters arrive from different neighbors. The naive postmaster simply adds them up: total them together and treat the sum as the aggregate signal. This is sum aggregation.
+
+But there is a subtlety. Namche Bazaar has two neighbors: Phakding and Tengboche. A village with ten neighbors receives ten letters. If you simply sum all incoming messages, a village with many neighbors accumulates a much larger aggregate signal than a village with few neighbors, even if the actual information content is the same. This size-sensitivity is sometimes useful — knowing that a village has many neighbors (high degree) is itself information — but it can also be a distortion. Mean aggregation divides the sum by the number of neighbors, normalizing for degree. Max aggregation takes the component-wise maximum, which is sensitive to the most extreme incoming signal rather than the average.
+
+Here is the break moment. You might think: mean aggregation is obviously better, because it normalizes for degree and makes the aggregate signal comparable across villages with different numbers of neighbors. Why would you ever use sum aggregation, which distorts the signal based on the number of neighbors?
+
+This breaks cleanly against the following example. Consider two villages. Village A has two neighbors, both reporting food stock level 3. Village B has three neighbors, all reporting food stock level 2. Under mean aggregation, both villages receive the same aggregate signal: the mean of $\{3, 3\}$ is 3, but also, the mean of $\{2, 2, 2\}$ is 2 — actually these differ, good. Try again with a cleaner break.
+
+Consider two villages. Village A has two neighbors, both at food stock level 3: mean aggregate is 3. Village B has four neighbors, all at food stock level 3: mean aggregate is also 3. These two villages are in completely different situations — Village A has two neighbors at risk, Village B has four — but mean aggregation cannot tell them apart. Sum aggregation gives Village A an aggregate of 6 and Village B an aggregate of 12, correctly distinguishing them. Mean aggregation has destroyed the information about neighborhood size.
+
+This is not a pathological example. It is the precise reason why the Graph Isomorphism Network (GIN) — the maximally expressive message-passing GNN — uses sum aggregation rather than mean aggregation. Sum aggregation is strictly more expressive than mean aggregation because it preserves information about both the values and the counts of incoming messages. Mean aggregation throws away count information. Max aggregation throws away even more. The aggregation choice is not a detail — it is the primary determinant of theoretical expressive power, as Topic 3 will prove rigorously using the Weisfeiler-Lehman test.
+
+**Decision Three: How do you update your own profile?**
+
+The postmaster receives the aggregated neighborhood signal and must combine it with their own village's existing profile to produce an updated profile. The simplest approach: apply a learned transformation to the concatenation of the current self-profile and the aggregated neighborhood signal, then pass through a nonlinearity. The nonlinearity is essential — without it, the entire $K$-layer network collapses to a single linear operation (composition of linear maps is linear), and you lose the capacity to represent nonlinear functions of neighborhood structure.
+
+---
+
+**The graph-level prediction.**
+
+The Government does not want a risk assessment for each village individually. It wants a single district-level assessment: is this district as a whole at risk of a coordinated supply crisis? This requires aggregating all node-level features into a single graph-level feature vector.
+
+The graph-level aggregation — called the readout or pooling operation — must be permutation-invariant: the district-level assessment should not depend on which village was numbered first. The simplest invariant readout is the sum or mean over all node features: $h_G = \sum_i h_i^{(K)}$ or $h_G = \frac{1}{n}\sum_i h_i^{(K)}$. This is the canonical $S_n$-invariant operation — summation over an unordered set, which is the same regardless of the ordering of the elements.
+
+After the readout, a final learned transformation maps the graph-level feature vector to the prediction: district-level crisis probability, molecule energy, social network resilience, or whatever the task demands.
+
+---
+
+**The full pipeline, stated once.**
+
+Initialize: $h_i^{(0)} = x_i$ for all villages $i$.
+
+For each round $k = 1, \ldots, K$:
+— For each edge $(j, i)$: compute message $m_{ji}^{(k)}$ from $h_j^{(k-1)}$, $h_i^{(k-1)}$, and edge feature $e_{ji}$.
+— For each node $i$: aggregate $\bar{m}_i^{(k)} = \text{AGG}\left(\{m_{ji}^{(k)} : j \in \mathcal{N}(i)\}\right)$.
+— For each node $i$: update $h_i^{(k)} = \text{UPD}\left(h_i^{(k-1)}, \bar{m}_i^{(k)}\right)$.
+
+Readout: $h_G = \text{READOUT}\left(\{h_i^{(K)} : i \in V\}\right)$.
+
+Predict: $\hat{y} = f(h_G)$ for graph-level tasks, or $\hat{y}_i = f(h_i^{(K)})$ for node-level tasks.
+
+Every GNN architecture you will encounter in the literature — GCN, GraphSAGE, GAT, GIN, MPNN, PNA, DimeNet, SchNet — is a specific instantiation of this pipeline, varying in the choice of message function, aggregation function, update function, and readout. The pipeline itself is the constant. It is $S_n$-equivariant by construction: because every operation — message computation, neighborhood aggregation, node update — treats all nodes with the same functions and aggregates over unordered sets, relabeling the nodes produces identically relabeled outputs. The permutation symmetry is built into the architecture at the structural level, not enforced as a regularization penalty or learned from data.
+
+---
+
+**What message passing cannot do.**
+
+Before you move to the mathematics, hold one limitation clearly in mind.
+
+The postal network aggregates information from $K$-hop neighborhoods. But two villages that have identical $K$-hop neighborhood structures — the same pattern of connections and features within $K$ hops — will receive identical feature vectors after $K$ rounds of message passing, even if they are embedded in globally different parts of a larger network. Message passing is local: it sees neighborhood structure, not global position. Two nodes in completely different graphs that happen to have isomorphic $K$-hop neighborhoods are indistinguishable to a $K$-layer message-passing GNN.
+
+This is not a failure of implementation. It is a fundamental structural limit, and it is exactly the limit that the Weisfeiler-Lehman analysis of Topic 3 characterizes with mathematical precision. You are not yet ready for that analysis — it requires the formalism of Topic 2 as an intermediate step — but you should carry this limitation forward as an open question: which graph structures can message passing distinguish, and which are invisible to it?
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in five stages: the precise algebraic definition of a graph and its associated matrices, the general message passing neural network (MPNN) framework, the three canonical instantiations (GCN, GraphSAGE, GAT), the graph-level readout and its invariance properties, and the over-smoothing phenomenon that limits depth.
+
+### Graphs and Their Matrix Representations
+
+**Definition.** A **graph** is a tuple $G = (V, E, X)$ where $V = \{1, \ldots, n\}$ is the node set, $E \subseteq V \times V$ is the edge set, and $X \in \mathbb{R}^{n \times d}$ is the node feature matrix with row $x_i \in \mathbb{R}^d$ being the feature vector of node $i$. Optionally, $E_{ij} \in \mathbb{R}^k$ is an edge feature vector for each $(i,j) \in E$.
+
+**Adjacency matrix.** The adjacency matrix $A \in \{0,1\}^{n \times n}$ is defined by:
+
+$$A_{ij} = \begin{cases} 1 & \text{if } (j, i) \in E \\ 0 & \text{otherwise} \end{cases}$$
+
+For undirected graphs, $A = A^\top$. For directed graphs, $A_{ij} \neq A_{ji}$ in general.
+
+**Degree matrix.** The degree matrix $D \in \mathbb{R}^{n \times n}$ is the diagonal matrix with entries:
+
+$$D_{ii} = \deg(i) = \sum_{j=1}^{n} A_{ij}$$
+
+the number of neighbors of node $i$.
+
+**Neighborhood.** The neighborhood of node $i$ is:
+
+$$\mathcal{N}(i) = \{j \in V : (j,i) \in E\}$$
+
+For undirected graphs, $(j,i) \in E \Leftrightarrow (i,j) \in E$, so $j \in \mathcal{N}(i) \Leftrightarrow i \in \mathcal{N}(j)$.
+
+**Normalized adjacency.** The symmetrically normalized adjacency matrix is:
+
+$$\hat{A} = D^{-1/2} A D^{-1/2}, \quad \hat{A}_{ij} = \frac{A_{ij}}{\sqrt{\deg(i)\deg(j)}}$$
+
+The self-loop augmented versions $\tilde{A} = A + I$ and $\tilde{D}_{ii} = \deg(i) + 1$ give $\hat{\tilde{A}} = \tilde{D}^{-1/2}\tilde{A}\tilde{D}^{-1/2}$, the propagation matrix of the Graph Convolutional Network.
+
+---
+
+### The General MPNN Framework
+
+**Definition (Message Passing Neural Network).** A **message passing neural network** with $K$ layers computes node representations $h_i^{(k)}$ for $k = 0, 1, \ldots, K$ via:
+
+$$\text{Initialization:} \quad h_i^{(0)} = x_i \in \mathbb{R}^d$$
+
+$$\text{Message:} \quad m_{ji}^{(k)} = \phi^{(k)}\!\left(h_i^{(k-1)},\, h_j^{(k-1)},\, e_{ji}\right)$$
+
+$$\text{Aggregate:} \quad \bar{m}_i^{(k)} = \bigoplus_{j \in \mathcal{N}(i)} m_{ji}^{(k)}$$
+
+$$\text{Update:} \quad h_i^{(k)} = \psi^{(k)}\!\left(h_i^{(k-1)},\, \bar{m}_i^{(k)}\right)$$
+
+where $\phi^{(k)}: \mathbb{R}^{d_{k-1}} \times \mathbb{R}^{d_{k-1}} \times \mathbb{R}^{k_e} \to \mathbb{R}^{d_k}$ is the **message function**, $\bigoplus$ denotes a permutation-invariant **aggregation operator** (sum, mean, max, or learned), and $\psi^{(k)}: \mathbb{R}^{d_{k-1}} \times \mathbb{R}^{d_k} \to \mathbb{R}^{d_k}$ is the **update function**.
+
+**Equivariance of MPNN.** Let $\sigma \in S_n$ be a permutation and $P_\sigma$ its permutation matrix. Define the action of $\sigma$ on node features as $(P_\sigma H)_i = H_{\sigma^{-1}(i)}$ (permuting rows). Then:
+
+**Theorem.** The MPNN layer $H^{(k)} = \text{MPNN}(H^{(k-1)}, A)$ satisfies:
+
+$$\text{MPNN}(P_\sigma H^{(k-1)}, P_\sigma A P_\sigma^\top) = P_\sigma \, \text{MPNN}(H^{(k-1)}, A)$$
+
+**Proof sketch.** The message $m_{ji}^{(k)}$ depends only on $h_i^{(k-1)}$ and $h_j^{(k-1)}$, which under permutation $\sigma$ become $h_{\sigma^{-1}(i)}^{(k-1)}$ and $h_{\sigma^{-1}(j)}^{(k-1)}$. The adjacency $P_\sigma A P_\sigma^\top$ has entry $(i,j)$ equal to $A_{\sigma^{-1}(i)\sigma^{-1}(j)}$, so the neighborhood of node $i$ under the permuted graph is $\{\sigma(j) : j \in \mathcal{N}(\sigma^{-1}(i))\}$. The aggregation over this permuted neighborhood, by permutation-invariance of $\bigoplus$, produces the same result as permuting after aggregating. $\square$
+
+---
+
+### Canonical Instantiation I: Graph Convolutional Network (GCN)
+
+**Kipf and Welling (2017).** The GCN layer is:
+
+$$H^{(k)} = \sigma\!\left(\hat{\tilde{A}} H^{(k-1)} W^{(k)}\right)$$
+
+where $\hat{\tilde{A}} = \tilde{D}^{-1/2}\tilde{A}\tilde{D}^{-1/2}$ is the symmetrically normalized self-loop augmented adjacency matrix, $W^{(k)} \in \mathbb{R}^{d_{k-1} \times d_k}$ is a learnable weight matrix, and $\sigma$ is a pointwise nonlinearity (ReLU).
+
+**MPNN decomposition.** The GCN layer is an instance of the MPNN framework with:
+
+$$m_{ji}^{(k)} = \frac{1}{\sqrt{\widetilde{\deg}(i)\,\widetilde{\deg}(j)}} h_j^{(k-1)}$$
+
+$$\bar{m}_i^{(k)} = \sum_{j \in \mathcal{N}(i) \cup \{i\}} m_{ji}^{(k)}$$
+
+$$h_i^{(k)} = \sigma\!\left(W^{(k)\top} \bar{m}_i^{(k)}\right)$$
+
+The self-loop (adding $I$ to $A$) ensures that the update includes the node's own previous feature, so $h_i^{(k)}$ is a function of $h_i^{(k-1)}$ and the neighborhood. Without the self-loop, the update discards the node's own feature entirely.
+
+**Spectral motivation.** The normalization $\hat{\tilde{A}}$ is not arbitrary — it is the first-order approximation of a spectral graph filter. This connection is developed fully in Topic 2.
+
+---
+
+### Canonical Instantiation II: GraphSAGE
+
+**Hamilton, Ying, and Leskovec (2017).** GraphSAGE separates the self-feature from the aggregated neighborhood feature:
+
+$$h_{\mathcal{N}(i)}^{(k)} = \text{AGG}^{(k)}\!\left(\{h_j^{(k-1)} : j \in \mathcal{N}(i)\}\right)$$
+
+$$h_i^{(k)} = \sigma\!\left(W^{(k)} \cdot \left[h_i^{(k-1)} \,\|\, h_{\mathcal{N}(i)}^{(k)}\right]\right)$$
+
+where $[\cdot \| \cdot]$ denotes concatenation and $\text{AGG}^{(k)}$ is one of:
+
+$$\text{Mean AGG:} \quad h_{\mathcal{N}(i)}^{(k)} = \frac{1}{|\mathcal{N}(i)|}\sum_{j \in \mathcal{N}(i)} h_j^{(k-1)}$$
+
+$$\text{Max AGG:} \quad h_{\mathcal{N}(i)}^{(k)} = \max_{j \in \mathcal{N}(i)} \sigma\!\left(W h_j^{(k-1)}\right)$$
+
+$$\text{LSTM AGG:} \quad h_{\mathcal{N}(i)}^{(k)} = \text{LSTM}\!\left(\{h_j^{(k-1)} : j \in \pi(\mathcal{N}(i))\}\right)$$
+
+where $\pi(\mathcal{N}(i))$ is a random permutation of the neighborhood (the LSTM aggregator is not permutation-invariant by construction, which is a pragmatic compromise for expressiveness).
+
+**Inductive generalization.** GraphSAGE is designed for inductive learning — applying a trained model to graphs not seen during training, including graphs with new nodes. Because the weight matrices $W^{(k)}$ are shared across all nodes and the aggregation is over local neighborhoods, the learned function generalizes to new graph structures without retraining.
+
+---
+
+### Canonical Instantiation III: Graph Attention Network (GAT)
+
+**Veličković et al. (2018).** The GAT layer computes attention coefficients $\alpha_{ji}$ that weight each neighbor's contribution:
+
+$$e_{ji} = \text{LeakyReLU}\!\left(a^\top \left[W h_i^{(k-1)} \,\|\, W h_j^{(k-1)}\right]\right)$$
+
+$$\alpha_{ji} = \text{softmax}_j(e_{ji}) = \frac{\exp(e_{ji})}{\sum_{l \in \mathcal{N}(i)} \exp(e_{li})}$$
+
+$$h_i^{(k)} = \sigma\!\left(\sum_{j \in \mathcal{N}(i)} \alpha_{ji} W h_j^{(k-1)}\right)$$
+
+where $a \in \mathbb{R}^{2d_k}$ is a learnable attention vector and $W \in \mathbb{R}^{d_k \times d_{k-1}}$ is a learnable weight matrix.
+
+**Multi-head attention.** GAT uses $P$ independent attention heads and concatenates (or averages) the results:
+
+$$h_i^{(k)} = \|_{p=1}^{P} \sigma\!\left(\sum_{j \in \mathcal{N}(i)} \alpha_{ji}^{(p)} W^{(p)} h_j^{(k-1)}\right)$$
+
+**Permutation invariance of GAT.** The softmax normalization ensures $\sum_{j \in \mathcal{N}(i)} \alpha_{ji} = 1$ for all $i$. Since the attention coefficients $\alpha_{ji}$ depend only on the features $h_i^{(k-1)}$ and $h_j^{(k-1)}$ (not on the node indices), and the aggregation $\sum_{j \in \mathcal{N}(i)} \alpha_{ji} W h_j^{(k-1)}$ is a sum over the neighborhood (permutation-invariant), the GAT layer is $S_n$-equivariant.
+
+---
+
+### The Graph Isomorphism Network (GIN) — Maximum Expressive Power
+
+**Xu, Hu, Leskovec, Jegelka (2019).** The GIN layer is:
+
+$$h_i^{(k)} = \text{MLP}^{(k)}\!\left((1 + \epsilon^{(k)}) h_i^{(k-1)} + \sum_{j \in \mathcal{N}(i)} h_j^{(k-1)}\right)$$
+
+where $\epsilon^{(k)} \in \mathbb{R}$ is a learnable (or fixed) scalar and $\text{MLP}^{(k)}$ is a multilayer perceptron.
+
+**Why sum aggregation.** The use of sum (not mean, not max) is essential. The key lemma is:
+
+**Lemma (Xu et al. 2019).** Let $\mathcal{X}$ be a countable feature space. A function $f: 2^\mathcal{X} \to \mathbb{R}^d$ over multisets is injective if and only if there exists a function $\phi: \mathcal{X} \to \mathbb{R}^d$ such that $f(X) = \sum_{x \in X} \phi(x)$.
+
+**Proof sketch.** ($\Leftarrow$) If $f(X) = \sum_{x\in X}\phi(x)$ and $\phi$ is injective with a countable domain embeddable in $\mathbb{R}^d$, then distinct multisets have distinct sums. ($\Rightarrow$) Mean aggregation maps $\{1,1\}$ and $\{1\}$ (as multisets of scalars) to the same value $1$, failing injectivity. Max aggregation maps $\{1,2\}$ and $\{2\}$ to the same value $2$, failing injectivity. Sum preserves both multiplicity and values. $\square$
+
+**GIN is as powerful as the WL test.** Any injective aggregation of the form $\sum_{j \in \mathcal{N}(i) \cup \{i\}} \phi(h_j^{(k-1)})$ with an MLP $\phi$ of sufficient width achieves the maximum expressive power of message-passing networks — exactly the power of the 1-dimensional Weisfeiler-Lehman isomorphism test. The proof of this upper bound is the content of Topic 3.
+
+---
+
+### Graph-Level Readout
+
+**Definition.** A **readout function** maps the set of final node representations $\{h_i^{(K)} : i \in V\}$ to a graph-level representation $h_G \in \mathbb{R}^{d_G}$:
+
+$$h_G = \text{READOUT}\!\left(\{h_i^{(K)} : i \in V\}\right)$$
+
+**Permutation invariance requirement.** The readout must satisfy $\text{READOUT}(\{h_{\sigma(i)}^{(K)}\}) = \text{READOUT}(\{h_i^{(K)}\})$ for all $\sigma \in S_n$ — the graph-level representation must be independent of node ordering.
+
+**Standard readouts:**
+
+$$\text{Sum:} \quad h_G = \sum_{i \in V} h_i^{(K)}$$
+
+$$\text{Mean:} \quad h_G = \frac{1}{|V|} \sum_{i \in V} h_i^{(K)}$$
+
+$$\text{Max:} \quad h_G = \max_{i \in V} h_i^{(K)}$$
+
+**Hierarchical readout.** More expressive readouts learn to pool nodes progressively, coarsening the graph at each pooling step. DiffPool (Ying et al. 2018) learns a soft assignment matrix $S^{(k)} \in \mathbb{R}^{n_k \times n_{k+1}}$ that maps $n_k$ nodes to $n_{k+1}$ clusters:
+
+$$H^{(k+1)} = S^{(k)\top} H^{(k)}_{\text{emb}}, \quad A^{(k+1)} = S^{(k)\top} A^{(k)} S^{(k)}$$
+
+producing a coarsened graph at each level and a hierarchical graph representation.
+
+---
+
+### Over-Smoothing: The Depth Limitation
+
+**Phenomenon.** As the number of layers $K$ increases, node representations converge to the same vector — they lose the ability to distinguish different nodes. This is the **over-smoothing** phenomenon.
+
+**Formal statement.** Let $\hat{A} = D^{-1/2}AD^{-1/2}$ be the normalized adjacency of a connected non-bipartite graph. The eigenvalues of $\hat{A}$ satisfy $-1 < \lambda_n \leq \ldots \leq \lambda_2 < \lambda_1 = 1$. Repeated application of $\hat{A}$ drives $\hat{A}^K H^{(0)}$ toward the dominant eigenvector $\mathbf{1}$ (up to degree normalization):
+
+$$\lim_{K\to\infty} \hat{A}^K H^{(0)} = \mathbf{d}\,\mathbf{d}^\top H^{(0)} / \|\mathbf{d}\|^2$$
+
+where $\mathbf{d} = (d_1^{1/2}, \ldots, d_n^{1/2})^\top$ is the degree-normalized stationary distribution vector. All node representations converge to the same direction — all local structural information is destroyed.
+
+**Consequence.** GNNs in practice use $K \in \{2, 3, 4\}$ layers. Beyond that, over-smoothing dominates. Techniques to mitigate over-smoothing include: residual connections ($h_i^{(k)} = h_i^{(k-1)} + \text{AGG}(\cdot)$), jumping knowledge connections (concatenate representations from all layers), and graph transformers that use global attention rather than local aggregation.
+
+---
+
+### The Complete MPNN in Matrix Form
+
+For GCN, the full $K$-layer forward pass in matrix notation is:
+
+$$H^{(0)} = X \in \mathbb{R}^{n \times d_0}$$
+
+$$H^{(k)} = \sigma\!\left(\hat{\tilde{A}} H^{(k-1)} W^{(k)}\right), \quad k = 1, \ldots, K$$
+
+$$h_G = \frac{1}{n}\mathbf{1}^\top H^{(K)} \in \mathbb{R}^{d_K}$$
+
+$$\hat{y} = \text{softmax}(h_G W^{(K+1)})$$
+
+The entire computation is differentiable end-to-end. Gradients flow back through the readout, through all $K$ update layers, and through the normalized adjacency multiplication. Training minimizes the task loss (cross-entropy for classification, mean squared error for regression) via stochastic gradient descent or Adam.
+
+---
+
+### WHY THIS MATTERS
+
+In **COMP 202 (Data Structures and Algorithms)**, the adjacency list representation of a graph enables $O(\deg(i))$ traversal of the neighborhood $\mathcal{N}(i)$ — the same operation that the message passing aggregation $\bigoplus_{j \in \mathcal{N}(i)}$ performs. The total computational cost of one MPNN layer over all nodes is $O(|E| \cdot d)$ — linear in the number of edges, the same asymptotic cost as one pass of BFS over the graph. The sparse matrix-vector product $\hat{A}H$ exploits the sparsity of $A$ exactly as the adjacency list exploits sparsity in BFS — the graph's sparsity is the computational savings that makes GNNs tractable on graphs with millions of nodes.
+
+In **COMP 323 (Graph Theory)**, the graph Laplacian $L = D - A$ and its spectral properties — the eigenvalue $\lambda_1 = 0$ with eigenvector $\mathbf{1}$ for a connected graph, the Fiedler value $\lambda_2 > 0$ measuring connectivity — govern the over-smoothing behavior of deep GCNs. The convergence $\hat{A}^K H \to \mathbf{d}\mathbf{d}^\top H / \|\mathbf{d}\|^2$ is a direct consequence of the Perron-Frobenius theorem applied to the non-negative matrix $\hat{A}$ — the dominant eigenvalue is $1$ with eigenvector $\mathbf{d}$, and all other eigenvalue contributions decay geometrically at rate $|\lambda_2|^K$. The spectral gap $1 - |\lambda_2|$ from Graph Theory determines the over-smoothing rate: a small spectral gap means slow over-smoothing (information propagates slowly), a large spectral gap means fast over-smoothing (information propagates and homogenizes quickly).
+
+In **MATH 208 (Statistics and Probability)**, the softmax attention weights $\alpha_{ji} = \exp(e_{ji})/\sum_l \exp(e_{li})$ are a categorical probability distribution over the neighborhood $\mathcal{N}(i)$ — the GAT attention mechanism is a learned probability distribution over neighbors, with the message aggregation $\sum_{j} \alpha_{ji} W h_j^{(k-1)}$ being the expected neighbor feature under this distribution. The multi-head attention with $P$ heads computes $P$ independent such distributions and pools their expectations — a mixture model over neighborhood aggregation strategies. The LeakyReLU in the attention logit computation prevents the degenerate collapse of the softmax to a one-hot distribution (which would reduce GAT to a nearest-neighbor lookup), the same numerical stability concern as the log-sum-exp trick from the Sinkhorn algorithm in Phase 1.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Himalayan postal network story has a precise mathematical address. We walk through them completely — the village profiles, the postmaster's three decisions, the round-by-round propagation, the break moment about aggregation, and the graph-level district assessment — until the story and the formalism are a single object seen from two angles.
+
+---
+
+**The villages are the nodes $V = \{1, \ldots, n\}$, and the postal routes connecting them are the edges $E \subseteq V \times V$.** The graph $G = (V, E, X)$ is the complete mathematical object corresponding to the postal network: the node set $V$ is the set of villages, the edge set $E$ encodes which villages have direct postal routes between them, and the feature matrix $X \in \mathbb{R}^{n \times d}$ has row $x_i \in \mathbb{R}^d$ being the raw profile of village $i$ — its population, altitude, food stock, and disease burden. The adjacency matrix $A \in \{0,1\}^{n \times n}$ with $A_{ij} = 1$ if $(j,i) \in E$ is the matrix encoding of the postal route map: a one in position $(i,j)$ means there is a direct route from village $j$ to village $i$. The degree matrix $D$ with $D_{ii} = \sum_j A_{ij}$ records how many direct neighbors each village has — how many postal routes arrive at village $i$. Namche Bazaar with two direct neighbors Phakding and Tengboche corresponds to $D_{ii} = 2$ for the node $i$ representing Namche Bazaar.
+
+**The neighborhood $\mathcal{N}(i) = \{j \in V : (j,i) \in E\}$ is the set of villages from which village $i$ directly receives letters — the villages reachable in one hop along the postal routes.** Namche Bazaar's neighborhood is $\mathcal{N}(\text{Namche}) = \{\text{Phakding}, \text{Tengboche}\}$. Phakding's neighborhood is $\mathcal{N}(\text{Phakding}) = \{\text{Namche Bazaar}, \text{Lukla}\}$. The neighborhood definition is the graph-theoretic formalization of the geographic constraint that determined the postal network: only adjacent villages exchange direct letters. This is the structure that the message passing framework respects and exploits — the MPNN aggregates over $\mathcal{N}(i)$, not over all $n$ nodes, precisely because the postal network is sparse and local.
+
+---
+
+**The initialization $h_i^{(0)} = x_i$ — every village begins knowing only its own raw profile — is Layer 0 of the MPNN, before any message passing has occurred.** The feature vector $h_i^{(0)} \in \mathbb{R}^d$ at layer zero is exactly the raw feature vector $x_i$ from the feature matrix $X$. No information has yet traveled along any postal route. Each node's representation encodes purely local, self-contained information. This is the mathematical statement of Round Zero in the story: the postal system has not yet been activated, and every village is informationally isolated.
+
+---
+
+**The postmaster's first decision — transforming the village's raw profile into a message suitable for transmission — is the message function $\phi^{(k)}: \mathbb{R}^{d_{k-1}} \times \mathbb{R}^{d_{k-1}} \times \mathbb{R}^{k_e} \to \mathbb{R}^{d_k}$.** The message $m_{ji}^{(k)} = \phi^{(k)}(h_i^{(k-1)}, h_j^{(k-1)}, e_{ji})$ is the formal identity of the letter that village $j$ sends to village $i$ along edge $(j,i)$ in round $k$. The simplest postmaster — who sends their raw feature unchanged — corresponds to $\phi^{(k)}(h_i, h_j, e_{ji}) = h_j$: the message is just the sender's current feature. The wiser postmaster who applies a learned linear transformation corresponds to $\phi^{(k)}(h_i, h_j, e_{ji}) = Wh_j$ for a learnable weight matrix $W \in \mathbb{R}^{d_k \times d_{k-1}}$: the weight matrix is the postmaster's judgment about how to compress and normalize the village profile for transmission. The attention-aware postmaster — who sends a different message depending on who the recipient is — corresponds to the GAT message function $\phi^{(k)}(h_i, h_j, e_{ji}) = \alpha_{ji} W h_j$ where $\alpha_{ji} = \text{softmax}_j(a^\top[Wh_i \| Wh_j])$ is a learned attention coefficient that makes the message depend on both the sender $j$ and the receiver $i$. The attention coefficient $\alpha_{ji}$ is mathematically a categorical probability distribution over the neighborhood $\mathcal{N}(i)$ — it is the learned answer to the question: how much should village $i$ weight the information arriving from village $j$?
+
+---
+
+**The postmaster's second decision — combining all incoming letters into a single aggregate signal — is the aggregation operator $\bigoplus_{j \in \mathcal{N}(i)} m_{ji}^{(k)}$, and the break moment about mean versus sum aggregation is the content of the injectivity lemma.** The aggregated message $\bar{m}_i^{(k)} = \bigoplus_{j \in \mathcal{N}(i)} m_{ji}^{(k)}$ is the single vector that summarizes everything village $i$ has learned from its neighbors in round $k$. The aggregation operator $\bigoplus$ must be permutation-invariant over the incoming messages — the order in which the letters arrive at village $i$'s postal station must not affect the aggregate — because the neighbors $\mathcal{N}(i)$ have no canonical ordering, and $S_n$-equivariance demands that the computation not depend on arbitrary index assignments.
+
+The break moment is now fully precise. The two villages in the story — Village A with two neighbors at food stock level 3, and Village B with four neighbors at food stock level 3 — correspond to two multisets: $\{3, 3\}$ and $\{3, 3, 3, 3\}$ in scalar feature space. Mean aggregation maps both to $3$ — it fails to distinguish them because it normalizes by neighborhood size $|\mathcal{N}(i)|$, discarding the count information. Sum aggregation maps $\{3,3\}$ to $6$ and $\{3,3,3,3\}$ to $12$ — it distinguishes them because it preserves both the values and the multiplicities of the incoming messages. This is exactly the content of the injectivity lemma: a function $f$ on multisets is injective if and only if it can be written as $f(X) = \sum_{x \in X}\phi(x)$ for some function $\phi$. Mean aggregation is not injective on multisets — it collapses multisets of different sizes to the same value when all elements are equal. Max aggregation is not injective — it collapses multisets with the same maximum to the same value regardless of the remaining elements. Sum aggregation with a universal function approximator $\phi$ (an MLP of sufficient width) is injective on multisets with a countable feature space — it is the unique maximally expressive aggregation. This is why GIN uses sum aggregation: it is the only aggregation that makes the overall message passing function injective on neighborhood multisets, and injectivity is the condition for distinguishing graphs that the WL test can distinguish.
+
+The normalized adjacency $\hat{A} = D^{-1/2}AD^{-1/2}$ of the GCN corresponds to a specific choice of $\bigoplus$ that combines mean aggregation with symmetric degree normalization: $\hat{A}_{ij} = 1/\sqrt{\deg(i)\deg(j)}$ scales each incoming message by the geometric mean of sender and receiver degrees. This is the degree-normalized mean aggregation — computationally convenient and spectrally well-behaved (its eigenvalues lie in $(-1, 1]$, preventing exploding activations), but less expressive than sum aggregation for the reason the lemma makes precise.
+
+---
+
+**The postmaster's third decision — updating the village's own profile by combining the aggregated neighborhood signal with the existing self-profile — is the update function $\psi^{(k)}: \mathbb{R}^{d_{k-1}} \times \mathbb{R}^{d_k} \to \mathbb{R}^{d_k}$.** The new feature $h_i^{(k)} = \psi^{(k)}(h_i^{(k-1)}, \bar{m}_i^{(k)})$ is the updated profile of village $i$ after round $k$ of the postal system. In GCN, the update is $h_i^{(k)} = \sigma(W^{(k)\top}(\hat{\tilde{A}}H^{(k-1)})_i)$ — a linear transformation of the aggregated neighborhood signal (including self-loop) followed by a nonlinearity $\sigma$. The self-loop $\tilde{A} = A + I$ is the mathematical encoding of the story's requirement that the postmaster reads their own village's report alongside the incoming letters: adding $I$ to $A$ ensures that node $i$ is included in its own neighborhood for the purpose of the aggregation, so the update $h_i^{(k)}$ depends on $h_i^{(k-1)}$ directly through the aggregation rather than only through the separate $\psi$ argument. In GraphSAGE, the update explicitly separates the self-feature and the neighborhood aggregate: $h_i^{(k)} = \sigma(W^{(k)}[h_i^{(k-1)} \| h_{\mathcal{N}(i)}^{(k)}])$, where the concatenation $[\cdot \| \cdot]$ keeps the postmaster's own assessment and the neighborhood aggregate as distinct inputs to the update function, allowing the learned weight matrix to weigh them independently. In GIN, the update is $(1+\epsilon)h_i^{(k-1)} + \sum_{j \in \mathcal{N}(i)}h_j^{(k-1)}$ passed through an MLP — the scalar $\epsilon$ controls how much weight the village gives to its own current feature relative to the sum of neighborhood features, with the MLP providing the nonlinear transformation needed to make the overall function injective on the combined self-plus-neighborhood multiset.
+
+---
+
+**Round One of the postal system — every village sends a letter and receives letters, updating its profile to encode one-hop neighborhood information — is the first MPNN layer, $k=1$.** After one layer, $h_i^{(1)}$ encodes a function of $\{h_j^{(0)} : j \in \mathcal{N}(i) \cup \{i\}\} = \{x_j : j \in \mathcal{N}(i) \cup \{i\}\}$ — the raw features of the one-hop neighborhood. Namche Bazaar's $h_{\text{Namche}}^{(1)}$ is a function of $x_{\text{Namche}}$, $x_{\text{Phakding}}$, and $x_{\text{Tengboche}}$. It contains no information about Lukla yet. **Round Two — the second round of letters, where Phakding's message to Namche Bazaar carries implicit information about Lukla — is the second MPNN layer, $k=2$.** After two layers, $h_i^{(2)}$ encodes a function of all raw features within the two-hop neighborhood: $\{x_j : j \in \mathcal{N}^2(i)\}$ where $\mathcal{N}^2(i) = \{j : \text{dist}(i,j) \leq 2\}$. The ripple metaphor is exact: each MPNN layer expands the informational horizon of every node by exactly one hop, and $K$ layers give every node a representation encoding its entire $K$-hop neighborhood structure. The matrix form $H^{(k)} = \sigma(\hat{\tilde{A}}H^{(k-1)}W^{(k)})$ makes this propagation explicit: multiplying by $\hat{\tilde{A}}$ is the aggregation step (one step of neighborhood diffusion on the graph), and multiplying by $W^{(k)}$ followed by $\sigma$ is the update step (learned linear transformation plus nonlinearity).
+
+---
+
+**The over-smoothing phenomenon — village profiles converging to the same vector after too many rounds of letter exchange — is the convergence $\hat{A}^K H \to \mathbf{d}\mathbf{d}^\top H / \|\mathbf{d}\|^2$ as $K \to \infty$, governed by the spectral gap of $\hat{A}$.** After sufficiently many rounds of message passing, every village's profile encodes information from the entire network — but it encodes it so thoroughly that all village-specific local information is washed out, and every village receives the same global average signal scaled by its degree. This is the Perron-Frobenius theorem in action: the dominant eigenvalue of $\hat{A}$ is $\lambda_1 = 1$ with eigenvector $\mathbf{d} = (d_1^{1/2}, \ldots, d_n^{1/2})^\top$, and all other eigenvalue contributions decay geometrically at rate $|\lambda_2|^K$. The spectral gap $1 - |\lambda_2|$ — the Fiedler-adjacent quantity from your COMP 323 Graph Theory course — determines how quickly the postal network homogenizes: a well-connected network (large spectral gap) homogenizes fast, destroying local information quickly; a poorly connected network (small spectral gap, near-disconnected) homogenizes slowly, preserving local information longer. This is why GNNs use $K \in \{2,3,4\}$ layers in practice — deep enough to collect multi-hop neighborhood information, shallow enough to avoid over-smoothing. The residual connection $h_i^{(k)} = h_i^{(k-1)} + \text{AGG}(\cdot)$ is the mathematical fix: it adds a skip connection that preserves the village's own profile across rounds, preventing the full convergence to the global mean.
+
+---
+
+**The district-level crisis assessment — a single prediction for the entire postal network rather than a per-village prediction — is the graph-level readout $h_G = \text{READOUT}(\{h_i^{(K)} : i \in V\})$, which must be $S_n$-invariant.** The sum readout $h_G = \sum_{i \in V} h_i^{(K)}$ is the canonical invariant operation: summing over an unordered set gives the same result regardless of the order of summation, which is $S_n$-invariance by definition. The mean readout $h_G = \frac{1}{|V|}\sum_{i \in V} h_i^{(K)}$ is similarly invariant. Both correspond to the story's instruction that the district-level assessment must not depend on which engineer numbered the villages first. The final prediction $\hat{y} = f(h_G)$ — applying a learned function to the graph-level representation — is the Government's crisis probability score for the district. For node-level predictions (per-village risk assessment rather than district-level), the readout is omitted and $\hat{y}_i = f(h_i^{(K)})$ directly, which is $S_n$-equivariant: relabeling the nodes permutes the per-node predictions in the same way, exactly as relabeling the villages permutes the per-village assessments.
+
+---
+
+**The $S_n$-equivariance theorem — the MPNN satisfies $\text{MPNN}(P_\sigma H, P_\sigma A P_\sigma^\top) = P_\sigma \, \text{MPNN}(H, A)$ — is the mathematical statement that the postal system produces consistent results regardless of which engineer numbered the villages.** Engineer A's adjacency matrix $A$ and Engineer B's adjacency matrix $P_\sigma A P_\sigma^\top$ represent the same physical network under different numberings. The MPNN applied to Engineer B's representation produces node features that are exactly the permuted version of the node features produced from Engineer A's representation. The proof rests on two facts: the message function $\phi^{(k)}$ depends on node features but not on node indices (so permuting indices permutes messages in the same way), and the aggregation $\bigoplus_{j \in \mathcal{N}(i)}$ is permutation-invariant over the neighborhood (so the order in which messages arrive at the postal station does not matter). These two facts together ensure that every layer of the MPNN commutes with the permutation action of $S_n$ on node features — the architectural embodiment of the Erlangen Program's demand that architecture follow symmetry.
+
+---
+
+**The limitation identified at the end of the story — two villages with identical $K$-hop neighborhood structures receiving identical feature vectors despite being globally different — is the connection to the Weisfeiler-Lehman test that Topic 3 will formalize.** Two nodes $i$ and $j$ with isomorphic $K$-hop neighborhoods satisfy $h_i^{(K)} = h_j^{(K)}$ for any MPNN, regardless of the choice of $\phi^{(k)}$, $\bigoplus$, and $\psi^{(k)}$. This is not a bug — it is a structural consequence of the locality of message passing. The WL test is precisely the algorithm that characterizes which pairs of graphs (or nodes) have isomorphic neighborhood structures at every scale, and the GIN is precisely the MPNN that matches the WL test's discriminating power. The boundary between what message passing can and cannot distinguish is the boundary between what the WL test can and cannot distinguish — and that boundary is Topic 3.
+
+---
+
+**The connection to COMP 202 is now fully explicit.** The adjacency list representation of the graph in COMP 202 — storing $\mathcal{N}(i)$ as a list for each node $i$ — is the data structure that implements the aggregation $\bigoplus_{j \in \mathcal{N}(i)} m_{ji}^{(k)}$ in $O(\deg(i))$ time per node per layer, giving total cost $O(|E| \cdot d)$ per layer — linear in edges, the same as BFS. The message passing computation is differentiable BFS: the neighborhood expansion is identical, but instead of a visited boolean, each node accumulates a differentiable feature vector. **The connection to COMP 323 is equally explicit.** The Laplacian $L = D - A$ from Graph Theory governs over-smoothing through the eigenvalue gap of $\hat{A} = D^{-1/2}AD^{-1/2} = I - D^{-1/2}LD^{-1/2}$: the eigenvalues of $\hat{A}$ are $1 - \tilde{\lambda}_i$ where $\tilde{\lambda}_i$ are the eigenvalues of the normalized Laplacian $\tilde{L} = D^{-1/2}LD^{-1/2}$. The spectral gap of the graph — the Fiedler value $\tilde{\lambda}_2$ — is the rate at which the postal network homogenizes under repeated message passing. **The connection to MATH 208 is the GAT attention weight.** The softmax attention coefficients $\alpha_{ji} = \exp(e_{ji})/\sum_l \exp(e_{li})$ are a learned categorical probability distribution over $\mathcal{N}(i)$, and the GAT aggregation $\sum_j \alpha_{ji} Wh_j$ is the expected transformed neighbor feature under this distribution — a conditional expectation in the sense of MATH 208, where the conditioning is on the receiver node's identity.
+
+---
+
+The Himalayan postal network — its villages, routes, postmasters, letters, and district assessment — is now completely dissolved into its mathematical form. The village profiles are $x_i \in \mathbb{R}^d$. The postal routes are $E$. The postmaster's letter is $m_{ji}^{(k)} = \phi^{(k)}(h_i^{(k-1)}, h_j^{(k-1)}, e_{ji})$. The aggregated mailbag is $\bar{m}_i^{(k)} = \bigoplus_{j \in \mathcal{N}(i)} m_{ji}^{(k)}$. The updated profile is $h_i^{(k)} = \psi^{(k)}(h_i^{(k-1)}, \bar{m}_i^{(k)})$. The district assessment is $h_G = \sum_i h_i^{(K)}$. The consistency across different engineers' numberings is $S_n$-equivariance. The limitation that identical local neighborhoods produce identical features is the WL ceiling.
+
+---
+---

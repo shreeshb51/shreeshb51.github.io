@@ -1,0 +1,449 @@
+# Topic 3 - The Wasserstein Distance: The Metric Defined by Optimal Cost
+
+## Introduction
+
+You now have two formulations of Optimal Transport — the Monge map and the Kantorovich coupling — and you have seen that the Kantorovich problem always has a solution, is always a linear program over a convex set, and defines a minimum cost that is finite whenever the source and target distributions have finite moments. This minimum cost is a number: the smallest possible expected transport cost over all valid couplings of $\mu$ and $\nu$. The natural question is: does this number define a useful notion of distance between $\mu$ and $\nu$?
+
+The answer is yes, and the resulting distance is the Wasserstein distance — one of the most geometrically meaningful and practically useful notions of distance between probability distributions in modern mathematics.
+
+The Wasserstein distance is not just another dissimilarity measure to add to the list alongside KL divergence, total variation, and $\chi^2$ divergence. It is geometrically fundamentally different from all of them. The KL divergence, total variation, and their relatives are defined by comparing the values of the two density functions pointwise — they ask "how different is $p(x)$ from $q(x)$ at each point $x$?" The Wasserstein distance asks a completely different question: "how much work is required to transport the mass of one distribution into the configuration of the other?" The answer depends not on the pointwise difference between the densities but on the geometric relationship between where the two distributions place their mass in the underlying space.
+
+This geometric sensitivity is what makes the Wasserstein distance the right tool for comparing distributions in machine learning. Two distributions can be very different pointwise — their densities do not overlap at all — and yet be close in Wasserstein distance because their masses are geometrically near. And two distributions can be identical in shape and spread but simply shifted in space, in which case the Wasserstein distance reflects that shift cleanly while the KL divergence is infinite (when the supports are disjoint) or insensitive to the shift (when the distributions overlap). The Wasserstein distance sees the geometry of the space in which the distributions live.
+
+The topic has four subtopics that develop the Wasserstein distance from its definition to its deepest geometric properties.
+
+The first subtopic is the **formal metric properties** — the proof that $W_p$ is a genuine metric on the space $\mathcal{P}_p(\mathbb{R}^n)$ of probability measures with finite $p$-th moment, the metrization of weak convergence plus moment convergence, and the comparison with other probability distances. This subtopic establishes that the Wasserstein distance is not merely a dissimilarity measure but a true distance function satisfying all three metric axioms.
+
+The second subtopic is the **special structure of $W_1$ and $W_2$** — the two Wasserstein distances that appear most frequently in the roadmap. The $W_1$ distance has the Kantorovich-Rubinstein dual formula $W_1(\mu,\nu) = \sup_{\text{Lip}(f)\leq 1}\int f\,d(\mu-\nu)$, which expresses the distance as a supremum over 1-Lipschitz test functions and makes $W_1$ the norm on the dual of the Lipschitz function space. The $W_2$ distance has the Brenier map formula $W_2^2(\mu,\nu) = \int\|x-T(x)\|^2\,d\mu$ where $T=\nabla\phi$ is the Brenier potential, connecting the $W_2$ distance directly to the convex analysis of Topic 1 and to the Riemannian geometry of the Wasserstein manifold.
+
+The third subtopic is the **Wasserstein manifold** — the formal structure of the space $(\mathcal{P}_2(\mathbb{R}^n), W_2)$ as an infinite-dimensional Riemannian manifold in the sense of Otto calculus. The tangent space at $\mu$ is the space of gradient fields $\{\nabla\phi:\phi\in C^\infty_c(\mathbb{R}^n)\}$ in $L^2(\mu)$, the Riemannian metric is the $L^2(\mu)$ inner product on gradient fields, and the Wasserstein distance is the geodesic distance on this manifold. This subtopic is the bridge between Phase 1 and Phase 3 — the Wasserstein manifold's geometry is what makes the JKO scheme, the Fokker-Planck equation, and Riemannian flow matching all geometrically natural.
+
+The fourth subtopic is the **convergence properties and the central limit theorem for Wasserstein distances** — the rate at which the empirical distribution of $n$ samples converges to the true distribution in Wasserstein distance, the curse of dimensionality in Wasserstein estimation, and the statistical implications for machine learning. This subtopic connects the abstract geometric theory to the practical question of how many samples you need to estimate the Wasserstein distance reliably.
+
+By the end of this topic, the Wasserstein distance will be fully integrated into your geometric understanding of probability distributions. When you see two images that look different but are related by a coherent geometric transformation, you will know that their Wasserstein distance is small while their KL divergence may be large. When you see a generative model trained to minimize the Wasserstein distance between generated and real distributions, you will understand why this training objective produces more geometrically coherent samples than training to minimize KL divergence. And when you see the geodesic on the Wasserstein manifold between two distributions, you will recognize it as the displacement interpolation — the curve that the Wasserstein distance is the length of.
+
+**ALL FOUR SUBTOPICS ARE TREATED AS A SINGLE TOPIC FOR EASY COMPREHENSION.**
+
+---
+
+## Layer 1 (Story)
+
+You are a geographer at Tribhuvan University, and you have been given an unusual assignment. The Ministry of Urban Planning has asked your department to compare the population distributions of Nepal's major cities — Kathmandu, Pokhara, Biratnagar, Birgunj, and Bharatpur — across three different census years: 1991, 2001, and 2011. The question is not simply "did the population grow?" but "how did the spatial distribution of people change?" — how the geographic footprint of each city expanded or contracted, how the density shifted between the old city centers and the newer peripheral areas, and how comparable the growth patterns of different cities are to each other.
+
+Your department has two junior researchers. You give both the same data and the same task: compute a measure of how different the population distributions are between census years, and use it to compare the cities.
+
+The first researcher uses the KL divergence. She divides each city into a grid of one-kilometre squares, computes the fraction of the city's population living in each square in each census year, and measures the KL divergence between the two population distributions. Her numbers are meaningful for comparing the same city across time, but they have a disturbing property: when the city expands geographically between census years — when new neighbourhoods are built on the edge of the city that were unpopulated in the earlier census — the KL divergence is infinite. The denominator of the KL divergence formula has zeros where the new population squares are empty in the reference year, and dividing by zero blows up the measure. The KL divergence cannot handle the case where the support of the distribution changes.
+
+The second researcher uses the Wasserstein distance. He imagines each census year's population distribution as a pile of sand — one grain for each resident, placed at their home location — and asks: what is the minimum total effort required to rearrange the 1991 sand pile into the 2001 configuration? The effort is measured as the number of people times the distance each person is moved. He computes this minimum-effort rearrangement for each city and each pair of census years. His numbers are always finite. They handle expansion into new areas gracefully — residents moving from the old centre to the new periphery travel a definite distance, contributing a definite cost to the total. And his numbers have a natural geographic interpretation: a Wasserstein distance of 500 person-kilometres means the population distribution changed by an amount equivalent to moving 500 people by 1 kilometre each, or 250 people by 2 kilometres each, or 1 person by 500 kilometres.
+
+You immediately see the difference in what the two measures capture. The KL divergence measures how different the population densities are pointwise — it is blind to geographic proximity, treating a move of 10 metres and a move of 10 kilometres as the same kind of difference. The Wasserstein distance measures how much geographic effort the distributional change requires — it is sensitive to how far the population actually moved and always produces a finite, interpretable number.
+
+---
+
+**The Wasserstein distance as minimum-cost rearrangement**
+
+Your second researcher explains the formal structure of his computation. The population distribution in census year 1 is a probability measure $\mu$ on the city's geographic space — the fraction of the city's population living at each location. The population distribution in census year 2 is a probability measure $\nu$. The Wasserstein-1 distance $W_1(\mu,\nu)$ is the minimum cost of transforming $\mu$ into $\nu$, where cost is mass times distance:
+
+$$W_1(\mu,\nu) = \min_{\pi\in\Pi(\mu,\nu)}\int\int |x-y|\,d\pi(x,y)$$
+
+For the Wasserstein-2 distance, the cost is mass times distance squared:
+
+$$W_2(\mu,\nu) = \left(\min_{\pi\in\Pi(\mu,\nu)}\int\int \|x-y\|_2^2\,d\pi(x,y)\right)^{1/2}$$
+
+The squared distance cost penalizes large movements disproportionately — it prefers many short moves to a few long ones. The $W_2$ distance is therefore sensitive to the spread of the distribution, not just its bulk movement. A distribution that keeps its center fixed but becomes more spread out will have a positive $W_2$ distance from the original even though no mass moved far on average.
+
+Both distances are genuine metrics: they are symmetric ($W_p(\mu,\nu) = W_p(\nu,\mu)$ since the coupling problem is symmetric between $\mu$ and $\nu$), zero if and only if the distributions are identical, and satisfy the triangle inequality by the gluing lemma. A city where the population barely moved between census years has a small Wasserstein distance. A city undergoing rapid spatial expansion has a large one.
+
+---
+
+**The Kantorovich-Rubinstein duality for $W_1$: a completely different formula**
+
+Your researcher discovers something remarkable. The $W_1$ distance between the 1991 and 2001 population distributions can be computed in two completely different ways that give the same answer.
+
+The first way is the Kantorovich way: find the optimal coupling — the optimal assignment of 1991 residents to 2001 destinations — and compute the minimum expected distance traveled.
+
+The second way is entirely different. Consider all functions $f$ on the city's geographic space that are 1-Lipschitz — functions where the value changes by at most 1 unit per unit of geographic distance: $|f(x) - f(y)| \leq |x-y|$ for all $x, y$. These are functions that vary as slowly as possible — they cannot have steep gradients, they must be geographically smooth. The $W_1$ distance equals the maximum over all such functions of the difference in their expected values under the two distributions:
+
+$$W_1(\mu,\nu) = \sup_{\text{Lip}(f)\leq 1}\left\{\int f\,d\mu - \int f\,d\nu\right\}$$
+
+This is the Kantorovich-Rubinstein duality. The primal problem optimizes over transport plans. The dual problem optimizes over test functions. They give the same answer.
+
+Your researcher gives a geographic interpretation. Think of $f$ as an elevation map — a height assigned to each location in the city. The 1-Lipschitz condition says the elevation cannot change faster than 1 metre per metre of horizontal distance — the terrain is not too steep. The dual formula says: the $W_1$ distance is the maximum difference in average elevation between the two population distributions, over all terrain maps that are not too steep. If you can find a gently sloping elevation function where the 2001 population lives noticeably higher on average than the 1991 population, that difference measures the distance between the distributions.
+
+This dual interpretation is extraordinarily useful computationally. Instead of optimizing over the enormous space of coupling matrices (an $mn$-dimensional LP when the city is discretized into $m+n$ grid squares), you optimize over 1-Lipschitz functions — a much more tractable problem that can be approximated by a neural network, which is exactly what the Wasserstein GAN training procedure does.
+
+---
+
+**The $W_2$ distance and the Brenier connection**
+
+For the $W_2$ distance, your researcher discovers an even tighter connection to the analysis of Topic 1. When the 1991 population distribution $\mu$ is absolutely continuous — when the population density is a smooth function over the city, not concentrated at specific buildings — the Brenier theorem guarantees a unique optimal transport map $T^* = \nabla\phi$, the gradient of a convex potential. The $W_2$ distance is then:
+
+$$W_2^2(\mu,\nu) = \int \|x - T^*(x)\|_2^2\,d\mu(x) = \int \|x - \nabla\phi(x)\|_2^2\,d\mu(x)$$
+
+The squared Wasserstein-2 distance is the expected squared distance between a resident's 1991 home location $x$ and their optimal 2001 destination $\nabla\phi(x)$. The Brenier potential $\phi$ encodes the entire optimal transport structure in a single scalar function, and the $W_2$ distance is the $L^2$ norm of the displacement field $T^*(x) - x = \nabla\phi(x) - x$.
+
+This connection to the Brenier potential makes $W_2$ the natural distance for the Wasserstein manifold. The displacement field $\nabla\phi - \text{id}$ is a tangent vector at $\mu$ on the Wasserstein manifold — a velocity field that pushes mass from $\mu$ toward $\nu$. The $W_2$ distance is the $L^2(\mu)$ norm of this displacement field. And the geodesic from $\mu$ to $\nu$ — the path of minimum $W_2$ length — is the displacement interpolation: push each particle linearly from $x$ to $\nabla\phi(x)$, parameterizing the path by $t \in [0,1]$, and the intermediate distribution at time $t$ is $\mu_t = ((1-t)\text{id} + t\nabla\phi)_\#\mu$.
+
+---
+
+**Comparing $W_1$ and $W_2$: what each sees**
+
+Your department now compares the two Wasserstein distances across the five cities and three census years. You notice a striking pattern.
+
+For Kathmandu, which expanded primarily by adding new peripheral neighbourhoods while the centre remained dense, $W_1$ and $W_2$ tell slightly different stories. The $W_1$ distance is large — residents moved far from centre to periphery, and the bulk transport cost is high. The $W_2$ distance is even larger relative to $W_1$ than you would expect — because $W_2$ squares the distances before summing, it is disproportionately sensitive to the few residents who moved very far to the outermost new suburbs.
+
+For Pokhara, which grew more uniformly — the entire city expanding outward rather than concentrating growth on one edge — $W_1$ and $W_2$ are more proportionate to each other. The growth is spread across shorter distances, and squaring does not disproportionately amplify any single long movement.
+
+This difference captures a fundamental geometric distinction. The $W_1$ distance sees the total bulk movement — the average distance traveled. The $W_2$ distance sees the geometric spread of the movement — it is sensitive to whether the distribution moved uniformly or concentrated the movement at a few extreme displacements. The $W_2$ distance is the Riemannian distance on the Wasserstein manifold precisely because the Riemannian metric — the $L^2(\mu)$ norm on velocity fields — squares the velocity before integrating, matching the $W_2$ formula.
+
+---
+
+**The manifold of distributions and geodesics**
+
+Your geographer's intuition now leads you to a deeper picture. Think of all possible population distributions over the city as a space — a space whose points are probability distributions and whose geometry is defined by the $W_2$ distance. This space is the Wasserstein manifold.
+
+The Wasserstein distance $W_2(\mu,\nu)$ is the shortest path length between $\mu$ and $\nu$ in this space, measured along geodesics. The geodesic between $\mu$ (the 1991 distribution) and $\nu$ (the 2001 distribution) is the displacement interpolation: the sequence of population distributions $\{\mu_t\}_{t\in[0,1]}$ obtained by moving each resident linearly from their 1991 location to their optimal 2001 destination, parameterized by time $t$. At $t=0$, the distribution is the 1991 census. At $t=1$, the distribution is the 2001 census. At $t=0.5$, the distribution is the population configuration that would have been observed in 1996 if the city had grown by moving residents along straight lines to their 2001 destinations.
+
+The geodesic is not the pointwise average of the two distributions — it is the spatially coherent morphing that moves mass along the optimal transport paths. The pointwise average $\frac{\mu+\nu}{2}$ would produce a blurred distribution with mass spread between 1991 and 2001 locations simultaneously — a ghost city with residents frozen at both their old and new addresses. The Wasserstein geodesic produces a sharp, physically meaningful intermediate distribution where each resident is at a specific location along their journey.
+
+This geometric picture — the Wasserstein manifold, its Riemannian metric, its geodesics as displacement interpolations — is the content of Chapter 3 of Phase 1 and the foundation of Phase 3's generative models. Every diffusion model, every flow matching algorithm, every score-based generative model is operating on the Wasserstein manifold, following its geodesics, and its training objective is related to the Wasserstein distance.
+
+---
+
+**Why the Wasserstein distance beats the KL divergence for training generative models**
+
+Your geographer now understands why the Ministry chose to compare census years using the Wasserstein distance rather than the KL divergence, and this understanding maps directly onto why machine learning practitioners use the Wasserstein distance to train generative models.
+
+When a generative model is early in training, its distribution $\mu_\theta$ and the true data distribution $\nu$ may have disjoint support — the model generates samples in regions where there is no real data, and there is real data in regions where the model generates nothing. In this situation, the KL divergence $D_{KL}(\nu\|\mu_\theta)$ is infinite — the city analogy would be comparing a census year before the new districts exist to one after they exist, getting infinite divergence because the reference distribution has zeros where the new population lives.
+
+The Wasserstein distance handles this gracefully. Even when the supports are disjoint, $W_1(\mu_\theta,\nu)$ is finite and its gradient with respect to the model parameters $\theta$ is well-defined and informative. The gradient says: "move your generated distribution in the direction that reduces the distance to the real distribution, measured by how far the misplaced mass needs to travel." This provides a meaningful training signal even when the model is far from the correct distribution.
+
+This is the foundational observation behind the Wasserstein GAN: replace the KL divergence training objective of the original GAN with the Wasserstein-1 distance, computed via the Kantorovich-Rubinstein dual formula using a 1-Lipschitz discriminator network. The Wasserstein GAN converges more stably, provides gradients that are always well-defined, and the training loss is meaningful throughout training — not just when the distributions nearly overlap.
+
+---
+
+Here is the break moment. The naive assumption is that the Wasserstein distance is computationally tractable for high-dimensional distributions — since it has such a clean formula and such nice geometric properties, surely it can be computed efficiently in any dimension?
+
+This breaks dramatically. The Wasserstein distance between two empirical distributions of $n$ samples each requires solving a transportation LP with $n^2$ variables, costing $O(n^3)$ operations. For continuous distributions in $d$ dimensions, the sample complexity of estimating $W_2$ from $n$ samples is $O(n^{-2/d})$ — exponentially slow in the dimension $d$. In $d=100$ dimensions, you would need astronomically many samples to estimate $W_2$ reliably. This is the curse of dimensionality for the Wasserstein distance, and it is the reason the Sinkhorn algorithm — which approximates the Wasserstein distance with entropic regularization in $O(n^2)$ time — was such a breakthrough. The entropic regularization trades a small amount of geometric accuracy for enormous computational gains, making the Wasserstein distance practical in the high-dimensional settings of machine learning.
+
+The Kantorovich-Rubinstein dual formula provides an alternative escape from the curse of dimensionality for $W_1$: parameterize the 1-Lipschitz test function by a neural network with a Lipschitz constraint, and maximize the dual objective by gradient ascent. This is the Wasserstein GAN's computation of $W_1$ — not by solving the LP directly, but by optimizing the dual objective over a function class. The dual formula is not just a theoretical curiosity — it is the computational tool that makes the Wasserstein distance practical in high dimensions.
+
+---
+
+Hold four pictures simultaneously.
+
+The sand pile rearrangement: two census year population distributions as sand piles, the minimum effort to rearrange one into the other as the Wasserstein distance, always finite, always geometrically interpretable.
+
+The Kantorovich-Rubinstein dual: the $W_1$ distance as the supremum of the average elevation difference over all 1-Lipschitz terrain functions — the primal transportation problem and the dual Lipschitz function problem giving the same answer.
+
+The Wasserstein manifold geodesic: the displacement interpolation between two census distributions as the geodesic in the space of distributions, a coherent morphing rather than a blurry average, with the $W_2$ distance as the geodesic length.
+
+The curse of dimensionality: the exponential cost of computing the Wasserstein distance from samples in high dimensions, the motivation for the Sinkhorn algorithm's entropic regularization, and the dual formula's role as the computationally practical alternative.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the formal metric properties of $W_p$, the Kantorovich-Rubinstein duality for $W_1$, the Brenier formula for $W_2$ and the Wasserstein manifold in Otto calculus, the convergence properties and statistical estimation, the comparison with other probability distances, and the Wasserstein distance between Gaussians via the Bures metric.
+
+### Formal Metric Properties
+
+**Definition.** For $p \in [1,\infty)$, the **$p$-Wasserstein distance** between $\mu, \nu \in \mathcal{P}_p(\mathbb{R}^n)$ is:
+
+$$W_p(\mu,\nu) = \left(\inf_{\pi \in \Pi(\mu,\nu)} \int_{\mathbb{R}^n \times \mathbb{R}^n} \|x-y\|_2^p \, d\pi(x,y)\right)^{1/p}$$
+
+The infimum is attained by the existence theorem of Topic 2.
+
+**Theorem.** $W_p$ is a metric on $\mathcal{P}_p(\mathbb{R}^n)$.
+
+**Proof of the three axioms:**
+
+**Positivity.** $W_p(\mu,\nu) \geq 0$ is clear. If $W_p(\mu,\nu) = 0$, the optimal $\pi^*$ satisfies $\int\|x-y\|^p\,d\pi^* = 0$, so $\pi^*$ is supported on $\{(x,x):x\in\mathbb{R}^n\}$. Therefore $\mu = (\text{proj}_x)_\#\pi^* = (\text{proj}_y)_\#\pi^* = \nu$.
+
+**Symmetry.** For any $\pi\in\Pi(\mu,\nu)$, the pushforward $\bar\pi = S_\#\pi$ under $S(x,y)=(y,x)$ belongs to $\Pi(\nu,\mu)$ with the same cost. Hence $W_p(\mu,\nu) = W_p(\nu,\mu)$.
+
+**Triangle inequality.** Given $\mu,\nu,\rho \in \mathcal{P}_p(\mathbb{R}^n)$, let $\pi_1^* \in \Pi(\mu,\nu)$ and $\pi_2^* \in \Pi(\nu,\rho)$ be optimal. By the gluing lemma (Topic 2), there exists $\tilde\pi \in \mathcal{P}(\mathbb{R}^n \times \mathbb{R}^n \times \mathbb{R}^n)$ with $(\text{proj}_{xy})_\#\tilde\pi = \pi_1^*$ and $(\text{proj}_{yz})_\#\tilde\pi = \pi_2^*$. The projection $\pi_{xz} = (\text{proj}_{xz})_\#\tilde\pi \in \Pi(\mu,\rho)$ satisfies:
+
+$$W_p(\mu,\rho)^p \leq \int\|x-z\|^p\,d\pi_{xz}$$
+
+By Minkowski's inequality in $L^p(\tilde\pi)$:
+
+$$\left(\int\|x-z\|^p\,d\tilde\pi\right)^{1/p} \leq \left(\int\|x-y\|^p\,d\tilde\pi\right)^{1/p} + \left(\int\|y-z\|^p\,d\tilde\pi\right)^{1/p} = W_p(\mu,\nu) + W_p(\nu,\rho)$$
+
+Raising to the $p$-th power and using $(a+b)^p \leq 2^{p-1}(a^p+b^p)$... actually we directly have $W_p(\mu,\rho) \leq W_p(\mu,\nu) + W_p(\nu,\rho)$ from Minkowski. $\square$
+
+---
+
+### Metrization of Weak Convergence
+
+**Theorem.** A sequence $(\mu_k) \subset \mathcal{P}_p(\mathbb{R}^n)$ satisfies $W_p(\mu_k,\mu) \to 0$ if and only if:
+
+$$\text{(i) } \mu_k \rightharpoonup \mu \quad \text{(weak convergence)}$$
+$$\text{(ii) } \int \|x\|^p \, d\mu_k \to \int \|x\|^p \, d\mu \quad \text{(convergence of $p$-th moments)}$$
+
+**Proof sketch.** ($\Rightarrow$) If $W_p(\mu_k,\mu) \to 0$, take optimal couplings $\pi_k^*$. Then $\int f\,d\mu_k = \int f(x)\,d\pi_k^*(x,y) \to \int f(x)\,d\pi^*(x,y) = \int f\,d\mu$ for bounded continuous $f$ by tightness of $(\pi_k^*)$. Moment convergence follows from $W_p(\mu_k,\mu)^p \geq |\int\|x\|^p\,d\mu_k - \int\|x\|^p\,d\mu|$ (after checking).
+
+($\Leftarrow$) Weak convergence gives relative compactness of $(\pi_k^*)$ by Prokhorov. Moment convergence gives uniform integrability, ruling out mass escape to infinity. Together they give $W_p(\mu_k,\mu) \to 0$. $\square$
+
+The Wasserstein distance is thus strictly stronger than weak convergence: a sequence can converge weakly without converging in $W_p$ if moments diverge (e.g., $\mu_k = \delta_k$ converges weakly to nothing on $\mathbb{R}$ but $W_p(\delta_0,\delta_k) = k \to \infty$).
+
+---
+
+### The Kantorovich-Rubinstein Duality for $W_1$
+
+**Theorem (Kantorovich-Rubinstein).** For $\mu,\nu \in \mathcal{P}_1(\mathbb{R}^n)$:
+
+$$W_1(\mu,\nu) = \sup\left\{\int f\,d\mu - \int f\,d\nu : \text{Lip}(f) \leq 1\right\}$$
+
+where $\text{Lip}(f) = \sup_{x\neq y}\frac{|f(x)-f(y)|}{\|x-y\|}$ is the Lipschitz constant of $f$.
+
+**Proof.** This is the Kantorovich dual (Topic 4 will derive the general dual) specialized to $c(x,y) = \|x-y\|$. The dual of the LP $\min_{\pi\in\Pi(\mu,\nu)}\int\|x-y\|\,d\pi$ is:
+
+$$\sup_{\phi,\psi: \phi(x)+\psi(y)\leq\|x-y\|}\left\{\int\phi\,d\mu+\int\psi\,d\nu\right\}$$
+
+For $c(x,y) = \|x-y\|$, the constraint $\phi(x)+\psi(y)\leq\|x-y\|$ for all $x,y$ is equivalent (via the $c$-transform) to $\psi = -\phi$ and $\phi(x)-\phi(y)\leq\|x-y\|$ for all $x,y$ — i.e., $\text{Lip}(\phi)\leq 1$. With $\psi = -\phi$, the dual becomes $\sup_{\text{Lip}(f)\leq 1}\{\int f\,d\mu - \int f\,d\nu\}$. Strong duality holds by Fenchel duality. $\square$
+
+**The dual formula as a norm.** The Kantorovich-Rubinstein formula can be written:
+
+$$W_1(\mu,\nu) = \|\mu-\nu\|_{\text{BL}^*}$$
+
+where $\|\cdot\|_{\text{BL}^*}$ is the dual norm to the bounded-Lipschitz norm $\|f\|_{\text{BL}} = \|f\|_\infty + \text{Lip}(f)$. The $W_1$ distance is a norm on the space of signed measures — it is the dual norm of the Lipschitz function space. This makes $W_1$ a linear functional of $\mu-\nu$, giving it properties not shared by $W_2$.
+
+**Neural network approximation.** For empirical distributions $\hat\mu_n = \frac{1}{n}\sum_i\delta_{x_i}$ and $\hat\nu_n = \frac{1}{n}\sum_j\delta_{y_j}$:
+
+$$W_1(\hat\mu_n,\hat\nu_n) \approx \sup_{f_\theta: \text{Lip}(f_\theta)\leq 1}\left\{\frac{1}{n}\sum_i f_\theta(x_i) - \frac{1}{n}\sum_j f_\theta(y_j)\right\}$$
+
+The supremum over 1-Lipschitz functions is approximated by a neural network $f_\theta$ with a Lipschitz constraint enforced by weight clipping, gradient penalty, or spectral normalization. This is the **Wasserstein GAN** (WGAN) training procedure: the discriminator network $f_\theta$ approximates the optimal 1-Lipschitz test function, and its output estimates $W_1$ between the generated and real distributions.
+
+---
+
+### The $W_2$ Distance and Otto Calculus
+
+**Brenier formula.** When $\mu \ll \lambda^n$:
+
+$$W_2^2(\mu,\nu) = \int_{\mathbb{R}^n} \|x - \nabla\phi(x)\|_2^2 \, d\mu(x)$$
+
+where $\phi$ is the Brenier potential (unique convex function with $(\nabla\phi)_\#\mu = \nu$). This connects $W_2$ directly to convex analysis.
+
+**Otto calculus.** Felix Otto showed that $(\mathcal{P}_2(\mathbb{R}^n), W_2)$ has the formal structure of an infinite-dimensional Riemannian manifold. The key objects are:
+
+**Tangent space at $\mu$.** The tangent space $T_\mu\mathcal{P}_2$ is the $L^2(\mu)$-closure of gradient fields:
+
+$$T_\mu\mathcal{P}_2 = \overline{\{\nabla\phi : \phi \in C^\infty_c(\mathbb{R}^n)\}}^{L^2(\mu)}$$
+
+A tangent vector $v \in T_\mu\mathcal{P}_2$ represents an infinitesimal displacement of mass — the velocity field that pushes $\mu$ in the direction $v$.
+
+**Riemannian metric.** The inner product on $T_\mu\mathcal{P}_2$ is the $L^2(\mu)$ inner product:
+
+$$\langle v, w\rangle_\mu = \int_{\mathbb{R}^n} \langle v(x), w(x)\rangle \, d\mu(x)$$
+
+This gives the norm $\|v\|_\mu = \sqrt{\int\|v\|^2\,d\mu}$ on tangent vectors.
+
+**Geodesics.** The geodesic from $\mu$ to $\nu$ with initial velocity $v_0 = \nabla\phi - \text{id}$ (the displacement field) is the displacement interpolation:
+
+$$\mu_t = ((1-t)\text{id} + t\nabla\phi)_\#\mu, \quad t \in [0,1]$$
+
+The geodesic equation on the Wasserstein manifold is the **pressureless Euler equation** (Euler equation for an ideal fluid with no pressure):
+
+$$\partial_t v_t + (v_t \cdot \nabla)v_t = 0, \qquad \partial_t\mu_t + \nabla\cdot(\mu_t v_t) = 0$$
+
+The first equation says the velocity field is transported by itself (no acceleration). The second is the continuity equation (mass conservation). Together they characterize the geodesic as the path of minimum kinetic energy.
+
+**Geodesic distance.** The $W_2$ distance equals the length of the geodesic:
+
+$$W_2(\mu,\nu) = \int_0^1 \|v_t\|_{\mu_t}\,dt = \int_0^1\sqrt{\int\|v_t(x)\|^2\,d\mu_t(x)}\,dt$$
+
+For the displacement interpolation with constant velocity $v_t = \nabla\phi - \text{id}$, this simplifies to $W_2(\mu,\nu) = \|\nabla\phi - \text{id}\|_{L^2(\mu)}$.
+
+---
+
+### The Continuity Equation — The Tangent Space Link
+
+The connection between the tangent space and actual deformations of $\mu$ is given by the continuity equation. A curve $(\mu_t)_{t\in[0,1]}$ in $\mathcal{P}_2(\mathbb{R}^n)$ is absolutely continuous with velocity field $(v_t)$ if the **continuity equation** holds in the distributional sense:
+
+$$\partial_t \mu_t + \nabla\cdot(\mu_t v_t) = 0$$
+
+This is the transport equation: the rate of change of the density at each point equals the negative divergence of the mass flux $\mu_t v_t$. The continuity equation is the infinite-dimensional analogue of the chain rule in the Wasserstein manifold.
+
+**Theorem (Lisini).** Every absolutely continuous curve $(\mu_t)$ in $(\mathcal{P}_2(\mathbb{R}^n), W_2)$ satisfies the continuity equation with some velocity field $v_t \in T_{\mu_t}\mathcal{P}_2$, and the metric derivative equals the $L^2(\mu_t)$ norm of the velocity:
+
+$$|\dot\mu_t| = \lim_{s\to t}\frac{W_2(\mu_s,\mu_t)}{|s-t|} = \|v_t\|_{\mu_t}$$
+
+This theorem is the precise statement that the Riemannian metric on the Wasserstein manifold is the $L^2(\mu)$ norm on velocity fields — the formal content of Otto calculus.
+
+---
+
+### Wasserstein Distance in One Dimension
+
+The one-dimensional case is completely explicit.
+
+**Theorem.** For $\mu,\nu \in \mathcal{P}_p(\mathbb{R})$ with CDFs $F_\mu$ and $F_\nu$ and quantile functions $F_\mu^{-1}$ and $F_\nu^{-1}$:
+
+$$W_p^p(\mu,\nu) = \int_0^1 |F_\mu^{-1}(t) - F_\nu^{-1}(t)|^p \, dt$$
+
+For $p=1$: $W_1(\mu,\nu) = \int_{-\infty}^\infty |F_\mu(x) - F_\nu(x)|\,dx$ — the $L^1$ distance between CDFs.
+
+For $p=2$: $W_2^2(\mu,\nu) = \int_0^1 |F_\mu^{-1}(t) - F_\nu^{-1}(t)|^2\,dt$ — the squared $L^2$ distance between quantile functions.
+
+These formulas make the Wasserstein distance in one dimension computable in $O(n\log n)$ time (sort both samples, pair order statistics) — far cheaper than the general $O(n^3)$ LP.
+
+---
+
+### Statistical Estimation and the Curse of Dimensionality
+
+**Empirical approximation.** Given $n$ i.i.d. samples $X_1,\ldots,X_n \sim \mu$, the empirical measure is $\hat\mu_n = \frac{1}{n}\sum_i\delta_{X_i}$. The estimation rate for $W_p(\hat\mu_n,\mu)$ depends strongly on dimension:
+
+$$\mathbb{E}[W_p(\hat\mu_n,\mu)] \asymp \begin{cases} n^{-1/2} & d = 1 \\ (n^{-1}\log n)^{1/2} & d = 2 \\ n^{-1/d} & d \geq 3 \end{cases}$$
+
+For $d \geq 3$, convergence slows dramatically with dimension — this is the **curse of dimensionality** for Wasserstein estimation. In $d=100$, you need $n \sim \epsilon^{-100}$ samples to estimate $W_2$ to accuracy $\epsilon$, which is computationally infeasible.
+
+**Sliced Wasserstein.** The **sliced Wasserstein distance** addresses the curse of dimensionality by averaging one-dimensional Wasserstein distances over random projections:
+
+$$\text{SW}_p(\mu,\nu) = \left(\int_{S^{n-1}} W_p^p(\theta_\#\mu, \theta_\#\nu)\,d\sigma(\theta)\right)^{1/p}$$
+
+where $\theta_\#\mu$ is the pushforward of $\mu$ under the projection $x\mapsto\langle\theta,x\rangle$ and $\sigma$ is the uniform measure on the unit sphere. The sliced Wasserstein distance can be estimated in $O(Ln\log n)$ time with $L$ random projections, and its estimation rate is $O(n^{-1/2})$ regardless of dimension (since each one-dimensional projection is estimated at the $d=1$ rate).
+
+---
+
+### Comparison with Other Distances
+
+The Wasserstein distances relate to other probability metrics in precise ways.
+
+**KL divergence and Talagrand inequality.** For $\nu = \mathcal{N}(0,I_n)$:
+
+$$W_2^2(\mu,\nu) \leq 2D_{KL}(\mu\|\nu)$$
+
+This is **Talagrand's $T_2$ inequality** — the Wasserstein-2 distance is bounded above by the square root of the KL divergence (after appropriate scaling). The inequality reflects that KL divergence controls more than just geometry — it also controls density ratios — so it dominates $W_2$.
+
+**Total variation.** The coupling characterization gives $\text{TV}(\mu,\nu) = \inf_{\pi\in\Pi(\mu,\nu)}\pi(\{x\neq y\})$. For distributions supported on a bounded domain of diameter $D$:
+
+$$W_1(\mu,\nu) \leq D \cdot \text{TV}(\mu,\nu)$$
+
+Total variation is at least as sensitive as normalized $W_1$ on bounded domains.
+
+**Pinsker inequality.** $\text{TV}(\mu,\nu) \leq \sqrt{D_{KL}(\mu\|\nu)/2}$. Combined with the above: $W_1(\mu,\nu) \leq D\sqrt{D_{KL}(\mu\|\nu)/2}$.
+
+**Hierarchy for $p$.** For any $1 \leq p \leq q < \infty$:
+
+$$W_p(\mu,\nu) \leq W_q(\mu,\nu)$$
+
+by Jensen's inequality (since $\|\cdot\|^p$ is concave in $\|\cdot\|^q$ for $p < q$). The Wasserstein distances form an increasing hierarchy — $W_1 \leq W_2 \leq \cdots$ — with higher $p$ being more sensitive to large-scale geometry.
+
+---
+
+### Wasserstein Distance Between Gaussians
+
+For Gaussian measures $\mu = \mathcal{N}(m_1,\Sigma_1)$ and $\nu = \mathcal{N}(m_2,\Sigma_2)$, the $W_2$ distance has the closed-form Bures-Wasserstein formula (from Chapter 4 of Phase 0):
+
+$$W_2^2(\mathcal{N}(m_1,\Sigma_1),\mathcal{N}(m_2,\Sigma_2)) = \|m_1-m_2\|_2^2 + \mathcal{B}(\Sigma_1,\Sigma_2)^2$$
+
+where:
+
+$$\mathcal{B}(\Sigma_1,\Sigma_2)^2 = \text{tr}(\Sigma_1) + \text{tr}(\Sigma_2) - 2\text{tr}\!\left((\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})^{1/2}\right)$$
+
+The optimal transport map is the affine Brenier map $T^*(x) = m_2 + A(x-m_1)$ where $A = \Sigma_1^{-1/2}(\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})^{1/2}\Sigma_1^{-1/2}$ satisfies $A\Sigma_1 A = \Sigma_2$.
+
+For diagonal covariances $\Sigma_i = \text{diag}(\sigma_{i1}^2,\ldots,\sigma_{in}^2)$:
+
+$$W_2^2 = \|m_1-m_2\|_2^2 + \sum_{k=1}^n(\sigma_{1k}-\sigma_{2k})^2$$
+
+The $W_2$ distance between Gaussians decomposes into mean shift plus standard deviation mismatch in each principal direction.
+
+---
+
+### The JKO Scheme and Gradient Flows
+
+The $W_2$ distance is the foundational object of the JKO (Jordan-Kinderlehrer-Otto) scheme — the discrete-time gradient descent on the Wasserstein manifold.
+
+For an energy functional $\mathcal{F}: \mathcal{P}_2(\mathbb{R}^n) \to \mathbb{R}$, the **JKO scheme** with step size $\tau > 0$ defines a sequence of distributions:
+
+$$\mu_{k+1} = \argmin_{\mu \in \mathcal{P}_2(\mathbb{R}^n)}\left\{\mathcal{F}(\mu) + \frac{W_2^2(\mu,\mu_k)}{2\tau}\right\}$$
+
+Each step minimizes the energy $\mathcal{F}$ while staying close to the current distribution in $W_2$ distance. As $\tau\to 0$, the discrete-time scheme converges to the **Wasserstein gradient flow** — the continuous-time curve $(\mu_t)$ satisfying:
+
+$$\partial_t\mu_t = -\text{grad}_{W_2}\mathcal{F}(\mu_t)$$
+
+where $\text{grad}_{W_2}$ is the Riemannian gradient on the Wasserstein manifold.
+
+**Canonical examples:**
+
+For $\mathcal{F}(\mu) = \int V\,d\mu$ (potential energy): the Wasserstein gradient flow is $\partial_t\mu_t = \nabla\cdot(\mu_t\nabla V)$ — the **continuity equation** driven by the potential gradient.
+
+For $\mathcal{F}(\mu) = \int\mu\log\mu\,d\lambda$ (negative entropy): the Wasserstein gradient flow is $\partial_t\mu_t = \Delta\mu_t$ — the **heat equation**.
+
+For $\mathcal{F}(\mu) = \int V\,d\mu + \int\mu\log\mu\,d\lambda$ (free energy): the Wasserstein gradient flow is $\partial_t\mu_t = \nabla\cdot(\mu_t\nabla V) + \Delta\mu_t$ — the **Fokker-Planck equation**.
+
+The Fokker-Planck equation governs the evolution of the probability density in a Langevin diffusion $dX_t = -\nabla V(X_t)\,dt + \sqrt{2}\,dW_t$. The JKO theorem says: this SDE is the gradient flow of the free energy on the Wasserstein manifold. The connection between the JKO scheme and the Fokker-Planck equation is the bridge from Phase 1 to Phase 3's score-based generative models.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 208 (Statistics and Probability), weak convergence of probability measures — $\mu_k\rightharpoonup\mu$ meaning $\int f\,d\mu_k\to\int f\,d\mu$ for all bounded continuous $f$ — is now metrized by $W_p$: $W_p(\mu_k,\mu)\to 0$ iff weak convergence plus moment convergence. The characteristic function convergence theorem you used in MATH 208 (convergence in distribution iff characteristic functions converge pointwise) is the weak convergence condition without the moment requirement — Wasserstein convergence is strictly stronger. In MATH 217 (ODEs and PDEs), the Fokker-Planck equation $\partial_t p = \nabla\cdot(p\nabla V) + \Delta p$ appeared as a PDE to be solved analytically. It is now recognized as the Wasserstein gradient flow of the free energy functional — a geometric equation on the Wasserstein manifold whose solutions are the density evolutions of Langevin diffusion SDEs. In MATH 304 (Computational Operations Research), the transportation LP you solved is the discrete $W_1$ computation, and the dual variables (shadow prices) are the optimal 1-Lipschitz test function values at the grid points — the discrete Kantorovich-Rubinstein potential.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Tribhuvan University geography story has a precise mathematical address. Let us walk through them one by one, until the census distributions, the elevation test functions, the Wasserstein manifold geodesics, and the full formal apparatus are completely fused into a single picture.
+
+---
+
+**The population distribution of a Nepali city in a census year — the fraction of the city's total population living at each geographic location — is the probability measure $\mu \in \mathcal{P}_2(\mathbb{R}^2)$ on the city's geographic plane.** The measure $\mu(A)$ is the fraction of residents living in geographic region $A$. It is a probability measure because fractions sum to 1. It has finite second moment $\int\|x\|_2^2\,d\mu(x) < \infty$ because the city is bounded — all residents live within some finite geographic radius of the city center. The 1991 population distribution is $\mu$. The 2001 population distribution is $\nu$. Both are elements of the space $\mathcal{P}_2(\mathbb{R}^2)$ of probability measures with finite second moment, and the $W_2$ distance between them is the minimum cost rearrangement of the population between the two census years.
+
+**The first researcher's KL divergence — which breaks when new neighborhoods are built in areas that were unpopulated in the reference year — is the formal statement that KL divergence requires absolute continuity $\nu\ll\mu$.** The KL divergence $D_{KL}(\nu\|\mu) = \int\log\frac{d\nu}{d\mu}\,d\nu$ requires the Radon-Nikodym derivative $d\nu/d\mu$ to exist, which requires $\nu\ll\mu$ — every set that $\mu$ assigns zero probability must also receive zero probability under $\nu$. When new neighborhoods are built between census years, there are locations with $\nu(\{x\}) > 0$ (residents in 2001) but $\mu(\{x\}) = 0$ (no residents in 1991) — the absolute continuity condition fails and the KL divergence is infinite. The Wasserstein distance has no such requirement: $W_2(\mu,\nu)$ is always finite when both distributions have finite second moments, regardless of whether their supports overlap.
+
+**The second researcher's minimum-effort rearrangement — moving residents from their 1991 locations to their 2001 locations at minimum total person-kilometres — is the Kantorovich problem $\min_{\pi\in\Pi(\mu,\nu)}\int\|x-y\|_2^2\,d\pi(x,y)$ and its square root is $W_2(\mu,\nu)$.** The coupling $\pi(dx,dy)$ describes how much of the 1991 population at $x$ becomes the 2001 population at $y$. The cost $\|x-y\|_2^2$ is the squared geographic distance traveled by that fraction of the population. Integrating over all source-destination pairs gives the expected squared distance traveled by a randomly selected resident. The minimum over all valid couplings gives $W_2^2(\mu,\nu)$. The interpretation "500 person-kilometres" for $W_1(\mu,\nu) = 500$ means the minimum total transport effort is 500 units of mass times distance — equivalently 500 residents each moving 1 kilometre, or 250 moving 2 kilometres. The geometric interpretability of the Wasserstein distance — always finite, always measurable in natural units of mass times distance — is the formal consequence of the Kantorovich problem always being feasible and the minimum always being attained.
+
+---
+
+**The symmetry $W_p(\mu,\nu) = W_p(\nu,\mu)$ — the distance from the 1991 census to the 2001 census equals the distance from 2001 back to 1991 — is the formal proof that swapping the roles of source and target gives the same minimum cost.** For any coupling $\pi\in\Pi(\mu,\nu)$, the swap $\bar\pi = S_\#\pi$ under $S(x,y)=(y,x)$ is a coupling in $\Pi(\nu,\mu)$ with the same cost $\int\|x-y\|^p\,d\pi = \int\|y-x\|^p\,d\bar\pi$. The infimum over $\Pi(\mu,\nu)$ and the infimum over $\Pi(\nu,\mu)$ are therefore equal. Geographically: the minimum cost of moving the 1991 population into the 2001 configuration equals the minimum cost of moving the 2001 population back to the 1991 configuration — the optimal transport is reversible.
+
+**The positivity $W_p(\mu,\nu) > 0$ for $\mu \neq \nu$ — the Wasserstein distance is zero if and only if the two census distributions are identical — is the proof that the optimal coupling for zero-cost transport must be the diagonal measure.** If $W_p(\mu,\nu)^p = \int\|x-y\|^p\,d\pi^* = 0$ for the optimal coupling $\pi^*$, then $\pi^*$ is supported on the set $\{(x,y):\|x-y\|^p=0\} = \{(x,x):x\in\mathbb{R}^n\}$ — the diagonal. A coupling supported on the diagonal has the property that the $x$ and $y$ marginals are equal: $\mu = (\text{proj}_x)_\#\pi^* = (\text{proj}_y)_\#\pi^* = \nu$. If the two census distributions are identical, there is zero-cost transport — no one needs to move. If they differ, every coupling must have positive cost because mass must genuinely travel between different locations.
+
+**The triangle inequality $W_p(\mu,\rho) \leq W_p(\mu,\nu) + W_p(\nu,\rho)$ — the cost of going from the 1991 distribution to the 2011 distribution is at most the cost of going via the 2001 distribution — is the gluing lemma applied to the three census years.** The gluing lemma produces a joint distribution $\tilde\pi$ on $(1991\text{ location}) \times (2001\text{ location}) \times (2011\text{ location})$ that simultaneously realizes the optimal 1991-to-2001 coupling and the optimal 2001-to-2011 coupling. The 1991-to-2011 marginal of $\tilde\pi$ is a valid (generally suboptimal) coupling of $\mu_{91}$ and $\mu_{11}$. Its cost, bounded by the sum of the two sub-costs via Minkowski's inequality, gives the triangle inequality. Geographically: routing via the intermediate census year may require some residents to make a detour through their 2001 location before reaching their 2011 location, which is generally suboptimal but valid.
+
+---
+
+**The Kantorovich-Rubinstein dual formula $W_1(\mu,\nu) = \sup_{\text{Lip}(f)\leq 1}\{\int f\,d\mu - \int f\,d\nu\}$ — the $W_1$ distance as the maximum elevation difference over 1-Lipschitz terrain functions — is the LP duality applied to the $c(x,y) = \|x-y\|$ transportation problem.** The terrain function $f: \mathbb{R}^2\to\mathbb{R}$ assigns an elevation to each geographic location. The 1-Lipschitz condition $|f(x)-f(y)|\leq\|x-y\|$ says the terrain cannot be steeper than a 45-degree slope — elevation cannot change faster than 1 metre per metre of horizontal distance. The quantity $\int f\,d\mu - \int f\,d\nu$ is the difference in average elevation between the 1991 and 2001 populations — how much higher on average the 2001 population lives compared to the 1991 population, on the terrain $f$. The dual formula says: the $W_1$ distance is the maximum of this elevation difference over all non-too-steep terrains. The terrain that achieves the maximum is the optimal dual potential — the 1-Lipschitz function that best separates the 1991 and 2001 population distributions.
+
+**The dual formula as a norm $W_1(\mu,\nu) = \|\mu-\nu\|_{\text{BL}^*}$ — the $W_1$ distance as the dual norm of the bounded-Lipschitz function space — is the linear algebraic structure that makes $W_1$ special among Wasserstein distances.** The difference measure $\mu-\nu$ is a signed measure with total mass zero (both $\mu$ and $\nu$ are probability measures). The $W_1$ distance is the operator norm of $\mu-\nu$ viewed as a functional on 1-Lipschitz functions: $W_1(\mu,\nu) = \sup_{\|f\|_{\text{BL}}\leq 1}|(\mu-\nu)(f)|$. This makes $W_1$ a norm — not just a metric — on the space of signed measures with zero total mass. The norm structure means $W_1(\lambda\mu_1+(1-\lambda)\mu_2,\nu) \leq \lambda W_1(\mu_1,\nu) + (1-\lambda)W_1(\mu_2,\nu)$ — convexity in the first argument — and more generally all the algebraic properties of a norm.
+
+**The Wasserstein GAN's discriminator network — a neural network $f_\theta$ approximating the optimal 1-Lipschitz test function — is the dual formula implemented computationally.** Instead of solving the $O(n^3)$ transportation LP to compute $W_1$ between the generated and real distributions, the WGAN maximizes $\frac{1}{n}\sum_i f_\theta(x_i) - \frac{1}{n}\sum_j f_\theta(y_j)$ over the discriminator network parameters $\theta$ subject to the Lipschitz constraint $\text{Lip}(f_\theta)\leq 1$. The discriminator is learning the optimal terrain elevation function that best separates the two distributions. The gradient of this maximum with respect to the generator parameters $\theta_G$ gives the training signal that pushes the generated distribution toward the real distribution, measured in $W_1$. The dual formula is not just a theoretical curiosity — it is the algorithm.
+
+---
+
+**The metrization of weak convergence — $W_p(\mu_k,\mu)\to 0$ iff $\mu_k\rightharpoonup\mu$ and $p$-th moments converge — is the precise statement of when a sequence of census distributions "converges" to a limiting distribution in the Wasserstein sense.** The weak convergence condition says: for any bounded continuous geographic function $f$ (say, average altitude), the average of $f$ under $\mu_k$ converges to the average under $\mu$. This is the distributional convergence — the population's statistical profile converges. The moment convergence says: the average squared distance from the origin also converges — no mass escapes to geographic infinity. Together they give Wasserstein convergence: the population distribution converges both in shape and in spatial scale. The example $\mu_k = \delta_k$ (all residents moving to location $k$ on the number line) converges weakly to nothing (the mass escapes to infinity) but fails $W_p$ convergence because $W_p(\delta_0,\delta_k) = k\to\infty$ — the spatial scale diverges even as the distributional shape (a point mass) stays the same.
+
+---
+
+**The Wasserstein manifold — the space of all population distributions over the city, equipped with the $W_2$ metric — is the infinite-dimensional Riemannian manifold $(\mathcal{P}_2(\mathbb{R}^2), W_2)$ in Otto calculus.** Each point is a population distribution — a specific census-year snapshot. The tangent space at $\mu$ is the $L^2(\mu)$-closure of gradient vector fields — the space of all possible infinitesimal velocity fields by which the population could move, measured in the natural $L^2(\mu)$ norm. The Riemannian metric $\langle v,w\rangle_\mu = \int\langle v(x),w(x)\rangle\,d\mu(x)$ is the expected inner product of two velocity fields under the current distribution — it measures how much two infinitesimal movements are "in the same direction" on average across the population. The $W_2$ distance is the geodesic distance on this manifold — the length of the shortest path through the space of distributions connecting $\mu$ to $\nu$.
+
+**The displacement interpolation $\mu_t = ((1-t)\text{id}+t\nabla\phi)_\#\mu$ — the intermediate population distribution at time $t$ obtained by linearly interpolating each resident's position between their 1991 and 2001 optimal destinations — is the geodesic on the Wasserstein manifold from $\mu$ to $\nu$.** At $t=0$: $\mu_0 = \text{id}_\#\mu = \mu$ — the 1991 distribution. At $t=1$: $\mu_1 = (\nabla\phi)_\#\mu = \nu$ — the 2001 distribution. At $t=0.5$: $\mu_{0.5}$ is the intermediate distribution obtained by moving each resident halfway to their optimal 2001 destination — the "1996 distribution" if the city had grown linearly. The geodesic is not the pointwise average $\frac{\mu+\nu}{2}$ (which would double-count residents at both their 1991 and 2001 addresses simultaneously) — it is the spatially coherent morphing that moves each resident along the optimal transport path. The geodesic equation on the Wasserstein manifold is the pressureless Euler equation $\partial_t v_t + (v_t\cdot\nabla)v_t = 0$ — the population flows as a pressureless fluid with no self-interaction forces, purely following the inertia of the initial velocity field.
+
+**The continuity equation $\partial_t\mu_t + \nabla\cdot(\mu_t v_t) = 0$ — the PDE that any absolutely continuous curve of distributions must satisfy — is the mass conservation law for the population flow.** The term $\nabla\cdot(\mu_t v_t)$ is the divergence of the population flux — how much population is flowing into or out of each location per unit time. The continuity equation says the rate of change of population density at each location equals the negative divergence of the flux — residents arriving from neighboring areas increase the local density, residents leaving decrease it. The metric derivative $|\dot\mu_t| = \|v_t\|_{\mu_t}$ is the Lisini theorem: the speed at which the distribution is changing (in $W_2$) equals the $L^2(\mu_t)$ norm of the velocity field — the root-mean-squared speed of the population flow at time $t$.
+
+---
+
+**The Fokker-Planck equation as the JKO gradient flow — $\partial_t\mu_t = \nabla\cdot(\mu_t\nabla V) + \Delta\mu_t$ is the Wasserstein gradient flow of the free energy $\mathcal{F}(\mu) = \int V\,d\mu + \int\mu\log\mu\,d\lambda$ — is the geometric statement connecting Phase 1 to Phase 3.** The JKO scheme $\mu_{k+1} = \argmin_\mu\{\mathcal{F}(\mu) + W_2^2(\mu,\mu_k)/(2\tau)\}$ alternately decreases the free energy and stays close to the current distribution in $W_2$. As $\tau\to 0$, this becomes the continuous-time Wasserstein gradient flow. The Wasserstein gradient $\text{grad}_{W_2}\mathcal{F}(\mu) = -\nabla\cdot(\mu\nabla(V+\log\mu))$ is the Riemannian gradient — the vector field on the Wasserstein manifold pointing in the direction of steepest descent of $\mathcal{F}$. Setting this equal to $-\partial_t\mu_t$ gives the Fokker-Planck equation. The JKO scheme is gradient descent on the Wasserstein manifold, and the Fokker-Planck equation is the continuous-time limit — the ordinary differential equation on the manifold of distributions that the heat equation and Langevin diffusion satisfy.
+
+**The sliced Wasserstein distance $\text{SW}_p(\mu,\nu) = (\int_{S^{n-1}}W_p^p(\theta_\#\mu,\theta_\#\nu)\,d\sigma(\theta))^{1/p}$ — averaging one-dimensional Wasserstein distances over random projections — is the curse-of-dimensionality escape that makes the Wasserstein distance practical in high dimensions.** Each projection $\theta_\#\mu$ is the one-dimensional distribution of the population projected onto the direction $\theta$ — the distribution of distances from the city center in direction $\theta$. The one-dimensional $W_p$ distance between projections is computable in $O(n\log n)$ by sorting. Averaging over $L$ random directions costs $O(Ln\log n)$. The statistical estimation rate of $\text{SW}_p$ is $O(n^{-1/2})$ regardless of dimension — the curse of dimensionality is broken because the heavy lifting is done one dimension at a time. The sliced Wasserstein distance is an approximation to the true $W_p$ distance, but it is a geometrically meaningful approximation that inherits many of $W_p$'s properties.
+
+---
+
+**The break moment — the exponential sample complexity of estimating $W_2$ in high dimensions — is the formal proof that the beautiful Wasserstein geometry is computationally intractable without approximation.** The estimation rate $\mathbb{E}[W_p(\hat\mu_n,\mu)] \asymp n^{-1/d}$ for $d\geq 3$ means that in $d=100$ dimensions, you need $n\sim\epsilon^{-100}$ samples to estimate $W_2$ to accuracy $\epsilon$. This is not a practical limitation — it is a fundamental statistical lower bound. No estimator, however clever, can do better than $O(n^{-1/d})$ in the minimax sense. The curse of dimensionality for Wasserstein estimation is the reason the Sinkhorn algorithm (Chapter 2 of Phase 1) uses entropic regularization: the regularized Wasserstein distance has better statistical properties and can be estimated in $O(n^{-2/(d+4)})$ sample complexity — still dimension-dependent, but with a better exponent. The Kantorovich-Rubinstein dual formula for $W_1$ provides a different escape: by restricting the supremum to a neural network function class rather than all 1-Lipschitz functions, the statistical complexity is controlled by the function class complexity (Rademacher complexity) rather than the ambient dimension.
+
+---
+
+**The connection to MATH 217 (ODEs and PDEs) closes through the Fokker-Planck equation and the continuity equation.** The PDEs you solved in MATH 217 — the heat equation $\partial_t u = \Delta u$, the advection equation $\partial_t u = -v\cdot\nabla u$, the Fokker-Planck equation — are all special cases of the continuity equation $\partial_t\mu_t + \nabla\cdot(\mu_t v_t) = 0$ for different choices of velocity field $v_t$. The heat equation corresponds to $v_t = -\nabla\log\mu_t$ — the score function pointing in the direction of increasing density. The Fokker-Planck equation corresponds to $v_t = -\nabla V - \nabla\log\mu_t$ — drift plus diffusion. The Wasserstein framework reveals that all these PDEs are gradient flows on the Wasserstein manifold of the free energy functional, and their well-posedness and long-time behavior are governed by the convexity of the free energy in the Wasserstein sense — a concept called geodesic convexity on the Wasserstein manifold.
+
+**The connection to MATH 208 (Statistics and Probability) closes through weak convergence and the CLT for Wasserstein.** The central limit theorem you proved in MATH 208 — $\sqrt{n}(\bar X_n - \mu)\rightharpoonup\mathcal{N}(0,\sigma^2)$ — is a weak convergence statement. The Wasserstein version says: the empirical measure $\hat\mu_n = \frac{1}{n}\sum_i\delta_{X_i}$ satisfies $W_p(\hat\mu_n,\mu) \to 0$ at rate $O(n^{-1/d})$ for $d\geq 3$ — a rate that quantifies how quickly the empirical distribution converges to the true distribution in the geometric Wasserstein metric. The Berry-Esseen theorem giving the rate of CLT convergence in total variation is the $p=0$ analogue; the Wasserstein version gives the rate in the geometrically meaningful metric.
+
+---
+
+**Looking forward across the roadmap**, the Wasserstein distance is the thread connecting every chapter. In Phase 1's final chapter, the Wasserstein geodesics — the displacement interpolations between distributions — are developed explicitly as the central object of Wasserstein geometry. In Phase 2, the graph Wasserstein distance — the Wasserstein distance between distributions on graph-structured data — provides the geometrically correct measure of similarity between graphs, used in graph classification and graph generation tasks. In Phase 3, the score matching objective $\mathbb{E}[\|\nabla\log p_\theta-\nabla\log p\|^2]$ is related to the $W_2$ distance through the Talagrand inequality: minimizing the Fisher divergence (the score matching objective) bounds the $W_2$ distance between the model and data distributions. The flow matching loss $\mathbb{E}[\|v_\theta(\mu_t,t)-\dot\mu_t\|_{L^2(\mu_t)}^2]$ is the $L^2(\mu_t)$ norm of the difference between the learned and true velocity fields — the Riemannian metric on the Wasserstein manifold evaluated on the error in the learned dynamics. The JKO scheme's proximal step is a $W_2$ optimization. The diffusion model's forward and reverse processes are curves on the Wasserstein manifold. The entire geometric architecture of Phase 3 is the Wasserstein manifold of Phase 1, now equipped with specific dynamical processes that follow its geodesics.
+
+The census geographer's minimum-effort rearrangement — moving residents from their 1991 locations to their 2001 locations at minimum total person-kilometres — is the Wasserstein distance. The elevation terrain that best separates the two population distributions — the optimal 1-Lipschitz test function — is the Kantorovich-Rubinstein dual. The geodesic on the Wasserstein manifold from 1991 to 2001 — the spatially coherent morphing that moves each resident along the optimal path — is the displacement interpolation. All three are the same geometric object, seen from three different angles.
+
+---
+---

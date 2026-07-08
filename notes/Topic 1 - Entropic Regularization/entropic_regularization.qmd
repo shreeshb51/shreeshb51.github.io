@@ -1,0 +1,322 @@
+# Topic 1 - Entropic Regularization: Making Optimal Transport Smooth
+
+## Introduction
+
+The Kantorovich problem is geometrically perfect and computationally brutal. Its solution — the optimal coupling $\pi^*$ — is a sparse object. In the discrete case with $n$ source points and $n$ target points, the optimal coupling concentrates its mass on at most $2n - 1$ pairs out of the $n^2$ possible pairs. It is the extreme point of a polytope, found by the simplex method, and it costs $O(n^3)$ to compute. Every time you want to compute a Wasserstein distance inside a training loop, you are paying that cubic price. At any serious scale, this is unacceptable.
+
+The question is whether you can modify the Kantorovich problem slightly — perturbing it just enough to make computation tractable — without destroying the geometric meaning of the Wasserstein distance.
+
+Entropic regularization is that modification. It adds a single penalty term to the Kantorovich objective: a term that measures how concentrated the coupling is, and penalizes concentration. The penalty pushes the optimal coupling away from the sparse extreme-point solution toward a smoother, more diffuse distribution over transport pairs. The resulting problem is strictly convex, has a unique solution with a closed-form structure, and can be solved by a simple iterative algorithm that costs $O(n^2)$ per iteration.
+
+This topic covers three bullet points from the roadmap: the entropic regularization itself — what the penalty term is and why it is the right one — the structural form of the regularized solution — why it must be a Gibbs kernel scaled by two diagonal vectors — and the trade-off controlled by the regularization parameter $\varepsilon$ — what you gain and what you lose as $\varepsilon$ varies.
+
+The first bullet is **entropic regularization** — the addition of $+\varepsilon H(\pi)$ to the Kantorovich objective, where $H(\pi)$ is the negative KL divergence of the coupling $\pi$ with respect to the product measure $\mu \otimes \nu$, equivalently the relative entropy measuring how far $\pi$ is from independence. Large $H(\pi)$ means the coupling is spread out and nearly independent. Small $H(\pi)$ means the coupling is concentrated and nearly deterministic. Adding $+\varepsilon H(\pi)$ to a minimization problem penalizes low entropy — penalizes concentration — and pushes the solution toward smoother couplings.
+
+The second bullet is **the structure of the regularized solution** — the fact that the unique minimizer of the regularized problem must have the form $\pi^*_\varepsilon(x,y) \propto e^{-c(x,y)/\varepsilon}$, modulated by two marginal-correction factors. This Gibbs form is not an assumption — it is a theorem, derived from the first-order optimality conditions of the regularized problem. The exponential of the negative cost is the kernel, and the marginal constraints force it to be scaled row-wise and column-wise until the marginals match. This product structure is precisely what makes the Sinkhorn algorithm possible.
+
+The third bullet is **the $\varepsilon$ trade-off** — understanding what the regularization parameter controls geometrically and computationally. As $\varepsilon \to 0$, the regularized solution converges to the exact Kantorovich solution but becomes numerically unstable. As $\varepsilon \to \infty$, the solution converges to the independent product $\mu \otimes \nu$ — the coupling that ignores transport cost entirely — and loses geometric meaning. The practical regime is small but not too small: large enough for numerical stability, small enough that the regularized Wasserstein distance remains a faithful approximation of the true Wasserstein distance.
+
+By the end of this topic, you will understand why entropy is the right regularizer — not a heuristic choice, but the unique penalty that produces a solution with the Gibbs product structure that makes Sinkhorn work. The computational breakthrough of Chapter 2 rests entirely on this structural insight.
+
+---
+
+## Layer 1 (Story)
+
+You are the head of the postal sorting office in Kathmandu's main distribution hub, and you have inherited a crisis.
+
+Every morning, thousands of parcels arrive from districts across the western hills — Pokhara, Baglung, Myagdi — and must be dispatched to addresses across the eastern Terai — Janakpur, Birgunj, Biratnagar. Each parcel has a source district and a destination district. Your job is to design the sorting plan: which parcel goes on which truck, which truck takes which route.
+
+Your predecessor solved this problem the hard way. Every morning, he called in a team of operations researchers, handed them the full manifest — every parcel, every address, every route cost — and asked them to solve the exact optimal assignment. Find the cheapest possible sorting plan. Move every parcel to its destination at minimum total cost. They solved it using the transportation simplex method, exactly as you learned in MATH 304. The solution was perfect. It was also the reason the trucks left three hours late every single day.
+
+The exact optimal plan is a sparse object. Out of thousands of possible parcel-to-route assignments, the optimal solution uses only a handful — the extreme point of a polytope, concentrated on the cheapest routes, ignoring everything else. Finding that sparse extreme point requires the full cubic machinery of the simplex method. As the number of parcels and destinations grows, the computation time grows as the cube of that number. Double the parcels, wait eight times as long. The trucks cannot wait.
+
+You need a better approach. Not a perfect plan — a fast, good-enough plan that gets the trucks moving on time.
+
+---
+
+**The new policy: penalize obsessive efficiency**
+
+Your senior logistics consultant — the same mathematician who explained the no-crossing principle — walks in with an unconventional proposal.
+
+The reason the exact optimal plan takes so long to compute, she explains, is that it is too decisive. It concentrates all its choices on a tiny number of routes, ignoring everything else. The simplex method has to search the entire polytope of valid sorting plans, checking extreme point after extreme point, until it finds the single sparsest, cheapest one.
+
+What if, instead of demanding the cheapest plan, you demanded a plan that is cheap but also spread out? A plan that does not put all its eggs in one basket — that distributes parcels across multiple routes, not just the single cheapest one, while still preferring cheaper routes over expensive ones?
+
+Such a plan would not be perfectly optimal. It would be slightly more expensive than the true minimum. But it would be far easier to compute, because you are no longer looking for a sparse extreme point. You are looking for a smooth, interior solution — a plan that spreads its weight across many routes, weighted by their costs.
+
+To implement this, your consultant introduces a new rule into the sorting office: you must pay a penalty every time your sorting plan becomes too concentrated. The penalty is proportional to how decisive your plan is — how sharply it commits to a small number of routes and ignores the rest. Plans that spread parcels evenly across many routes pay a small penalty. Plans that concentrate everything on a single route pay a large penalty.
+
+This penalty has a name in information theory: it is the negative entropy of the sorting plan.
+
+---
+
+**What entropy measures in the sorting office**
+
+Imagine your sorting plan as a probability distribution over route assignments. For each possible pair — parcel from district $x$, delivered via route to destination $y$ — your plan assigns a weight $\pi(x,y)$ describing how much of the flow goes along that pair. A perfectly decisive plan puts all its weight on a single pair: one route, used for everything. A perfectly spread-out plan puts equal weight on every possible pair: all routes used equally.
+
+The entropy of your plan measures its spread. A plan concentrated on a single route has very low entropy — it is highly predictable, highly decisive. A plan spread uniformly across all routes has very high entropy — it is maximally uncertain, maximally spread.
+
+The negative entropy $-H(\pi)$ is the concentration penalty. Low entropy means high concentration means high penalty. High entropy means low concentration means low penalty.
+
+Your new objective is: minimize the total transport cost of the sorting plan, plus a small multiple $\varepsilon$ of the concentration penalty. You want a plan that is cheap, but not so obsessively cheap that it becomes a computational nightmare to find.
+
+Formally, you are minimizing:
+
+$$\text{total transport cost} + \varepsilon \times \text{concentration penalty}$$
+
+where the concentration penalty is the negative entropy of the plan.
+
+The parameter $\varepsilon$ — the regularization strength — is the dial that controls how much you care about spreading the plan out. Turn $\varepsilon$ all the way down to zero: the penalty disappears, and you are back to the exact Kantorovich problem, the trucks leave three hours late. Turn $\varepsilon$ all the way up to infinity: the penalty dominates, you use every route equally regardless of cost, the trucks leave on time but the fuel bill is catastrophic. The practical regime is somewhere in between: $\varepsilon$ small enough that the plan is still geometrically meaningful, large enough that the computation is fast and numerically stable.
+
+---
+
+**The structure of the regularized solution: why the optimal plan must be a Gibbs distribution**
+
+Your consultant now makes the key observation that drives the entire Sinkhorn algorithm.
+
+Suppose you have fixed the total amount of flow leaving each source district and the total amount arriving at each destination district — the marginal constraints. You want to find the sorting plan $\pi(x,y)$ that minimizes transport cost plus concentration penalty, subject to these marginal constraints.
+
+Write the cost of route $(x,y)$ as $c(x,y)$ — the expense of moving a parcel from district $x$ to destination $y$. Your objective is to choose the flow weights $\pi(x,y)$ to minimize:
+
+$$\sum_{x,y} c(x,y)\pi(x,y) - \varepsilon \sum_{x,y} \pi(x,y)\log\pi(x,y)$$
+
+subject to the row and column sum constraints.
+
+Ignore the marginal constraints for a moment — just minimize the cost plus penalty over all non-negative $\pi$. Take the derivative with respect to $\pi(x,y)$ and set it to zero:
+
+$$c(x,y) - \varepsilon(\log\pi(x,y) + 1) = 0$$
+
+Solving: $\log\pi(x,y) = c(x,y)/\varepsilon - 1$, so:
+
+$$\pi(x,y) \propto e^{-c(x,y)/\varepsilon}$$
+
+The optimal unconstrained plan is the Gibbs distribution — the exponential of the negative cost, scaled by the temperature $\varepsilon$. Cheap routes get exponentially higher weight than expensive routes. The sharpness of this preference is controlled by $\varepsilon$: small $\varepsilon$ means very sharp preference for cheap routes, large $\varepsilon$ means nearly uniform preference.
+
+This is not a heuristic — it is the exact first-order optimality condition of the regularized problem. The regularized optimal coupling must have Gibbs form.
+
+Now restore the marginal constraints. The plan must also satisfy: the total flow out of each source district equals the source mass $\mu(x)$, and the total flow into each destination equals the target mass $\nu(y)$. The Gibbs distribution $e^{-c(x,y)/\varepsilon}$ does not generally satisfy these constraints. You need to correct it — scale its rows until the row sums match $\mu$, and scale its columns until the column sums match $\nu$.
+
+The key insight: because the unconstrained solution has the product form $e^{-c(x,y)/\varepsilon}$, the marginal-corrected solution must have the form:
+
+$$\pi^*(x,y) = u(x) \cdot e^{-c(x,y)/\varepsilon} \cdot v(y)$$
+
+for some positive scaling functions $u(x)$ and $v(y)$ — one factor per source district, one factor per destination. The Gibbs kernel is sandwiched between two diagonal scalings, one on each side.
+
+Finding $u$ and $v$ is now a simple problem. Normalize the rows to match $\mu$: this fixes $u$ given $v$. Normalize the columns to match $\nu$: this fixes $v$ given $u$. Alternate. Repeat. This is the Sinkhorn algorithm, and its convergence is guaranteed because the regularized problem is strictly convex — there is exactly one solution, and the alternating normalization converges to it geometrically.
+
+---
+
+**The break moment**
+
+Here is the naive assumption that breaks.
+
+You might think: the smaller the $\varepsilon$, the better. After all, you want to approximate the true Wasserstein distance, and smaller $\varepsilon$ means the regularized solution is closer to the exact optimal coupling. Why not just use a very small $\varepsilon$ and get as close to the truth as you want?
+
+This breaks in the sorting office immediately.
+
+For small $\varepsilon$, the Gibbs kernel entries $e^{-c(x,y)/\varepsilon}$ span an enormous range of values. A cheap route with $c(x,y) = 1$ and an expensive route with $c(x,y) = 100$ at $\varepsilon = 0.01$ give kernel values $e^{-100}$ and $e^{-10000}$ respectively — numbers so astronomically small that no floating-point representation can distinguish them from zero. The entire kernel matrix underflows to zero. The Sinkhorn normalization divides by these zeros. The algorithm collapses.
+
+The problem is not mathematical — the regularized solution exists and is unique for any $\varepsilon > 0$. The problem is numerical. The Gibbs kernel in standard floating-point arithmetic loses all information when $\varepsilon$ is small, because the exponential function maps large negative numbers to values indistinguishable from zero.
+
+The fix is the log-sum-exp trick: instead of working with the kernel $K_{ij} = e^{-c(x,y)/\varepsilon}$ directly, work in log-space. Replace the scaling vectors $u$ and $v$ with their logarithms $f = \varepsilon \log u$ and $g = \varepsilon \log v$. The multiplicative Sinkhorn iterations become additive log-sum-exp operations, which remain numerically stable regardless of how small $\varepsilon$ is. The exponential is never explicitly computed — only differences of log-values are, and these remain in a reasonable numerical range.
+
+The naive assumption — smaller $\varepsilon$ is always better — breaks against the wall of floating-point arithmetic. The log-sum-exp trick is not a hack. It is the mandatory stabilization that makes the Sinkhorn algorithm usable in practice.
+
+---
+
+Hold three pictures simultaneously as you move to the mathematics.
+
+The sorting office: a flow distribution over parcel-route pairs, penalized for concentration, optimal when spread according to the Gibbs distribution weighted by route cost — this is entropic regularization.
+
+The Gibbs kernel sandwiched between two diagonal scalings: $\pi^*(x,y) = u(x) \cdot e^{-c(x,y)/\varepsilon} \cdot v(y)$ — this is the structural form of the regularized solution, derived from first-order optimality, and it is what makes Sinkhorn possible.
+
+The $\varepsilon$ dial: turned to zero, you recover exact OT but lose computation; turned to infinity, you lose geometry but gain speed; the practical regime lives in between, stabilized by the log-sum-exp trick when $\varepsilon$ is small.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in five stages: the precise statement of the regularized Kantorovich problem, the derivation of the Gibbs solution structure, the dual of the regularized problem, the $\varepsilon$-convergence theory, and the connection to KL divergence.
+
+### The Regularized Kantorovich Problem — Precise Statement
+
+Let $\mu \in \mathcal{P}(\mathcal{X})$ and $\nu \in \mathcal{P}(\mathcal{Y})$ be discrete measures supported on $m$ and $n$ points respectively, with weight vectors $a \in \Sigma_m$ and $b \in \Sigma_n$ (probability simplices). Let $C \in \mathbb{R}^{m \times n}_+$ be the cost matrix with $C_{ij} = c(x_i, y_j)$.
+
+The **entropic regularization** of the Kantorovich problem adds a KL divergence penalty:
+
+$$\text{OT}_\varepsilon(\mu,\nu) = \min_{P \in \Pi(a,b)} \left\{ \langle C, P \rangle - \varepsilon H(P) \right\}$$
+
+where:
+
+$$\langle C, P \rangle = \sum_{i,j} C_{ij} P_{ij}$$
+
+is the total transport cost, and:
+
+$$H(P) = -\sum_{i,j} P_{ij} \log P_{ij}$$
+
+is the **Shannon entropy** of the coupling matrix $P$, with the convention $0 \log 0 = 0$.
+
+The feasible set is:
+
+$$\Pi(a,b) = \left\{ P \in \mathbb{R}^{m\times n}_+ : P\mathbf{1}_n = a, \, P^\top \mathbf{1}_m = b \right\}$$
+
+Equivalently, writing the penalty as a KL divergence with respect to the product measure $a \otimes b$:
+
+$$\text{OT}_\varepsilon(\mu,\nu) = \min_{P \in \Pi(a,b)} \left\{ \langle C, P \rangle + \varepsilon \, \text{KL}(P \| a \otimes b) - \varepsilon H(a) - \varepsilon H(b) \right\}$$
+
+Since $H(a)$ and $H(b)$ are constants independent of $P$, minimizing $\langle C,P\rangle - \varepsilon H(P)$ is equivalent to minimizing $\langle C,P\rangle + \varepsilon\,\text{KL}(P \| a\otimes b)$. The KL divergence form makes clear that entropic regularization penalizes deviation of $P$ from the independent product coupling $a \otimes b$ — the coupling that assigns no information about transport structure at all.
+
+**Strict convexity.** The function $P \mapsto -H(P) = \sum_{ij} P_{ij}\log P_{ij}$ is strictly convex on $\mathbb{R}^{m\times n}_+$ (as a sum of strictly convex functions $t \mapsto t\log t$). Adding it to the linear objective $\langle C, P\rangle$ produces a strictly convex objective over the convex feasible set $\Pi(a,b)$. Therefore $\text{OT}_\varepsilon$ has a **unique minimizer** $P^*_\varepsilon$ for every $\varepsilon > 0$.
+
+---
+
+### The Gibbs Structure — Derivation from First-Order Optimality
+
+**Theorem (Gibbs form of the regularized solution).** The unique solution $P^*_\varepsilon$ of the regularized Kantorovich problem has the form:
+
+$$P^*_\varepsilon = \text{diag}(u) \cdot K \cdot \text{diag}(v)$$
+
+where $K \in \mathbb{R}^{m\times n}_+$ is the **Gibbs kernel**:
+
+$$K_{ij} = e^{-C_{ij}/\varepsilon}$$
+
+and $u \in \mathbb{R}^m_+$, $v \in \mathbb{R}^n_+$ are strictly positive scaling vectors uniquely determined (up to a multiplicative constant exchanged between $u$ and $v$) by the marginal constraints:
+
+$$\text{diag}(u) K \text{diag}(v) \mathbf{1}_n = a, \quad \text{diag}(u) K^\top \text{diag}(v) \mathbf{1}_m = b$$
+
+**Proof.** Form the Lagrangian with multipliers $f \in \mathbb{R}^m$ (for row constraints) and $g \in \mathbb{R}^n$ (for column constraints):
+
+$$\mathcal{L}(P, f, g) = \sum_{ij} C_{ij}P_{ij} + \varepsilon\sum_{ij}P_{ij}\log P_{ij} - \sum_i f_i\left(\sum_j P_{ij} - a_i\right) - \sum_j g_j\left(\sum_i P_{ij} - b_j\right)$$
+
+Taking the derivative with respect to $P_{ij}$ and setting to zero:
+
+$$C_{ij} + \varepsilon(\log P_{ij} + 1) - f_i - g_j = 0$$
+
+Solving for $P_{ij}$:
+
+$$\log P_{ij} = \frac{f_i + g_j - C_{ij}}{\varepsilon} - 1$$
+
+$$P_{ij} = e^{f_i/\varepsilon - 1/2} \cdot e^{-C_{ij}/\varepsilon} \cdot e^{g_j/\varepsilon - 1/2}$$
+
+Setting $u_i = e^{f_i/\varepsilon - 1/2}$ and $v_j = e^{g_j/\varepsilon - 1/2}$, this is exactly $P_{ij} = u_i K_{ij} v_j$, giving the matrix form $P^*_\varepsilon = \text{diag}(u) K \text{diag}(v)$. $\square$
+
+The Lagrange multipliers $f_i$ and $g_j$ are the dual potentials of the regularized problem — the entropic analogues of the Kantorovich potentials $\phi$ and $\psi$ from Topic 4. Their relationship to the scaling vectors is:
+
+$$f_i = \varepsilon \log u_i + \frac{\varepsilon}{2}, \qquad g_j = \varepsilon \log v_j + \frac{\varepsilon}{2}$$
+
+---
+
+### The Dual of the Regularized Problem
+
+The regularized Kantorovich problem has a dual that parallels the Kantorovich dual of Topic 4, with the hard constraint $\phi(x) + \psi(y) \leq c(x,y)$ replaced by a soft penalty.
+
+**Theorem (Entropic dual).** The dual of $\text{OT}_\varepsilon$ is:
+
+$$\text{OT}_\varepsilon(\mu,\nu) = \max_{f \in \mathbb{R}^m, g \in \mathbb{R}^n} \left\{ \langle f, a\rangle + \langle g, b\rangle - \varepsilon \sum_{ij} e^{(f_i + g_j - C_{ij})/\varepsilon} \cdot a_i b_j + \varepsilon \right\}$$
+
+The dual variables $f \in \mathbb{R}^m$ and $g \in \mathbb{R}^n$ are the **entropic potentials** — the log-domain versions of the Kantorovich potentials. Strong duality holds: the primal minimum equals the dual maximum, and the optimal primal solution $P^*_\varepsilon$ is recovered from the optimal dual variables via $P^*_{ij} = a_i b_j e^{(f_i + g_j - C_{ij})/\varepsilon}$.
+
+The Sinkhorn iterations, derived in Topic 2, are coordinate ascent steps on this dual objective — alternately optimizing over $f$ while holding $g$ fixed, then over $g$ while holding $f$ fixed.
+
+---
+
+### The $\varepsilon$-Convergence Theory
+
+**Theorem ($\varepsilon \to 0$ limit).** As $\varepsilon \to 0^+$:
+
+$$\text{OT}_\varepsilon(\mu,\nu) \to \text{OT}_0(\mu,\nu) = W_c(\mu,\nu)$$
+
+and the regularized optimal coupling $P^*_\varepsilon$ converges weakly to the **maximum entropy optimal coupling** — the coupling in $\arg\min_{\pi \in \Pi^*(a,b)} \text{KL}(\pi \| a\otimes b)$, where $\Pi^*(a,b)$ is the set of exact Kantorovich optimal couplings. Among all optimal exact couplings, the regularized solution selects the one closest to independence.
+
+**Theorem ($\varepsilon \to \infty$ limit).** As $\varepsilon \to \infty$:
+
+$$P^*_\varepsilon \to a \otimes b$$
+
+the independent product coupling, and $\text{OT}_\varepsilon(\mu,\nu) \to \langle C, a\otimes b\rangle - \varepsilon H(a) - \varepsilon H(b)$, which diverges. The regularized distance loses all transport structure.
+
+**Approximation error.** For finite $\varepsilon$:
+
+$$0 \leq \text{OT}_\varepsilon(\mu,\nu) - W_c(\mu,\nu) \leq \varepsilon \log(mn)$$
+
+The regularized OT overestimates the true Wasserstein distance by at most $\varepsilon \log(mn)$. This bound is sharp in general. For a fixed approximation tolerance $\delta$, choose $\varepsilon \leq \delta / \log(mn)$.
+
+**Differentiability.** Unlike $W_c(\mu,\nu)$, which is not differentiable with respect to the input weights $a$ and $b$ when the optimal coupling is non-unique, $\text{OT}_\varepsilon(\mu,\nu)$ is **infinitely differentiable** in $a$ and $b$ for every $\varepsilon > 0$. The gradient is:
+
+$$\nabla_a \text{OT}_\varepsilon = f^*, \qquad \nabla_b \text{OT}_\varepsilon = g^*$$
+
+where $(f^*, g^*)$ are the optimal entropic potentials. This differentiability is the property that makes $\text{OT}_\varepsilon$ usable as a loss function in neural network training via backpropagation.
+
+---
+
+### KL Divergence Formulation and the Gibbs Variational Principle
+
+The entropic regularization can be understood through the **Gibbs variational principle** from statistical mechanics. For any probability distribution $Q$ over states and a Hamiltonian (energy function) $E$:
+
+$$\min_{Q} \left\{ \mathbb{E}_Q[E] - \varepsilon H(Q) \right\} = -\varepsilon \log \sum_{\text{states}} e^{-E/\varepsilon}$$
+
+and the minimizer is the Gibbs (Boltzmann) distribution $Q^* \propto e^{-E/\varepsilon}$. The entropic Kantorovich problem is precisely the Gibbs variational principle applied to the probability distribution $P$ over transport pairs $(i,j)$, with energy $E_{ij} = C_{ij}$ and temperature $\varepsilon$. The regularized optimal coupling is the Boltzmann distribution over transport pairs, with cheaper pairs assigned exponentially higher probability.
+
+The KL divergence form makes the regularization interpretation precise:
+
+$$\text{OT}_\varepsilon(\mu,\nu) + \varepsilon H(a) + \varepsilon H(b) = \min_{P \in \Pi(a,b)} \left\{ \varepsilon \, \text{KL}(P \| K_\varepsilon) \right\} + \langle C^*, a\otimes b\rangle$$
+
+where $K_\varepsilon = (a_i K_{ij} b_j)_{ij}$ is the normalized Gibbs kernel. The regularized problem finds the coupling $P$ closest to the Gibbs kernel $K_\varepsilon$ in KL divergence, subject to the marginal constraints. The Sinkhorn algorithm solves this KL projection problem by alternating projections — first projecting onto the row-constraint set, then onto the column-constraint set — in the KL geometry. This is the information-geometric interpretation of Sinkhorn: it is Bregman alternating projections with the KL divergence as the Bregman divergence.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 208 (Statistics and Probability), the KL divergence $\text{KL}(P\|Q) = \sum_i P_i \log(P_i/Q_i)$ measures how much information is lost when $Q$ is used to approximate $P$. The entropic regularization penalty $\varepsilon\,\text{KL}(P\|a\otimes b)$ penalizes the coupling for carrying information beyond the marginals — for encoding transport structure that goes beyond what the marginals alone imply. Setting $\varepsilon$ large forces $P \approx a\otimes b$, the maximum-ignorance coupling. Setting $\varepsilon$ small allows $P$ to encode sharp transport structure at the cost of computational difficulty.
+
+In MATH 304 (Computational Operations Research), the Lagrangian duality approach used to derive the Gibbs form is exactly the method you applied to derive the KKT conditions for constrained optimization. The Lagrange multipliers $f_i$ and $g_j$ are the shadow prices of the row and column constraints — the dual variables of the transportation LP, now appearing in the exponent of the Gibbs kernel rather than as linear potentials. Every LP duality argument from MATH 304 applies to the regularized problem, with the difference that the logarithmic barrier term $\varepsilon\sum P_{ij}\log P_{ij}$ replaces the indicator function of the feasible set, converting the LP into a smooth strictly convex program.
+
+In MSCS 202 (Numerical Methods), the condition number of a matrix controls the convergence rate of iterative solvers. The Sinkhorn algorithm's convergence rate is controlled by the condition number of the Gibbs kernel $K$, which degrades as $\varepsilon \to 0$ — the entries of $K$ span an exponentially large range, making the matrix increasingly ill-conditioned. The log-sum-exp stabilization of Topic 3 is the numerical analysis fix for this ill-conditioning, exactly analogous to the pivoting strategies and scaling techniques you studied for linear system solvers.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Kathmandu postal sorting office story has a precise mathematical address. Let us walk through them one by one until the concentration penalty, the Gibbs kernel, the scaling vectors, and the $\varepsilon$ dial are completely fused with the formalism.
+
+---
+
+**The sorting plan — the assignment of parcel flows across all possible source-destination pairs — is the coupling matrix $P \in \Pi(a,b)$.** Each entry $P_{ij} \geq 0$ is the amount of mass transported from source point $x_i$ to destination point $y_j$. The row sum constraint $P\mathbf{1}_n = a$ says the total flow leaving each source district equals the source mass — all surplus parcels are dispatched. The column sum constraint $P^\top\mathbf{1}_m = b$ says the total flow arriving at each destination equals the target mass — all deficits are exactly met. The feasible set $\Pi(a,b)$ is the set of all valid sorting plans: non-negative matrices with prescribed row and column sums. The exact Kantorovich solution is a sparse extreme point of this polytope — a corner solution that uses only $2n-1$ of the $n^2$ possible routes, found by the simplex method at cubic cost.
+
+**The concentration penalty — the rule that punishes sorting plans for being too decisive — is the negative Shannon entropy $-H(P) = \sum_{ij} P_{ij}\log P_{ij}$.** Low entropy means high concentration: the plan commits all its flow to a tiny number of routes, exactly like the sparse Kantorovich solution. High entropy means high spread: the plan distributes flow across many routes, weighted by their costs. Adding $-\varepsilon H(P)$ to the minimization objective penalizes low entropy — penalizes concentration — and pushes the solution away from the sparse extreme point and toward a smooth interior solution. The regularized objective $\langle C, P\rangle - \varepsilon H(P)$ is strictly convex because $-H(P)$ is strictly convex, guaranteeing a unique minimizer for every $\varepsilon > 0$. The cubic search over polytope vertices is replaced by a smooth convex minimization with a unique interior solution.
+
+**The KL divergence reformulation — penalizing the coupling for carrying information beyond the marginals — is the equivalent form $\langle C,P\rangle + \varepsilon\,\text{KL}(P\|a\otimes b)$.** The product measure $a\otimes b$ is the maximum-ignorance coupling: the joint distribution that assigns no transport information at all, treating source and destination as independent. The KL divergence $\text{KL}(P\|a\otimes b)$ measures how far the sorting plan $P$ deviates from this total ignorance. Penalizing this deviation with weight $\varepsilon$ says: you may encode transport structure in your plan, but you pay a price proportional to how much structure you encode. The entropic regularization is not an arbitrary smoothing — it is the unique penalty that corresponds to projecting onto the marginal constraints in the KL geometry, which is exactly what the Sinkhorn algorithm does.
+
+---
+
+**The first-order optimality condition — setting the derivative of the Lagrangian to zero — is the derivation that forces the Gibbs form $P_{ij} \propto e^{-C_{ij}/\varepsilon}$ on the unconstrained solution.** The Lagrangian from MATH 304's KKT conditions attaches multipliers $f_i$ to the row constraints and $g_j$ to the column constraints. Differentiating with respect to $P_{ij}$ and setting to zero gives $C_{ij} + \varepsilon(\log P_{ij} + 1) - f_i - g_j = 0$, which solves to $P_{ij} = e^{(f_i + g_j - C_{ij})/\varepsilon - 1}$. This is the Gibbs-Boltzmann distribution from statistical mechanics: the probability of a transport pair $(i,j)$ is proportional to the exponential of the negative cost divided by the temperature $\varepsilon$. Cheap routes are exponentially more likely than expensive routes. The sharpness of this preference is controlled by $\varepsilon$: the Lagrange multipliers $f_i$ and $g_j$ are the entropic potentials — the dual variables of the regularized problem, the entropic analogues of the Kantorovich potentials $\phi$ and $\psi$ from Topic 4.
+
+**The Gibbs kernel — the matrix $K_{ij} = e^{-C_{ij}/\varepsilon}$ whose entries are the exponentials of the negative scaled costs — is the unconstrained regularized solution, before marginal correction.** The kernel $K$ encodes the full transport preference structure: entry $K_{ij}$ is large when the route $(i,j)$ is cheap and small when it is expensive. It does not satisfy the marginal constraints — its row sums are not $a$ and its column sums are not $b$. It is the raw Gibbs distribution over transport pairs, which must be scaled to match the prescribed marginals. The Gibbs kernel is the fixed object computed once at the start of the Sinkhorn algorithm and never changed — all subsequent computation is the search for the two scaling vectors that bring its marginals into agreement with $a$ and $b$.
+
+**The scaling vectors $u \in \mathbb{R}^m_+$ and $v \in \mathbb{R}^n_+$ — the per-district correction factors that adjust the Gibbs kernel to match the marginals — are the positive vectors satisfying $P^*_\varepsilon = \text{diag}(u)\cdot K\cdot\text{diag}(v)$.** The vector $u_i = e^{f_i/\varepsilon - 1/2}$ is the exponential of the row dual potential, and $v_j = e^{g_j/\varepsilon - 1/2}$ is the exponential of the column dual potential. In the sorting office: $u_i$ is the multiplicative correction applied to all routes leaving source district $x_i$, ensuring the total flow out of $x_i$ equals $a_i$. The vector $v_j$ is the multiplicative correction applied to all routes arriving at destination $y_j$, ensuring the total flow into $y_j$ equals $b_j$. The regularized optimal coupling is completely determined by the Gibbs kernel and these two vectors — a dramatic dimensional reduction from $mn$ free parameters to $m + n$ free parameters.
+
+---
+
+**The $\varepsilon$ dial — the regularization parameter that controls the trade-off between transport fidelity and computational tractability — is the temperature parameter governing the sharpness of the Gibbs distribution.** At $\varepsilon \to 0$: the Gibbs kernel becomes infinitely sharp, concentrating all weight on the cheapest routes, and $P^*_\varepsilon$ converges to the maximum-entropy exact Kantorovich coupling — the true Wasserstein solution. The approximation error $\text{OT}_\varepsilon - W_c \leq \varepsilon\log(mn)$ goes to zero, but the kernel matrix becomes numerically degenerate. At $\varepsilon \to \infty$: the Gibbs kernel becomes flat, all routes receive equal weight, and $P^*_\varepsilon \to a\otimes b$ — the independent product coupling that ignores cost entirely. The regularized distance diverges and loses geometric meaning. The practical regime is $\varepsilon$ small enough that $\varepsilon\log(mn)$ is a tolerable approximation error, large enough that the kernel matrix remains numerically representable.
+
+**The differentiability of $\text{OT}_\varepsilon$ with respect to the input weights — the property that makes entropic OT usable as a neural network loss function — is the consequence of strict convexity and the smooth Gibbs form of the solution.** The exact Wasserstein distance $W_c(\mu,\nu)$ is not differentiable when the optimal coupling is non-unique — its gradient is a subgradient, not a gradient. The regularized distance $\text{OT}_\varepsilon$ is infinitely differentiable for every $\varepsilon > 0$, with gradient $\nabla_a\text{OT}_\varepsilon = f^*$ and $\nabla_b\text{OT}_\varepsilon = g^*$ — the optimal entropic potentials. This is the property exploited in the Wasserstein loss functions of generative models: backpropagation through $\text{OT}_\varepsilon$ computes the gradient with respect to the generator's output distribution by reading off the optimal dual potentials, which are available as a byproduct of the Sinkhorn algorithm.
+
+---
+
+**The break moment — the naive assumption that smaller $\varepsilon$ is always better, broken by floating-point underflow — is the numerical ill-conditioning of the Gibbs kernel for small $\varepsilon$.** The kernel entry $K_{ij} = e^{-C_{ij}/\varepsilon}$ for a costly route with $C_{ij} = 100$ at $\varepsilon = 0.01$ is $e^{-10000}$ — a number approximately $10^{-4343}$ in absolute value, which underflows to exactly zero in IEEE 754 double precision (which can represent numbers only as small as $\approx 10^{-308}$). Once the kernel underflows, every row and column normalization divides by zero. The mathematical solution exists and is unique — the problem is not ill-posed. The computation is broken. This is the numerical analysis failure mode from MSCS 202: the condition number of $K$ grows as $e^{\|C\|_\infty/\varepsilon}$, exponentially large for small $\varepsilon$, making the matrix numerically rank-deficient in floating point.
+
+**The log-sum-exp fix — working in log-space with potentials $f = \varepsilon\log u$ and $g = \varepsilon\log v$ instead of the scaling vectors directly — converts the multiplicative Sinkhorn iterations into additive log-sum-exp operations that never explicitly compute $e^{-C_{ij}/\varepsilon}$.** Instead of updating $u_i \leftarrow a_i / (Kv)_i$, the log-domain update is $f_i \leftarrow \varepsilon\log a_i - \varepsilon\log\sum_j e^{(g_j - C_{ij})/\varepsilon}$, which is a log-sum-exp operation over the differences $g_j - C_{ij}$ — quantities that remain in a reasonable numerical range regardless of $\varepsilon$. The exponential is applied to differences, not to absolute values, and differences of log-potentials are numerically stable because they encode ratios rather than absolute magnitudes. This is the same stabilization trick used in the forward algorithm for Hidden Markov Models in MSCS 202: never compute small probabilities directly, always work with their logarithms.
+
+---
+
+**The connection to MATH 208 (Statistics and Probability) runs through the KL divergence and the maximum entropy principle.** The regularized optimal coupling $P^*_\varepsilon$ is the solution to a maximum entropy problem: among all couplings with marginals $a$ and $b$ and expected cost at most $\langle C, P\rangle$, it is the one with maximum entropy. This is Jaynes's maximum entropy principle from statistical mechanics: the least-committal distribution consistent with the constraints is the Gibbs distribution. The KL divergence $\text{KL}(P\|a\otimes b)$ you minimized in the regularized problem is the KL divergence you computed in MATH 208 for comparing discrete distributions — here applied to coupling matrices rather than probability vectors. The entire entropic regularization framework is the maximum entropy principle of MATH 208, applied to the space of transport plans.
+
+**The connection to MATH 304 (Computational Operations Research) closes through Lagrangian duality and the interpretation of dual variables as prices.** The Lagrange multipliers $f_i$ and $g_j$ derived from the KKT conditions of the regularized problem are the shadow prices of the supply and demand constraints — exactly as in the transportation LP of MATH 304, but now appearing in the exponent of the Gibbs kernel rather than as linear dual variables. The complementary slackness condition from MATH 304 — the primal constraint is active when the dual variable is nonzero — becomes the Gibbs form condition: every entry $P^*_{ij} = u_i K_{ij} v_j > 0$ is strictly positive, so all dual constraints are simultaneously active in the smooth sense. The strict interior solution of the regularized problem is the analytical content of why the LP corner solution of the exact Kantorovich problem is replaced by a strictly interior Gibbs solution.
+
+---
+
+**Looking forward across the roadmap**, entropic regularization is the foundation on which everything in Chapter 2 is built. Topic 2 — the Sinkhorn-Knopp theorem — takes the Gibbs structure $P^*_\varepsilon = \text{diag}(u)K\text{diag}(v)$ derived here and proves that the scaling vectors $u$ and $v$ can be found by alternately normalizing the rows and columns of $K$, with geometric convergence guaranteed by the strict convexity of the regularized problem. Topic 3 — the log-sum-exp trick — takes the numerical instability identified in the break moment and resolves it completely with the log-domain reformulation, making the algorithm stable for arbitrarily small $\varepsilon$. In Phase 3, the entropic regularization reappears as the foundation of denoising diffusion models: the forward noising process of a diffusion model is precisely the $\varepsilon \to \infty$ limit of entropic OT, and the reverse denoising process is the $\varepsilon \to 0$ limit — the entire diffusion framework is entropic OT interpolated across scales of $\varepsilon$.
+
+The Gibbs kernel $K_{ij} = e^{-C_{ij}/\varepsilon}$ sandwiched between the diagonal scaling vectors $\text{diag}(u)$ and $\text{diag}(v)$ — the sorting office's spread-out, cost-weighted plan that gets the trucks moving on time — is the regularized optimal coupling $P^*_\varepsilon$, the computationally tractable approximation to the Wasserstein distance that makes Optimal Transport practical at machine learning scale.
+
+---
+---

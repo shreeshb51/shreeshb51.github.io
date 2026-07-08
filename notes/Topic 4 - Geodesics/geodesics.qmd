@@ -1,0 +1,445 @@
+# Topic 4 - Geodesics: The Shortest Path Equation
+
+## Introduction
+
+You have now built the complete geometric infrastructure of differential geometry. Manifolds gave you the curved space. Tangent bundles gave you the local vector spaces of velocities. Riemannian metrics gave you measurement — lengths, angles, distances, gradients. Every piece of the geometric picture is in place except one: you do not yet know how to find the shortest path between two points on a Riemannian manifold.
+
+On a flat Euclidean space, this question is trivial. The shortest path between any two points is the straight line connecting them, and the straight line is uniquely determined by its starting point and direction. The line has two defining properties that make it special: it has no curvature — it does not bend — and it has constant velocity — it moves at constant speed in a fixed direction. These two properties together characterize the straight line as the curve that is locally as straight as possible at every point.
+
+On a curved manifold, the notion of a straight line must be generalized. A path on the surface of the Earth between Kathmandu and London cannot be a Euclidean straight line — such a line would tunnel through the Earth's interior, leaving the manifold entirely. The path must stay on the surface, and among all surface paths connecting the two cities, the shortest one is the great circle arc — the path that curves only as much as the Earth's surface forces it to, with no additional bending beyond what the manifold demands. This is the geodesic.
+
+A geodesic is the curved-space generalization of a straight line. It is the path on a Riemannian manifold that is locally length-minimizing — that is locally the shortest connection between nearby points — and that has constant speed and zero acceleration in the intrinsic sense of the manifold. The intrinsic acceleration is measured by the Levi-Civita connection briefly previewed in the Riemannian metrics topic: the geodesic equation is the condition that the covariant derivative of the velocity vector along the curve is zero — the velocity is parallel-transported along itself, which is the curved-space way of saying the path does not turn.
+
+The roadmap describes this topic as the shortest path equation — a description that captures both the variational and the differential aspects of geodesics. The shortest path aspect connects geodesics to the arc length functional of the previous topic: geodesics are the critical points of arc length, the curves that make the length functional stationary. The equation aspect refers to the geodesic ODE — the second-order system whose solutions are the geodesics — which determines the path from any initial position and velocity, exactly as Newton's second law determines the trajectory of a particle from its initial position and momentum.
+
+The topic has four tightly connected subtopics.
+
+The first subtopic is the **geodesic equation** itself — the second-order ODE $\ddot\gamma^k + \sum_{i,j} \Gamma^k_{ij} \dot\gamma^i \dot\gamma^j = 0$ that governs geodesics, expressed using the Christoffel symbols of the Levi-Civita connection. This equation is the curved-space Newton's law for a freely moving particle on the manifold — the particle moves along the manifold with no external force, and its trajectory is the geodesic. The Christoffel symbols encode the curvature of the metric, and the geodesic equation says the path's acceleration in coordinates is exactly cancelled by the metric's curvature terms.
+
+The second subtopic is the **variational derivation** — showing that geodesics are the critical points of the arc length functional, deriving the geodesic equation as the Euler-Lagrange equation of the length or energy functional, and understanding the relationship between the length-minimizing property and the ODE characterization. The variational approach connects geodesics to the optimization theory of Chapter 2: geodesics are the solutions to a variational optimization problem, and the geodesic equation is the KKT condition of that problem in the continuous setting.
+
+The third subtopic is **the exponential map** — the map $\exp_p: T_pM \to M$ that sends a tangent vector $v$ at $p$ to the point $\gamma_v(1)$ reached by following the geodesic starting at $p$ with initial velocity $v$ for unit time. The exponential map is the tool that converts local tangent space information into global manifold information: it parameterizes a neighborhood of $p$ by the initial velocities of geodesics, and it is what makes the normal coordinates around any point — the coordinates in which the metric looks Euclidean to first order — constructible. The exponential map is the computational tool used in Riemannian optimization algorithms, in the logarithmic map's definition, and in the Fréchet mean computation on manifolds.
+
+The fourth subtopic is the **connection to Optimal Transport** — how the geodesics of the Wasserstein manifold are precisely the displacement interpolations of Phase 1, how the Wasserstein-2 distance is the geodesic distance on the Wasserstein manifold, and how the Riemannian geometry of this chapter provides the precise geometric language for describing the structure of Optimal Transport. This subtopic is the bridge between Chapter 3 and Phase 1, making explicit the claim that Optimal Transport is Riemannian geometry on the space of probability distributions.
+
+By the end of this topic, Chapter 3 will be complete, and the full geometric framework of the roadmap will be in place. When you encounter the phrase "straight line interpolation in Wasserstein space" in Phase 1, you will know this means the geodesic of the Wasserstein manifold — the path of displacement interpolation that minimizes the Wasserstein distance between the two endpoint distributions. When you see Riemannian flow matching learning velocity fields that follow geodesics on a sphere or a torus, you will know the geodesic equation is the ODE whose solution determines those reference trajectories. And when you see the JKO scheme performing gradient descent in Wasserstein space, you will understand that each JKO step moves in the direction of the negative Wasserstein gradient — the geodesic direction of steepest descent on the Wasserstein manifold.
+
+**ALL FOUR SUBTOPICS ARE TREATED AS A SINGLE TOPIC FOR EASY COMPREHENSION.**
+
+---
+
+## Layer 1 (Story)
+
+You are a high-altitude mountaineer and route-finder for a Himalayan expedition, and you have been given a deceptively simple assignment: find the best route across the Rolwaling Himal from the Tamba Kosi valley in the south to the Rolwaling valley in the north. There is no established trail. The terrain is a complex three-dimensional surface of ridges, glaciers, couloirs, and high passes. Your job is to find the path that — staying on the mountain's surface at all times, never tunnelling through rock or flying through air — covers the crossing in the shortest possible distance.
+
+You begin by thinking about what a short path looks like on a curved surface. In the valley below, on flat ground, you know exactly what to do: draw a straight line from start to finish and walk it. The straight line is shortest because it never wastes distance by deviating sideways when it could be going directly toward the destination. On flat ground, the shortest path never turns.
+
+On the mountain surface, you cannot draw a straight line in the Euclidean sense — the mountain curves away from any flat line you might draw in the air. But the intuition survives: the shortest path on the mountain surface is the one that never turns unnecessarily. It curves only as much as the mountain forces it to. It does not zigzag. It does not make unnecessary detours along ridges when a more direct line across the face is shorter. It is, in a precise sense, the path that is as straight as possible given the constraints of the terrain.
+
+This is the geodesic.
+
+---
+
+**The marble on a curved surface**
+
+To make the intuition precise, your climbing partner — a mathematician who has joined the expedition — suggests a thought experiment. Forget your own movements for a moment. Instead, place a marble on the mountain's surface at your starting point and give it a gentle push in the direction of your destination. Do not push it sideways, do not apply any rotational force, do not guide it at all. Just a clean push in the right direction and let it roll freely, with no friction. Where does the marble go?
+
+The marble, feeling no force except the constraint of the surface itself, moves along the surface in the most direct possible way. It cannot leave the surface — it is constrained to it. It cannot curve sideways by its own volition — there is no force to bend it. The only curvature in its path comes from the mountain's surface forcing it to follow the terrain's shape. The marble rolls along a geodesic.
+
+This thought experiment captures the essential character of a geodesic: it is the path of a particle that moves freely on the surface with no external force, guided only by the surface's geometry. It cannot go in a straight Euclidean line because the surface curves. But among all the paths on the surface from start to finish, it goes in the straightest possible way — the way that at every moment requires no lateral steering, only the constraint of remaining on the surface.
+
+On the flat valley floor, the marble rolls in a straight Euclidean line. On a sphere, the marble rolls along a great circle — the intersection of the sphere with a plane through the center of the sphere, the largest possible circle on the sphere's surface. On your mountain terrain, the marble rolls along a geodesic that depends on the specific shape of the terrain at every point.
+
+---
+
+**The two equivalent characterizations**
+
+Your mathematician partner explains that geodesics can be understood in two equivalent ways, and both are essential for different purposes.
+
+The first characterization is **length-minimizing**: a geodesic is the shortest path between two points on the manifold. If you want to get from point $p$ to point $q$ using the minimum possible surface distance, you follow the geodesic. This is the characterization that matters for navigation and for defining the Riemannian distance: $d(p,q)$ is the length of the geodesic from $p$ to $q$.
+
+The second characterization is **zero acceleration**: a geodesic is the path whose velocity vector does not accelerate in the intrinsic sense. On a curved surface, the velocity vector of a moving particle is a tangent vector, living in the tangent space at the current position. As the particle moves, it moves from one tangent space to another — the tangent space at the new position is a different vector space. The intrinsic acceleration measures how the velocity vector changes as it is transported from one tangent space to the next. For a geodesic, this intrinsic acceleration is exactly zero: the velocity is transported without any intrinsic change, staying as constant as the curved geometry permits.
+
+These two characterizations sound different but are equivalent — at least locally. A length-minimizing path has zero intrinsic acceleration, and a path with zero intrinsic acceleration is locally length-minimizing. The equivalence is the curved-space version of the fact that straight lines minimize distance on flat space.
+
+---
+
+**The break moment: not all geodesics are globally shortest**
+
+Here is the break moment, and it is a genuinely surprising one. The naive assumption is that the two characterizations — shortest path and zero acceleration — are globally equivalent: a path with zero intrinsic acceleration is always the globally shortest path between its endpoints.
+
+This breaks on the sphere. Consider two antipodal points on the Earth — Kathmandu's antipodal point is somewhere in the South Pacific. The great circle arc from Kathmandu to the antipodal point has zero intrinsic acceleration — it is a genuine geodesic. But so is the great circle arc going the other way around — the complementary arc, which is also a geodesic. Both arcs have zero acceleration. Both connect the same two endpoints. But one arc is shorter (half the great circle) and the other is longer (also half the great circle, by symmetry — they are equal in this special case). More strikingly, consider two points that are slightly more than half a great circle apart: there is still a short geodesic and a long geodesic connecting them, both with zero acceleration, but only the shorter one minimizes distance.
+
+The correct statement is: a geodesic is locally length-minimizing — for any point on the geodesic, sufficiently short segments of the geodesic centered at that point are the shortest paths between their endpoints. But a geodesic is not necessarily globally length-minimizing: there may be a completely different geodesic that is shorter.
+
+The distance at which a geodesic ceases to be globally minimizing — the point beyond which the geodesic is no longer the shortest path — is called the **cut point**, and the set of all cut points from a given base point is the **cut locus**. Beyond the cut locus, other geodesics compete and may be shorter. The existence of the cut locus is the manifestation of the manifold's global topology and curvature working against local straightness.
+
+This distinction — between local and global — is one of the deepest insights of Riemannian geometry, and it has direct consequences for the roadmap. The Wasserstein geodesic between two probability distributions is the globally shortest path in Wasserstein space, and its existence requires the Wasserstein manifold to be geodesically complete — a condition that holds but requires proof. The Riemannian flow matching algorithms that interpolate along geodesics on spheres or other manifolds must use the globally shortest geodesic, not just any zero-acceleration path, to ensure the interpolation is the correct one.
+
+---
+
+**Parallel transport and the straightness condition**
+
+To understand why zero acceleration characterizes geodesics, your mathematician partner introduces the concept of parallel transport. As you walk along a path on the mountain surface, carrying a walking stick held perfectly horizontal in front of you, the stick must tilt and turn to stay tangent to the surface. But suppose you carry it in such a way that you never rotate it — you simply translate it forward, allowing it to tilt only as much as the surface forces it to, with no additional twisting or turning from your wrists. The stick is being **parallel-transported** along your path — it moves along the surface with the minimum possible change, constrained to remain tangent to the surface but rotated as little as possible.
+
+The velocity vector of a moving particle is a tangent vector, and as the particle moves, its velocity vector must be transported from one tangent space to the next. Parallel transport is the rule for doing this transport with minimum intrinsic change. The **covariant derivative** of the velocity along the path measures how much the velocity deviates from parallel transport — it is the intrinsic acceleration.
+
+For a geodesic, the velocity vector is parallel-transported along itself. The particle carries its own direction of motion forward through parallel transport. This is the zero-acceleration condition stated precisely: the covariant derivative of the velocity vector along the geodesic is zero. The geodesic is the path whose velocity is its own parallel transport direction — the path that carries itself forward with no intrinsic turning.
+
+On flat Euclidean space, parallel transport is trivial — you just carry the vector forward without any rotation, which is the same as keeping its components constant in Cartesian coordinates. On a curved surface, parallel transport involves the metric's connection — the Christoffel symbols — and carrying a vector forward without rotation requires accounting for the curvature. The geodesic equation, which we will see in Layer 2, is the precise ODE that encodes this condition.
+
+---
+
+**The exponential map — shooting geodesics from a base point**
+
+Now your expedition team needs a practical tool: given your current position $p$ on the mountain and a desired direction of travel $v$ in your local tangent space, how far do you end up if you follow the geodesic in direction $v$ for one unit of time?
+
+The answer is the **exponential map** $\exp_p(v)$ — the point reached by starting at $p$, moving in direction $v$ at speed $\|v\|$ for one unit of time along the geodesic. The exponential map sends tangent vectors at $p$ to points on the manifold: it converts local velocity information into global position information.
+
+Near your current position, the exponential map gives you a precise local coordinate system — the normal coordinates centered at $p$. In these coordinates, the geodesics through $p$ are straight lines, and the metric at $p$ looks exactly like the Euclidean metric. The curvature of the manifold appears only at second order and beyond — the normal coordinates are the flat-earth approximation made rigorous. This is why surveyors can use flat coordinate systems for local work: within a small enough region, every Riemannian manifold looks Euclidean to first order, and the geodesics through the base point look like straight lines.
+
+The exponential map is also the tool for computing the Fréchet mean on a manifold — the analogue of the Euclidean mean for data living on a curved space. The Fréchet mean of a set of points $p_1, \ldots, p_n$ on a manifold is the point $p^*$ that minimizes the sum of squared geodesic distances: $p^* = \operatorname*{arg\,min}_{p} \sum_i d(p, p_i)^2$. This is computed iteratively using the exponential and logarithmic maps — the logarithmic map $\log_p: M \to T_pM$ is the inverse of the exponential map, converting manifold points back to tangent vectors, and the Fréchet mean update is a Riemannian gradient descent step using these maps.
+
+---
+
+**The connection to Optimal Transport**
+
+Your mathematician partner reveals the deepest connection of this entire chapter. The displacement interpolation of Optimal Transport — the path in the space of probability distributions that moves mass from distribution $\mu$ to distribution $\nu$ along the optimal transport map — is a geodesic. Not a geodesic on the physical mountain, but a geodesic on an infinite-dimensional manifold: the Wasserstein manifold of probability distributions equipped with the Wasserstein-2 distance.
+
+The picture is precise. Imagine the space of all probability distributions over $\mathbb{R}^n$ as a manifold — each distribution is a point, and the Wasserstein-2 distance $W_2(\mu, \nu)$ is the Riemannian distance between points. The geodesic from $\mu$ to $\nu$ in this manifold is the path $\{\mu_t\}_{t \in [0,1]}$ defined by the displacement interpolation: if $T$ is the optimal transport map from $\mu$ to $\nu$, then $\mu_t = ((1-t)\text{id} + tT)_\# \mu$ — the distribution obtained by moving each particle from its starting position to the point $(1-t)x + tT(x)$, a linear interpolation between the starting position and the destination.
+
+This path is a geodesic in the Wasserstein manifold because it is length-minimizing: among all paths in the Wasserstein manifold from $\mu$ to $\nu$, the displacement interpolation is the shortest. Its length is exactly $W_2(\mu,\nu)$. The path also satisfies zero intrinsic acceleration — the velocity field driving the interpolation is the gradient of a convex function (the Brenier potential), which is the condition for the path to be a Wasserstein geodesic.
+
+This identification — geodesics in Wasserstein space are displacement interpolations, and geodesic distances are Wasserstein distances — is the conceptual bridge between Chapter 3 and Phase 1. Optimal Transport is not merely a computational tool for comparing distributions. It is Riemannian geometry on the space of distributions. The Wasserstein distance is a Riemannian distance. The optimal transport map is the exponential map. The displacement interpolation is the geodesic. The entire geometric apparatus of this chapter — manifolds, tangent bundles, metrics, geodesics — applies to the space of probability distributions, and Phase 1 is the study of the resulting geometry.
+
+---
+
+Hold four pictures simultaneously.
+
+The marble rolling freely on the mountain surface: no external force, no unnecessary turning, following the terrain's shape as directly as possible — the geodesic as the path of a freely moving particle.
+
+The two great circle arcs between antipodal points on the sphere: both geodesics, both with zero acceleration, but only one globally shortest — the break moment that separates local and global minimality.
+
+The walking stick carried through parallel transport: never twisted by external force, tilting only as the surface demands, its direction of motion carrying itself forward along the geodesic.
+
+The displacement interpolation in Wasserstein space: the geodesic on the manifold of probability distributions, moving mass along optimal transport paths, its length the Wasserstein distance between the endpoint distributions.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the covariant derivative and parallel transport, the geodesic equation, the variational derivation from the energy functional, the exponential map and normal coordinates, the Hopf-Rinow theorem and geodesic completeness, and the Wasserstein geodesic connecting this topic to Phase 1.
+
+### The Covariant Derivative
+
+To define geodesics intrinsically, we need a way to differentiate vector fields along curves on a manifold — a notion of derivative that accounts for the curvature of the space. The ordinary coordinate derivative does not work: if $V(t)$ is a vector field along a curve $\gamma(t)$, the derivative $dV/dt$ in coordinates mixes the change in the vector components with the change in the coordinate basis vectors, producing a result that depends on the chart and does not transform as a tangent vector.
+
+The correct notion is the **covariant derivative**. Given the Levi-Civita connection $\nabla$ — the unique connection on $TM$ compatible with the metric and torsion-free — the **covariant derivative** of a vector field $V$ along a curve $\gamma: [a,b] \to M$ is the vector field $\frac{DV}{dt}$ along $\gamma$ defined in local coordinates by:
+
+$$\frac{DV^k}{dt} = \frac{dV^k}{dt} + \sum_{i,j} \Gamma^k_{ij}(\gamma(t)) \dot\gamma^i(t) V^j(t)$$
+
+where $\Gamma^k_{ij}$ are the **Christoffel symbols** of the Levi-Civita connection:
+
+$$\Gamma^k_{ij} = \frac{1}{2}\sum_l g^{kl}\left(\frac{\partial g_{jl}}{\partial x^i} + \frac{\partial g_{il}}{\partial x^j} - \frac{\partial g_{ij}}{\partial x^l}\right)$$
+
+The Christoffel symbols encode the rate of change of the metric coefficients — they measure how the coordinate basis vectors rotate and stretch as you move through the manifold. For the Euclidean metric with constant $g_{ij} = \delta_{ij}$, all partial derivatives of $g_{ij}$ vanish, so $\Gamma^k_{ij} = 0$ everywhere and the covariant derivative reduces to the ordinary coordinate derivative.
+
+The covariant derivative satisfies the **metric compatibility condition**:
+
+$$\frac{d}{dt} g_{\gamma(t)}(V, W) = g_{\gamma(t)}\!\left(\frac{DV}{dt}, W\right) + g_{\gamma(t)}\!\left(V, \frac{DW}{dt}\right)$$
+
+This says the metric is compatible with parallel transport: the inner product of two parallel-transported vectors is constant along the curve. The inner product is preserved by the connection.
+
+---
+
+### Parallel Transport
+
+A vector field $V$ along $\gamma$ is **parallel** along $\gamma$ if its covariant derivative vanishes:
+
+$$\frac{DV}{dt} = 0 \quad \text{along } \gamma$$
+
+In coordinates: $\frac{dV^k}{dt} + \sum_{i,j} \Gamma^k_{ij} \dot\gamma^i V^j = 0$ for all $k$.
+
+This is a first-order linear ODE system for the components $V^k(t)$. By the ODE existence and uniqueness theorem, given any initial vector $V_0 \in T_{\gamma(a)}M$, there exists a unique parallel vector field $V(t)$ along $\gamma$ with $V(a) = V_0$. The resulting map $P_\gamma: T_{\gamma(a)}M \to T_{\gamma(b)}M$ is the **parallel transport** map along $\gamma$ — a linear isometry (it preserves the inner product by metric compatibility).
+
+Parallel transport is path-dependent: parallel-transporting the same vector along two different paths between the same endpoints generally produces different results. The failure of parallel transport to be path-independent is the **holonomy** of the connection — a manifestation of the curvature of the manifold.
+
+---
+
+### The Geodesic Equation
+
+A smooth curve $\gamma: [a,b] \to M$ is a **geodesic** if its velocity vector $\dot\gamma(t) \in T_{\gamma(t)}M$ is parallel along $\gamma$:
+
+$$\frac{D\dot\gamma}{dt} = 0$$
+
+In coordinates, expanding the covariant derivative of the velocity field $V^k = \dot\gamma^k$:
+
+$$\boxed{\ddot\gamma^k + \sum_{i,j=1}^n \Gamma^k_{ij}(\gamma(t)) \dot\gamma^i(t) \dot\gamma^j(t) = 0, \quad k = 1,\ldots,n}$$
+
+This is the **geodesic equation** — a second-order ODE system for the curve $\gamma(t) = (x^1(t), \ldots, x^n(t))$. The term $\ddot\gamma^k$ is the coordinate acceleration. The term $\sum_{i,j} \Gamma^k_{ij} \dot\gamma^i \dot\gamma^j$ is the Christoffel correction — the amount by which the metric's curvature forces the coordinate acceleration to be nonzero even for a straight path. The geodesic equation says these two terms exactly cancel: the coordinate acceleration is precisely the Christoffel correction, producing zero intrinsic acceleration.
+
+**Existence and uniqueness.** By the ODE existence and uniqueness theorem (applied to the second-order system rewritten as a first-order system on $TM$), for any $p \in M$ and any $v \in T_pM$, there exists a unique maximal geodesic $\gamma_v: (-\epsilon, \epsilon) \to M$ with $\gamma_v(0) = p$ and $\dot\gamma_v(0) = v$. The geodesic is uniquely determined by its initial position and initial velocity.
+
+**Speed is constant.** For any geodesic $\gamma$:
+
+$$\frac{d}{dt}\|\dot\gamma\|^2 = \frac{d}{dt} g(\dot\gamma, \dot\gamma) = 2g\!\left(\frac{D\dot\gamma}{dt}, \dot\gamma\right) = 0$$
+
+by metric compatibility and the geodesic equation. Therefore $\|\dot\gamma(t)\|$ is constant — geodesics have constant speed. A geodesic parameterized with unit speed ($\|\dot\gamma\| = 1$) is called a **unit speed geodesic** or **arc-length parameterized geodesic**.
+
+**Canonical examples:**
+
+On $(\mathbb{R}^n, g_{\text{Euclidean}})$: $\Gamma^k_{ij} = 0$ everywhere, so the geodesic equation reduces to $\ddot\gamma^k = 0$, giving $\gamma(t) = p + tv$ — straight lines.
+
+On $(S^n, g_{\text{round}})$: the geodesics are great circles — intersections of $S^n$ with 2-planes through the origin in $\mathbb{R}^{n+1}$.
+
+On $(\mathbb{H}^n, g_{\text{hyp}})$: the geodesics are semicircles and vertical lines perpendicular to the boundary $\{x^n = 0\}$.
+
+---
+
+### Variational Derivation — Geodesics as Critical Points of Energy
+
+Geodesics arise naturally as solutions to a variational problem. Define the **energy functional** of a smooth curve $\gamma: [0,1] \to M$ as:
+
+$$E(\gamma) = \frac{1}{2}\int_0^1 \|\dot\gamma(t)\|^2_{\gamma(t)} \, dt = \frac{1}{2}\int_0^1 g_{\gamma(t)}(\dot\gamma(t), \dot\gamma(t)) \, dt$$
+
+The energy is related to arc length by the Cauchy-Schwarz inequality:
+
+$$L(\gamma)^2 = \left(\int_0^1 \|\dot\gamma\| \, dt\right)^2 \leq \int_0^1 1^2 \, dt \cdot \int_0^1 \|\dot\gamma\|^2 \, dt = 2E(\gamma)$$
+
+with equality if and only if $\|\dot\gamma\|$ is constant — the curve is parameterized at constant speed. Among curves with fixed parameterization interval $[0,1]$, minimizing energy is equivalent to minimizing arc length among constant-speed curves.
+
+**Theorem.** The critical points of $E$ among smooth curves with fixed endpoints $\gamma(0) = p$ and $\gamma(1) = q$ are precisely the geodesics (with constant speed parameterization).
+
+**Derivation.** Consider a variation $\gamma_s(t) = \gamma(t) + s\xi(t) + O(s^2)$ where $\xi(t) \in T_{\gamma(t)}M$ is a variation vector field vanishing at the endpoints: $\xi(0) = \xi(1) = 0$. Computing $\frac{d}{ds}|_{s=0} E(\gamma_s)$ in local coordinates and integrating by parts:
+
+$$\frac{d}{ds}\bigg|_{s=0} E(\gamma_s) = \int_0^1 g_{\gamma(t)}\!\left(-\frac{D\dot\gamma}{dt}, \xi(t)\right) dt$$
+
+For this to vanish for all variations $\xi$ with $\xi(0) = \xi(1) = 0$, we need $\frac{D\dot\gamma}{dt} = 0$ at every $t$ — the geodesic equation. The critical point condition is exactly the geodesic condition. $\square$
+
+In coordinates, the Euler-Lagrange equation for the Lagrangian $\mathcal{L}(x, \dot x) = \frac{1}{2}\sum_{i,j} g_{ij}(x) \dot x^i \dot x^j$ is:
+
+$$\frac{d}{dt}\frac{\partial \mathcal{L}}{\partial \dot x^k} - \frac{\partial \mathcal{L}}{\partial x^k} = 0$$
+
+Computing each term:
+
+$$\frac{\partial \mathcal{L}}{\partial \dot x^k} = \sum_j g_{kj} \dot x^j, \qquad \frac{d}{dt}\frac{\partial \mathcal{L}}{\partial \dot x^k} = \sum_j g_{kj} \ddot x^j + \sum_{i,j} \frac{\partial g_{kj}}{\partial x^i} \dot x^i \dot x^j$$
+
+$$\frac{\partial \mathcal{L}}{\partial x^k} = \frac{1}{2}\sum_{i,j} \frac{\partial g_{ij}}{\partial x^k} \dot x^i \dot x^j$$
+
+Combining and multiplying by $g^{lk}$ (summing over $k$) recovers precisely the geodesic equation with the Christoffel symbol formula. The geodesic equation is the Euler-Lagrange equation of the kinetic energy Lagrangian — geodesics are the trajectories of a free particle on the manifold, moving under no potential, purely under the geometry of the metric.
+
+---
+
+### The Exponential Map
+
+Fix a point $p \in M$. For each $v \in T_pM$ with $\|v\|$ small enough, the geodesic $\gamma_v$ starting at $p$ with initial velocity $v$ exists at least until time $t = 1$. The **exponential map** at $p$ is:
+
+$$\exp_p: \mathcal{U}_p \subseteq T_pM \to M, \qquad \exp_p(v) = \gamma_v(1)$$
+
+where $\mathcal{U}_p$ is the star-shaped domain in $T_pM$ on which the geodesic is defined until time 1.
+
+**Properties of the exponential map:**
+
+$$\exp_p(0) = p \qquad \text{(the zero vector maps to the base point)}$$
+
+$$\frac{d}{ds}\bigg|_{s=0} \exp_p(sv) = v \qquad \text{(the differential at 0 is the identity)}$$
+
+The second property follows because $\gamma_{sv}(1) = \gamma_v(s)$ — scaling the initial velocity scales the time parameter. Taking $\frac{d}{ds}|_{s=0}$ gives the velocity of the geodesic at $s=0$, which is $v$.
+
+By the inverse function theorem, $\exp_p$ is a local diffeomorphism near the origin in $T_pM$ — it maps a neighborhood of $0 \in T_pM$ diffeomorphically onto a neighborhood of $p \in M$.
+
+**Normal coordinates.** The **normal coordinate chart** at $p$ is the inverse of $\exp_p$ restricted to a neighborhood of $p$:
+
+$$\phi = \exp_p^{-1}: \mathcal{V}_p \subseteq M \to \mathcal{U}_p \subseteq T_pM \cong \mathbb{R}^n$$
+
+In normal coordinates centered at $p$:
+
+$$g_{ij}(p) = \delta_{ij} \quad \text{(metric is Euclidean at } p\text{)}$$
+$$\frac{\partial g_{ij}}{\partial x^k}\bigg|_p = 0 \quad \text{(first derivatives vanish at } p\text{)}$$
+$$\Gamma^k_{ij}(p) = 0 \quad \text{(Christoffel symbols vanish at } p\text{)}$$
+
+Normal coordinates are the coordinates that make the manifold look maximally Euclidean at $p$ — the metric is the identity to first order, and the curvature appears only at second order through the metric's second derivatives. In normal coordinates, geodesics through $p$ are straight lines: $\gamma_v(t) = tv$ for $v \in T_pM$.
+
+**The logarithmic map** is the local inverse of the exponential map:
+
+$$\log_p = \exp_p^{-1}: \mathcal{V}_p \to T_pM$$
+
+Given a point $q$ near $p$, $\log_p(q)$ is the initial velocity of the geodesic from $p$ to $q$ — the tangent vector at $p$ pointing toward $q$ with magnitude $d(p,q)$.
+
+---
+
+### Cut Locus and Injectivity Radius
+
+The exponential map is a local diffeomorphism but not necessarily a global one. Along a geodesic $\gamma_v$, there is a maximal time $t_c(v)$ beyond which $\gamma_v$ is no longer the globally shortest path from $p$ — the point $\gamma_v(t_c(v))$ is the **cut point** of $p$ along $\gamma_v$.
+
+The **cut locus** $\text{Cut}(p) \subseteq M$ is the set of all cut points from $p$ along all geodesics:
+
+$$\text{Cut}(p) = \{\gamma_v(t_c(v)) : v \in T_pM, \|v\| = 1\}$$
+
+The **injectivity radius** at $p$ is:
+
+$$\text{inj}(p) = \inf_{v \in T_pM, \|v\|=1} t_c(v) > 0$$
+
+Within the ball $B(p, \text{inj}(p)) \subseteq M$, the exponential map is a diffeomorphism and every point has a unique shortest geodesic from $p$. Beyond the cut locus, geodesics from $p$ are no longer globally minimizing.
+
+**Cut locus on the sphere.** For $p \in S^n$, the cut locus is the antipodal point $\{-p\}$ — a single point. The injectivity radius is $\pi$ (the half-circumference of the unit sphere). Every geodesic from $p$ is a great circle, and all great circles from $p$ meet at $-p$ after traveling distance $\pi$.
+
+---
+
+### Jacobi Fields and Curvature
+
+A **Jacobi field** $J(t)$ along a geodesic $\gamma$ is a vector field satisfying the **Jacobi equation**:
+
+$$\frac{D^2 J}{dt^2} + R(\dot\gamma, J)\dot\gamma = 0$$
+
+where $R$ is the **Riemann curvature tensor**:
+
+$$R(X,Y)Z = \nabla_X \nabla_Y Z - \nabla_Y \nabla_X Z - \nabla_{[X,Y]} Z$$
+
+The Riemann curvature tensor measures the failure of parallel transport to be path-independent — it is the fundamental invariant of Riemannian geometry. In coordinates:
+
+$$R^l_{kij} = \frac{\partial \Gamma^l_{jk}}{\partial x^i} - \frac{\partial \Gamma^l_{ik}}{\partial x^j} + \sum_m \Gamma^m_{jk}\Gamma^l_{im} - \sum_m \Gamma^m_{ik}\Gamma^l_{jm}$$
+
+Jacobi fields describe how nearby geodesics diverge or converge. If $\gamma_s(t)$ is a one-parameter family of geodesics with $\gamma_0 = \gamma$, the variation field $J(t) = \frac{\partial\gamma_s}{\partial s}|_{s=0}$ is a Jacobi field. The Jacobi equation governs the spreading of a geodesic family — positive curvature (sphere) causes geodesics to converge, negative curvature (hyperbolic space) causes geodesics to diverge exponentially.
+
+---
+
+### Hopf-Rinow Theorem — Geodesic Completeness
+
+**Theorem (Hopf-Rinow).** For a connected Riemannian manifold $(M,g)$, the following are equivalent:
+
+$$\text{(i)} \; (M, d_g) \text{ is a complete metric space}$$
+$$\text{(ii)} \text{ Every closed bounded subset of } M \text{ is compact}$$
+$$\text{(iii)} \text{ The exponential map } \exp_p \text{ is defined on all of } T_pM \text{ for some (hence all) } p \in M$$
+$$\text{(iv)} \text{ Every geodesic can be extended to all of } \mathbb{R}$$
+
+A manifold satisfying these conditions is **geodesically complete**. Moreover, if $(M,g)$ is geodesically complete, then for any $p, q \in M$, there exists a minimizing geodesic from $p$ to $q$ — the infimum defining $d_g(p,q)$ is achieved.
+
+---
+
+### The Wasserstein Geodesic — Bridge to Phase 1
+
+The space $\mathcal{P}_2(\mathbb{R}^n)$ of probability measures with finite second moment, equipped with the Wasserstein-2 metric $W_2$, has the formal structure of a geodesic metric space — in fact, an infinite-dimensional Riemannian manifold (in the sense of Otto calculus).
+
+**Wasserstein geodesics.** For $\mu, \nu \in \mathcal{P}_2(\mathbb{R}^n)$, let $T: \mathbb{R}^n \to \mathbb{R}^n$ be the optimal transport map with $T_\#\mu = \nu$ (the Brenier map, which exists and is the gradient of a convex function when $\mu$ is absolutely continuous). The **displacement interpolation** or **Wasserstein geodesic** is:
+
+$$\mu_t = ((1-t)\text{id} + tT)_\#\mu, \quad t \in [0,1]$$
+
+At each time $t$, each particle at position $x$ has moved to $(1-t)x + tT(x)$ — a linear interpolation between its starting position and its optimal destination.
+
+**Theorem.** The displacement interpolation $\{\mu_t\}_{t \in [0,1]}$ is the unique Wasserstein geodesic from $\mu_0 = \mu$ to $\mu_1 = \nu$, and its length in the Wasserstein metric is:
+
+$$W_2(\mu, \nu) = \left(\int \|x - T(x)\|_2^2 \, d\mu(x)\right)^{1/2}$$
+
+The Wasserstein distance is the length of the geodesic — the minimum-cost displacement of mass from $\mu$ to $\nu$.
+
+**Otto calculus — the Riemannian structure.** Felix Otto showed that $(\mathcal{P}_2(\mathbb{R}^n), W_2)$ can be formally treated as an infinite-dimensional Riemannian manifold. The tangent space at $\mu \in \mathcal{P}_2(\mathbb{R}^n)$ consists of velocity fields that transport $\mu$ — formally:
+
+$$T_\mu\mathcal{P}_2 = \overline{\{\nabla\phi : \phi \in C^\infty_c(\mathbb{R}^n)\}}^{L^2(\mu)}$$
+
+Tangent vectors are gradients of smooth functions, and the Riemannian metric is:
+
+$$g_\mu(s_1, s_2) = \int \langle s_1(x), s_2(x)\rangle \, d\mu(x), \quad s_1, s_2 \in T_\mu\mathcal{P}_2$$
+
+Under this metric, the Wasserstein geodesic equation corresponds to the continuity equation:
+
+$$\frac{\partial \mu_t}{\partial t} + \nabla \cdot (\mu_t v_t) = 0$$
+
+where the velocity field $v_t(x) = T(x) - x$ is constant along the geodesic (for the Wasserstein-2 case with quadratic cost). This is the geodesic equation on the Wasserstein manifold — the Euler equation for free motion in $\mathcal{P}_2(\mathbb{R}^n)$.
+
+**The JKO scheme** performs gradient descent on the Wasserstein manifold: given an energy functional $\mathcal{F}: \mathcal{P}_2 \to \mathbb{R}$, the JKO step from $\mu_k$ is:
+
+$$\mu_{k+1} = \operatorname*{arg\,min}_{\mu \in \mathcal{P}_2} \left\{\mathcal{F}(\mu) + \frac{1}{2\tau} W_2^2(\mu, \mu_k)\right\}$$
+
+This is the proximal point algorithm in Wasserstein space — the Moreau envelope of $\mathcal{F}$ with respect to $W_2^2$. The geodesic from $\mu_k$ to $\mu_{k+1}$ is the JKO update direction — the Wasserstein gradient flow step. The Wasserstein geodesic is both the shortest path and the gradient descent path in this geometry.
+
+---
+
+### Riemannian Flow Matching — Geodesics on Compact Manifolds
+
+For data on a compact Riemannian manifold $(M,g)$ — such as $S^2$ for orientational data or $SO(3)$ for protein conformations — Riemannian flow matching learns a velocity field $v_\theta: M \times [0,1] \to TM$ whose integral curves follow geodesics from noise samples to data samples.
+
+The reference trajectories are geodesics $\gamma_{p,q}(t) = \exp_p(t \log_p(q))$ connecting a noise sample $p$ to a data sample $q$. The geodesic velocity at time $t$ is:
+
+$$\dot\gamma_{p,q}(t) = \frac{D\gamma_{p,q}}{dt} = P_{\gamma_{p,q}, 0 \to t}(\log_p(q))$$
+
+where $P_{\gamma_{p,q}, 0 \to t}$ is parallel transport along the geodesic. The flow matching loss is:
+
+$$\mathcal{L}(\theta) = \mathbb{E}_{t, p, q}\left[\left\|v_\theta(\gamma_{p,q}(t), t) - \dot\gamma_{p,q}(t)\right\|_{g_{\gamma_{p,q}(t)}}^2\right]$$
+
+The norm $\|\cdot\|_{g_x}$ is the Riemannian metric at the point $x = \gamma_{p,q}(t)$ — the loss measures the discrepancy in the tangent space norm. Using geodesics rather than straight lines as reference trajectories ensures that the learned flow stays on the manifold $M$ and respects its geometry — the generated samples satisfy the manifold constraint exactly, not approximately.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 217 (ODEs and PDEs), the geodesic equation $\ddot\gamma^k + \sum_{i,j}\Gamma^k_{ij}\dot\gamma^i\dot\gamma^j = 0$ is a second-order ODE system — the existence and uniqueness theorem you applied to ODEs guarantees the existence of a unique geodesic for each initial condition $(p,v) \in TM$. The Euler-Lagrange equation you encountered in variational problems in MATH 201 — setting $\frac{d}{dt}\frac{\partial \mathcal{L}}{\partial \dot x} - \frac{\partial \mathcal{L}}{\partial x} = 0$ — is the variational derivation of the geodesic equation: the kinetic energy Lagrangian $\mathcal{L} = \frac{1}{2}\sum_{i,j}g_{ij}\dot x^i\dot x^j$ produces exactly the geodesic equation. In MATH 304 (Computational Operations Research), the Wasserstein geodesic problem — finding the minimum-cost displacement of mass from $\mu$ to $\nu$ — is a continuous linear programming problem: minimize $\int c(x,y) \, d\pi$ over couplings $\pi$, which is the Kantorovich problem of Phase 1. The geodesic in Wasserstein space is the solution to this LP, connecting the Riemannian geometry of this chapter directly to the optimization theory of Chapter 2.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Rolwaling mountaineer's story has a precise mathematical address. Let us walk through them one by one, until the marble, the walking stick, the parallel transport, and the Wasserstein geodesic are completely fused with the formalism.
+
+---
+
+**The Rolwaling mountain terrain — the curved surface across which the mountaineer seeks the shortest route — is the Riemannian manifold $(M, g)$.** The manifold $M$ is the mountain surface, equipped with the Riemannian metric $g$ from Topic 3 that assigns lengths to tangent vectors and angles to pairs of tangent vectors at each point. The metric is the measurement tool that makes the notion of "shortest route" meaningful: without $g$, you can say which paths exist on the surface but not which ones are longer or shorter. The Riemannian manifold is the complete geometric package — surface plus measurement — and the geodesic is the geometric object that the metric selects as the locally shortest path.
+
+**The assignment to find the shortest route from the Tamba Kosi valley to the Rolwaling valley — staying on the mountain surface at all times — is the geodesic problem: find the curve $\gamma^*: [0,1] \to M$ with $\gamma^*(0) = p$, $\gamma^*(1) = q$ that minimizes $L(\gamma) = \int_0^1 \|\dot\gamma(t)\|_{\gamma(t)} \, dt$.** The constraint "staying on the surface" is the constraint that $\gamma$ takes values in $M$ — it is a smooth curve on the manifold, not a straight line through the ambient three-dimensional space. Among all smooth curves on $M$ connecting $p$ to $q$, the geodesic is the one that minimizes arc length. The Riemannian distance $d_g(p,q) = \inf_\gamma L(\gamma)$ is the length of this minimizing curve — the shortest surface distance between the two valleys.
+
+---
+
+**The marble rolling freely on the mountain surface — guided only by the terrain, with no external force or lateral steering — is the geodesic characterized by zero intrinsic acceleration $\frac{D\dot\gamma}{dt} = 0$.** The marble feels no external force: there is no friction, no steering, no sideways push. The only constraint is that it stays on the surface. Its trajectory is therefore the path of minimum curvature — the path that turns only as much as the surface forces it to. This is the geodesic equation in its physical interpretation: the covariant derivative of the velocity is zero, meaning the velocity is parallel-transported along itself, meaning the path accumulates no intrinsic turning beyond what the curvature of the manifold imposes.
+
+**The geodesic equation $\ddot\gamma^k + \sum_{i,j} \Gamma^k_{ij} \dot\gamma^i \dot\gamma^j = 0$ is the marble's equation of motion in coordinates.** The term $\ddot\gamma^k$ is the coordinate acceleration — how fast the $k$-th coordinate of the marble's position is changing. The term $\sum_{i,j} \Gamma^k_{ij} \dot\gamma^i \dot\gamma^j$ is the Christoffel correction — the amount by which the coordinate system itself is turning due to the metric's curvature, forcing a coordinate acceleration even for a straight path in the intrinsic sense. The geodesic equation says these two terms exactly cancel: in intrinsic terms, the marble is not accelerating at all. In coordinate terms, it has exactly the acceleration required to compensate for the coordinate system's curvature. On the flat valley floor where $\Gamma^k_{ij} = 0$, the equation reduces to $\ddot\gamma^k = 0$ — constant velocity, straight line, exactly as expected.
+
+**The Christoffel symbols $\Gamma^k_{ij} = \frac{1}{2}\sum_l g^{kl}(\partial_i g_{jl} + \partial_j g_{il} - \partial_l g_{ij})$ encode the rate of change of the metric — the curvature of the terrain in coordinates.** On the steep ridge, the metric coefficients $g_{ij}$ change rapidly with position — the terrain's geometry varies quickly — and the Christoffel symbols are large. On the flat glacier, the metric is approximately constant and the Christoffel symbols are approximately zero. The geodesic equation uses the Christoffel symbols to account for these variations: the marble's trajectory bends in coordinates exactly to compensate for the bending of the coordinate grid imposed by the metric's variation.
+
+---
+
+**The walking stick carried through parallel transport — tilting only as the surface demands, never twisted by external force — is a vector field $V(t)$ along the geodesic satisfying $\frac{DV}{dt} = 0$.** The parallel transport equation $\frac{dV^k}{dt} + \sum_{i,j} \Gamma^k_{ij} \dot\gamma^i V^j = 0$ is the coordinate expression of this condition. The ordinary derivative $\frac{dV^k}{dt}$ measures how the coordinate components of $V$ change as you move. The Christoffel correction $\sum_{i,j} \Gamma^k_{ij} \dot\gamma^i V^j$ measures how the coordinate basis vectors themselves change as you move — how much the coordinate grid is rotating and stretching. The parallel transport condition says these two changes exactly cancel: the vector $V$ is being carried forward with minimum intrinsic change, accounting for the coordinate system's own motion due to the terrain's curvature.
+
+**The geodesic is the path whose velocity vector is parallel-transported along itself — $\frac{D\dot\gamma}{dt} = 0$ — meaning the marble is its own walking stick.** Setting $V = \dot\gamma$ in the parallel transport equation immediately gives the geodesic equation. The marble's direction of motion at each moment is the result of parallel-transporting its direction of motion from the previous moment. The geodesic does not turn intrinsically — it carries its own velocity forward through parallel transport, the most direct possible motion on the curved surface.
+
+**The path-dependence of parallel transport — the holonomy — is the manifestation of curvature.** If you parallel-transport the walking stick around a closed loop on the mountain and it comes back rotated relative to its starting orientation, the loop encloses a region of nonzero curvature. On flat terrain, the walking stick returns to its original orientation after any closed loop — the holonomy is trivial. On the spherical Earth, parallel-transporting a vector around a spherical triangle returns it rotated by the solid angle subtended by the triangle — the holonomy equals the integrated curvature enclosed by the loop, by the Gauss-Bonnet theorem. The Riemann curvature tensor $R$ is the infinitesimal holonomy — it measures the rotation per unit area of loop.
+
+---
+
+**The break moment — the two great circle arcs between antipodal points, both geodesics but only one globally shortest — is the distinction between local and global length-minimization.** The geodesic equation $\frac{D\dot\gamma}{dt} = 0$ is a local condition: it says the curve is locally straight at every point. A curve satisfying this condition is a geodesic — locally length-minimizing — but not necessarily globally length-minimizing. On the sphere, both the short and long arcs connecting two non-antipodal points satisfy the geodesic equation — both are great circle arcs, both have zero intrinsic acceleration — but only the shorter one is the globally minimizing geodesic. The cut locus $\text{Cut}(p)$ is the precise set where this global minimality fails: beyond the cut point along any geodesic from $p$, there is a competing shorter path. On the sphere, the cut locus of any point is its antipodal point — the single point at distance $\pi$ where all geodesics from $p$ reconverge.
+
+**The injectivity radius $\text{inj}(p) > 0$ — the radius within which the exponential map is a diffeomorphism — is the range of guaranteed global minimality around each point.** Within the geodesic ball $B(p, \text{inj}(p))$, the exponential map $\exp_p$ is injective — every point $q$ in this ball has a unique shortest geodesic from $p$, and that geodesic is the image of the straight line from $0$ to $\log_p(q)$ in $T_pM$ under $\exp_p$. The normal coordinates centered at $p$ are valid diffeomorphisms within this ball. Beyond the injectivity radius, global minimality may fail and the normal coordinate chart may develop singularities. For the sphere of radius $r$, $\text{inj}(p) = \pi r$ — the geodesic ball of radius $\pi r$ around any point $p$ covers the entire sphere except the antipodal point.
+
+---
+
+**The exponential map $\exp_p(v) = \gamma_v(1)$ — sending a tangent vector $v$ at $p$ to the point reached by following the geodesic in direction $v$ for unit time — is the mountaineer's tool for converting local navigation instructions into global positions.** The mountaineer at position $p$ can describe any direction as a tangent vector $v \in T_pM$ — a vector in the local flat approximation to the terrain. The exponential map converts this local instruction into a global destination: starting at $p$, go in direction $v$ at speed $\|v\|$ along the geodesic for one unit of time, and you arrive at $\exp_p(v)$. The distance traveled is $\|v\| = d(p, \exp_p(v))$ (within the injectivity radius). The exponential map parameterizes the neighborhood of $p$ by the initial velocities of geodesics — a neighborhood chart on the manifold, the normal coordinate chart.
+
+**The normal coordinates at $p$ — in which $g_{ij}(p) = \delta_{ij}$, $\partial_k g_{ij}|_p = 0$, $\Gamma^k_{ij}(p) = 0$, and geodesics through $p$ are straight lines — are the precise statement of the surveyor's flat-earth approximation.** In normal coordinates, the manifold looks maximally Euclidean at $p$: the metric is the identity, the Christoffel symbols vanish, and the geodesic equation reduces to $\ddot\gamma^k = 0$ — straight lines. The curvature appears only at second order, through the metric's second derivatives. This is why surveyors can use flat coordinate systems for local work: within a small enough region, normal coordinates make the curved surface indistinguishable from flat space to first order.
+
+**The logarithmic map $\log_p(q) = \exp_p^{-1}(q)$ — the initial velocity of the geodesic from $p$ to $q$ — is the inverse operation: converting a global manifold position back into a local tangent vector at the base point.** The logarithmic map is defined within the injectivity radius. It is used in the Fréchet mean computation: the Fréchet mean update is $p \leftarrow \exp_p\left(\frac{1}{n}\sum_i \log_p(q_i)\right)$ — average the logarithms (local tangent vectors pointing toward each data point) and exponentiate back to the manifold. This is the Riemannian gradient descent algorithm for the sum of squared geodesic distances, the curved-space generalization of the Euclidean mean.
+
+---
+
+**The Wasserstein geodesic — the displacement interpolation $\mu_t = ((1-t)\text{id} + tT)_\#\mu$ — is the marble rolling freely on the Wasserstein manifold $(\mathcal{P}_2(\mathbb{R}^n), W_2)$.** The Wasserstein manifold is the curved infinite-dimensional space whose points are probability distributions and whose Riemannian metric is the Otto calculus metric $g_\mu(s_1,s_2) = \int \langle s_1(x), s_2(x)\rangle \, d\mu(x)$. The tangent vectors at $\mu$ are velocity fields $s = \nabla\phi$ — gradient fields transporting mass from $\mu$. The displacement interpolation moves each particle linearly from $x$ to $T(x)$, the velocity field is $v_t = T - \text{id}$ (constant along the geodesic in the Wasserstein-2 case), and the geodesic equation on the Wasserstein manifold is the pressureless Euler equation — the equation of motion for a free particle distribution with no interaction. The Wasserstein geodesic is the marble rolling freely in distribution space: no external force, just the geometry of the Wasserstein manifold guiding the mass along the most direct path from $\mu$ to $\nu$.
+
+**The Wasserstein distance $W_2(\mu,\nu) = (\int \|x - T(x)\|_2^2 \, d\mu)^{1/2}$ is the length of the Wasserstein geodesic — the Riemannian distance on the Wasserstein manifold.** The formula is the arc length formula $L(\gamma) = \int_0^1 \|\dot\gamma_t\|_{g_{\gamma_t}} \, dt$ evaluated for the displacement interpolation: the speed at each time $t$ is $\|v_t\|_{g_{\mu_t}} = (\int \|T(x)-x\|_2^2 \, d\mu_t(x))^{1/2}$, which is constant along the geodesic (by the constant-speed property of geodesics) and equals $W_2(\mu,\nu)$ for the unit-time parameterization. The Wasserstein distance is both the geodesic length and the minimum-cost transport cost — the two characterizations of the geodesic (shortest path and zero acceleration) give the same number, as they must by the equivalence of the two characterizations.
+
+**The JKO scheme $\mu_{k+1} = \operatorname*{arg\,min}_\mu\{\mathcal{F}(\mu) + \frac{1}{2\tau}W_2^2(\mu,\mu_k)\}$ is proximal gradient descent on the Wasserstein manifold — the geodesic update step.** The Moreau envelope $\mathcal{F}^\tau(\mu_k) = \inf_\mu\{\mathcal{F}(\mu) + \frac{1}{2\tau}W_2^2(\mu,\mu_k)\}$ from the Legendre-Fenchel topic of Chapter 2 appears here in the Wasserstein geometry of Chapter 3. The proximal operator in Wasserstein space moves $\mu_k$ along the Wasserstein geodesic in the direction of steepest descent of $\mathcal{F}$, by step size $\tau$. The geodesic from $\mu_k$ to $\mu_{k+1}$ is the JKO update path — the displacement interpolation in the direction of the Wasserstein gradient of $\mathcal{F}$. The JKO scheme is the Riemannian gradient descent on the Wasserstein manifold, and the geodesic is the update direction. Every step of the JKO scheme is a geodesic step on the Wasserstein manifold.
+
+---
+
+**The Riemannian flow matching loss $\mathcal{L}(\theta) = \mathbb{E}[\|v_\theta(\gamma_{p,q}(t),t) - \dot\gamma_{p,q}(t)\|_{g_{\gamma(t)}}^2]$ uses geodesic reference trajectories on the data manifold.** The reference trajectory $\gamma_{p,q}(t) = \exp_p(t\log_p(q))$ is the geodesic from noise sample $p$ to data sample $q$ — the image of the straight line $t\log_p(q)$ in $T_pM$ under the exponential map, the marble rolling freely from $p$ toward $q$. The reference velocity $\dot\gamma_{p,q}(t)$ is the parallel transport of $\log_p(q)$ along the geodesic — the constant-speed geodesic velocity, the walking stick being carried forward without turning. The flow matching loss penalizes the discrepancy between the learned velocity field $v_\theta$ and this reference velocity, measured in the Riemannian metric norm $\|\cdot\|_{g_{\gamma(t)}}$ at each trajectory point. Using geodesic reference trajectories ensures: the learned flow stays on the manifold $M$, the generated samples satisfy the manifold constraint exactly, and the learning problem is geometrically natural — the target trajectories are the straightest possible paths on the manifold.
+
+---
+
+**The connection to MATH 217 (ODEs and PDEs) is now total.** The geodesic equation is a second-order ODE system, and every theorem you used in MATH 217 — existence and uniqueness (Picard-Lindelöf), continuous dependence on initial data, the flow of an ODE — applies directly. The geodesic flow on $TM$ is the flow of the vector field defined by the geodesic equation on the $2n$-dimensional manifold $TM$ — a specific smooth vector field whose integral curves are the geodesic lifts $(\gamma(t), \dot\gamma(t))$. The Euler-Lagrange equation that you derived for variational problems in MATH 201 is exactly the geodesic equation: setting $\mathcal{L} = \frac{1}{2}g_{ij}\dot x^i\dot x^j$ in the Euler-Lagrange equation $\frac{d}{dt}\partial_{\dot x^k}\mathcal{L} - \partial_{x^k}\mathcal{L} = 0$ produces the geodesic equation with the Christoffel symbols. The geodesic is the trajectory of a free particle — the Lagrangian mechanics of a particle on a curved surface, with the Christoffel symbols playing the role of the connection forces that keep the particle on the surface.
+
+**The connection to MATH 304 (Computational Operations Research) closes through the Kantorovich problem.** The Wasserstein geodesic problem — finding the geodesic from $\mu$ to $\nu$ in the Wasserstein manifold — is equivalent to the Kantorovich optimal transport problem: minimize $\int \|x-y\|_2^2 \, d\pi$ over couplings $\pi$ with marginals $\mu$ and $\nu$. The optimal coupling $\pi^*$ is the joint distribution of $(x, T(x))$ where $T$ is the Brenier map — the optimal transport map that is also the exponential map of the Wasserstein manifold at $\mu$. The Kantorovich dual — the potential functions $\phi$ and $\psi = \phi^c$ — are the Riemannian potential whose gradient gives the geodesic velocity: $v_0 = \nabla\phi^* = T - \text{id}$. The LP duality of MATH 304, the Legendre-Fenchel transform of Chapter 2, and the Riemannian geodesic equation of Chapter 3 are three faces of the same object: the Kantorovich optimal transport problem and its dual.
+
+---
+
+**Looking forward to Phase 1**, every concept introduced there — the Monge problem, the Kantorovich relaxation, the Wasserstein distance, the Sinkhorn algorithm, the displacement interpolation — is now recognizable as Riemannian geometry on the Wasserstein manifold. The Monge problem searches for the optimal transport map, which is the exponential map of the Wasserstein manifold. The Kantorovich relaxation replaces deterministic transport maps with couplings, which are the analogues of allowing non-geodesic paths in the variational problem. The Wasserstein distance is the geodesic distance on the Wasserstein manifold. The displacement interpolation is the Wasserstein geodesic. The Sinkhorn algorithm computes an entropically regularized approximation to the geodesic distance — the Moreau envelope of the geodesic distance, smoothed by the entropy term. Phase 1 is not a new mathematical universe — it is the Riemannian geometry of Chapter 3 applied to the specific manifold of probability distributions.
+
+The marble rolling freely on the Rolwaling mountain surface — the geodesic — is also mass flowing optimally in distribution space, also a particle moving along the Wasserstein manifold, also the reference trajectory of every manifold-respecting generative model. The geodesic is the straightest path, the shortest path, and the most natural path. In every curved space where the roadmap operates, it is the path that the geometry itself selects.
+
+---
+---

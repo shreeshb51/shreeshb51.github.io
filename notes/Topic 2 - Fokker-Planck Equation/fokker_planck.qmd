@@ -1,0 +1,463 @@
+# Topic 2 -The Fokker-Planck Equation: Time Evolution of Probability Densities
+
+## Introduction
+
+Topic 1 established the variational architecture of probability flow: the JKO scheme showed that the heat equation is gradient descent of entropy in Wasserstein space, and that every PDE governing distributional evolution is the gradient flow of some functional. The framework is geometric and variational — it tells you that probability distributions flow downhill on functionals, and that the JKO proximal step discretizes this flow correctly.
+
+Topic 2 shifts from the variational to the dynamical. Instead of asking which functional is being minimized, it asks how individual particles move. Instead of describing the evolution of a density $\rho_t$ through a PDE on functions, it describes the evolution of individual random particles through a stochastic differential equation on trajectories. The Fokker-Planck equation is the bridge between these two descriptions: it is the PDE that governs the density $\rho_t$ of a cloud of particles each following a stochastic differential equation. The two perspectives — population-level density evolution and individual-level stochastic trajectory — are two windows into the same mathematical object, and the Fokker-Planck equation is the precise theorem that makes this duality exact.
+
+This duality is not merely conceptually elegant. It is computationally essential for generative modeling. A generative model must do two things: run a forward process that transforms data into noise (the noising direction), and run a reverse process that transforms noise back into data (the generation direction). The forward process is most naturally described at the particle level — each data point $x_0$ follows a stochastic trajectory $X_t$ driven by a specific SDE, accumulating noise until it becomes indistinguishable from a Gaussian. The reverse process is most naturally described at the density level — starting from the Gaussian density $\rho_T \approx \mathcal{N}(0,I)$, evolve $\rho_t$ backward in time until it matches the data density $\rho_0 = p_{\text{data}}$. The Fokker-Planck equation is the theorem that connects these two descriptions: knowing the SDE driving individual particles tells you the PDE governing the density, and vice versa. Every modern diffusion model — DDPM, score-based SDE, DDIM, flow matching — is a specific choice of SDE paired with its Fokker-Planck equation, and the training procedure is the method for learning the drift term that drives both.
+
+This topic has three components that build in strict sequence.
+
+The first component is **the stochastic differential equation and its relationship to the Fokker-Planck equation**. A stochastic differential equation $dX_t = b(X_t,t)dt + \sigma(t)dW_t$ describes the trajectory of a single random particle: at each instant, the particle moves by a deterministic drift $b(X_t,t)dt$ plus a random Gaussian perturbation $\sigma(t)dW_t$ from the Brownian motion $W_t$. The drift $b$ is a vector field on $\mathbb{R}^d$ — it points in the direction the particle is being pushed deterministically at each location and time. The noise coefficient $\sigma(t)$ controls how much randomness is added at each instant. The Fokker-Planck equation says: if many particles independently follow this SDE, starting from an initial density $\rho_0$, then the density $\rho_t$ of the particle cloud at time $t$ satisfies $\partial_t\rho_t = -\nabla\cdot(\rho_t b_t) + \frac{\sigma^2}{2}\Delta\rho_t$. The first term $-\nabla\cdot(\rho_t b_t)$ is advection — probability mass being carried by the drift. The second term $\frac{\sigma^2}{2}\Delta\rho_t$ is diffusion — probability mass spreading due to Brownian noise. Together they describe the two forces acting on the probability cloud: being pushed by the deterministic drift and being spread by the stochastic noise.
+
+The second component is **the continuity equation and its role as the noiseless limit**. When $\sigma = 0$ — no Brownian noise, purely deterministic flow — the Fokker-Planck equation reduces to the continuity equation $\partial_t\rho_t + \nabla\cdot(\rho_t v_t) = 0$ with $v_t = b_t$. This is the equation of probability mass conservation under a deterministic velocity field — the same continuity equation that appeared in the Benamou-Brenier formula of Phase 1 and in the JKO scheme's characterization of Wasserstein geodesics. The continuity equation is the skeleton of the Fokker-Planck equation: add noise ($\sigma > 0$) and you get the full Fokker-Planck; remove noise ($\sigma = 0$) and you get pure advection. This connection is crucial for generative modeling: diffusion models use the full Fokker-Planck equation with noise for training stability, while flow matching models use the continuity equation with $\sigma = 0$ for faster, straighter generation trajectories. Both are special cases of the same Fokker-Planck family, parameterized by the noise level $\sigma$.
+
+The third component is **the Ornstein-Uhlenbeck process and the forward diffusion process of generative models**. The specific SDE used in diffusion models is the Ornstein-Uhlenbeck process: $dX_t = -\frac{1}{2}X_t\,dt + dW_t$ — a particle being pulled toward the origin by a linear restoring force $-X_t/2$, plus Brownian noise. This SDE has the remarkable property that its stationary distribution — the distribution toward which $\rho_t$ converges as $t\to\infty$ — is exactly the standard Gaussian $\mathcal{N}(0,I)$. This makes the OU process the canonical forward process for generative modeling: start any data distribution $\rho_0 = p_{\text{data}}$, run the OU SDE forward for time $T$, and the density $\rho_T$ is approximately Gaussian regardless of what $p_{\text{data}}$ was. The reverse process — the generation direction — is a different SDE running backward in time, whose drift involves the score function $\nabla\log\rho_t$ that Topic 1 identified as the fundamental object of Wasserstein gradient flows. The Fokker-Planck equation for the OU process is a specific free energy gradient flow — the gradient flow of $\mathcal{F}(\rho) = \int\rho\log\rho + \frac{1}{2}\int\|x\|^2\rho\,dx$, exactly the free energy functional of Topic 1 with quadratic potential $V(x) = \|x\|^2/2$.
+
+The connections to your curriculum are direct and multiple.
+
+Your MATH 217 course on ODEs and PDEs is the central scaffold. The Fokker-Planck equation is a second-order linear parabolic PDE — the variable-coefficient generalization of the heat equation whose solvability, maximum principle, and long-time behavior you have studied in MATH 217. The method of characteristics from MATH 217 applies to the advection term $-\nabla\cdot(\rho_t b_t)$: characteristics are the trajectories of the ODE $\dot x = b(x,t)$, along which $\rho_t$ is constant in the absence of diffusion. The existence and uniqueness of SDE solutions — the stochastic analogue of Picard-Lindelöf from MATH 217 — holds under the same Lipschitz conditions on $b$ that guarantee ODE well-posedness.
+
+Your MATH 208 course on Statistics and Probability provides the Brownian motion $W_t$ — the continuous-time stochastic process with independent Gaussian increments, $W_t - W_s \sim \mathcal{N}(0,(t-s)I)$ for $t > s$. The Gaussian distribution of the OU process's stationary state, the conditional Gaussian distributions along the OU trajectory, and the denoising interpretation of score matching all use the Gaussian probability theory from MATH 208. The transition density of the OU process — the conditional distribution of $X_t$ given $X_0 = x_0$ — is Gaussian with explicitly computable mean and variance, computed by solving the linear SDE exactly using the integrating factor technique from MATH 217.
+
+Your MATH 201 course on Advanced Calculus provides Itô's formula — the stochastic chain rule $df(X_t) = \nabla f(X_t)\cdot dX_t + \frac{1}{2}\text{tr}(\nabla^2 f(X_t))\sigma^2\,dt$ — which is the multivariable chain rule from MATH 201 with an additional second-order correction term arising from the quadratic variation of Brownian motion. This second-order term is the origin of the diffusion term $\frac{\sigma^2}{2}\Delta\rho_t$ in the Fokker-Planck equation: the Laplacian $\Delta$ appears because Itô's formula produces a trace of the Hessian, which for isotropic noise $\sigma I$ reduces to $\sigma^2$ times the Laplacian.
+
+By the end of this topic, the Fokker-Planck equation will feel not like a technical PDE imported from statistical physics but like the inevitable consequence of asking two equivalent questions simultaneously: how does the density of a particle cloud evolve, and how do individual particles move? Both questions have the same answer, expressed in two different mathematical languages — the PDE language of the Fokker-Planck equation and the SDE language of the stochastic trajectory. Every generative model in Chapter 2 is a specific answer to these two questions: a specific SDE for the particles and the corresponding Fokker-Planck equation for the density, with the training procedure learning the drift term that makes the reverse flow produce data from noise.
+
+---
+
+## Layer 1 (Story)
+
+It is 2019. The Department of Hydrology and Meteorology has deployed a network of automated weather stations across Nepal — 847 stations scattered from the Terai lowlands to the high Himalayan ridges, each recording temperature, humidity, wind speed, and atmospheric pressure every hour. The data flows continuously to the central server in Kathmandu.
+
+Your task is not to record the weather. Your task is to simulate it — to build a generative model that can produce realistic synthetic weather trajectories, sequences of atmospheric states evolving through time that look indistinguishable from real observations. The synthetic data will be used to train emergency response systems, stress-test flood prediction algorithms, and augment the sparse historical record for rare extreme events like the 1993 Koshi floods or the 2015 post-earthquake landslide storms.
+
+The fundamental question is: how does the atmosphere move? Not in the meteorological sense — you are not solving the Navier-Stokes equations. In the probabilistic sense: if you think of the current atmospheric state as a point $x$ in some high-dimensional space, how does that point wander through the space over time? What forces push it? What randomness buffets it? And how do you learn those forces and that randomness from the historical record of 847 stations observing for twenty years?
+
+---
+
+**Two kinds of motion: drift and diffusion.**
+
+You hire two research assistants — Aakriti, a dynamicist, and Bikram, a statistician — and ask them each to describe how the atmospheric state moves.
+
+Aakriti thinks in terms of deterministic forces. She says: the atmosphere has preferred states. In the pre-monsoon season, pressure systems build predictably — temperature rises, humidity climbs, the jet stream shifts northward. There is a deterministic drift pulling the atmospheric state toward these preferred configurations. If you know where the state is now, the drift tells you which direction it wants to move. The drift is a vector field $b(x,t)$: at each atmospheric state $x$ and each time $t$, it points in the direction the atmosphere is being pushed by the large-scale dynamics.
+
+Bikram thinks in terms of random perturbations. He says: no matter how precisely you know today's atmospheric state, tomorrow's will be uncertain. Convective cells form unpredictably. A dust storm in Rajasthan influences humidity in the Terai in ways too complex to track. A rockfall in the Mustang valley creates a local pressure anomaly. These perturbations are effectively random — not because they are truly random, but because they depend on details too fine to observe or model. The randomness is Brownian: the accumulated effect of countless small, independent, unresolvable perturbations, each tiny, summing to a non-trivial uncertainty that grows with time.
+
+The atmospheric state does both simultaneously. It drifts toward preferred configurations and diffuses away from them due to unresolvable perturbations. The stochastic differential equation:
+
+$$dX_t = b(X_t, t)\,dt + \sigma\,dW_t$$
+
+is the mathematical sentence encoding both: the deterministic drift $b(X_t,t)dt$ and the random diffusion $\sigma\,dW_t$. Aakriti designed the drift term. Bikram designed the noise term. Together they describe the trajectory of a single atmospheric state evolving through time — a single weather realization.
+
+---
+
+**The particle cloud: from one trajectory to the density.**
+
+Aakriti and Bikram's SDE describes one possible weather trajectory. But you need the full distribution of possible trajectories — the probability cloud of all atmospheric states the system might visit at each time.
+
+Imagine releasing not one weather station but a thousand imaginary copies of the atmosphere, each starting from the same observed initial state in January 2019, each evolving independently under the same SDE but with different random perturbations. At $t=0$, all thousand copies are at the same point — the initial atmospheric state is known precisely, so the initial density $\rho_0$ is a sharp spike at the observed state. At $t=1$ hour, the copies have spread slightly — small random perturbations have separated them. At $t=1$ day, the spread is larger — the randomness has accumulated. At $t=1$ week, the copies span a wide cloud — the initial certainty has dissolved into a broad distribution reflecting the genuine uncertainty of the seven-day weather forecast.
+
+This spreading cloud is a probability distribution $\rho_t$ evolving through time. The question — how does $\rho_t$ evolve? — has a precise answer: the Fokker-Planck equation. If the individual particles follow $dX_t = b(X_t,t)dt + \sigma dW_t$, then the cloud density satisfies:
+
+$$\partial_t\rho_t = -\nabla\cdot(\rho_t b_t) + \frac{\sigma^2}{2}\Delta\rho_t$$
+
+Two terms. The first, $-\nabla\cdot(\rho_t b_t)$, is advection: the cloud is carried by the drift $b_t$, with the entire probability distribution being pushed in the direction the drift field points. The second, $\frac{\sigma^2}{2}\Delta\rho_t$, is diffusion: the cloud spreads due to the Brownian noise, with the spreading rate proportional to $\sigma^2$. Together: the cloud drifts and spreads. This is the Fokker-Planck equation — the population-level description of what the SDE describes at the individual level.
+
+---
+
+**Advection: the drift carries the cloud.**
+
+To understand the advection term, watch what happens if you turn off the noise entirely: $\sigma = 0$. The SDE becomes a deterministic ODE $\dot X_t = b(X_t,t)$, and the Fokker-Planck equation becomes the continuity equation $\partial_t\rho_t + \nabla\cdot(\rho_t b_t) = 0$.
+
+Imagine the thousand imaginary atmosphere copies evolving without any randomness — purely deterministic drift. They all start at the same point. They all follow the same path. After one week, they are all at the same state — no spreading, no uncertainty. The density $\rho_t$ remains a sharp spike throughout, just moving through atmospheric state space along the deterministic trajectory defined by the drift $b$.
+
+Now suppose the thousand copies start from slightly different initial states — the initial density $\rho_0$ is not a sharp spike but a small cloud representing measurement uncertainty. Each copy follows the deterministic drift from its own starting point. The cloud deforms as it moves: if the drift is convergent (the vector field pointing inward toward a common attractor), the cloud shrinks as the copies converge. If the drift is divergent (the vector field spreading outward), the cloud expands. The continuity equation $\partial_t\rho_t = -\nabla\cdot(\rho_t b_t)$ tracks this deformation precisely — the divergence $\nabla\cdot b_t$ of the drift field measures whether the cloud is compressing or expanding at each point.
+
+---
+
+**Diffusion: the noise spreads the cloud.**
+
+Now turn the drift off entirely: $b = 0$. The SDE becomes pure Brownian motion $dX_t = \sigma dW_t$, and the Fokker-Planck equation becomes the heat equation $\partial_t\rho_t = \frac{\sigma^2}{2}\Delta\rho_t$ — exactly the entropy gradient flow of Topic 1. The probability cloud spreads isotropically from its initial location, with the spreading rate proportional to $\sigma^2$. After time $t$, a cloud that started as a sharp spike at $x_0$ has spread to a Gaussian with variance $\sigma^2 t$ in every direction.
+
+This is the purely diffusive case — no preferred direction, just spreading. The weather analogy: if there were no atmospheric dynamics (no drift), the forecast uncertainty would simply grow as a Gaussian ball around the initial state, expanding at rate $\sigma^2$ in every direction. Real forecast uncertainty does not behave this way — it grows faster in some directions than others (the unstable directions of the atmospheric dynamics), and the drift carries the uncertainty cloud toward preferred atmospheric states. But the pure diffusion term captures the isotropic component of forecast uncertainty growth.
+
+---
+
+**The Ornstein-Uhlenbeck process: drift back toward equilibrium.**
+
+The specific SDE that proves most useful for generative modeling is the Ornstein-Uhlenbeck process:
+
+$$dX_t = -\frac{\beta(t)}{2} X_t\,dt + \sqrt{\beta(t)}\,dW_t$$
+
+where $\beta(t) > 0$ is a time-varying noise schedule. The drift $b(x,t) = -\frac{\beta(t)}{2}x$ is linear and pointing toward the origin: wherever the atmospheric state is, the drift pulls it toward zero. The further from the origin, the stronger the pull. This is a restoring force — a stochastic spring pulling every particle back toward the center.
+
+The monsoon analogy: imagine a weather station recording temperature anomalies — deviations from the seasonal mean. In October, after the monsoon, temperatures overshoot the mean and then relax back toward it. The relaxation is the drift $-\frac{\beta}{2}x$: the anomaly is pushed toward zero at a rate proportional to its magnitude. Meanwhile, unpredictable convective events create random perturbations $\sqrt{\beta}dW_t$ that kick the anomaly away from zero. The OU process is the balance between these two forces: deterministic relaxation toward zero and stochastic excitation away from it.
+
+The OU process has a beautiful property: regardless of where you start, the distribution $\rho_t$ converges to the standard Gaussian $\mathcal{N}(0,I)$ as $t\to\infty$. The restoring drift always wins eventually — it pulls every particle toward the origin, and the noise spreads things out just enough to maintain a Gaussian spread rather than collapsing to a point. The stationary distribution is $\rho_\infty = \mathcal{N}(0,I)$ — a precise Gaussian equilibrium where drift and diffusion balance exactly.
+
+For generative modeling, this is exactly the property you need: start any data distribution $\rho_0 = p_{\text{data}}$ and run the OU process forward. After sufficient time $T$, the distribution $\rho_T\approx\mathcal{N}(0,I)$ regardless of what $p_{\text{data}}$ was. The forward OU process is a universal noising machine — it destroys the structure of any distribution and replaces it with Gaussian noise. Generation is the reverse: start from Gaussian noise and run the reverse process to recover the data distribution.
+
+---
+
+**The transition density: what one step of the OU process looks like.**
+
+The OU process has the remarkable property that its transition density — the conditional distribution of $X_t$ given $X_0 = x_0$ — is exactly Gaussian at every time $t$, computable in closed form.
+
+Starting from $X_0 = x_0$, after time $t$:
+
+$$X_t | X_0 = x_0 \sim \mathcal{N}(\alpha_t x_0,\, \sigma_t^2 I)$$
+
+where $\alpha_t = e^{-\frac{1}{2}\int_0^t\beta(s)ds}$ is the signal coefficient — how much of the original $x_0$ survives — and $\sigma_t^2 = 1 - \alpha_t^2$ is the noise variance — how much Gaussian noise has accumulated. At $t=0$: $\alpha_0 = 1$, $\sigma_0 = 0$ — the state is exactly $x_0$. As $t\to\infty$: $\alpha_t\to 0$, $\sigma_t\to 1$ — the state is pure $\mathcal{N}(0,I)$, completely forgetting $x_0$.
+
+This interpolation from data to noise is the forward process of diffusion models. The variable $\alpha_t$ is called the signal-to-noise ratio's signal component: at early times, $\alpha_t \approx 1$ and the state is mostly signal; at late times, $\alpha_t \approx 0$ and the state is mostly noise. The noise schedule $\beta(t)$ controls the rate of this transition — a fast-rising $\beta$ destroys structure quickly, a slow-rising $\beta$ destroys it gradually.
+
+---
+
+**The break moment: why you cannot just reverse the SDE naively.**
+
+You have the forward process perfectly understood. Each weather trajectory starts from data and evolves toward Gaussian noise. Now you want to reverse it: start from Gaussian noise and evolve backward to data. The naive assumption: simply negate the SDE. If the forward SDE is $dX_t = b(X_t,t)dt + \sigma dW_t$, then surely the reverse SDE is $dX_t = -b(X_t,t)dt + \sigma dW_t$ — just flip the drift sign and run time backward.
+
+This breaks immediately, in a way that is both subtle and instructive.
+
+Reversing the drift sign without modification gives the SDE $dX_t = -b(X_t,t)dt + \sigma dW_t$. Consider the pure diffusion case $b = 0$: the naive reverse is $dX_t = \sigma dW_t$ — the same pure Brownian motion as the forward process. But this cannot be right: pure Brownian motion always spreads probability mass outward. Starting from a Gaussian $\mathcal{N}(0,I)$ and running pure Brownian motion backward gives another spreading Gaussian — not a concentration back toward the data. The reverse process must somehow concentrate probability mass, not spread it. Simply negating the drift cannot achieve this.
+
+The correct reverse-time SDE, derived by Anderson (1982) using time-reversal of stochastic processes, is:
+
+$$dX_t = \left[b(X_t,t) - \sigma^2\nabla\log\rho_t(X_t)\right]dt + \sigma\,d\tilde W_t$$
+
+where $\tilde W_t$ is a new Brownian motion running backward in time. The correction term $-\sigma^2\nabla\log\rho_t(X_t) = -\sigma^2 s_t(X_t)$ — the score function multiplied by $\sigma^2$ — is what makes concentration possible. The score function $s_t = \nabla\log\rho_t$ points from low-density regions toward high-density regions — it is the uphill direction in log-probability space. Adding $-\sigma^2 s_t$ to the drift means the reverse process actively pushes particles toward high-density regions: toward the data. This is the force that counteracts the diffusion's spreading tendency and concentrates probability mass back onto the data manifold.
+
+The correction term is not optional. It is not a small improvement on the naive approach. It is the essential difference between a reverse process that concentrates and a reverse process that merely continues spreading. Without the score function correction, the reverse SDE is just more diffusion. With it, the reverse SDE is a precise, mathematically exact time-reversal of the forward process.
+
+This is why learning the score function $s_t = \nabla\log\rho_t$ is the central task of diffusion model training. The forward process is known — it is the OU SDE with a fixed noise schedule. The reverse process requires the score function at every time $t$ and every location $x$. Score matching learns this function. Neural networks parameterize it. And the Fokker-Planck equation is the guarantee that if you learn the score correctly and run the reverse SDE, the resulting density $\rho_t$ for decreasing $t$ will exactly retrace the forward process — from Gaussian noise back to the data distribution.
+
+---
+
+**The continuity equation as the zero-noise limit: flow matching's foundation.**
+
+The Koshi basin hydrologist from Topic 1 returns. She notices that the weather station SDE, when the noise is turned off ($\sigma\to 0$), becomes the continuity equation $\partial_t\rho_t = -\nabla\cdot(\rho_t v_t)$ with $v_t = b_t$. In this limit, there is no diffusion — probability mass flows purely deterministically along streamlines of the velocity field $v_t$.
+
+This is the foundation of flow matching — the architecture of Chapter 2's second major topic. Instead of learning the score function and running a noisy reverse SDE, flow matching directly learns the velocity field $v_t$ that transports the noise distribution $\rho_T = \mathcal{N}(0,I)$ to the data distribution $\rho_0 = p_{\text{data}}$ along deterministic streamlines. No noise is needed during generation — only during training, to define the interpolating distributions $\rho_t$ whose velocity field $v_t$ is being learned.
+
+The Fokker-Planck equation unifies both approaches: diffusion models are Fokker-Planck equations with $\sigma > 0$ learned through the score function; flow matching models are Fokker-Planck equations with $\sigma = 0$ learned through the velocity field. The noise level $\sigma$ is the dial that interpolates between the two families. The Fokker-Planck equation is the master equation of which both are special cases.
+
+---
+
+**Three pictures to carry into the mathematics.**
+
+The first picture: the thousand imaginary atmosphere copies evolving from the same initial state — some drifting toward monsoon onset, others veering toward dry spells due to random perturbations — forming a probability cloud whose density $\rho_t$ satisfies the Fokker-Planck equation. The forward process turns a sharp spike into a Gaussian cloud. The reverse process, running the corrected reverse SDE with the score function, turns the Gaussian cloud back into a sharp spike at the data.
+
+The second picture: the OU process as a stochastic spring — the linear drift $-\frac{\beta}{2}x$ pulling every atmospheric state toward the origin, balanced by the Brownian noise $\sqrt{\beta}dW_t$ pushing it away. The transition density $\mathcal{N}(\alpha_t x_0, \sigma_t^2 I)$ interpolating between data ($t=0$, pure signal) and noise ($t\to\infty$, pure Gaussian). The signal coefficient $\alpha_t\to 0$ and noise coefficient $\sigma_t\to 1$ as the OU process destroys structure.
+
+The third picture: the break moment — the naive reverse SDE producing more diffusion, not concentration — and the correct Anderson reverse SDE adding the score correction $-\sigma^2\nabla\log\rho_t$, which is the uphill direction in log-probability space, the force that concentrates probability mass onto the data manifold. The score function is the map that tells each particle which direction is uphill — toward data, away from noise.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: Brownian motion and Itô calculus, the stochastic differential equation and its solution theory, the Fokker-Planck equation and its derivation from the SDE, the Ornstein-Uhlenbeck process and its transition density, the reverse-time SDE and the Anderson theorem, and the probability flow ODE connecting the stochastic and deterministic perspectives.
+
+### Brownian Motion and Itô Calculus
+
+**Definition (Brownian motion).** A **standard Brownian motion** (Wiener process) $W_t = (W_t^1,\ldots,W_t^d)$ on $\mathbb{R}^d$ is a stochastic process satisfying:
+
+- $W_0 = 0$ almost surely
+- Independent increments: $W_t - W_s \perp W_s - W_r$ for $r < s < t$
+- Gaussian increments: $W_t - W_s \sim \mathcal{N}(0,(t-s)I_d)$ for $s < t$
+- Continuous paths: $t\mapsto W_t$ is continuous almost surely
+
+**Quadratic variation.** The key property distinguishing Brownian motion from smooth paths:
+
+$$[W,W]_t = \lim_{\|\Pi\|\to 0}\sum_i (W_{t_{i+1}} - W_{t_i})^2 = t\cdot I_d$$
+
+in probability, where the limit is over partitions $\Pi = \{0 = t_0 < t_1 < \cdots < t_n = t\}$. This is written informally as $dW_t\,dW_t^\top = I_d\,dt$.
+
+**Itô integral.** For an adapted process $f(t,\omega)$ with $\int_0^T\mathbb{E}[\|f(t)\|^2]dt < \infty$:
+
+$$\int_0^T f(t)\,dW_t = \lim_{\|\Pi\|\to 0}\sum_i f(t_i)(W_{t_{i+1}} - W_{t_i})$$
+
+using the left-endpoint (non-anticipating) rule — Itô convention.
+
+**Itô's formula (stochastic chain rule).** For $f \in C^2(\mathbb{R}^d\times[0,T])$ and $dX_t = b_t\,dt + \sigma_t\,dW_t$:
+
+$$df(X_t,t) = \left(\partial_t f + \nabla_x f\cdot b_t + \frac{1}{2}\text{tr}(\sigma_t\sigma_t^\top\nabla_x^2 f)\right)dt + \nabla_x f\cdot\sigma_t\,dW_t$$
+
+The correction term $\frac{1}{2}\text{tr}(\sigma_t\sigma_t^\top\nabla_x^2 f)$ — absent in the classical chain rule — arises from the quadratic variation $dW_t\,dW_t^\top = I\,dt$. For scalar noise $\sigma_t = \sigma I$:
+
+$$df(X_t,t) = \left(\partial_t f + \nabla f\cdot b_t + \frac{\sigma^2}{2}\Delta f\right)dt + \sigma\nabla f\cdot dW_t$$
+
+---
+
+### Stochastic Differential Equations
+
+**Definition (SDE).** A **stochastic differential equation** in Itô form:
+
+$$dX_t = b(X_t,t)\,dt + \sigma(t)\,dW_t, \quad X_0 \sim \rho_0$$
+
+where $b: \mathbb{R}^d\times[0,T]\to\mathbb{R}^d$ is the **drift**, $\sigma: [0,T]\to\mathbb{R}$ is the **diffusion coefficient**, and $W_t$ is a standard $d$-dimensional Brownian motion.
+
+**Existence and uniqueness (Itô).** Under the conditions:
+- **Lipschitz drift:** $\|b(x,t) - b(y,t)\| \leq L\|x-y\|$ for all $x,y,t$
+- **Linear growth:** $\|b(x,t)\| + \sigma(t) \leq C(1+\|x\|)$
+
+there exists a unique strong solution $X_t$ with $\mathbb{E}[\sup_{t\leq T}\|X_t\|^2] < \infty$.
+
+**Explicit solution for linear SDEs.** For the linear SDE $dX_t = A(t)X_t\,dt + \sigma(t)\,dW_t$, the solution is:
+
+$$X_t = \Phi(t,0)X_0 + \int_0^t \Phi(t,s)\sigma(s)\,dW_s$$
+
+where $\Phi(t,s)$ is the fundamental matrix satisfying $\partial_t\Phi(t,s) = A(t)\Phi(t,s)$, $\Phi(s,s) = I$. For scalar $A(t) = -\beta(t)/2$ and $\sigma(t) = \sqrt{\beta(t)}$:
+
+$$X_t = e^{-\frac{1}{2}\int_0^t\beta(s)ds}X_0 + \int_0^t e^{-\frac{1}{2}\int_s^t\beta(u)du}\sqrt{\beta(s)}\,dW_s$$
+
+---
+
+### The Fokker-Planck Equation
+
+**Derivation via Itô's formula.** Let $\rho_t$ be the density of $X_t$ (assuming it exists). For any test function $\phi \in C_c^\infty(\mathbb{R}^d)$:
+
+$$\frac{d}{dt}\mathbb{E}[\phi(X_t)] = \mathbb{E}\left[\nabla\phi(X_t)\cdot b(X_t,t) + \frac{\sigma^2}{2}\Delta\phi(X_t)\right]$$
+
+by Itô's formula (taking expectations eliminates the stochastic integral term $\mathbb{E}[\nabla\phi\cdot\sigma\,dW_t] = 0$). Writing this as:
+
+$$\frac{d}{dt}\int\phi\,\rho_t\,dx = \int\left[\nabla\phi\cdot b\,\rho_t + \frac{\sigma^2}{2}(\Delta\phi)\rho_t\right]dx$$
+
+Integrating by parts (Green's identity):
+
+$$= \int\phi\left[-\nabla\cdot(b\rho_t) + \frac{\sigma^2}{2}\Delta\rho_t\right]dx$$
+
+Since this holds for all $\phi$:
+
+$$\boxed{\partial_t\rho_t = -\nabla\cdot(b_t\rho_t) + \frac{\sigma^2}{2}\Delta\rho_t}$$
+
+the **Fokker-Planck equation** (also called the forward Kolmogorov equation).
+
+**Structure of terms:**
+
+**Advection term:** $-\nabla\cdot(b_t\rho_t) = -\sum_i\partial_{x_i}(b_t^i\rho_t)$ — probability mass transported by drift $b_t$.
+
+**Diffusion term:** $\frac{\sigma^2}{2}\Delta\rho_t = \frac{\sigma^2}{2}\sum_i\partial_{x_i}^2\rho_t$ — probability mass spread by Brownian noise.
+
+**Probability flux.** The Fokker-Planck equation is a conservation law:
+
+$$\partial_t\rho_t + \nabla\cdot J_t = 0$$
+
+where $J_t = b_t\rho_t - \frac{\sigma^2}{2}\nabla\rho_t$ is the **probability flux** — drift flux minus diffusion flux. At stationarity $\partial_t\rho = 0$: $\nabla\cdot J = 0$ — zero divergence of the flux.
+
+**Special cases:**
+
+$\sigma = 0$: Continuity equation $\partial_t\rho_t + \nabla\cdot(\rho_t b_t) = 0$.
+
+$b = 0$: Heat equation $\partial_t\rho_t = \frac{\sigma^2}{2}\Delta\rho_t$.
+
+$b = -\nabla V$: Fokker-Planck for overdamped Langevin $dX_t = -\nabla V(X_t)dt + \sigma dW_t$:
+
+$$\partial_t\rho_t = \nabla\cdot(\rho_t\nabla V) + \frac{\sigma^2}{2}\Delta\rho_t$$
+
+Stationary solution: $\rho_\infty\propto e^{-2V/\sigma^2}$ (Gibbs distribution).
+
+---
+
+### The Ornstein-Uhlenbeck Process
+
+**Definition.** The **Ornstein-Uhlenbeck (OU) process** with noise schedule $\beta(t) > 0$:
+
+$$dX_t = -\frac{\beta(t)}{2}X_t\,dt + \sqrt{\beta(t)}\,dW_t$$
+
+**Explicit solution.** Applying the linear SDE formula with $A(t) = -\beta(t)/2 \cdot I$:
+
+$$X_t = \alpha_t X_0 + \sigma_t Z, \quad Z\sim\mathcal{N}(0,I)$$
+
+where:
+
+$$\alpha_t = e^{-\frac{1}{2}\int_0^t\beta(s)ds}, \quad \sigma_t^2 = 1 - \alpha_t^2$$
+
+**Proof of $\sigma_t^2 = 1-\alpha_t^2$.** The variance of $X_t|X_0$ is $\int_0^t\alpha_t^2\alpha_s^{-2}\beta(s)ds = \alpha_t^2\int_0^t\frac{\beta(s)ds}{e^{-\int_0^s\beta(u)du}} = 1-\alpha_t^2$ by direct computation using $\frac{d}{ds}\alpha_s^{-2} = \beta(s)\alpha_s^{-2}$.
+
+**Transition density.** The conditional distribution of $X_t$ given $X_0 = x_0$ is:
+
+$$p(x_t|x_0) = \mathcal{N}(x_t;\,\alpha_t x_0,\,\sigma_t^2 I)$$
+
+This is the **reparameterization** used in DDPM (Ho et al. 2020): $X_t = \alpha_t x_0 + \sigma_t\epsilon$, $\epsilon\sim\mathcal{N}(0,I)$.
+
+**Marginal density.** For $X_0\sim p_{\text{data}}$:
+
+$$\rho_t(x) = \int p_{\text{data}}(x_0)\,\mathcal{N}(x;\,\alpha_t x_0,\,\sigma_t^2 I)\,dx_0$$
+
+a Gaussian mixture with components centered at $\alpha_t x_0$ for each data point $x_0$.
+
+**Fokker-Planck for OU.** The drift $b(x,t) = -\frac{\beta(t)}{2}x$ gives:
+
+$$\partial_t\rho_t = \nabla\cdot\!\left(\frac{\beta(t)}{2}x\rho_t\right) + \frac{\beta(t)}{2}\Delta\rho_t = \frac{\beta(t)}{2}\left[\nabla\cdot(x\rho_t) + \Delta\rho_t\right]$$
+
+**Stationary distribution.** Setting $\partial_t\rho = 0$: $\nabla\cdot(x\rho) + \Delta\rho = 0$, so $\nabla\cdot(x\rho + \nabla\rho) = 0$. Solution: $x\rho_\infty + \nabla\rho_\infty = 0$, giving $\nabla\log\rho_\infty = -x$, so:
+
+$$\rho_\infty(x) = \mathcal{N}(x;\,0,\,I)$$
+
+the standard Gaussian. The OU process converges to $\mathcal{N}(0,I)$ from any initial distribution.
+
+**Signal-to-noise ratio.** Define $\text{SNR}(t) = \alpha_t^2/\sigma_t^2$. The noise schedule determines $\text{SNR}(t)$:
+- Linear schedule: $\beta(t) = \beta_{\min} + t(\beta_{\max}-\beta_{\min})$
+- Cosine schedule (Nichol-Dhariwal): $\alpha_t = \cos(\pi t/2T)$, giving smoother SNR decay
+
+---
+
+### Score Function and Denoising
+
+**Score function of $\rho_t$:**
+
+$$s_t(x) = \nabla_x\log\rho_t(x)$$
+
+**Score of the marginal via Tweedie's formula.** For $X_t = \alpha_t X_0 + \sigma_t\epsilon$, $\epsilon\sim\mathcal{N}(0,I)$:
+
+$$\nabla_x\log\rho_t(x) = -\frac{x - \alpha_t\mathbb{E}[X_0|X_t=x]}{\sigma_t^2}$$
+
+**Proof.** Using Bayes:
+
+$$\rho_t(x) = \int p_{\text{data}}(x_0)\frac{1}{(2\pi\sigma_t^2)^{d/2}}e^{-\frac{\|x-\alpha_t x_0\|^2}{2\sigma_t^2}}\,dx_0$$
+
+$$\nabla_x\log\rho_t(x) = \frac{\nabla_x\rho_t(x)}{\rho_t(x)} = \frac{\int p_{\text{data}}(x_0)\frac{-(x-\alpha_t x_0)}{\sigma_t^2}\mathcal{N}(x;\alpha_t x_0,\sigma_t^2)dx_0}{\rho_t(x)}$$
+
+$$= -\frac{x}{\sigma_t^2} + \frac{\alpha_t}{\sigma_t^2}\frac{\int x_0\,p_{\text{data}}(x_0)\mathcal{N}(x;\alpha_t x_0,\sigma_t^2)dx_0}{\rho_t(x)} = -\frac{x - \alpha_t\mathbb{E}[X_0|X_t=x]}{\sigma_t^2}$$
+
+**Reparameterization.** Since $X_t = \alpha_t X_0 + \sigma_t\epsilon$, the optimal denoiser $\hat x_0(x,t) = \mathbb{E}[X_0|X_t=x]$ gives:
+
+$$s_t(x) = -\frac{x - \alpha_t\hat x_0(x,t)}{\sigma_t^2} = -\frac{\mathbb{E}[\epsilon|X_t=x]}{\sigma_t} = -\frac{\hat\epsilon(x,t)}{\sigma_t}$$
+
+Three equivalent parameterizations of the score: $x$-prediction ($\hat x_0$), $\epsilon$-prediction ($\hat\epsilon$), and $v$-prediction ($v = \alpha_t\epsilon - \sigma_t x_0$).
+
+**Score matching objective (Vincent 2011, Song-Ermon 2019):**
+
+$$\mathcal{L}_{\text{SM}}(\theta) = \mathbb{E}_{t,X_t}\left[\|s_\theta(X_t,t) - \nabla_{X_t}\log\rho_t(X_t)\|^2\right]$$
+
+**Denoising score matching (DSM):** Equivalent tractable objective:
+
+$$\mathcal{L}_{\text{DSM}}(\theta) = \mathbb{E}_{t,X_0,\epsilon}\left[\left\|s_\theta(\alpha_t X_0+\sigma_t\epsilon,\,t) + \frac{\epsilon}{\sigma_t}\right\|^2\right]$$
+
+The intractable $\nabla\log\rho_t$ is replaced by $-\epsilon/\sigma_t$ — the known noise added in the forward process — making the objective computable from data without knowing the true score.
+
+---
+
+### Reverse-Time SDE and Anderson's Theorem
+
+**Theorem (Anderson 1982).** Let $X_t$ satisfy the forward SDE:
+
+$$dX_t = b(X_t,t)\,dt + \sigma(t)\,dW_t, \quad t\in[0,T]$$
+
+with marginal densities $\rho_t$. Define the **reverse-time process** $\tilde X_t = X_{T-t}$. Then $\tilde X_t$ satisfies:
+
+$$d\tilde X_t = \left[{-b(\tilde X_t,T-t) + \sigma(T-t)^2\nabla\log\rho_{T-t}(\tilde X_t)}\right]dt + \sigma(T-t)\,d\tilde W_t$$
+
+where $\tilde W_t$ is a standard Brownian motion under the time-reversed filtration.
+
+**Proof sketch.** Using the Doob-Meyer decomposition and time-reversal of martingales: for a diffusion with generator $\mathcal{L}f = b\cdot\nabla f + \frac{\sigma^2}{2}\Delta f$, the adjoint generator (in $L^2(\rho_t)$) is $\mathcal{L}^*f = -\nabla\cdot(bf) + \frac{\sigma^2}{2}\Delta f$. The reverse-time drift is obtained by decomposing $b$ into its $\rho_t$-symmetric and antisymmetric parts:
+
+$$\tilde b(x,t) = -b(x,T-t) + \sigma^2\nabla\log\rho_{T-t}(x) = -b(x,T-t) + \sigma^2 s_{T-t}(x)$$
+
+The score correction $\sigma^2\nabla\log\rho_{T-t}$ accounts for the change in the reference measure from $\rho_0$ to $\rho_T$ under time reversal. $\square$
+
+**For the OU forward process** $dX_t = -\frac{\beta_t}{2}X_t\,dt + \sqrt{\beta_t}\,dW_t$, the reverse SDE is:
+
+$$d\tilde X_t = \left[\frac{\beta_{T-t}}{2}\tilde X_t + \beta_{T-t}\nabla\log\rho_{T-t}(\tilde X_t)\right]dt + \sqrt{\beta_{T-t}}\,d\tilde W_t$$
+
+$$= \left[\frac{\beta_{T-t}}{2}\tilde X_t + \beta_{T-t}s_{T-t}(\tilde X_t)\right]dt + \sqrt{\beta_{T-t}}\,d\tilde W_t$$
+
+**DDPM connection.** Replacing $s_{T-t}(x) \approx s_\theta(x,T-t)$ with a learned neural network and discretizing gives the DDPM reverse sampling:
+
+$$x_{t-1} = \frac{1}{\sqrt{\bar\alpha_t}}\left(x_t + (1-\bar\alpha_t)s_\theta(x_t,t)\right) + \sqrt{1-\bar\alpha_{t-1}}\epsilon_t$$
+
+where $\bar\alpha_t = \alpha_t^2$ and $\epsilon_t\sim\mathcal{N}(0,I)$.
+
+---
+
+### Probability Flow ODE
+
+**Theorem (Song et al. 2021).** For any SDE $dX_t = b_t(X_t)dt + \sigma_t dW_t$ with marginals $\rho_t$, there exists an ODE — the **probability flow ODE** — with the same marginals:
+
+$$\frac{dx_t}{dt} = b_t(x_t) - \frac{\sigma_t^2}{2}\nabla\log\rho_t(x_t) = b_t(x_t) - \frac{\sigma_t^2}{2}s_t(x_t)$$
+
+**Proof.** The Fokker-Planck equation for the SDE is:
+
+$$\partial_t\rho_t = -\nabla\cdot(\rho_t b_t) + \frac{\sigma_t^2}{2}\Delta\rho_t$$
+
+Rewrite the diffusion term: $\frac{\sigma_t^2}{2}\Delta\rho_t = -\nabla\cdot\!\left(-\frac{\sigma_t^2}{2}\nabla\rho_t\right) = -\nabla\cdot\!\left(-\frac{\sigma_t^2}{2}\rho_t\nabla\log\rho_t\right)$. Therefore:
+
+$$\partial_t\rho_t = -\nabla\cdot\!\left(\rho_t\!\left(b_t - \frac{\sigma_t^2}{2}\nabla\log\rho_t\right)\right)$$
+
+This is the continuity equation $\partial_t\rho_t + \nabla\cdot(\rho_t v_t) = 0$ with velocity field:
+
+$$v_t = b_t - \frac{\sigma_t^2}{2}\nabla\log\rho_t = b_t - \frac{\sigma_t^2}{2}s_t$$
+
+The ODE $dx_t/dt = v_t(x_t)$ has the same marginals as the original SDE. $\square$
+
+**Consequence for generation.** The probability flow ODE can be integrated backward from $t=T$ (Gaussian) to $t=0$ (data) using any ODE solver — Euler, Runge-Kutta, adaptive — without stochastic noise. This gives DDIM (Song et al. 2020): deterministic generation with the same marginals as DDPM but faster (fewer function evaluations, no stochastic sampling noise).
+
+**For the OU process**, the probability flow ODE is:
+
+$$\frac{dx_t}{dt} = -\frac{\beta_t}{2}x_t - \frac{\beta_t}{2}\nabla\log\rho_t(x_t) = -\frac{\beta_t}{2}\left(x_t + s_t(x_t)\right)$$
+
+---
+
+### WHY THIS MATTERS
+
+In **MATH 217 (ODEs and PDEs)**, the Fokker-Planck equation $\partial_t\rho_t = -\nabla\cdot(b_t\rho_t) + \frac{\sigma^2}{2}\Delta\rho_t$ is a second-order linear parabolic PDE — the same structural class as the heat equation from MATH 217, with the variable-coefficient first-order term $-\nabla\cdot(b_t\rho_t)$ adding advection to the diffusion. The maximum principle from MATH 217 guarantees that $\rho_t \geq 0$ is preserved — non-negativity of the density is a consequence of the PDE's structure, not an additional constraint. The fundamental solution of the heat equation $K_t(x) = (4\pi t)^{-d/2}e^{-|x|^2/4t}$ is the transition density of pure Brownian motion — the solution of the Fokker-Planck equation with $b=0$ — whose Gaussian form follows from the Fourier transform method of MATH 217. Itô's formula $df = (\partial_t f + \nabla f\cdot b + \frac{\sigma^2}{2}\Delta f)dt + \sigma\nabla f\cdot dW$ is the stochastic chain rule — its derivation using $dW_t^2 = dt$ (the quadratic variation) is the stochastic analogue of the Taylor expansion $df = (\partial_t f + \nabla f\cdot\dot x)dt$ for smooth paths, with the extra Laplacian term $\frac{\sigma^2}{2}\Delta f\,dt$ arising from the quadratic variation of Brownian motion — the second-order term that MATH 217's smooth-path chain rule neglects.
+
+In **MATH 208 (Statistics and Probability)**, the Brownian motion $W_t$ is the continuous-time limit of the random walk from MATH 208 — the process with independent $\mathcal{N}(0,dt)$ increments at every infinitesimal time step. The Gaussian transition density $p(x_t|x_0) = \mathcal{N}(x_t;\alpha_t x_0,\sigma_t^2 I)$ of the OU process is the conditional Gaussian distribution from MATH 208 — computed using the Gaussian integral formula and Bayes' theorem. Tweedie's formula $\nabla\log\rho_t(x) = -(x - \alpha_t\hat x_0(x,t))/\sigma_t^2$ is the score function of a Gaussian mixture — derived by differentiating the log of a mixture of Gaussians, using the MATH 208 formula for conditional expectations in Gaussian models. The denoising score matching objective $\mathcal{L}_{\text{DSM}}(\theta) = \mathbb{E}[\|s_\theta(X_t,t) + \epsilon/\sigma_t\|^2]$ is a mean squared error loss — the same MSE from MATH 208's regression theory, here regressing the neural network $s_\theta$ onto the known noise direction $-\epsilon/\sigma_t$.
+
+In **MATH 201 (Advanced Calculus)**, the integration by parts used to derive the Fokker-Planck equation — $\int(\nabla\phi\cdot b)\rho\,dx = -\int\phi\nabla\cdot(b\rho)\,dx$ — is the divergence theorem from MATH 201 applied to the product $\phi b\rho$ with boundary terms vanishing at infinity. The gradient $\nabla_x\log\rho_t(x)$ is the multivariable gradient from MATH 201, applied to the log-density as a scalar field on $\mathbb{R}^d$. The probability flow ODE's velocity field $v_t = b_t - \frac{\sigma_t^2}{2}\nabla\log\rho_t$ is a vector field on $\mathbb{R}^d$ — its divergence $\nabla\cdot v_t = \nabla\cdot b_t - \frac{\sigma_t^2}{2}\Delta\log\rho_t$ appears in the continuity equation, connecting the multivariable calculus of MATH 201 to the PDE theory of MATH 217 through the divergence theorem.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Department of Hydrology weather station story has a precise mathematical address. We walk through them completely — Aakriti's drift, Bikram's randomness, the thousand imaginary atmosphere copies, the advection and diffusion terms, the OU stochastic spring, the transition density interpolation, the break moment of the naive reverse SDE, the Anderson correction, and the probability flow ODE — until the story and the formalism are a single object seen from two angles.
+
+---
+
+**Aakriti's deterministic drift — the vector field pointing in the direction the atmospheric state wants to move at each location and time — is the drift function $b: \mathbb{R}^d\times[0,T]\to\mathbb{R}^d$ in the SDE $dX_t = b(X_t,t)dt + \sigma(t)dW_t$.** The drift $b(x,t)$ is a vector at each point $x$ in atmospheric state space and each time $t$, encoding the deterministic component of atmospheric evolution — the large-scale dynamics that push temperature, pressure, and humidity toward preferred seasonal configurations. In the OU process specifically, $b(x,t) = -\frac{\beta(t)}{2}x$ — the linear restoring force pulling every atmospheric state toward the origin (the seasonal mean). The Lipschitz condition $\|b(x,t)-b(y,t)\|\leq L\|x-y\|$ — which guarantees the Itô existence and uniqueness theorem, the stochastic Picard-Lindelöf from MATH 217 — is satisfied for the OU drift with $L = \beta(t)/2$, ensuring that the SDE has a unique strong solution $X_t$ for any initial condition $X_0\sim\rho_0$.
+
+**Bikram's random perturbations — the accumulated effect of countless small, independent, unresolvable atmospheric disturbances — is the Brownian motion $W_t$, a standard $d$-dimensional Wiener process with independent Gaussian increments $W_t - W_s\sim\mathcal{N}(0,(t-s)I_d)$.** The independence of increments — $W_t - W_s\perp W_s - W_r$ for $r < s < t$ — is the mathematical statement that perturbations in non-overlapping time intervals are independent, reflecting the assumption that the unresolvable atmospheric disturbances at different times are uncorrelated. The Gaussian distribution of each increment reflects the central limit theorem from MATH 208: the sum of many small, independent, unresolvable perturbations converges to Gaussian by the CLT, regardless of the individual perturbations' distributions. The quadratic variation $[W,W]_t = tI_d$ — the fact that the sum of squared Brownian increments converges to $t$ rather than zero — is what distinguishes Brownian paths from smooth paths and produces the additional Laplacian term in Itô's formula.
+
+---
+
+**The thousand imaginary atmosphere copies evolving independently from the same initial state — forming a spreading probability cloud $\rho_t$ — is the empirical measure $\hat\rho_t^n = \frac{1}{n}\sum_{i=1}^n\delta_{X_t^{(i)}}$ of $n$ independent solutions to the same SDE, converging to the true marginal density $\rho_t$ as $n\to\infty$ by the law of large numbers.** Each copy $X_t^{(i)}$ follows $dX_t^{(i)} = b(X_t^{(i)},t)dt + \sigma(t)dW_t^{(i)}$ with independent Brownian motions $W_t^{(i)}$. The density $\rho_t$ is the distribution of any single copy at time $t$ — the marginal law of $X_t$. The Fokker-Planck equation $\partial_t\rho_t = -\nabla\cdot(b_t\rho_t) + \frac{\sigma^2}{2}\Delta\rho_t$ governs how this marginal law evolves. The initial sharp spike $\rho_0 = \delta_{x_0}$ — all thousand copies starting at the same observed atmospheric state — spreads into a Gaussian cloud $\rho_t = \mathcal{N}(\alpha_t x_0, \sigma_t^2 I)$ for the OU process, with the Gaussian width $\sigma_t$ growing from zero as $t$ increases. The seven-day forecast uncertainty — the cloud spanning a wide distribution after one week — is the variance $\sigma_t^2 = 1-\alpha_t^2$ of this Gaussian, growing from zero at $t=0$ toward one as $t\to\infty$.
+
+---
+
+**The advection term $-\nabla\cdot(\rho_t b_t)$ — probability mass being carried by the drift field — is derived by taking expectations in Itô's formula and integrating by parts using the divergence theorem from MATH 201.** The derivation proceeds: apply Itô's formula to $\phi(X_t)$ for test function $\phi\in C_c^\infty$, giving $d\phi(X_t) = (\nabla\phi\cdot b_t + \frac{\sigma^2}{2}\Delta\phi)dt + \sigma\nabla\phi\cdot dW_t$. Take expectations: $\frac{d}{dt}\mathbb{E}[\phi(X_t)] = \mathbb{E}[\nabla\phi(X_t)\cdot b_t + \frac{\sigma^2}{2}\Delta\phi(X_t)]$ — the stochastic integral term vanishes because $\mathbb{E}[\int f\,dW] = 0$ for adapted $f$. Write as $\frac{d}{dt}\int\phi\rho_t\,dx = \int(\nabla\phi\cdot b_t + \frac{\sigma^2}{2}\Delta\phi)\rho_t\,dx$. Integrate by parts: $\int\nabla\phi\cdot b_t\rho_t\,dx = -\int\phi\nabla\cdot(b_t\rho_t)\,dx$ (divergence theorem, boundary terms vanish at infinity) and $\int(\Delta\phi)\rho_t\,dx = \int\phi\Delta\rho_t\,dx$ (Green's identity, twice). Since this holds for all $\phi$, the densities satisfy $\partial_t\rho_t = -\nabla\cdot(b_t\rho_t) + \frac{\sigma^2}{2}\Delta\rho_t$. The advection term measures the convergence or divergence of the drift field weighted by the current density — $-\nabla\cdot(b_t\rho_t) = -(\nabla\cdot b_t)\rho_t - b_t\cdot\nabla\rho_t$: the first part compresses or expands the cloud based on the divergence of $b_t$, the second part translates the cloud in the direction of $b_t$.
+
+**The diffusion term $\frac{\sigma^2}{2}\Delta\rho_t$ — probability mass spreading due to Brownian noise — arises from the quadratic variation of Brownian motion through Itô's formula, and is the precise mathematical encoding of the fact that random perturbations spread the probability cloud isotropically at rate $\sigma^2$.** The quadratic variation $dW_t^2 = dt$ — the defining property that distinguishes Brownian paths from smooth paths — produces the Laplacian correction $\frac{\sigma^2}{2}\Delta f$ in Itô's formula beyond the classical chain rule term $\nabla f\cdot b_t$. This Laplacian correction, after taking expectations and integrating by parts, becomes the diffusion term $\frac{\sigma^2}{2}\Delta\rho_t$ in the Fokker-Planck equation. The spreading rate $\sigma^2/2$ is the diffusion coefficient — large $\sigma$ means rapid spreading (Bikram's many large random perturbations), small $\sigma$ means slow spreading (few small perturbations). The probability flux $J_t = b_t\rho_t - \frac{\sigma^2}{2}\nabla\rho_t$ decomposes into drift flux $b_t\rho_t$ (advection, carrying mass in the drift direction) and diffusion flux $-\frac{\sigma^2}{2}\nabla\rho_t$ (Fick's law, carrying mass from high to low density) — exactly the hydrological flux decomposition of Topic 1's river story, now for probability rather than water.
+
+---
+
+**The OU stochastic spring — linear drift $-\frac{\beta(t)}{2}x$ pulling toward the origin, balanced by Brownian noise $\sqrt{\beta(t)}dW_t$ — has the explicit solution $X_t = \alpha_t X_0 + \sigma_t Z$, $Z\sim\mathcal{N}(0,I)$, derived by the integrating factor technique from MATH 217.** The linear SDE $dX_t = -\frac{\beta_t}{2}X_t\,dt + \sqrt{\beta_t}\,dW_t$ is solved by multiplying both sides by the integrating factor $e^{\frac{1}{2}\int_0^t\beta_s\,ds} = \alpha_t^{-1}$: $d(\alpha_t^{-1}X_t) = \alpha_t^{-1}\sqrt{\beta_t}\,dW_t$. Integrating: $\alpha_t^{-1}X_t = X_0 + \int_0^t\alpha_s^{-1}\sqrt{\beta_s}\,dW_s$, so $X_t = \alpha_t X_0 + \alpha_t\int_0^t\alpha_s^{-1}\sqrt{\beta_s}\,dW_s$. The stochastic integral $\alpha_t\int_0^t\alpha_s^{-1}\sqrt{\beta_s}dW_s$ is Gaussian with mean zero and variance $\alpha_t^2\int_0^t\alpha_s^{-2}\beta_s\,ds = 1-\alpha_t^2 = \sigma_t^2$ (computed using Itô isometry and $\frac{d}{ds}\alpha_s^{-2} = \beta_s\alpha_s^{-2}$). Therefore $X_t|X_0=x_0\sim\mathcal{N}(\alpha_t x_0,\sigma_t^2 I)$ — the Gaussian transition density with signal coefficient $\alpha_t = e^{-\frac{1}{2}\int_0^t\beta_s\,ds}$ and noise coefficient $\sigma_t = \sqrt{1-\alpha_t^2}$.
+
+**The interpolation $X_t = \alpha_t x_0 + \sigma_t\epsilon$, $\epsilon\sim\mathcal{N}(0,I)$ — the DDPM reparameterization — is the closed-form transition density of the OU process, expressing the noisy state at time $t$ as a convex combination of the clean data $x_0$ (scaled by signal coefficient $\alpha_t$) and pure noise $\epsilon$ (scaled by noise coefficient $\sigma_t$).** At $t=0$: $\alpha_0=1$, $\sigma_0=0$, so $X_0 = x_0$ — pure signal, no noise. As $t\to T$: $\alpha_T\approx 0$, $\sigma_T\approx 1$, so $X_T\approx\epsilon\sim\mathcal{N}(0,I)$ — pure noise, signal forgotten. The signal-to-noise ratio $\text{SNR}(t) = \alpha_t^2/\sigma_t^2$ decreases monotonically from $\infty$ at $t=0$ to $0$ as $t\to T$. The noise schedule $\beta(t)$ is the design choice that determines how rapidly $\text{SNR}(t)$ decreases — the linear schedule $\beta_t = \beta_{\min}+t(\beta_{\max}-\beta_{\min})$ decreases SNR at a fixed rate; the cosine schedule $\alpha_t = \cos(\pi t/2T)$ decreases SNR more slowly near $t=0$ (preserving signal longer) and more rapidly near $t=T$ (destroying it faster), empirically producing better generative quality.
+
+---
+
+**Tweedie's formula $\nabla_x\log\rho_t(x) = -(x-\alpha_t\mathbb{E}[X_0|X_t=x])/\sigma_t^2$ — expressing the score function as the normalized distance between the current noisy state and the optimal denoised estimate — is derived by differentiating the log of the Gaussian mixture $\rho_t(x) = \int p_{\text{data}}(x_0)\mathcal{N}(x;\alpha_t x_0,\sigma_t^2)dx_0$ with respect to $x$, using Bayes' theorem to identify the conditional expectation.** The gradient of the log of an integral $\nabla\log\int f_\theta\,d\theta = \int\theta f_\theta\,d\theta/\int f_\theta\,d\theta$ in the form of a ratio of integrals — a standard computation using the chain rule from MATH 201 and differentiation under the integral sign from Analysis II — produces the conditional expectation formula. The three equivalent parameterizations — $x$-prediction ($\hat x_0 = \mathbb{E}[X_0|X_t]$), $\epsilon$-prediction ($\hat\epsilon = -\sigma_t s_t$), and $v$-prediction ($v_t = \alpha_t\epsilon - \sigma_t x_0$) — are related by $\hat x_0 = (x_t - \sigma_t\hat\epsilon)/\alpha_t = \alpha_t x_t - \sigma_t v_t$, all encoding the same score function in different numerical scalings. The denoising score matching objective $\mathcal{L}_{\text{DSM}} = \mathbb{E}[\|s_\theta(X_t,t)+\epsilon/\sigma_t\|^2]$ replaces the intractable true score $\nabla\log\rho_t$ with the known noise $-\epsilon/\sigma_t$: the neural network learns to predict the noise added in the forward process, which by Tweedie's formula is equivalent to learning the score function — the regression target is known because the forward process is a specific Gaussian distribution.
+
+---
+
+**The break moment — the naive reverse SDE $dX_t = -b(X_t,t)dt + \sigma dW_t$ producing more diffusion rather than concentration — is the formal failure of simply negating the drift without correcting for the score function, which is the precisely stated content of Anderson's theorem.** For pure diffusion $b=0$: the naive reverse is $dX_t = \sigma dW_t$ — another Brownian motion, which spreads probability mass outward from any initial distribution. Starting from $\mathcal{N}(0,I)$ and running $dX_t = \sigma dW_t$ produces $\mathcal{N}(0,(1+\sigma^2 t)I)$ — a Gaussian that grows wider, not one that concentrates toward the data. The score correction $\sigma^2\nabla\log\rho_t(x)$ adds a drift pointing toward high-density regions — the uphill direction in log-probability space — which counteracts the diffusion's spreading tendency. Without the correction, the reverse process continues spreading; with it, the reverse process concentrates. The Anderson formula $\tilde b = -b_{T-t} + \sigma^2 s_{T-t}$ has two terms: $-b_{T-t}$ negates the drift (reversing the deterministic component of the forward process) and $+\sigma^2 s_{T-t}$ adds the score correction (reversing the diffusion's spreading by pointing mass uphill toward data). Both terms are essential: negating the drift alone reverses advection but not diffusion; the score term specifically reverses diffusion by turning spreading into concentrating.
+
+**The Anderson reverse SDE for the OU process $d\tilde X_t = [\frac{\beta_{T-t}}{2}\tilde X_t + \beta_{T-t}s_{T-t}(\tilde X_t)]dt + \sqrt{\beta_{T-t}}d\tilde W_t$ — starting from $\tilde X_0\sim\mathcal{N}(0,I)$ and producing $\tilde X_T\sim p_{\text{data}}$ — is the exact time-reversal of the OU forward process, with the score function $s_{T-t} = \nabla\log\rho_{T-t}$ learned by the neural network $s_\theta$.** The forward drift $-\frac{\beta_t}{2}x$ becomes $+\frac{\beta_{T-t}}{2}\tilde X_t$ in the reverse — same linear term, now with positive sign, pointing away from origin (anti-restoring force in the reverse time direction). The score correction $\beta_{T-t}s_{T-t}(\tilde X_t) = \beta_{T-t}\nabla\log\rho_{T-t}(\tilde X_t)$ points toward high-density regions of $\rho_{T-t}$ — toward the data manifold. At early reverse time (close to $t=0$, corresponding to forward time $T$), $\rho_T\approx\mathcal{N}(0,I)$ and the score is $-x$, so the correction roughly points inward — concentrating the distribution. At late reverse time (close to $t=T$, corresponding to forward time $0$), $\rho_0 = p_{\text{data}}$ and the score points toward the data manifold — fine-tuning the concentration. The DDPM reverse sampling is the Euler-Maruyama discretization of this reverse SDE with $s_{T-t}$ replaced by the learned neural network $s_\theta$.
+
+---
+
+**The probability flow ODE $dx_t/dt = b_t(x_t) - \frac{\sigma_t^2}{2}s_t(x_t)$ — having the same marginals $\rho_t$ as the stochastic SDE but generating deterministic trajectories — is derived by rewriting the diffusion term in the Fokker-Planck equation as an additional advection term, halving the score correction relative to the Anderson reverse SDE.** The proof decomposes: $\frac{\sigma_t^2}{2}\Delta\rho_t = -\nabla\cdot(-\frac{\sigma_t^2}{2}\nabla\rho_t) = -\nabla\cdot(\rho_t\cdot(-\frac{\sigma_t^2}{2}\nabla\log\rho_t)) = -\nabla\cdot(\rho_t\cdot(-\frac{\sigma_t^2}{2}s_t))$. The Fokker-Planck equation becomes $\partial_t\rho_t = -\nabla\cdot(\rho_t(b_t - \frac{\sigma_t^2}{2}s_t))$ — a pure continuity equation with velocity field $v_t = b_t - \frac{\sigma_t^2}{2}s_t$, confirming that the ODE $\dot x_t = v_t(x_t)$ has marginals $\rho_t$. The factor of $\frac{1}{2}$ difference between the ODE correction ($\frac{\sigma_t^2}{2}s_t$) and the SDE correction ($\sigma_t^2 s_t$) is fundamental: the SDE must counteract both the forward diffusion and maintain correct marginals in a stochastic setting, requiring the full score correction; the ODE only needs to encode the net probability flux, which is half the correction. This is the Song et al. (2021) probability flow ODE — its practical implementation as DDIM gives deterministic generation by integrating the ODE backward from $T$ to $0$ using standard ODE solvers (Euler, RK4, adaptive), producing high-quality samples in far fewer function evaluations than the stochastic DDPM sampler.
+
+---
+
+**The connection to MATH 217 is threefold.** Itô's formula $df = (\partial_t f + \nabla f\cdot b + \frac{\sigma^2}{2}\Delta f)dt + \sigma\nabla f\cdot dW$ is the stochastic chain rule — the classical chain rule from MATH 201's multivariate calculus with the Laplacian correction $\frac{\sigma^2}{2}\Delta f\,dt$ arising from $dW_t^2 = dt$. The Fokker-Planck equation is the variable-coefficient parabolic PDE of MATH 217, with the drift providing variable coefficients in the first-order advection term. The integrating factor method used to solve the linear OU SDE — multiplying both sides by $\alpha_t^{-1}$ to convert $dX_t = -\frac{\beta_t}{2}X_t\,dt+\sqrt{\beta_t}\,dW_t$ into $d(\alpha_t^{-1}X_t) = \alpha_t^{-1}\sqrt{\beta_t}\,dW_t$ — is the same integrating factor technique from MATH 217 for linear first-order ODEs $\dot x + p(t)x = q(t)$, now applied to the stochastic analogue with $q(t)$ replaced by $\sqrt{\beta_t}dW_t$. **The connection to MATH 208 is the Gaussian transition density and Bayes' theorem.** The conditional $X_t|X_0=x_0\sim\mathcal{N}(\alpha_t x_0,\sigma_t^2 I)$ uses Gaussian conditional distributions from MATH 208; Tweedie's formula uses Bayes' theorem $p(x_0|x_t)\propto p(x_t|x_0)p(x_0)$ to compute the posterior mean $\mathbb{E}[X_0|X_t]$; the DSM objective $\mathbb{E}[\|s_\theta+\epsilon/\sigma_t\|^2]$ is the MATH 208 MSE regression loss applied to learning the score function from paired $(X_t,\epsilon)$ samples generated by the known forward process. **The connection to MATH 201 is the divergence theorem.** The integration by parts $\int\nabla\phi\cdot b\rho\,dx = -\int\phi\nabla\cdot(b\rho)\,dx$ is the divergence theorem from MATH 201 in $\mathbb{R}^d$; the chain rule $\nabla_x\log\rho_t(x) = \nabla_x\rho_t(x)/\rho_t(x)$ is the multivariable chain rule; and the score decomposition $\nabla\log\rho_t = -(x-\alpha_t\hat x_0)/\sigma_t^2$ uses differentiation under the integral sign from Analysis II applied to the Gaussian mixture.
+
+---
+
+The Department of Hydrology weather station network — Aakriti's drift, Bikram's Brownian perturbations, the thousand imaginary atmosphere copies, the advection and diffusion terms, the OU stochastic spring, the transition density $\mathcal{N}(\alpha_t x_0,\sigma_t^2 I)$, Tweedie's formula for the score, the break moment of the naive reverse SDE, the Anderson correction $\sigma^2 s_t$, and the deterministic probability flow ODE — is now completely dissolved into its mathematical form. Aakriti's drift is $b(x,t)$. Bikram's randomness is $\sigma dW_t$. The particle cloud density is $\rho_t$. The Fokker-Planck equation is $\partial_t\rho_t = -\nabla\cdot(b_t\rho_t)+\frac{\sigma^2}{2}\Delta\rho_t$. The OU solution is $X_t = \alpha_t X_0+\sigma_t\epsilon$. The score is $s_t = \nabla\log\rho_t = -(x-\alpha_t\hat x_0)/\sigma_t^2$. The Fisher information is $\mathcal{I}(\rho_t) = \|s_t\|^2_{L^2(\rho_t)}$. The naive reverse fails without score correction. The Anderson reverse SDE is $d\tilde X_t = [-b_{T-t}+\sigma^2 s_{T-t}]dt+\sigma d\tilde W_t$. The probability flow ODE is $\dot x_t = b_t - \frac{\sigma_t^2}{2}s_t$.
+
+---
+---

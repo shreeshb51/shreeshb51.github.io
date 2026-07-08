@@ -1,0 +1,385 @@
+# Topic 3 - The Legendre-Fenchel Transform
+
+## Introduction
+
+You now have three tools from Chapter 2. Norms gave you geometry — three different shapes of unit ball, three different notions of size, three different characters of optimal solution. Convex sets gave you feasibility — the condition under which optimization problems have no hidden traps and no disconnected pockets. Convex functions gave you tractability — the condition under which local minima are global, gradients point reliably toward optima, and Jensen's inequality controls every expectation bound.
+
+What you do not yet have is duality.
+
+Duality is the idea that every optimization problem has a shadow — a mirror image problem, defined on a different space, whose solution illuminates the original problem from a completely different angle. The shadow is not an approximation. It is an exact reformulation. Solving the shadow solves the original. And in many cases, the shadow is dramatically easier to solve than the original, or reveals structural properties of the solution that the original formulation hides entirely.
+
+The mathematical engine that produces this shadow — that takes any convex function and constructs its dual — is the Legendre-Fenchel transform, also called the convex conjugate. The roadmap names it explicitly as the heart of duality in Optimal Transport, and this description is precise: every step of the Kantorovich duality theorem in Phase 1, which converts the primal transport problem into the dual potential problem, is a Legendre-Fenchel computation. Without the Legendre-Fenchel transform, Kantorovich duality is a miracle. With it, it is a theorem.
+
+But the Legendre-Fenchel transform is more than a tool for Optimal Transport. It is the unifying structure behind every duality in the roadmap. The relationship between the primal and dual formulations of a support vector machine is a Legendre-Fenchel computation. The relationship between entropy and free energy in statistical mechanics — which underlies the entropic regularization of the Sinkhorn algorithm — is a Legendre-Fenchel computation. The relationship between the log-partition function of an exponential family and the negative entropy of its mean parameters — which underlies the information geometry of diffusion models — is a Legendre-Fenchel computation. The transform is not a specialized tool for one problem. It is the universal machine that produces duals.
+
+The core idea is simpler than it first appears. Every convex function can be described in two equivalent ways: by its values — the function itself, telling you the height of the graph at each point — or by its slopes — the collection of all supporting hyperplanes, telling you every tangent line that touches the graph from below. The first description is the primal. The second description is the dual. The Legendre-Fenchel transform converts between them. Given the primal description — the function values — it produces the dual description — the supporting hyperplane slopes — in the form of a new function called the convex conjugate. Given the convex conjugate, it recovers the original function exactly, by a second application of the same transform. The transform is its own inverse on the class of closed convex functions.
+
+This topic has three tightly connected subtopics that unfold the transform in logical order.
+
+The first subtopic is the **definition of the convex conjugate** $f^*(y) = \sup_{x \in \mathbb{R}^n} \{\langle y, x\rangle - f(x)\}$ — the formal construction of the dual function, its geometric interpretation as the intercept of the supporting hyperplane with slope $y$, and its basic properties.
+
+The second subtopic is the **Fenchel-Moreau theorem** — the biconjugate theorem stating that for any closed convex function, $f^{**} = f$. The transform is an involution on the space of closed convex functions, and this involution is the precise statement of the duality between the primal and dual descriptions.
+
+The third subtopic is the **Fenchel duality theorem** — the result that converts a primal optimization problem into its dual, shows when the duality gap is zero, and produces the KKT conditions as a corollary. This is the theorem that the Kantorovich duality of Phase 1 is built on, and by the end of this subtopic, the connection between the Legendre-Fenchel transform and the structure of Optimal Transport will be completely explicit.
+
+By the end of this topic, when you see the Kantorovich dual problem written as $\sup_{\phi, \psi} \int \phi \, d\mu + \int \psi \, d\nu$ subject to $\phi(x) + \psi(y) \leq c(x,y)$, you will not see a separate theorem requiring separate proof. You will see the Legendre-Fenchel transform of the transport cost $c$, applied to the marginal distributions $\mu$ and $\nu$, producing the dual potential functions $\phi$ and $\psi$ as the slopes of the supporting hyperplanes to the cost function. The Kantorovich dual is the Legendre-Fenchel transform of the primal transport problem, and the duality gap is zero because the cost function is convex.
+
+**ALL THREE SUBTOPICS ARE TREATED AS A SINGLE TOPIC FOR EASY COMPREHENSION.**
+
+---
+
+## Layer 1 (Story)
+
+You are the owner of a small textile factory on the outskirts of Patan, and you manufacture a single product: hand-woven fabric sold by the metre. Your factory has a production cost function — the total cost of producing $x$ metres of fabric per day depends on $x$ in a nonlinear way. Raw materials are cheap at low volumes but expensive when you rush to scale up. Labour costs rise nonlinearly when you need overtime. Equipment maintenance grows with output. The result is a convex cost function $f(x)$ — a bowl-shaped curve that rises steeply at both low and high volumes, with a sweet spot somewhere in the middle.
+
+Every morning, a fabric merchant arrives at your factory gate and offers you a price $y$ rupees per metre for your entire day's production. You do not get to negotiate. He names a price, you decide how much to produce, and you pocket the profit. Your profit at price $y$ when you produce $x$ metres is the revenue $yx$ minus the production cost $f(x)$:
+
+$$\text{profit}(x, y) = yx - f(x)$$
+
+Since you are a rational producer, you choose the production volume $x$ that maximizes your profit at the offered price $y$. Your maximum achievable profit at price $y$ is:
+
+$$f^*(y) = \sup_x \{yx - f(x)\}$$
+
+This function $f^*$ — your maximum profit as a function of the merchant's price — is the **Legendre-Fenchel transform** of your cost function $f$. It is also called the **convex conjugate** of $f$.
+
+---
+
+Let us sit with this definition long enough to see what it is actually doing.
+
+Your cost function $f(x)$ describes your factory from the inside — it tells you, for each production level $x$, how much it costs you to produce that amount. It is the primal description of your production economics, told from the perspective of quantity.
+
+Your conjugate function $f^*(y)$ describes your factory from the outside — it tells you, for each price $y$ the merchant could offer, the maximum profit you could extract. It is the dual description of your production economics, told from the perspective of price. The same factory, the same production process, the same cost structure — but described in the language of prices rather than quantities.
+
+The Legendre-Fenchel transform is the machine that converts between these two descriptions. It takes your cost function — the inside view — and produces your profit function — the outside view. And as you will see, under the right conditions, applying the transform a second time — taking the conjugate of the conjugate — brings you all the way back to the original cost function. The two descriptions are equivalent. Neither is more fundamental than the other. They are two windows onto the same factory.
+
+---
+
+Now let us trace through the geometry carefully, because the geometry is everything.
+
+Suppose your cost function is the simple quadratic $f(x) = \frac{1}{2}x^2$ — a perfectly symmetric bowl, with costs rising proportionally to the square of production volume. At price $y$, your profit function is $yx - \frac{1}{2}x^2$. To find the optimal production volume, you take the derivative with respect to $x$ and set it to zero: $y - x = 0$, so $x^* = y$. The optimal production volume equals the price. You substitute back: $f^*(y) = y \cdot y - \frac{1}{2}y^2 = \frac{1}{2}y^2$.
+
+The conjugate of the quadratic $\frac{1}{2}x^2$ is the quadratic $\frac{1}{2}y^2$. The two functions are identical — the quadratic is self-dual. The inside view and the outside view give the same mathematical object. This is the simplest possible case, and it already reveals something important: the conjugate of a cost function is a function of price, defined on the price space rather than the quantity space. The domains of $f$ and $f^*$ are dual to each other — one is quantity space, the other is price space — and the Legendre-Fenchel transform is the precise machine that converts between them.
+
+---
+
+Now let us develop the geometric interpretation that makes the transform feel inevitable rather than arbitrary.
+
+Consider any production level $x_0$ and the tangent line to your cost function at that point. The tangent line has slope $f'(x_0)$ — the marginal cost at production level $x_0$ — and passes through the point $(x_0, f(x_0))$. Its equation is:
+
+$$\ell_{x_0}(x) = f(x_0) + f'(x_0)(x - x_0)$$
+
+Now ask: what is the vertical intercept of this tangent line at $x = 0$? It is:
+
+$$\ell_{x_0}(0) = f(x_0) - f'(x_0) x_0$$
+
+This intercept has a name: it is $-f^*(f'(x_0))$, the negative of the conjugate evaluated at the slope $y = f'(x_0)$. To see why: $f^*(y) = \sup_x \{yx - f(x)\}$. At the optimal $x^* = x_0$ where the supremum is achieved, $y = f'(x_0)$ and $f^*(f'(x_0)) = f'(x_0)x_0 - f(x_0)$. So $-f^*(f'(x_0)) = f(x_0) - f'(x_0)x_0 = \ell_{x_0}(0)$ — exactly the tangent line's intercept.
+
+The Legendre-Fenchel transform is encoding every tangent line to the cost function — every supporting hyperplane — in a single function. Given a slope $y$, it tells you the intercept of the supporting hyperplane with that slope: $-f^*(y)$ is the vertical intercept of the supporting line to $f$ with slope $y$. The conjugate function $f^*$ is the complete catalogue of all supporting lines to $f$, indexed by their slopes.
+
+---
+
+This geometric picture reveals why the transform is so powerful for duality.
+
+A convex function is completely determined by its supporting lines — you can reconstruct the function from the envelope of all its tangent lines. The function's graph is the upper envelope of all supporting lines, and no supporting line lies above the graph. This means the convex function $f$ and the collection of its supporting lines carry exactly the same information. The conjugate $f^*$ is the function that encodes the supporting lines indexed by slope. The original function $f$ can be recovered from $f^*$ by another application of the same construction — the supporting lines to $f^*$, indexed by their own slopes, reconstruct $f$. This is the biconjugate theorem: $f^{**} = f$ for closed convex functions.
+
+The factory story makes this concrete. The cost function $f$ tells you the production cost at each quantity — the inside view. The conjugate $f^*$ tells you the maximum profit at each price — the outside view. To go from outside view back to inside view, you apply the transform again: the cost function is the supremum over all prices of the quantity-revenue minus the maximum profit at that price: $f(x) = \sup_y\{yx - f^*(y)\}$. The factory can be described entirely from the merchant's perspective — from the outside — and the inside description can be recovered perfectly from the outside description. No information is lost in the transformation.
+
+---
+
+Now here is the break moment. The naive assumption is that every function has a well-defined conjugate that is also a nice, smooth, finite-valued function — that the transform is a clean, symmetric operation on the space of all functions. After all, the quadratic case worked perfectly: the conjugate was just another quadratic, finite everywhere, smooth everywhere.
+
+This breaks in multiple directions.
+
+First, the conjugate can be infinite. If your cost function grows very slowly — say $f(x) = \log(1+x)$ for $x \geq 0$ — then at high prices $y$, the profit $yx - \log(1+x)$ grows without bound as $x \to \infty$, because the revenue $yx$ grows linearly while the cost grows only logarithmically. The supremum is infinite: $f^*(y) = +\infty$ for all $y > 1$. The conjugate of a slowly growing function is infinite outside a bounded domain. This is not a failure of the transform — it is the correct encoding of the fact that a cost function that grows too slowly makes the profit unbounded at high prices, which is economically meaningful.
+
+Second, the conjugate can be defined on a different domain than the original. The cost function $f$ lives on the quantity space — positive reals, in the factory context. The conjugate $f^*$ lives on the price space — which can have a completely different structure. The transform maps functions on one space to functions on the dual space, and the dual space can be genuinely different.
+
+Third, and most importantly: the conjugate of a non-convex function is always convex, even if the original function is not. The supremum of linear functions $\{yx - f(x)\}$ over $x$ is always a convex function of $y$ — because it is the pointwise supremum of linear (hence convex) functions of $y$, and pointwise suprema of convex functions are convex. This means the conjugate operation throws away the non-convex parts of a function and returns only the convex hull of the epigraph. The biconjugate $f^{**}$ is therefore the largest convex function lying below $f$ — the convex envelope of $f$. For non-convex $f$, $f^{**} \neq f$: the round-trip from $f$ to $f^*$ to $f^{**}$ does not return you to $f$, but to its convex envelope. The biconjugate theorem $f^{**} = f$ holds only for closed convex functions — and this is not a technical restriction, it is the precise statement of when the inside and outside descriptions carry the same information.
+
+---
+
+Let us now see how this story connects to the Kantorovich duality that opens Phase 1.
+
+In the Kantorovich problem, you want to transport mass from distribution $\mu$ to distribution $\nu$ at minimum cost, where the cost of moving a unit of mass from location $x$ to location $y$ is $c(x,y)$. The primal problem minimizes the total transport cost over all couplings. The dual problem maximizes an integral over potential functions $\phi$ and $\psi$ subject to $\phi(x) + \psi(y) \leq c(x,y)$.
+
+The dual potential $\psi$ is the $c$-transform of $\phi$ — the Legendre-Fenchel transform of the cost function, adapted to the transport setting: $\psi(y) = \inf_x \{c(x,y) - \phi(x)\}$. The constraint $\phi(x) + \psi(y) \leq c(x,y)$ is exactly the condition that $\psi$ is a supporting function to the cost in the transport sense — the analogue of the tangent line condition from the factory story. The Kantorovich dual is the factory's outside view applied to the transport problem: instead of describing the optimal transport plan from the inside (which couplings minimize cost?), you describe it from the outside (which potential functions certify that the cost is at least this large?). The two descriptions — primal coupling and dual potentials — carry the same information when the cost is convex, exactly as the factory's inside and outside descriptions carry the same information when the production cost is convex.
+
+---
+
+Hold two pictures simultaneously. The Patan textile factory: a convex cost function as the inside view, the maximum profit function as the outside view, the Legendre-Fenchel transform as the machine converting between them, and the geometric fact that both views encode the same family of supporting tangent lines. And the Kantorovich optimal transport problem, dimly visible on the horizon: a convex transport cost as the primal, the dual potential functions as the conjugate, and the zero duality gap as the statement that the primal and dual descriptions of the optimal transport plan carry the same information. The factory and the transport problem are the same mathematical object, told in two different economic languages.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the precise definition of the convex conjugate, its fundamental properties, canonical examples, the Fenchel-Moreau biconjugate theorem, the Fenchel duality theorem and its connection to KKT conditions, and finally the $c$-transform that bridges this theory directly to Kantorovich duality in Phase 1.
+
+### The Definition
+
+Let $f: \mathbb{R}^n \to \mathbb{R} \cup \{+\infty\}$ be any function, not necessarily convex. The **convex conjugate** (or **Legendre-Fenchel transform**) of $f$ is the function $f^*: \mathbb{R}^n \to \mathbb{R} \cup \{+\infty\}$ defined by:
+
+$$f^*(y) = \sup_{x \in \mathbb{R}^n} \{\langle y, x\rangle - f(x)\}$$
+
+The domain of $f^*$ is the set of $y$ for which this supremum is finite:
+
+$$\text{dom}(f^*) = \{y \in \mathbb{R}^n : f^*(y) < +\infty\}$$
+
+Several immediate observations follow from the definition.
+
+**$f^*$ is always convex**, regardless of whether $f$ is convex. For any $y_1, y_2$ and $\lambda \in [0,1]$:
+
+$$f^*(\lambda y_1 + (1-\lambda)y_2) = \sup_x \{\langle \lambda y_1 + (1-\lambda)y_2, x\rangle - f(x)\}$$
+$$\leq \lambda \sup_x\{\langle y_1, x\rangle - f(x)\} + (1-\lambda)\sup_x\{\langle y_2, x\rangle - f(x)\} = \lambda f^*(y_1) + (1-\lambda)f^*(y_2)$$
+
+The inequality holds because $\sup(A + B) \leq \sup A + \sup B$. The conjugate is a pointwise supremum of affine (hence convex) functions $y \mapsto \langle y, x\rangle - f(x)$, and pointwise suprema of convex functions are convex.
+
+**Fenchel-Young Inequality.** For all $x \in \mathbb{R}^n$ and $y \in \mathbb{R}^n$:
+
+$$f(x) + f^*(y) \geq \langle x, y\rangle$$
+
+This follows directly from the definition: $f^*(y) \geq \langle y, x\rangle - f(x)$ for every fixed $x$, which rearranges to $f(x) + f^*(y) \geq \langle x, y\rangle$. Equality holds if and only if $x$ achieves the supremum in the definition of $f^*(y)$ — that is, if and only if $y \in \partial f(x)$, the subdifferential of $f$ at $x$.
+
+---
+
+### Canonical Examples
+
+Working through explicit examples builds the geometric intuition.
+
+**Example 1: Quadratic.** $f(x) = \frac{1}{2}\|x\|_2^2$ on $\mathbb{R}^n$.
+
+$$f^*(y) = \sup_x \left\{\langle y, x\rangle - \frac{1}{2}\|x\|_2^2\right\}$$
+
+Setting the gradient to zero: $y - x = 0 \implies x^* = y$. Substituting: $f^*(y) = \langle y, y\rangle - \frac{1}{2}\|y\|_2^2 = \frac{1}{2}\|y\|_2^2$. The quadratic is self-conjugate: $f^* = f$.
+
+**Example 2: Affine.** $f(x) = \langle a, x\rangle + b$.
+
+$$f^*(y) = \sup_x\{\langle y - a, x\rangle - b\}$$
+
+This supremum is $+\infty$ if $y \neq a$ (take $x$ in the direction $y-a$) and $-b$ if $y = a$. Therefore:
+
+$$f^*(y) = \begin{cases} -b & y = a \\ +\infty & y \neq a \end{cases}$$
+
+The conjugate of an affine function is an indicator function — infinite everywhere except at one point.
+
+**Example 3: Indicator function.** Let $C \subseteq \mathbb{R}^n$ be a convex set and $f = \delta_C$ the indicator function: $\delta_C(x) = 0$ if $x \in C$, $+\infty$ otherwise.
+
+$$\delta_C^*(y) = \sup_{x \in \mathbb{R}^n}\{\langle y, x\rangle - \delta_C(x)\} = \sup_{x \in C}\langle y, x\rangle$$
+
+This is the **support function** of $C$, written $\sigma_C(y)$. It measures the maximum inner product between $y$ and any point in $C$ — geometrically, it is the signed distance from the origin to the supporting hyperplane of $C$ in direction $y$. The conjugate of the indicator of a convex set is the support function of that set. This duality — between sets (described by membership) and their support functions (described by their projections onto directions) — is the geometric heart of convex duality.
+
+**Example 4: $L^p$ norm.** For $f(x) = \frac{1}{p}\|x\|_p^p$ with $1 < p < \infty$:
+
+$$f^*(y) = \frac{1}{q}\|y\|_q^q \quad \text{where} \quad \frac{1}{p} + \frac{1}{q} = 1$$
+
+The conjugate of a scaled $L^p$ norm is a scaled $L^q$ norm, where $p$ and $q$ are conjugate exponents — exactly the duality between norms established in the previous topic. The Fenchel-Young inequality for this pair becomes $\frac{1}{p}\|x\|_p^p + \frac{1}{q}\|y\|_q^q \geq \langle x, y\rangle$, which is Young's inequality — the cornerstone of Hölder's inequality.
+
+**Example 5: Negative entropy.** $f(p) = \sum_i p_i \log p_i$ on the probability simplex.
+
+$$f^*(y) = \sup_p \left\{\sum_i y_i p_i - \sum_i p_i \log p_i\right\} = \log \sum_i e^{y_i}$$
+
+The conjugate of the negative entropy is the **log-sum-exp** function — the soft maximum. Setting the gradient to zero: $y_i - \log p_i - 1 = 0 \implies p_i = e^{y_i - 1}$, normalized to the simplex gives $p_i = e^{y_i}/\sum_j e^{y_j}$ — the softmax. The Fenchel-Young inequality becomes $\sum_i p_i \log p_i + \log \sum_i e^{y_i} \geq \sum_i p_i y_i$, which is equivalent to the non-negativity of KL divergence from the softmax distribution to $p$. Entropy and log-sum-exp are conjugates — a fundamental duality in information theory and statistical mechanics.
+
+**Example 6: $L^1$ norm.** $f(x) = \|x\|_1$.
+
+$$f^*(y) = \sup_x\{\langle y, x\rangle - \|x\|_1\} = \delta_{B_\infty}(y) = \begin{cases} 0 & \|y\|_\infty \leq 1 \\ +\infty & \|y\|_\infty > 1 \end{cases}$$
+
+The conjugate of the $L^1$ norm is the indicator of the $L^\infty$ unit ball. This is the dual norm relationship in conjugate form: the Legendre-Fenchel transform converts the $L^1$ norm into the indicator of its dual ball. The Fenchel-Young inequality becomes $\|x\|_1 + \delta_{B_\infty}(y) \geq \langle x, y\rangle$, which for $\|y\|_\infty \leq 1$ gives $\|x\|_1 \geq \langle x, y\rangle$ — the dual norm definition.
+
+---
+
+### Subdifferential Characterization of the Conjugate
+
+The conjugate and the subdifferential are linked by a fundamental equivalence. For a closed convex function $f$:
+
+$$y \in \partial f(x) \iff x \in \partial f^*(y) \iff f(x) + f^*(y) = \langle x, y\rangle$$
+
+All three conditions are equivalent. This is the **Fenchel equality condition** — the equality case of the Fenchel-Young inequality. It says: $y$ is a subgradient of $f$ at $x$ if and only if $x$ is a subgradient of $f^*$ at $y$, if and only if the Fenchel-Young inequality is tight.
+
+For differentiable $f$, this becomes: $y = \nabla f(x) \iff x = \nabla f^*(y)$. The gradient maps of $f$ and $f^*$ are inverses of each other. This is the content of the classical Legendre transform — the gradient map of the cost function inverts the gradient map of the profit function. In the factory story: the optimal production volume $x^*$ at price $y$ satisfies $y = f'(x^*)$, and the inverse relationship $x^* = (f^*)'(y)$ gives the supply curve — production as a function of price — directly from the conjugate.
+
+---
+
+### The Fenchel-Moreau Biconjugate Theorem
+
+The biconjugate of $f$ is the conjugate of the conjugate:
+
+$$f^{**}(x) = (f^*)^*(x) = \sup_{y \in \mathbb{R}^n}\{\langle x, y\rangle - f^*(y)\}$$
+
+**Theorem (Fenchel-Moreau).** For any function $f: \mathbb{R}^n \to \mathbb{R} \cup \{+\infty\}$:
+
+$$f^{**} = \overline{\text{conv}}(f)$$
+
+where $\overline{\text{conv}}(f)$ is the **closed convex envelope** of $f$ — the largest closed convex function lying pointwise below $f$.
+
+**Corollary.** If $f$ is closed and convex, then $f^{**} = f$.
+
+**Proof sketch.** Since $f^*$ is always convex and $f^{**}$ is the conjugate of $f^*$, $f^{**}$ is always convex. The Fenchel-Young inequality gives $f^{**}(x) \leq f(x)$ for all $x$ — the biconjugate is always a lower bound. For closed convex $f$, the supporting hyperplane theorem guarantees that for any $x_0 \notin \text{epi}(f)$, there exists a separating hyperplane, which translates into the existence of $y$ such that $\langle y, x_0\rangle - f^*(y) = f(x_0)$, giving $f^{**}(x_0) = f(x_0)$. $\square$
+
+The Fenchel-Moreau theorem is the precise statement that the Legendre-Fenchel transform is an involution on the space of closed convex functions. The round trip $f \to f^* \to f^{**}$ returns exactly $f$ when $f$ is closed and convex. For non-convex $f$, it returns the convex envelope — the "convexification" of $f$. This theorem is the formal statement that the inside view (function values) and the outside view (supporting hyperplanes) carry exactly the same information for closed convex functions.
+
+---
+
+### Properties of the Conjugate
+
+Several algebraic properties make the conjugate computationally tractable.
+
+**Scaling.** For $\alpha > 0$: $(\alpha f)^*(y) = \alpha f^*(y/\alpha)$.
+
+**Translation.** $(f(\cdot - a))^*(y) = f^*(y) + \langle y, a\rangle$. $(f + b)^*(y) = f^*(y) - b$.
+
+**Infimal convolution.** The infimal convolution of $f$ and $g$ is $(f \square g)(x) = \inf_z\{f(z) + g(x-z)\}$. Under conjugation:
+
+$$(f \square g)^* = f^* + g^*$$
+
+The conjugate of the infimal convolution is the sum of the conjugates. Dually:
+
+$$(f + g)^* = f^* \square g^*$$
+
+The conjugate of the sum is the infimal convolution of the conjugates. These two identities are the Legendre-Fenchel analogues of the convolution theorem for Fourier transforms — addition and infimal convolution are dual operations under the Legendre-Fenchel transform.
+
+**Composition with linear map.** For a linear map $A: \mathbb{R}^m \to \mathbb{R}^n$: $(f \circ A)^*(y) = f^*(A^{-T}y)$ when $A$ is invertible, and more generally $(f \circ A)^* = \inf_{z: A^Tz = y} f^*(z)$ in the non-invertible case.
+
+---
+
+### The Fenchel Duality Theorem
+
+The Fenchel duality theorem is the bridge between the Legendre-Fenchel transform and the primal-dual structure of convex optimization.
+
+**Theorem (Fenchel Duality).** Let $f: \mathbb{R}^n \to \mathbb{R} \cup \{+\infty\}$ and $g: \mathbb{R}^m \to \mathbb{R} \cup \{+\infty\}$ be convex functions and let $A: \mathbb{R}^n \to \mathbb{R}^m$ be a linear map. Consider the primal problem:
+
+$$p^* = \inf_{x \in \mathbb{R}^n} \{f(x) + g(Ax)\}$$
+
+and the dual problem:
+
+$$d^* = \sup_{y \in \mathbb{R}^m} \{-f^*(A^T y) - g^*(-y)\}$$
+
+Then $p^* \geq d^*$ (weak duality) always holds. Under a constraint qualification — for instance, if there exists $x_0 \in \text{dom}(f)$ with $Ax_0 \in \text{int}(\text{dom}(g))$ — then:
+
+$$p^* = d^* \quad \text{(strong duality)}$$
+
+and the dual supremum is attained at some $y^*$.
+
+The primal-dual optimality conditions are:
+
+$$A^T y^* \in \partial f(x^*) \quad \text{and} \quad -y^* \in \partial g(Ax^*)$$
+
+equivalently, using the Fenchel equality:
+
+$$x^* \in \partial f^*(A^T y^*) \quad \text{and} \quad Ax^* \in \partial g^*(-y^*)$$
+
+These are the KKT conditions in subdifferential form. They reduce to the standard KKT conditions $\nabla f(x^*) + A^T \nabla g(Ax^*) = 0$ when $f$ and $g$ are smooth.
+
+---
+
+### The $c$-Transform and Kantorovich Duality
+
+The $c$-transform is the version of the Legendre-Fenchel transform adapted to the Optimal Transport setting. For a cost function $c: \mathbb{R}^n \times \mathbb{R}^n \to \mathbb{R}$ and a function $\phi: \mathbb{R}^n \to \mathbb{R}$, the **$c$-transform** of $\phi$ is:
+
+$$\phi^c(y) = \inf_{x \in \mathbb{R}^n} \{c(x,y) - \phi(x)\}$$
+
+Compare this with the Legendre-Fenchel transform $f^*(y) = \sup_x\{\langle y, x\rangle - f(x)\}$. The $c$-transform replaces the inner product $\langle y, x\rangle$ with the cost function $c(x,y)$, and replaces supremum with infimum (corresponding to a sign convention difference). For the quadratic cost $c(x,y) = \frac{1}{2}\|x-y\|_2^2$, the $c$-transform reduces to the standard Legendre-Fenchel transform up to a change of variables.
+
+The **Kantorovich dual problem** is:
+
+$$\sup_{\phi, \psi} \left\{\int \phi \, d\mu + \int \psi \, d\nu : \phi(x) + \psi(y) \leq c(x,y) \; \forall x, y\right\}$$
+
+The constraint $\phi(x) + \psi(y) \leq c(x,y)$ for all $y$ is equivalent to $\psi(y) \leq \inf_x\{c(x,y) - \phi(x)\} = \phi^c(y)$. The optimal $\psi$ is therefore $\psi = \phi^c$ — the $c$-transform of $\phi$. The dual problem reduces to:
+
+$$\sup_\phi \left\{\int \phi \, d\mu + \int \phi^c \, d\nu\right\}$$
+
+A function $\phi$ satisfying $\phi^{cc} = \phi$ — whose double $c$-transform returns itself — is called **$c$-concave**. The Fenchel-Moreau theorem in the $c$-transform setting says: the optimal potential $\phi$ in the Kantorovich dual is always $c$-concave. For the quadratic cost $c(x,y) = \frac{1}{2}\|x-y\|_2^2$, $c$-concavity reduces to ordinary concavity of $\phi + \frac{1}{2}\|\cdot\|^2$, and the optimal potential is the gradient of a convex function — a classical result in Optimal Transport theory.
+
+**Theorem (Kantorovich Duality).** For probability measures $\mu$ and $\nu$ on $\mathbb{R}^n$ and a lower semicontinuous cost $c \geq 0$:
+
+$$\inf_{\pi \in \Pi(\mu,\nu)} \int c(x,y) \, d\pi = \sup_{\phi \oplus \psi \leq c} \left\{\int \phi \, d\mu + \int \psi \, d\nu\right\}$$
+
+where $\Pi(\mu,\nu)$ is the set of couplings with marginals $\mu$ and $\nu$, and the supremum is over pairs $(\phi, \psi)$ satisfying $\phi(x) + \psi(y) \leq c(x,y)$ for all $x,y$. Both sides equal the Wasserstein distance $W_c(\mu,\nu)$ (for the appropriate Wasserstein metric). The proof uses the Fenchel duality theorem applied to the linear programming structure of the Kantorovich problem, with strong duality following from the constraint qualification that the feasible set of couplings is non-empty and compact.
+
+---
+
+### Moreau Envelope and Proximal Operator
+
+Two constructions derived from the Legendre-Fenchel transform are essential for computational optimization.
+
+The **Moreau envelope** of $f$ with parameter $\lambda > 0$ is:
+
+$$f^\lambda(x) = \inf_z \left\{f(z) + \frac{1}{2\lambda}\|x-z\|_2^2\right\} = (f \square \frac{1}{2\lambda}\|\cdot\|_2^2)(x)$$
+
+It is the infimal convolution of $f$ with a scaled quadratic — a smoothed version of $f$ that approximates $f$ as $\lambda \to 0$. The Moreau envelope is always differentiable, even when $f$ is not, with gradient:
+
+$$\nabla f^\lambda(x) = \frac{1}{\lambda}(x - \text{prox}_{\lambda f}(x))$$
+
+where the **proximal operator** is:
+
+$$\text{prox}_{\lambda f}(x) = \argmin_z \left\{f(z) + \frac{1}{2\lambda}\|x-z\|_2^2\right\}$$
+
+The proximal operator is the generalization of the projection operator: $\text{prox}_{\lambda \delta_C} = \text{proj}_C$. It is the building block of proximal gradient methods — the algorithms used to minimize non-smooth convex objectives like the LASSO. The conjugate of the Moreau envelope is: $(f^\lambda)^*(y) = f^*(y) + \frac{\lambda}{2}\|y\|_2^2$ — adding a quadratic to $f^*$ corresponds to infimal convolution with a quadratic in the primal. This duality between smoothing and strong convexification is used extensively in the analysis of the Sinkhorn algorithm.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 304 (Computational Operations Research), the duality of linear programs — the primal maximization problem and the dual minimization problem — is a special case of the Fenchel duality theorem with $f = \delta_{\{Ax = b, x \geq 0\}}$ and $g$ linear. The dual variables (shadow prices) in linear programming are exactly the $y^*$ that achieve the dual supremum in the Fenchel dual — they are the slopes of the supporting hyperplanes to the primal feasible set, encoded by the Legendre-Fenchel transform. The complementary slackness conditions of linear programming — $y_i^*(a_i^T x^* - b_i) = 0$ for all $i$ — are the Fenchel equality conditions $f(x^*) + f^*(y^*) = \langle x^*, y^*\rangle$ applied to the indicator function of the feasible set. In MATH 208, the connection between entropy and the log-partition function — the fact that the expected sufficient statistics under an exponential family are the gradient of the log-partition function — is the subdifferential characterization $\mathbb{E}[T(X)] \in \partial A(\theta)$ where $A(\theta) = \log Z(\theta)$ is the log-partition function and $(-H)^* = A$ — the conjugate of negative entropy is the log-partition function.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Patan textile factory story has a precise mathematical address. Let us walk through them one by one, until the factory, the merchant, the profit function, and the full formal apparatus are completely fused into a single picture.
+
+---
+
+**The textile factory itself — the production process with its nonlinear cost structure — is the function $f: \mathbb{R}^n \to \mathbb{R} \cup \{+\infty\}$.** The factory is not the building or the machines — it is the cost function. Every economic property of the factory is encoded in $f$: the convexity encodes the disproportionate cost of scaling up, the domain encodes the feasible production range, the growth rate encodes the marginal cost at each output level. When the cost function is convex — when the factory's cost structure bows upward — the entire duality theory applies. When it is not convex, the biconjugate theorem says only the convex envelope $f^{**}$ can be fully recovered from the outside view. Non-convex factories are partially invisible to the merchant.
+
+**The merchant's offered price $y$ rupees per metre is the dual variable $y \in \mathbb{R}^n$.** In the scalar factory story, $y$ is a single price — the price per metre of fabric. In the general Legendre-Fenchel setting, $y$ lives in the dual space $\mathbb{R}^n$, which for the scalar case is the same as the primal space $\mathbb{R}$ but for general vector-valued production is the space of price vectors. The dual variable is not a quantity — it is a price, a slope, a linear functional on the primal space. The primal space is quantity space. The dual space is price space. The Legendre-Fenchel transform is the machine that converts between them.
+
+**The trader's profit at price $y$ when producing $x$ metres is the expression $\langle y, x\rangle - f(x)$ inside the supremum.** The revenue $\langle y, x\rangle$ is the inner product of the price vector $y$ and the production vector $x$ — total revenue at the offered price. The cost $f(x)$ is subtracted. The difference is profit. This expression is linear in $y$ for fixed $x$ — it is an affine function of the price, with slope $x$ and intercept $-f(x)$. The family of all such affine functions, one for each production level $x$, is the collection of all linear functions that the supremum ranges over when computing $f^*(y)$.
+
+**The trader's optimal production decision — maximizing profit over all production levels — is the supremum $f^*(y) = \sup_x \{\langle y, x\rangle - f(x)\}$.** The supremum selects the production level $x^*$ that maximizes profit at the offered price $y$. When $f$ is strictly convex and differentiable, the optimal $x^*$ is unique and satisfies the first-order condition $y = \nabla f(x^*)$ — price equals marginal cost, the fundamental economic optimality condition. The maximum profit $f^*(y)$ is the value of the factory to the merchant at price $y$ — the outside view of the production process.
+
+---
+
+**The quadratic cost $f(x) = \frac{1}{2}x^2$ and its self-conjugate $f^*(y) = \frac{1}{2}y^2$ is the symmetric factory story.** The first-order condition $y = f'(x^*) = x^*$ says optimal production equals price — a perfectly symmetric relationship between the inside and outside views. The factory's marginal cost at production level $x$ equals $x$, and the optimal production at price $y$ equals $y$. The supply curve $x^*(y) = y$ is linear, and the profit function is a perfect mirror of the cost function. Self-conjugate functions are the factories whose inside and outside views are indistinguishable in shape — only the interpretation changes, from cost to profit, from quantity to price.
+
+**The affine cost $f(x) = \langle a, x\rangle + b$ and its indicator conjugate $f^*(y) = -b$ if $y = a$, $+\infty$ otherwise, is the factory with fixed marginal cost.** A factory with constant marginal cost $a$ has no flexibility — it always produces at the same marginal cost regardless of volume. The merchant can only profitably offer the exact price $y = a$ — any higher price generates infinite profit (the factory would produce infinite quantities at constant marginal cost), any lower price makes production unprofitable. The conjugate being infinite outside $\{a\}$ is the formal statement that the factory is only economically viable at one specific price. The inside view — constant marginal cost — produces the outside view — infinite supply elasticity except at exactly one price.
+
+**The indicator function $\delta_C$ and its support function conjugate $\sigma_C(y) = \sup_{x \in C} \langle y, x\rangle$ is the constrained factory.** A factory constrained to produce in the set $C$ — say, bounded between minimum and maximum production levels — has zero cost within $C$ and infinite cost outside $C$. The merchant's maximum revenue from such a factory at price $y$ is the support function $\sigma_C(y)$ — the maximum inner product between the price direction $y$ and any feasible production vector in $C$. The support function is the factory's revenue potential as a function of price, and it is the geometric dual of the constraint set — it describes $C$ from the outside, via its projections onto every direction, rather than from the inside via membership conditions.
+
+---
+
+**The tangent line to the cost function at production level $x_0$ — the line with slope $f'(x_0)$ and intercept $f(x_0) - f'(x_0)x_0$ — is a supporting hyperplane to the epigraph of $f$ at the point $(x_0, f(x_0))$.** The intercept $f(x_0) - f'(x_0)x_0 = -f^*(f'(x_0))$ is the negative of the conjugate evaluated at the marginal cost $f'(x_0)$. Every tangent line to the cost function is therefore encoded in the conjugate: knowing $f^*$ at every price $y$ is equivalent to knowing the intercept of every tangent line to $f$ at every slope $y$. The conjugate is the complete catalogue of all tangent lines — the outside view is the collection of all supporting hyperplanes, and $f^*$ is the function that encodes them indexed by slope.
+
+**The Fenchel-Young inequality $f(x) + f^*(y) \geq \langle x, y\rangle$ is the profit bound.** In the factory story: the production cost $f(x)$ plus the maximum achievable profit $f^*(y)$ is always at least the revenue $\langle y, x\rangle$ at price $y$ when producing $x$. Rearranging: $f^*(y) \geq \langle y, x\rangle - f(x)$ — the maximum profit is always at least the profit at any specific production level. This is trivially true — the supremum is always at least any particular value. The content of the inequality is the equality condition: $f(x) + f^*(y) = \langle x, y\rangle$ if and only if $y = \nabla f(x)$ — the merchant's price equals the factory's marginal cost at the chosen production level. Equality is achieved exactly when the production decision is optimal — when price equals marginal cost. The Fenchel equality condition is the economic optimality condition, dressed in mathematical clothing.
+
+---
+
+**The biconjugate theorem $f^{**} = f$ for closed convex $f$ is the statement that a well-behaved factory is completely determined by its outside view.** The round trip — from cost function $f$ to profit function $f^*$ to the conjugate of the profit function $f^{**}$ — returns exactly the original cost function $f$ when $f$ is closed and convex. The factory is fully recoverable from the merchant's perspective alone. If you know the maximum profit at every possible price, you can reconstruct the production cost at every possible quantity. The two descriptions carry identical information. For a non-convex factory — one whose cost function has local dips or non-convex regions — the round trip returns only the convex envelope $f^{**} \leq f$: the outside view cannot see the non-convexities, which are averaged away when you take the convex hull. The merchant cannot distinguish a non-convex factory from its convex envelope. Non-convexity is invisible from outside.
+
+**The infimal convolution duality $(f \square g)^* = f^* + g^*$ is the merger of two factories.** The infimal convolution $(f \square g)(x) = \inf_z\{f(z) + g(x-z)\}$ is the cost of producing $x$ total units by splitting production optimally between two factories — one with cost $f$ and one with cost $g$. The conjugate of this merged operation is the sum of the individual profit functions: the maximum profit of the merged factory at price $y$ equals the maximum profit of factory 1 at price $y$ plus the maximum profit of factory 2 at price $y$. Both factories face the same market price and maximize their profits independently. The inside view — split production optimally — corresponds to the outside view — maximize profits independently. This duality is used in the Sinkhorn algorithm: adding the entropic regularization term to the transport cost corresponds, under conjugation, to smoothing the dual potentials — and the smoothness of the Moreau envelope corresponds exactly to the strong convexity of the regularized problem.
+
+---
+
+**The $c$-transform $\phi^c(y) = \inf_x\{c(x,y) - \phi(x)\}$ is the Legendre-Fenchel transform with the inner product replaced by the transport cost $c(x,y)$.** In the factory story: instead of revenue being the inner product $\langle y, x\rangle$, the gain from moving a unit of mass from $x$ to $y$ is governed by the cost $c(x,y)$. The $c$-transform of $\phi$ at $y$ asks: what is the best gain you can extract by choosing the source location $x$ optimally, given that the payoff at source $x$ and destination $y$ is $c(x,y)$ minus the potential $\phi(x)$ already extracted at the source? The constraint $\phi(x) + \psi(y) \leq c(x,y)$ in the Kantorovich dual is exactly the Fenchel-Young inequality for the $c$-transform: the sum of the potentials at source and destination must not exceed the transport cost, just as the sum of production cost and maximum profit must not exceed revenue.
+
+**The Kantorovich duality theorem $\inf_\pi \int c \, d\pi = \sup_{\phi + \psi \leq c} \{\int \phi \, d\mu + \int \psi \, d\nu\}$ is the Fenchel duality theorem applied to the transport problem.** The primal problem minimizes the linear functional $\pi \mapsto \int c \, d\pi$ over the convex set of couplings $\Pi(\mu,\nu)$ — a linear program over an infinite-dimensional space. The dual problem maximizes the sum of potential integrals subject to the $c$-transform constraint. Strong duality — the equality of primal and dual values — is the statement that the cost function $c$ and the coupling set $\Pi(\mu,\nu)$ together satisfy the constraint qualification of the Fenchel duality theorem. The optimal dual potentials $\phi^*$ and $\psi^* = (\phi^*)^c$ are the supporting hyperplanes to the optimal transport cost, exactly as the tangent lines to the factory's cost function are the supporting hyperplanes encoded by $f^*$. The Kantorovich dual is the factory's outside view, applied to the space of probability distributions.
+
+---
+
+**The Moreau envelope $f^\lambda(x) = \inf_z\{f(z) + \frac{1}{2\lambda}\|x-z\|_2^2\}$ is the smoothed factory.** The factory produces at the optimal mix between its natural production level $z$ and the target level $x$, with a quadratic penalty for deviating from $x$. As $\lambda \to 0$, the penalty dominates and $f^\lambda \to f$ — the smoothing disappears. As $\lambda \to \infty$, the penalty vanishes and $f^\lambda \to \inf_z f(z)$ — the factory always produces at its cheapest level regardless of $x$. The Moreau envelope is always differentiable with gradient $\nabla f^\lambda(x) = \frac{1}{\lambda}(x - \text{prox}_{\lambda f}(x))$ — the smoothed factory has a well-defined marginal cost at every production level, even when the original factory's cost function has corners or kinks. This is the mathematical reason the Sinkhorn algorithm uses entropic regularization: adding $\varepsilon H(\pi)$ to the transport cost is the Moreau envelope of the indicator function of $\Pi(\mu,\nu)$ in the dual space, producing a smooth, strictly convex problem from a non-smooth one.
+
+**The proximal operator $\text{prox}_{\lambda f}(x) = \argmin_z\{f(z) + \frac{1}{2\lambda}\|x-z\|_2^2\}$ is the factory's optimal production level given a target $x$ and a quadratic deviation penalty.** It generalizes projection — $\text{prox}_{\lambda\delta_C}(x) = \text{proj}_C(x)$ — to non-indicator convex functions. The LASSO regularizer's proximal operator is the soft-thresholding function: $\text{prox}_{\lambda\|\cdot\|_1}(x)_i = \text{sign}(x_i)\max(|x_i| - \lambda, 0)$. The soft-thresholding operator sets small components to zero — exactly the sparsity-promoting geometry of the $L_1$ ball — and shrinks large components toward zero by $\lambda$. The Legendre-Fenchel transform, through the proximal operator, is the engine behind every sparse optimization algorithm in machine learning.
+
+---
+
+**The connection to MATH 304 (Computational Operations Research) is now complete.** The dual variables in linear programming are the $y^*$ that achieve the Fenchel dual supremum. The complementary slackness conditions $y_i^*(a_i^Tx^* - b_i) = 0$ are the Fenchel equality conditions $f(x^*) + f^*(y^*) = \langle x^*, y^*\rangle$ applied to the indicator function of the feasible polytope. The shadow price interpretation of dual variables — the rate at which the optimal objective value changes with respect to tightening a constraint — is the subdifferential of the value function with respect to the right-hand side, which by the envelope theorem equals the optimal dual variable. Every concept in LP duality that you used in MATH 304 was a special case of the Legendre-Fenchel transform applied to piecewise linear functions on polyhedral sets.
+
+**The connection to MATH 208 (Statistics and Probability) runs through the exponential family duality.** The log-partition function $A(\theta) = \log \int e^{\langle \theta, T(x)\rangle} p_0(x) \, dx$ of an exponential family is the conjugate of the negative entropy $H(p) = -\int p \log p \, d\lambda$ restricted to the exponential family manifold. The moment map $\mathbb{E}_\theta[T(X)] = \nabla A(\theta)$ is the gradient of the log-partition function — the subdifferential characterization of the conjugate, giving the mean parameters as the gradient of the dual function. The natural parameters $\theta$ and the mean parameters $\mu = \mathbb{E}_\theta[T(X)]$ are related by the Legendre-Fenchel transform: $\theta \in \partial(-H)(\mu)$ and $\mu \in \partial A(\theta)$. Every exponential family distribution you worked with in MATH 208 — Gaussian, Poisson, Bernoulli, exponential — lives on a Legendre-Fenchel dual pair of parameterizations.
+
+---
+
+**Looking forward across the roadmap**, the Legendre-Fenchel transform is the duality engine of every phase. In Phase 1, the Kantorovich duality converts the primal coupling problem into the dual potential problem via the $c$-transform, and the entropic regularization of the Sinkhorn algorithm adds a KL divergence term whose conjugate is the log-sum-exp — the entropy-log-partition duality from Example 5. The Sinkhorn iterations are coordinate ascent on the dual Kantorovich problem, and their convergence is the convergence of the Legendre-Fenchel duality gap to zero. In Phase 2, the graph Laplacian eigenmaps minimize a Dirichlet energy functional whose dual — via the Legendre-Fenchel transform of the energy — is the spectral decomposition problem, connecting the primal geometric embedding to the dual spectral problem. In Phase 3, the score matching objective is the dual of the Fisher divergence, connected via the Legendre-Fenchel transform of the log-density. The JKO scheme's variational formulation at each time step is a proximal operator in Wasserstein space — the Moreau envelope of the energy functional with respect to the Wasserstein metric. Every duality in Phase 3 — between noise and data, between forward and reverse diffusion, between the score function and the denoising function — is a Legendre-Fenchel duality in the appropriate function space.
+
+The Patan factory's two descriptions — inside cost and outside profit — are not two different objects. They are two windows onto the same economic reality, related by the Legendre-Fenchel transform. Every duality in the roadmap is a factory with two windows. The transform is the machine that opens both simultaneously.
+
+---
+---

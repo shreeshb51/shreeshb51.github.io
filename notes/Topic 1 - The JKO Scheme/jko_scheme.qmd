@@ -1,0 +1,502 @@
+# Topic 1 - The JKO Scheme: Viewing the Heat Equation as Gradient Descent of Entropy
+
+## Introduction
+
+Every optimization algorithm you have encountered in your mathematical training has operated in the same kind of space: a finite-dimensional Euclidean space $\mathbb{R}^n$, or a smooth finite-dimensional manifold, where points are vectors of numbers and the notion of distance is Euclidean or Riemannian. Gradient descent moves a point $x \in \mathbb{R}^n$ in the direction of steepest decrease of a function $f: \mathbb{R}^n \to \mathbb{R}$. The gradient $\nabla f(x)$ tells you which direction is steepest. The step size tells you how far to move. The sequence of iterates $x^{(k+1)} = x^{(k)} - \eta\nabla f(x^{(k)})$ traces a path through $\mathbb{R}^n$ that descends the function $f$.
+
+Topic 1 asks: what happens when the space is not $\mathbb{R}^n$ but the space of probability distributions? What happens when the object you are optimizing over is not a vector of numbers but a probability distribution $\rho$ over $\mathbb{R}^d$, and the function you are minimizing is not a real-valued function on vectors but a functional $F: \mathcal{P}_2(\mathbb{R}^d) \to \mathbb{R}$ defined on distributions? What is the gradient of $F$ in this setting, and what does gradient descent look like when each step moves not a point in $\mathbb{R}^n$ but a probability distribution in the Wasserstein space $(\mathcal{P}_2(\mathbb{R}^d), W_2)$?
+
+The answer is the JKO scheme, and it is one of the most beautiful results in the intersection of optimal transport, partial differential equations, and variational analysis. Its beauty is not merely aesthetic. It is the theorem that makes gradient flow in distribution space computable, interpretable, and connectable to the PDEs that govern real physical and generative processes.
+
+The result that makes the JKO scheme remarkable is its central identification: the heat equation is gradient descent of entropy in the Wasserstein metric. This statement is not a metaphor or an approximation. It is a precise mathematical theorem. The entropy functional $H(\rho) = \int_{\mathbb{R}^d}\rho(x)\log\rho(x)\,dx$, evaluated at a probability density $\rho$, is a real number measuring the negative information content of the distribution. The Wasserstein-2 metric $W_2$ gives the space of probability distributions a Riemannian-like geometry. The gradient flow of $H$ in this geometry — the curve $(\rho_t)_{t\geq 0}$ in distribution space that follows the steepest descent of $H$ at every instant — satisfies the heat equation $\partial_t\rho_t = \Delta\rho_t$. The heat equation is the Wasserstein gradient flow of entropy. Nothing more, nothing less.
+
+This identification transforms how you think about the heat equation. Before the JKO result, the heat equation was a PDE: a condition on how a function $\rho(x,t)$ changes in space and time, derived from physical considerations about heat conduction or particle diffusion. After the JKO result, the heat equation is a geometric object: the steepest descent curve of a specific functional on a specific metric space. The PDE is the consequence of the variational principle, not the other way around. And the variational principle is not specific to entropy — it generalizes to any functional $F$ on distribution space, producing a family of PDEs of which the heat equation is merely the simplest member.
+
+This topic develops the JKO scheme across three components that build on each other with strict logical necessity.
+
+The first component is **the functional landscape of distribution space and the concept of gradient flow**. Before you can define gradient descent in distribution space, you need to understand what it means for distribution space to have a geometry. The Wasserstein-2 space $(\mathcal{P}_2(\mathbb{R}^d), W_2)$ is not a Euclidean space — it is an infinite-dimensional metric space with a rich geometric structure that Otto formalized in 2001 as an infinite-dimensional Riemannian manifold. The tangent space at a distribution $\rho$ is the space of velocity fields $v: \mathbb{R}^d \to \mathbb{R}^d$ that transport $\rho$ infinitesimally — the same velocity fields that appear in the continuity equation $\partial_t\rho_t + \nabla\cdot(\rho_t v_t) = 0$. The Riemannian metric at $\rho$ is the inner product $\langle v, w\rangle_\rho = \int_{\mathbb{R}^d}v(x)\cdot w(x)\,\rho(x)\,dx$ — the $L^2(\rho)$ inner product on velocity fields, weighted by the distribution $\rho$ itself. With this geometric structure, the gradient of a functional $F$ at a distribution $\rho$ — the Wasserstein gradient $\text{grad}_{W_2}F(\rho)$ — is the velocity field $v$ that points in the direction of steepest increase of $F$ in the Wasserstein metric. The gradient flow of $F$ is the curve $(\rho_t)_{t\geq 0}$ satisfying $\partial_t\rho_t = -\text{grad}_{W_2}F(\rho_t)$ — the distributional analogue of $\dot x = -\nabla f(x)$.
+
+The second component is **the JKO time discretization and the proximal point interpretation**. The continuous gradient flow $\partial_t\rho_t = -\text{grad}_{W_2}F(\rho_t)$ is defined but not directly computable — you cannot follow a continuous curve in infinite-dimensional distribution space on a computer. The JKO scheme provides the time-discretized version: given the current distribution $\rho^k$, the next distribution $\rho^{k+1}$ is defined as the solution to the proximal minimization problem:
+
+$$\rho^{k+1} = \arg\min_{\rho \in \mathcal{P}_2(\mathbb{R}^d)} \left\{ F(\rho) + \frac{1}{2\tau} W_2^2(\rho, \rho^k) \right\}$$
+
+This is the implicit Euler discretization of gradient flow, with the Wasserstein distance $W_2(\rho, \rho^k)$ playing the role of the step-size regularization. The functional $F(\rho)$ pulls $\rho$ toward the minimum of $F$; the term $\frac{1}{2\tau}W_2^2(\rho, \rho^k)$ penalizes moving too far from the current distribution in the Wasserstein metric. As the step size $\tau \to 0$, the sequence $(\rho^k)$ converges to the continuous gradient flow. This is the proximal point algorithm from your MATH 304 course, lifted to the infinite-dimensional Wasserstein space — the same algorithm, the same convergence theory, the same geometric meaning, now operating on distributions rather than vectors.
+
+The third component is **the identification of specific gradient flows with known PDEs**. The power of the JKO framework is that different choices of the functional $F$ produce different PDEs as their gradient flows, and many fundamental equations of physics and probability theory turn out to be Wasserstein gradient flows of natural functionals. The heat equation $\partial_t\rho = \Delta\rho$ is the gradient flow of the Boltzmann entropy $H(\rho) = \int\rho\log\rho$. The porous medium equation $\partial_t\rho = \Delta(\rho^m)$ for $m > 1$ is the gradient flow of the Rényi entropy $H_m(\rho) = \frac{1}{m-1}\int\rho^m$. The Fokker-Planck equation $\partial_t\rho = \nabla\cdot(\rho\nabla V) + \Delta\rho$ is the gradient flow of the free energy $F(\rho) = \int\rho V + \int\rho\log\rho$ — the sum of potential energy and entropy. The aggregation equation $\partial_t\rho = \nabla\cdot(\rho\nabla(W\star\rho))$ for an interaction potential $W$ is the gradient flow of the interaction energy $E(\rho) = \frac{1}{2}\iint W(x-y)\rho(x)\rho(y)\,dx\,dy$. Each of these identifications transforms a PDE from a descriptive equation into a geometric object: the steepest descent curve of a functional in Wasserstein space, with the functional encoding the physical or informational quantity being minimized.
+
+The connection to Phase 1 is direct and bilateral. In Phase 1, the Wasserstein distance $W_2(\mu,\nu)$ was defined as the optimal transport cost between two distributions — the minimum cost of transporting mass from $\mu$ to $\nu$, with cost proportional to squared displacement. In Phase 3's JKO scheme, that same $W_2$ appears as the regularization term in the proximal minimization — it measures the cost of moving from the current distribution $\rho^k$ to the next distribution $\rho^{k+1}$. The Wasserstein distance that Phase 1 built as a geometric tool for comparing distributions is now the metric that defines what it means to take a small step in distribution space. The displacement interpolation of Phase 1 — the geodesic in Wasserstein space between two distributions — is the path that the JKO step follows. Brenier's theorem — which characterized optimal transport maps as gradients of convex functions — is the tool that makes the JKO step's optimality conditions explicit. Phase 1 built the geometry; Phase 3 uses it to define dynamics.
+
+The connection to Phase 2 is through the velocity field. The gradient flow equation $\partial_t\rho_t + \nabla\cdot(\rho_t v_t) = 0$ is a continuity equation with velocity field $v_t$. In the JKO framework, the Wasserstein gradient of $F$ at $\rho_t$ is a function $\phi: \mathbb{R}^d \to \mathbb{R}$ (the Kantorovich potential, familiar from Phase 1's dual formulation), and the velocity field is $v_t = -\nabla\phi$ — the gradient of the Kantorovich potential. In Chapter 2 of Phase 3, this velocity field $v_t$ is parameterized by a neural network — an equivariant network of the type built in Phase 2. The JKO framework tells you what $v_t$ should be in principle; the equivariant neural network parameterizes it in practice. Phase 2's architectural choices — $S_n$-equivariance for molecular graphs, $SO(3)$-equivariance for 3D coordinates, gauge-equivariance for manifold-valued data — determine the symmetry constraints on the velocity field that drives the probability flow.
+
+The connection to your curriculum is the deepest it has been at any single topic in the roadmap.
+
+Your MATH 217 course on ODEs and PDEs is the direct foundation. The heat equation $\partial_t\rho = \Delta\rho$ is the canonical parabolic PDE from MATH 217 — you have solved it by Fourier series on bounded domains and by the Fourier transform on $\mathbb{R}^d$, obtaining the Gaussian heat kernel $K_t(x,y) = (4\pi t)^{-d/2}\exp(-|x-y|^2/4t)$ as the fundamental solution. The JKO theorem reinterprets this same equation as a gradient flow in Wasserstein space. The Fokker-Planck equation $\partial_t\rho = -\nabla\cdot(\rho b) + \frac{\sigma^2}{2}\Delta\rho$ is a second-order linear parabolic PDE — the same structural class as the heat equation, with an additional first-order advection term $-\nabla\cdot(\rho b)$ of the same type studied in MATH 217's treatment of first-order PDEs and characteristics.
+
+Your MATH 325 course on Analysis II provides the functional analytic tools. The first variation $\frac{\delta F}{\delta\rho}$ of a functional $F(\rho) = \int f(\rho(x))\,dx$ is the Gâteaux derivative — $\frac{d}{d\epsilon}F(\rho+\epsilon\psi)\big|_{\epsilon=0} = \int f'(\rho)\psi\,dx$ — the functional calculus tool from Analysis II. The Wasserstein gradient of $F$ at $\rho$ is then $\text{grad}_{W_2}F(\rho) = -\nabla\cdot(\rho\nabla\frac{\delta F}{\delta\rho})$ — a divergence-form expression involving the first variation, connecting functional calculus to PDE theory through the continuity equation.
+
+Your MATH 304 course on Computational Operations Research provides the proximal point algorithm in finite dimensions — the algorithm that the JKO scheme generalizes. The proximal point iteration $x^{(k+1)} = \arg\min_x\{f(x) + \frac{1}{2\tau}\|x-x^{(k)}\|^2\}$ is MATH 304's implicit gradient descent: each step minimizes the objective $f$ plus a quadratic penalty for moving far from the current point, with the penalty coefficient $1/(2\tau)$ controlling the step size. The JKO scheme replaces $\|x-x^{(k)}\|^2$ with $W_2^2(\rho,\rho^k)$ and replaces the finite-dimensional point $x$ with the infinite-dimensional distribution $\rho$ — the same algorithm, the same geometric meaning, the same convergence theory, now in Wasserstein space. The strong convexity condition for exponential convergence in MATH 304 becomes geodesic convexity of the functional $F$ in Wasserstein space — the same condition, now defined with respect to geodesics in $(\mathcal{P}_2(\mathbb{R}^d), W_2)$ rather than straight lines in $\mathbb{R}^n$.
+
+By the end of this topic, you will hold in your mind a single unified picture: probability distributions flowing through the Wasserstein space like balls rolling down a hill, following the steepest descent of a functional, with the hill's geometry determined by the Wasserstein metric and the hill's shape determined by the physical or informational quantity being minimized. The heat equation is the simplest such flow — entropy rolling downhill in Wasserstein space, spreading probability mass to maximize disorder. The Fokker-Planck equation is a richer flow — free energy rolling downhill, balancing the spreading force of entropy against the concentrating force of a potential. Every generative model in Chapter 2 is a controlled version of such a flow — a probability distribution being pushed from Gaussian noise toward data, following a velocity field that has been learned to optimize a training objective. The JKO scheme is the theoretical guarantee that this picture is not a metaphor but a theorem.
+
+---
+
+## Layer 1 (Story)
+
+It is the monsoon season of 2018. You are a hydrologist working for the Department of Hydrology and Meteorology in Kathmandu, stationed at the Koshi River basin monitoring center in the eastern Terai. The Koshi is one of Nepal's most powerful rivers — fed by glacial melt and monsoon rainfall from the high Himalayas, it carries enormous volumes of water and sediment down through the Siwalik hills into the Gangetic plain. Your task this monsoon is to monitor how floodwater spreads across the basin after a major rainfall event and predict where the water will accumulate, drain, and settle over the coming days.
+
+After a particularly intense three-day monsoon event, you receive aerial survey data: a map of water depth at every point across the 12,000-square-kilometre basin. The water is not distributed uniformly. There are deep pools in the river channels, shallow sheets of water across the agricultural plains, isolated pockets of standing water in low-lying areas, and dry elevated ground on the terraces and embankments. The water distribution is a complex, highly irregular pattern across the basin.
+
+Over the next week, without any additional rainfall, you watch the water redistribute itself. The deep pools drain slightly. The shallow sheets spread further across the plain. The isolated pockets either drain into lower areas or evaporate. The dry terraces remain dry. Gradually, over many days, the water finds a more even distribution — not perfectly uniform, because the basin's topography prevents that, but progressively more spread out, seeking the lowest available level at every point.
+
+You are watching gradient flow. The water is not moving randomly. It is following a precise mathematical law: at every point, it flows in the direction that most rapidly decreases the total energy of the system. The energy it is minimizing is gravitational potential energy — water at high elevation has more potential energy than water at low elevation, and water flows downhill to reduce this energy. The rate at which water flows between two adjacent points is proportional to the difference in water level between them — steep gradients drive fast flow, gentle gradients drive slow flow.
+
+This is the physical archetype of gradient flow: a distributed quantity — water across the basin — evolving continuously through time, at every moment following the direction of steepest energy decrease, until it reaches an equilibrium where the energy can decrease no further.
+
+---
+
+**The mathematical shift: from water to probability.**
+
+Now comes the conceptual leap that makes the JKO scheme profound.
+
+Replace the water with probability mass. Instead of water depth at each point in the Koshi basin, imagine a probability distribution $\rho(x)$ at each point $x$ in some space — perhaps the space of possible configurations of a protein, or the space of possible image pixel values, or the space of possible molecular structures. The probability distribution tells you how much probability mass is located at each point, just as the water depth told you how much water was located at each point in the basin.
+
+The total amount of water in the basin is conserved — water flows but does not appear or disappear. Similarly, the total probability mass is conserved — probability flows but the total integrates to one. In both cases, the evolution is governed by a continuity equation: the rate of change of the density at each point equals the negative divergence of the flux at that point.
+
+The water's energy was gravitational potential energy — a functional of the water distribution that the water minimized by flowing downhill. What is the analogue for a probability distribution? What is the energy functional that a probability distribution minimizes as it evolves?
+
+The answer, for the simplest and most fundamental case, is entropy.
+
+---
+
+**Entropy as the energy functional: why probability spreads.**
+
+The entropy of a probability distribution $\rho$ is:
+
+$$H(\rho) = \int \rho(x) \log \rho(x) \, dx$$
+
+This number measures the concentration of the distribution. A distribution concentrated at a single point has very high $H$ — nearly all the mass is in one place, $\log\rho(x)$ is very large and positive where $\rho$ is large, and the integral is large. A distribution spread uniformly over a large region has $H$ close to zero or negative — the mass is diluted, $\log\rho(x)$ is large and negative everywhere, and the integral is negative.
+
+Wait — but entropy is supposed to be maximized, not minimized. The second law of thermodynamics says entropy increases. How can probability flow be gradient descent of entropy if entropy should be going up, not down?
+
+The resolution is a sign convention. In thermodynamics, entropy is defined as $S = -\int\rho\log\rho$ — the negative of what we wrote. Maximizing $S$ is the same as minimizing $H = -S = \int\rho\log\rho$. When we say probability flows by gradient descent of $H = \int\rho\log\rho$, we mean it flows in the direction that decreases $H$ — which is the direction that increases thermodynamic entropy $S$. The probability distribution spreads out, becoming more uniform, less concentrated. The water in the basin spreads to lower levels. The probability mass spreads to fill available space. The physics and the mathematics are consistent: entropy (in the thermodynamic sense) increases, and $H = \int\rho\log\rho$ decreases.
+
+The gradient flow of entropy drives probability mass from concentrated regions toward diluted regions — exactly as heat flows from hot regions to cold regions, and water flows from high ground to low ground. All three are the same mathematical phenomenon: gradient flow of an energy functional.
+
+---
+
+**The break moment: what does gradient descent mean for a distribution?**
+
+You understand gradient descent in finite dimensions. You have a function $f: \mathbb{R}^n \to \mathbb{R}$ and you update the parameter vector $\theta \in \mathbb{R}^n$ by:
+
+$$\theta^{(k+1)} = \theta^{(k)} - \eta \nabla f(\theta^{(k)})$$
+
+The gradient $\nabla f(\theta)$ is a vector in $\mathbb{R}^n$ pointing in the direction of steepest increase of $f$. Moving in the opposite direction decreases $f$.
+
+Now the naive assumption: gradient descent of entropy on the space of probability distributions works the same way. The gradient of $H(\rho) = \int\rho\log\rho$ with respect to $\rho$ is $\frac{\delta H}{\delta\rho} = \log\rho + 1$ — the functional derivative, a function of $x$. So gradient descent updates the distribution as:
+
+$$\rho^{(k+1)}(x) = \rho^{(k)}(x) - \eta(\log\rho^{(k)}(x) + 1)$$
+
+This breaks immediately, in two ways.
+
+First, the updated $\rho^{(k+1)}$ is not guaranteed to be non-negative. For points $x$ where $\rho^{(k)}(x)$ is small, $\log\rho^{(k)}(x)$ is large and negative, making $\log\rho^{(k)}(x) + 1$ negative, so $\rho^{(k+1)}(x) = \rho^{(k)}(x) - \eta(\log\rho^{(k)}(x) + 1) > \rho^{(k)}(x)$ — the density increases at sparse points. But for points where $\rho^{(k)}(x)$ is large, $\log\rho^{(k)}(x) + 1$ is large and positive, so $\rho^{(k+1)}(x) < \rho^{(k)}(x)$ — the density decreases at dense points. So far so good: the distribution is spreading out. But for large enough $\eta$, the update $\rho^{(k+1)}(x) = \rho^{(k)}(x) - \eta(\log\rho^{(k)}(x) + 1)$ can become negative at some points, violating the requirement that $\rho \geq 0$.
+
+Second, and more fundamentally, the update does not respect the geometry of distribution space. In Euclidean space, the distance between $\theta^{(k)}$ and $\theta^{(k+1)}$ is $\eta\|\nabla f\|$ — the step size in the Euclidean metric. But distributions are not vectors in Euclidean space. The natural notion of distance between two distributions is not the $L^2$ norm $\|\rho^{(k+1)} - \rho^{(k)}\|_{L^2}$ — it is the Wasserstein distance $W_2(\rho^{(k+1)}, \rho^{(k)})$, which measures how much mass must be transported and how far, not how different the density values are pointwise. The naive update moves probability mass by changing density values pointwise — it is like changing the water depth at each point of the basin directly, rather than letting water flow between adjacent points. Real water does not teleport: it flows continuously through space, conserving mass at every intermediate point. Real probability gradient flow is the same: mass must flow through space continuously, not teleport from dense regions to sparse regions.
+
+The correct notion of gradient descent for distributions must respect both constraints: non-negativity of $\rho$ at every step, and the Wasserstein geometry of distribution space that reflects the physical constraint that mass moves continuously through space.
+
+---
+
+**The JKO scheme: proximal gradient descent in Wasserstein space.**
+
+The JKO scheme resolves both failures by redefining what it means to take a gradient step in distribution space. Instead of updating the density pointwise, it defines each step as the solution to a constrained optimization problem:
+
+$$\rho^{(k+1)} = \arg\min_{\rho \geq 0,\, \int\rho=1} \left\{ H(\rho) + \frac{1}{2\tau} W_2^2(\rho, \rho^{(k)}) \right\}$$
+
+This is the proximal point algorithm — which you know from MATH 304 as the implicit gradient descent that adds a quadratic penalty to the objective to prevent overshoot. In finite dimensions, the proximal update is $x^{(k+1)} = \arg\min_x\{f(x) + \frac{1}{2\tau}\|x - x^{(k)}\|^2\}$. The JKO scheme replaces the Euclidean squared distance $\|x - x^{(k)}\|^2$ with the Wasserstein squared distance $W_2^2(\rho, \rho^{(k)})$ and replaces the finite-dimensional variable $x$ with the distribution $\rho$.
+
+The Wasserstein penalty $\frac{1}{2\tau}W_2^2(\rho, \rho^{(k)})$ does two things simultaneously. First, it enforces non-negativity and mass conservation: the Wasserstein distance is only defined for non-negative distributions with the same total mass, so the constraint $\rho \geq 0$ and $\int\rho = 1$ is automatically enforced by the structure of the optimization problem. Second, it penalizes moving probability mass through large distances in physical space: the Wasserstein distance measures the cost of transporting mass, so a small Wasserstein distance means mass has moved only a short distance across the basin. This is the correct penalty for the physics of continuous mass flow.
+
+The parameter $\tau > 0$ is the time step — the smaller $\tau$, the smaller the allowed Wasserstein distance between consecutive distributions, and the closer the discrete scheme approximates the continuous gradient flow. For large $\tau$, the scheme takes large steps in distribution space; for small $\tau$, it takes small steps and the discrete iterates closely track the continuous gradient flow trajectory.
+
+---
+
+**Why the JKO scheme gives the heat equation.**
+
+The hydrologist's intuition completes the picture. In the Koshi basin, water flows from high points to low points — from regions of high water level to regions of low water level, driven by the gradient of the water depth function. The flux of water at each point is proportional to the spatial gradient of the water depth: $J = -\kappa\nabla h$, where $h$ is the water depth and $\kappa$ is the hydraulic conductivity. The continuity equation $\partial_t h = -\nabla\cdot J = \kappa\Delta h$ is the diffusion equation for water depth — identical in form to the heat equation.
+
+For probability distributions evolving under the JKO scheme with entropy as the functional, the same structure emerges. The first variation of entropy is $\frac{\delta H}{\delta\rho} = \log\rho + 1$. The Wasserstein gradient of $H$ at $\rho$ — the velocity field that drives the probability flow — is $v = -\nabla\frac{\delta H}{\delta\rho} = -\nabla(\log\rho + 1) = -\frac{\nabla\rho}{\rho}$. The continuity equation with this velocity field is:
+
+$$\partial_t\rho = -\nabla\cdot(\rho v) = -\nabla\cdot\left(\rho \cdot \left(-\frac{\nabla\rho}{\rho}\right)\right) = -\nabla\cdot(-\nabla\rho) = \Delta\rho$$
+
+The heat equation. The probability distribution flows in the direction of $-\nabla\log\rho$ — from regions of high log-density to regions of low log-density — exactly as water flows in the direction of $-\nabla h$ — from regions of high water depth to regions of low water depth. The two flows are mathematically identical; the only difference is whether the quantity flowing is water depth or log-probability density.
+
+This is the JKO theorem: the heat equation $\partial_t\rho = \Delta\rho$ is the continuous limit, as $\tau\to 0$, of the JKO proximal scheme with entropy $H(\rho) = \int\rho\log\rho$ as the functional and $W_2$ as the metric. As the time step shrinks, the discrete sequence of distributions $(\rho^{(k)})$ converges to the solution of the heat equation. The water in the Koshi basin flowing downhill is the heat equation in the river's hydraulic geometry. The probability mass flowing down the entropy gradient in Wasserstein space is the same heat equation in the geometry of distribution space.
+
+---
+
+**The generalization: every PDE is a gradient flow.**
+
+Once you see the heat equation as the gradient flow of entropy, the question immediately arises: what other PDEs are gradient flows of other functionals?
+
+The free energy functional $F(\rho) = \int\rho\log\rho + \int\rho V$ — entropy plus potential energy with potential $V: \mathbb{R}^d \to \mathbb{R}$ — has Wasserstein gradient:
+
+$$v = -\nabla\frac{\delta F}{\delta\rho} = -\nabla(\log\rho + V) = -\frac{\nabla\rho}{\rho} - \nabla V$$
+
+The continuity equation with this velocity field is:
+
+$$\partial_t\rho = -\nabla\cdot(\rho v) = \nabla\cdot(\nabla\rho + \rho\nabla V) = \Delta\rho + \nabla\cdot(\rho\nabla V)$$
+
+This is the Fokker-Planck equation — the equation governing the evolution of a probability density under the stochastic differential equation $dX_t = -\nabla V(X_t)dt + \sqrt{2}dW_t$. A particle in a potential $V$, buffeted by Brownian noise, has a distribution that evolves by the Fokker-Planck equation — which is the gradient flow of the free energy in Wasserstein space.
+
+The Koshi basin analogy extends perfectly. Add a tilted landscape — a potential $V(x)$ that represents the elevation of the basin floor. Water flows both downhill (following $-\nabla V$) and from deep to shallow (following $-\nabla h/h \propto -\nabla\log h$). The combined flow is the superposition of gravitational drainage and hydraulic diffusion — exactly the Fokker-Planck equation for the probability distribution of particles in a potential with noise.
+
+This is the landscape of gradient flows in Wasserstein space. Each functional on distribution space defines a PDE. The heat equation is the gradient flow of entropy. The Fokker-Planck equation is the gradient flow of free energy. The porous medium equation is the gradient flow of Rényi entropy. The aggregation equation is the gradient flow of interaction energy. The continuity equation with a learned velocity field — the neural ODE of Chapter 2 — is the gradient flow of a learned functional, parameterized by a neural network. Every generative model in Phase 3 is a gradient flow; every gradient flow is defined by its functional; every functional encodes a geometric or informational quantity being minimized as the distribution evolves from noise to data.
+
+---
+
+**The connection to generative modeling: reversing the flow.**
+
+The hydrologist realizes something important. The monsoon brought concentrated water to specific points in the basin — the river channels, the low-lying plains — and gravity then spread it outward toward equilibrium. The forward process is concentration to diffusion: from structured (high mountains receive concentrated rainfall) to unstructured (water spreads uniformly across the plain).
+
+A generative model needs the reverse. It starts from the unstructured equilibrium — a uniform or Gaussian distribution, the probability analogue of water spread uniformly across the basin — and must reconstruct the structured concentrated distribution — the data distribution, the probability analogue of water concentrated in the river channels.
+
+The forward process (data to noise) is a gradient flow of free energy, governed by the Fokker-Planck equation. It transforms the complex, concentrated data distribution into a simple Gaussian. The reverse process (noise to data) is the time-reversal of this flow — it reconstructs the concentrated data distribution from the Gaussian noise. The score function $\nabla\log\rho_t(x)$ — the gradient of the log-density, which you saw in the velocity field $v = -\nabla\log\rho$ of the heat equation — is the key object: it tells you, at every point in space and every moment in time, which direction probability mass wants to flow in the forward process. Reversing the sign gives you the direction probability mass must flow in the backward process — from noise to data. Score matching, the training objective of diffusion models, is the procedure for learning this direction from data.
+
+The Koshi basin in reverse: instead of monsoon rain concentrating in the mountains and spreading outward, imagine starting from water spread uniformly across the plain and asking it to flow backward — uphill, against gravity, from the flat Terai back into the Himalayan river channels. The score function is the map of the basin's gradient field; the reverse score is the anti-gradient; and learning the score function from data is the task of reconstructing the basin's gradient map from observations of where water ended up after flowing forward.
+
+This is the conceptual bridge from JKO to the generative models of Chapter 2. The JKO scheme established that probability flows are gradient flows of functionals in Wasserstein space. Chapter 2 will show how to learn those functionals — or equivalently, how to learn the velocity fields they generate — from data, producing neural networks that can push a Gaussian distribution to the data distribution by following the learned gradient flow in reverse.
+
+---
+
+**Three pictures to carry into the mathematics.**
+
+Before the formalism, hold three geometric pictures simultaneously.
+
+The first picture: the Koshi basin after monsoon — water distributed unevenly, flowing downhill from every point, gradually spreading to a more uniform level. The water distribution is $\rho_t$. The water level gradient at each point is $\nabla\log\rho_t$. The flow velocity is $-\nabla\log\rho_t$. The continuity equation gives the heat equation. The equilibrium is the uniform distribution — maximum entropy, zero gradient everywhere, no further flow.
+
+The second picture: the proximal step in the Koshi basin — instead of continuous water flow, imagine freezing the basin at each time step, solving an optimization problem that finds the next water distribution minimizing free energy plus a penalty for moving water too far from where it currently is, then unfreezing. The optimization problem is the JKO step: $\rho^{(k+1)} = \arg\min_\rho\{F(\rho) + \frac{1}{2\tau}W_2^2(\rho,\rho^{(k)})\}$. As $\tau\to 0$, the frozen optimization steps converge to the continuous water flow.
+
+The third picture: the tilted basin — adding a landscape potential $V(x)$ that tilts the basin floor, so water flows both by gravity (toward low $V$) and by hydraulic diffusion (from deep to shallow). The equilibrium is no longer uniform but concentrated at the lowest points of $V$ — the Boltzmann distribution $\rho_\infty \propto e^{-V}$. The evolution is the Fokker-Planck equation — the gradient flow of free energy. The generative model learns to reverse this flow, pushing Gaussian noise (the equilibrium of a particular Fokker-Planck equation) back to the data distribution (the initial concentrated configuration before the forward diffusion began).
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the Wasserstein-2 space as an infinite-dimensional Riemannian manifold, the Otto calculus and tangent space structure, functionals on distribution space and their first variations, the JKO proximal scheme and its convergence, the identification of specific gradient flows with PDEs, and the geodesic convexity conditions for convergence.
+
+### The Wasserstein-2 Space as a Metric Space
+
+**Definition.** The **Wasserstein-2 space** is:
+
+$$\mathcal{P}_2(\mathbb{R}^d) = \left\{\mu \in \mathcal{P}(\mathbb{R}^d) : \int_{\mathbb{R}^d} \|x\|^2\, d\mu(x) < \infty\right\}$$
+
+the set of Borel probability measures on $\mathbb{R}^d$ with finite second moment, equipped with the Wasserstein-2 distance:
+
+$$W_2(\mu,\nu)^2 = \inf_{\gamma \in \Pi(\mu,\nu)} \int_{\mathbb{R}^d\times\mathbb{R}^d} \|x-y\|^2\, d\gamma(x,y)$$
+
+where $\Pi(\mu,\nu)$ is the set of couplings with marginals $\mu$ and $\nu$.
+
+**Theorem (Brenier).** For absolutely continuous $\mu$, the optimal coupling is induced by a map: $\gamma^* = (\text{Id}\times T)_\#\mu$ where $T = \nabla\phi$ is the gradient of a convex function $\phi$ (the Kantorovich potential), and:
+
+$$W_2(\mu,\nu)^2 = \int_{\mathbb{R}^d} \|x - \nabla\phi(x)\|^2\, d\mu(x)$$
+
+**Geodesics in $\mathcal{P}_2(\mathbb{R}^d)$.** The displacement interpolation (Wasserstein geodesic) between $\mu_0$ and $\mu_1$ is:
+
+$$\mu_t = ((1-t)\text{Id} + tT)_\# \mu_0, \quad t \in [0,1]$$
+
+where $T = \nabla\phi$ is the optimal transport map. This is the unique constant-speed geodesic in $(\mathcal{P}_2(\mathbb{R}^d), W_2)$.
+
+---
+
+### Otto Calculus: The Riemannian Structure of Wasserstein Space
+
+**The continuity equation.** A curve $(\rho_t)_{t\geq 0}$ in $\mathcal{P}_2(\mathbb{R}^d)$ (with $\rho_t$ absolutely continuous densities) is absolutely continuous if and only if there exists a time-dependent velocity field $v_t: \mathbb{R}^d \to \mathbb{R}^d$ satisfying the **continuity equation**:
+
+$$\partial_t \rho_t + \nabla\cdot(\rho_t v_t) = 0$$
+
+in the sense of distributions, with $\int_0^1\int_{\mathbb{R}^d}\|v_t\|^2\rho_t\,dx\,dt < \infty$.
+
+**The Benamou-Brenier formula.** The Wasserstein distance admits the dynamic formulation:
+
+$$W_2(\mu_0,\mu_1)^2 = \inf_{(\rho_t,v_t)} \int_0^1\int_{\mathbb{R}^d}\|v_t(x)\|^2\rho_t(x)\,dx\,dt$$
+
+where the infimum is over all $(\rho_t,v_t)$ satisfying the continuity equation with $\rho_0=\mu_0$, $\rho_1=\mu_1$. The optimal velocity field is $v_t = \nabla\phi_t$ — a gradient field at every time.
+
+**Definition (Otto's Riemannian structure).** Following Otto (2001), $\mathcal{P}_2(\mathbb{R}^d)$ is formally an infinite-dimensional Riemannian manifold with:
+
+**Tangent space at $\rho$:**
+
+$$T_\rho\mathcal{P}_2 = \overline{\{\nabla\phi : \phi \in C_c^\infty(\mathbb{R}^d)\}}^{L^2(\rho)}$$
+
+— the closure in $L^2(\rho)$ of gradient fields, representing infinitesimal perturbations of $\rho$ via the continuity equation.
+
+**Riemannian metric at $\rho$** (the Otto metric):
+
+$$\langle v, w\rangle_\rho = \int_{\mathbb{R}^d} v(x)\cdot w(x)\, \rho(x)\,dx = \langle v,w\rangle_{L^2(\rho)}$$
+
+the $L^2(\rho)$-inner product on velocity fields, weighted by the current distribution $\rho$.
+
+**Geodesic speed.** For an absolutely continuous curve $(\rho_t)$ with velocity $(v_t)$:
+
+$$|\dot\rho_t|^2_{W_2} = \int_{\mathbb{R}^d}\|v_t(x)\|^2\rho_t(x)\,dx = \|v_t\|^2_{L^2(\rho_t)}$$
+
+---
+
+### Functionals on Distribution Space and Their Wasserstein Gradients
+
+**Definition (Internal energy).** For a convex function $U: [0,\infty) \to \mathbb{R}$:
+
+$$\mathcal{U}(\rho) = \int_{\mathbb{R}^d} U(\rho(x))\,dx$$
+
+**Definition (Potential energy):**
+
+$$\mathcal{V}(\rho) = \int_{\mathbb{R}^d} V(x)\rho(x)\,dx$$
+
+for a potential $V: \mathbb{R}^d \to \mathbb{R}$.
+
+**Definition (Interaction energy):**
+
+$$\mathcal{W}(\rho) = \frac{1}{2}\iint_{\mathbb{R}^d\times\mathbb{R}^d} W(x-y)\rho(x)\rho(y)\,dx\,dy$$
+
+for an interaction kernel $W: \mathbb{R}^d \to \mathbb{R}$.
+
+**Definition (Free energy):**
+
+$$\mathcal{F}(\rho) = \mathcal{U}(\rho) + \mathcal{V}(\rho) = \int_{\mathbb{R}^d}[\rho\log\rho + V\rho]\,dx$$
+
+**First variation.** The **first variation** (Gâteaux derivative) of $F$ at $\rho$ in direction $\psi$ is:
+
+$$\frac{\delta F}{\delta\rho}[\psi] = \lim_{\epsilon\to 0}\frac{F(\rho+\epsilon\psi) - F(\rho)}{\epsilon} = \int_{\mathbb{R}^d}\frac{\delta F}{\delta\rho}(x)\psi(x)\,dx$$
+
+For the specific functionals:
+
+$$\frac{\delta\mathcal{U}}{\delta\rho} = U'(\rho), \quad \frac{\delta\mathcal{V}}{\delta\rho} = V, \quad \frac{\delta\mathcal{W}}{\delta\rho} = W\star\rho, \quad \frac{\delta\mathcal{F}}{\delta\rho} = \log\rho + 1 + V$$
+
+**Definition (Wasserstein gradient).** The **Wasserstein gradient** of $F$ at $\rho$ is the tangent vector $\xi \in T_\rho\mathcal{P}_2$ satisfying:
+
+$$\langle\xi, v\rangle_{L^2(\rho)} = \frac{\delta F}{\delta\rho}[v] \quad \forall v \in T_\rho\mathcal{P}_2$$
+
+**Theorem (Otto 2001).** The Wasserstein gradient of $F$ at $\rho$ is:
+
+$$\text{grad}_{W_2}F(\rho) = -\nabla\cdot\!\left(\rho\,\nabla\frac{\delta F}{\delta\rho}\right)$$
+
+viewed as a tangent vector via the velocity field $v = -\nabla\frac{\delta F}{\delta\rho}$, giving the gradient flow equation:
+
+$$\partial_t\rho_t = \nabla\cdot\!\left(\rho_t\,\nabla\frac{\delta F}{\delta\rho}(\rho_t)\right)$$
+
+---
+
+### The JKO Scheme
+
+**Definition (JKO scheme — Jordan, Kinderlehrer, Otto 1998).** Given a functional $F: \mathcal{P}_2(\mathbb{R}^d)\to\mathbb{R}$ and time step $\tau > 0$, starting from $\rho^0 \in \mathcal{P}_2(\mathbb{R}^d)$, the **JKO scheme** defines the sequence $(\rho^k)_{k\geq 0}$ by:
+
+$$\rho^{k+1} = \arg\min_{\rho \in \mathcal{P}_2(\mathbb{R}^d)}\left\{F(\rho) + \frac{1}{2\tau}W_2^2(\rho, \rho^k)\right\}$$
+
+**Existence and uniqueness.** Under mild conditions on $F$ (lower semicontinuity, coercivity), the minimizer exists. Uniqueness holds when $F$ is geodesically convex — the Wasserstein analogue of convexity.
+
+**Optimality conditions.** The minimizer $\rho^{k+1}$ satisfies:
+
+$$\frac{\delta F}{\delta\rho}(\rho^{k+1}) + \frac{1}{\tau}\phi^{k+1} = C$$
+
+where $\phi^{k+1}$ is the Kantorovich potential from $\rho^{k+1}$ to $\rho^k$ (so $\nabla\phi^{k+1}$ is the optimal transport map from $\rho^{k+1}$ to $\rho^k$) and $C$ is a constant. This says: the first variation of $F$ plus the transport potential is constant — the marginal cost of moving mass equals the gradient of $F$ everywhere.
+
+**Relation to proximal point algorithm.** In finite dimensions, the proximal point algorithm for minimizing $f: \mathbb{R}^n \to \mathbb{R}$ is:
+
+$$x^{k+1} = \arg\min_{x\in\mathbb{R}^n}\left\{f(x) + \frac{1}{2\tau}\|x-x^k\|^2\right\} = (\text{Id} + \tau\partial f)^{-1}(x^k)$$
+
+The JKO scheme is this algorithm with $\|x - x^k\|^2$ replaced by $W_2^2(\rho,\rho^k)$ — the resolvent of the subdifferential of $F$ in the Wasserstein metric.
+
+**Theorem (JKO 1998 — Convergence to the heat equation).** For $F = \mathcal{U}$ with $U(\rho) = \rho\log\rho$ (Boltzmann entropy), define the piecewise constant interpolation:
+
+$$\bar\rho_\tau(t) = \rho^{\lfloor t/\tau\rfloor}$$
+
+Then as $\tau\to 0$, $\bar\rho_\tau \to \rho$ in $C([0,T]; \mathcal{P}_2(\mathbb{R}^d))$ where $\rho$ is the unique solution of:
+
+$$\partial_t\rho = \Delta\rho, \quad \rho|_{t=0} = \rho^0$$
+
+the **heat equation**.
+
+---
+
+### Gradient Flows of Specific Functionals
+
+**Theorem (Heat equation as entropy gradient flow).**
+
+Functional: $\mathcal{H}(\rho) = \int\rho\log\rho\,dx$ (Boltzmann entropy).
+
+First variation: $\frac{\delta\mathcal{H}}{\delta\rho} = \log\rho + 1$.
+
+Wasserstein gradient velocity: $v = -\nabla(\log\rho + 1) = -\frac{\nabla\rho}{\rho}$.
+
+Gradient flow PDE:
+
+$$\partial_t\rho = -\nabla\cdot(\rho v) = -\nabla\cdot\!\left(\rho\cdot\left(-\frac{\nabla\rho}{\rho}\right)\right) = -\nabla\cdot(-\nabla\rho) = \Delta\rho$$
+
+**Theorem (Fokker-Planck as free energy gradient flow).**
+
+Functional: $\mathcal{F}(\rho) = \int[\rho\log\rho + V\rho]\,dx$ (free energy).
+
+First variation: $\frac{\delta\mathcal{F}}{\delta\rho} = \log\rho + 1 + V$.
+
+Wasserstein gradient velocity: $v = -\nabla(\log\rho + V) = -\frac{\nabla\rho}{\rho} - \nabla V$.
+
+Gradient flow PDE:
+
+$$\partial_t\rho = -\nabla\cdot(\rho v) = \nabla\cdot(\nabla\rho + \rho\nabla V) = \Delta\rho + \nabla\cdot(\rho\nabla V)$$
+
+the **Fokker-Planck equation**.
+
+**Equilibrium.** Setting $\partial_t\rho = 0$: $\nabla\cdot(\nabla\rho + \rho\nabla V) = 0$ implies $\nabla\rho + \rho\nabla V = 0$, so $\nabla\log\rho = -\nabla V$, giving:
+
+$$\rho_\infty(x) = Z^{-1}e^{-V(x)}, \quad Z = \int e^{-V(x)}\,dx$$
+
+the **Boltzmann distribution** — the unique minimizer of $\mathcal{F}$.
+
+**Theorem (Porous medium equation as Rényi entropy gradient flow).**
+
+Functional: $\mathcal{H}_m(\rho) = \frac{1}{m-1}\int\rho^m\,dx$ for $m > 1$.
+
+First variation: $\frac{\delta\mathcal{H}_m}{\delta\rho} = \frac{m}{m-1}\rho^{m-1}$.
+
+Gradient flow PDE:
+
+$$\partial_t\rho = \nabla\cdot\!\left(\rho\nabla\!\left(\frac{m}{m-1}\rho^{m-1}\right)\right) = \nabla\cdot(m\rho^{m-1}\nabla\rho) = \Delta(\rho^m)$$
+
+the **porous medium equation**.
+
+**Theorem (Aggregation equation as interaction energy gradient flow).**
+
+Functional: $\mathcal{W}(\rho) = \frac{1}{2}\iint W(x-y)\rho(x)\rho(y)\,dx\,dy$.
+
+First variation: $\frac{\delta\mathcal{W}}{\delta\rho} = W\star\rho$.
+
+Gradient flow PDE:
+
+$$\partial_t\rho = \nabla\cdot(\rho\nabla(W\star\rho))$$
+
+the **aggregation equation** — governing swarming, chemotaxis, and granular media.
+
+---
+
+### Geodesic Convexity and Convergence
+
+**Definition (Geodesic convexity).** A functional $F: \mathcal{P}_2(\mathbb{R}^d)\to\mathbb{R}$ is **$\lambda$-geodesically convex** if for every Wasserstein geodesic $(\mu_t)_{t\in[0,1]}$:
+
+$$F(\mu_t) \leq (1-t)F(\mu_0) + tF(\mu_1) - \frac{\lambda}{2}t(1-t)W_2^2(\mu_0,\mu_1)$$
+
+For $\lambda > 0$: strongly geodesically convex (exponential convergence). For $\lambda = 0$: geodesically convex (polynomial convergence). For $\lambda < 0$: geodesically semiconvex.
+
+**Theorem (McCann 1997).** The following functionals are geodesically convex:
+
+$\mathcal{U}(\rho) = \int U(\rho)\,dx$ is geodesically convex when $s \mapsto s^d U(s^{-d})$ is convex and non-increasing (displacement convexity condition).
+
+$\mathcal{V}(\rho) = \int V\rho\,dx$ is $\lambda$-geodesically convex when $V$ is $\lambda$-convex: $\nabla^2 V \geq \lambda I$.
+
+$\mathcal{W}(\rho) = \frac{1}{2}\iint W(x-y)\rho(x)\rho(y)$ is geodesically convex when $W$ is convex and even.
+
+**Corollary.** The free energy $\mathcal{F} = \mathcal{H} + \mathcal{V}$ is $\lambda$-geodesically convex when $V$ is $\lambda$-convex. For $\lambda > 0$:
+
+$$\mathcal{F}(\rho_t) \leq e^{-\lambda t}\mathcal{F}(\rho_0) + (1-e^{-\lambda t})\mathcal{F}(\rho_\infty)$$
+
+Exponential convergence of the Fokker-Planck flow to the Boltzmann equilibrium $\rho_\infty \propto e^{-V}$.
+
+**The log-Sobolev inequality.** For $V$ strongly convex ($\nabla^2 V \geq \lambda I$, $\lambda > 0$), the Boltzmann distribution $\rho_\infty \propto e^{-V}$ satisfies:
+
+$$\text{KL}(\rho\|\rho_\infty) \leq \frac{1}{2\lambda}\mathcal{I}(\rho\|\rho_\infty)$$
+
+where $\mathcal{I}(\rho\|\rho_\infty) = \int\rho\|\nabla\log(\rho/\rho_\infty)\|^2\,dx$ is the **Fisher information** (relative). This implies exponential decay:
+
+$$\text{KL}(\rho_t\|\rho_\infty) \leq e^{-2\lambda t}\text{KL}(\rho_0\|\rho_\infty)$$
+
+---
+
+### The Score Function and Its Role in Gradient Flow
+
+**Definition (Score function).** For a density $\rho_t$, the **score function** is:
+
+$$s_t(x) = \nabla\log\rho_t(x) = \frac{\nabla\rho_t(x)}{\rho_t(x)}$$
+
+**Role in gradient flows.** The velocity field of the entropy gradient flow is:
+
+$$v_t = -\nabla\log\rho_t = -s_t$$
+
+The velocity field of the free energy gradient flow is:
+
+$$v_t = -\nabla\log\rho_t - \nabla V = -s_t - \nabla V$$
+
+The score function $s_t = \nabla\log\rho_t$ is the fundamental object driving Wasserstein gradient flows. Learning $s_t$ from data is **score matching** — the training objective of diffusion models in Chapter 2.
+
+**Fisher information.** The squared $L^2(\rho_t)$-norm of the score is the Fisher information:
+
+$$\mathcal{I}(\rho_t) = \int_{\mathbb{R}^d}\|\nabla\log\rho_t(x)\|^2\rho_t(x)\,dx = \|\nabla\log\rho_t\|^2_{L^2(\rho_t)}$$
+
+This is also the squared Wasserstein speed of the entropy gradient flow: $|\dot\rho_t|^2_{W_2} = \mathcal{I}(\rho_t)$, since $v_t = -\nabla\log\rho_t$ and $\|v_t\|^2_{L^2(\rho_t)} = \mathcal{I}(\rho_t)$.
+
+**De Bruijn identity.** Along the heat equation $\partial_t\rho_t = \Delta\rho_t$:
+
+$$\frac{d}{dt}\mathcal{H}(\rho_t) = -\mathcal{I}(\rho_t)$$
+
+Entropy decreases at rate equal to Fisher information — the rate of entropy decrease equals the squared speed of the Wasserstein gradient flow. This is the Wasserstein analogue of $\frac{d}{dt}f(x_t) = -\|\nabla f(x_t)\|^2$ along gradient flow in Euclidean space.
+
+---
+
+### WHY THIS MATTERS
+
+In **MATH 217 (ODEs and PDEs)**, the heat equation $\partial_t\rho = \Delta\rho$ is the canonical second-order linear parabolic PDE — solved by the Fourier transform giving the Gaussian heat kernel $K_t(x,y) = (4\pi t)^{-d/2}e^{-|x-y|^2/4t}$, which is exactly the density of $\mathcal{N}(y, 2tI)$. The JKO theorem identifies this PDE as the gradient flow of $\mathcal{H}(\rho) = \int\rho\log\rho$ in Wasserstein space — connecting the PDE theory of MATH 217 to the variational theory of Phase 1's Optimal Transport. The Fokker-Planck equation $\partial_t\rho = \Delta\rho + \nabla\cdot(\rho\nabla V)$ is a second-order linear parabolic PDE with variable-coefficient first-order term — the variable-coefficient generalization of the heat equation whose well-posedness follows from the maximum principle and energy estimates from MATH 217. The stochastic differential equation $dX_t = -\nabla V(X_t)dt + \sqrt{2}dW_t$ is the stochastic analogue of the ODE $\dot x = -\nabla V(x)$ from MATH 217 — both describe particle motion in a potential $V$, the SDE adding Brownian noise that produces the diffusion term $\Delta\rho$ in the Fokker-Planck equation.
+
+In **MATH 325 (Analysis II)**, the first variation $\frac{\delta F}{\delta\rho} = \lim_{\epsilon\to 0}(F(\rho+\epsilon\psi)-F(\rho))/\epsilon$ is the Gâteaux derivative of $F$ as a functional on $L^1(\mathbb{R}^d)$ — the infinite-dimensional analogue of the directional derivative from multivariate calculus, computed via the same limit but in function space rather than $\mathbb{R}^n$. The Wasserstein gradient $\text{grad}_{W_2}F(\rho) = -\nabla\cdot(\rho\nabla\frac{\delta F}{\delta\rho})$ is the Riemannian gradient in the Otto metric — connecting the Gâteaux derivative (a functional analytic object from Analysis II) to the Riemannian gradient (a differential geometric object from Phase 0) through the continuity equation (a PDE from MATH 217). The log-Sobolev inequality $\text{KL}(\rho\|\rho_\infty) \leq \frac{1}{2\lambda}\mathcal{I}(\rho\|\rho_\infty)$ is a functional inequality on $L^1$ — the same class of functional inequalities (Poincaré, Sobolev, log-Sobolev) studied in Analysis II, here providing the quantitative convergence rate of the Fokker-Planck flow to equilibrium.
+
+In **MATH 304 (Computational Operations Research)**, the JKO proximal step $\rho^{k+1} = \arg\min_\rho\{F(\rho) + \frac{1}{2\tau}W_2^2(\rho,\rho^k)\}$ is the proximal point algorithm lifted to Wasserstein space. In MATH 304, the proximal point algorithm $x^{k+1} = \arg\min_x\{f(x) + \frac{1}{2\tau}\|x-x^k\|^2\}$ converges at rate $O(1/k)$ for convex $f$ and $O(e^{-\lambda k})$ for $\lambda$-strongly convex $f$. The same convergence rates hold for the JKO scheme under geodesic convexity and strong geodesic convexity of $F$ — with the Wasserstein metric replacing the Euclidean metric throughout. The condition number $\kappa = L/\lambda$ (ratio of Lipschitz constant to strong convexity constant) from MATH 304's convergence analysis appears here as the ratio $\mathcal{I}(\rho_0)/\text{KL}(\rho_0\|\rho_\infty)$, governing the number of JKO steps needed to reach $\epsilon$-accuracy.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Department of Hydrology monsoon story has a precise mathematical address. We walk through them completely — the water distribution across the basin, the downhill flow velocity, the proximal freeze-and-optimize, the tilted landscape, the reverse flow toward data — until the story and the formalism are a single object seen from two angles.
+
+---
+
+**The water depth at each point of the Koshi basin — the spatial distribution of floodwater across the 12,000-square-kilometre terrain — is the probability density $\rho_t: \mathbb{R}^d \to \mathbb{R}_{\geq 0}$ with $\int\rho_t\,dx = 1$, an element of the Wasserstein-2 space $\mathcal{P}_2(\mathbb{R}^d)$.** The total water volume is conserved — water flows but does not appear or disappear — exactly as total probability mass is conserved: $\frac{d}{dt}\int\rho_t\,dx = 0$. The water depth at a specific basin point $x$ at time $t$ is $\rho_t(x)$ — the probability density at that location. Deep pools correspond to high-density regions; dry elevated ground corresponds to low-density regions. The evolution of the water distribution over the monsoon week is a curve $t\mapsto\rho_t$ in $\mathcal{P}_2(\mathbb{R}^d)$ — a trajectory in the infinite-dimensional space of probability distributions, parameterized by time.
+
+**The conservation of water volume — water flows between adjacent basin points but neither appears nor disappears at any interior point — is the continuity equation $\partial_t\rho_t + \nabla\cdot(\rho_t v_t) = 0$, where $v_t: \mathbb{R}^d\to\mathbb{R}^d$ is the velocity field of the water flow at time $t$.** The divergence term $\nabla\cdot(\rho_t v_t)$ measures the net outflow of water at each point: if more water flows out of a small region than flows in, the local density decreases. The equation $\partial_t\rho_t = -\nabla\cdot(\rho_t v_t)$ says the rate of change of water depth at $x$ equals the negative net outflow — exactly the hydrological continuity equation for incompressible flow. The Benamou-Brenier formula $W_2(\mu_0,\mu_1)^2 = \inf_{(\rho_t,v_t)}\int_0^1\int\|v_t\|^2\rho_t\,dx\,dt$ is the statement that the Wasserstein distance between two water distributions equals the minimum kinetic energy required to transport one into the other via continuous flow — the least-effort hydrological rerouting of the basin's water.
+
+---
+
+**The direction of water flow at each basin point — from high water level to low water level, driven by the spatial gradient of the water depth — is the velocity field $v_t = -\nabla\log\rho_t = -\frac{\nabla\rho_t}{\rho_t}$, the negative gradient of the log-density, which is the Wasserstein gradient velocity of the entropy functional $\mathcal{H}(\rho) = \int\rho\log\rho\,dx$.** The hydraulic flux $J = -\kappa\nabla h$ — water flowing in the direction of decreasing depth $h$ with rate proportional to the depth gradient — is the exact analogue of the probability flux $J_t = \rho_t v_t = -\nabla\rho_t$ — probability mass flowing in the direction of decreasing density. The continuity equation $\partial_t\rho_t = -\nabla\cdot J_t = -\nabla\cdot(-\nabla\rho_t) = \Delta\rho_t$ is the heat equation. The Wasserstein gradient of $\mathcal{H}$ at $\rho_t$ is computed as: first variation $\frac{\delta\mathcal{H}}{\delta\rho} = \log\rho_t + 1$; Wasserstein gradient velocity $v_t = -\nabla\frac{\delta\mathcal{H}}{\delta\rho} = -\nabla(\log\rho_t+1) = -\frac{\nabla\rho_t}{\rho_t}$; gradient flow PDE $\partial_t\rho_t = -\nabla\cdot(\rho_t v_t) = \Delta\rho_t$. Three lines of calculus produce the heat equation from the entropy functional — the JKO theorem in compressed form.
+
+**The sign convention resolution — thermodynamic entropy $S = -\int\rho\log\rho$ increases, while $\mathcal{H} = \int\rho\log\rho$ decreases along the heat equation — is the De Bruijn identity $\frac{d}{dt}\mathcal{H}(\rho_t) = -\mathcal{I}(\rho_t) \leq 0$, where $\mathcal{I}(\rho_t) = \int\|\nabla\log\rho_t\|^2\rho_t\,dx$ is the Fisher information.** The Fisher information is the squared Wasserstein speed of the entropy gradient flow: $|\dot\rho_t|^2_{W_2} = \|v_t\|^2_{L^2(\rho_t)} = \int\|-\nabla\log\rho_t\|^2\rho_t\,dx = \mathcal{I}(\rho_t)$. The De Bruijn identity says $\mathcal{H}$ decreases at rate equal to the Fisher information — the faster the probability mass is moving (high $\mathcal{I}$), the faster entropy is decreasing. This is the Wasserstein analogue of the basic Euclidean identity $\frac{d}{dt}f(x_t) = -\|\nabla f(x_t)\|^2$ along gradient flow $\dot x_t = -\nabla f(x_t)$ — the rate of decrease of the objective equals the squared gradient magnitude. In the Koshi basin: the rate at which the water distribution's $\mathcal{H}$ decreases equals the total kinetic energy of the water flow across the basin.
+
+---
+
+**The break moment — the naive pointwise gradient descent $\rho^{(k+1)}(x) = \rho^{(k)}(x) - \eta(\log\rho^{(k)}(x)+1)$ failing because it produces negative densities and ignores the physics of continuous mass flow — is the formal failure of the $L^2$ gradient descent on distribution space to respect the Wasserstein geometry, which requires that mass moves continuously through space rather than teleporting between locations.** The $L^2$ update changes density values pointwise without moving mass between spatial locations — like magically adding water to dry regions and subtracting it from wet regions, violating mass conservation at every intermediate point. The Wasserstein geometry encodes the physical constraint that mass must flow continuously through space: the Wasserstein distance $W_2(\rho^{(k+1)},\rho^{(k)})$ measures the cost of transporting mass from $\rho^{(k)}$ to $\rho^{(k+1)}$, which is finite only when the mass moves continuously. The $L^2$ norm $\|\rho^{(k+1)}-\rho^{(k)}\|_{L^2}$ measures pointwise density differences — it can be small even when $\rho^{(k+1)}$ requires teleporting mass across large distances to produce from $\rho^{(k)}$. The correct metric for distributional evolution is $W_2$, not $L^2$, because only $W_2$ captures the physical constraint that mass is transported, not created or destroyed.
+
+---
+
+**The JKO proximal step — freezing the basin, solving for the optimal next water distribution, then unfreezing — is the proximal point algorithm in Wasserstein space: $\rho^{k+1} = \arg\min_{\rho\in\mathcal{P}_2(\mathbb{R}^d)}\{F(\rho) + \frac{1}{2\tau}W_2^2(\rho,\rho^k)\}$.** In MATH 304's finite-dimensional proximal algorithm, the Euclidean penalty $\frac{1}{2\tau}\|x-x^k\|^2$ prevents overshoot by penalizing large parameter steps. The JKO scheme replaces this with $\frac{1}{2\tau}W_2^2(\rho,\rho^k)$ — the Wasserstein penalty that prevents the next distribution from being too far from the current one in the transportation sense. The parameter $\tau$ is the time step: small $\tau$ means small Wasserstein steps (water moves only short distances per iteration), large $\tau$ means large steps (water moves far per iteration). The optimality condition $\frac{\delta F}{\delta\rho}(\rho^{k+1}) + \frac{1}{\tau}\phi^{k+1} = C$ — first variation of $F$ plus the Kantorovich potential equals a constant — is the stationarity condition of the proximal objective, identical in structure to the MATH 304 condition $\nabla f(x^{k+1}) + \frac{1}{\tau}(x^{k+1}-x^k) = 0$ for the finite-dimensional proximal step. The Kantorovich potential $\phi^{k+1}$ — the dual variable from Phase 1's Kantorovich duality — plays the role of the displacement $x^{k+1}-x^k$: it encodes how much the distribution has moved and in which direction.
+
+**The convergence of the discrete JKO steps to the continuous heat equation as $\tau\to 0$ — the piecewise constant interpolation $\bar\rho_\tau(t) = \rho^{\lfloor t/\tau\rfloor}$ converging in $C([0,T];\mathcal{P}_2(\mathbb{R}^d))$ to the heat equation solution — is the Wasserstein analogue of the implicit Euler method's convergence to the ODE solution as the step size goes to zero, a result from MATH 217's numerical PDE theory.** The implicit Euler method for $\dot x = -\nabla f(x)$ is $x^{k+1} = x^k - \tau\nabla f(x^{k+1})$ — which is exactly the proximal point algorithm $x^{k+1} = \arg\min_x\{f(x) + \frac{1}{2\tau}\|x-x^k\|^2\}$ by the first-order optimality condition $\nabla f(x^{k+1}) + \frac{1}{\tau}(x^{k+1}-x^k) = 0$. The JKO scheme is the Wasserstein implicit Euler method: each step solves an implicit equation for $\rho^{k+1}$, making the scheme unconditionally stable regardless of $\tau$ — the same unconditional stability of implicit Euler that MATH 217 establishes for parabolic PDEs.
+
+---
+
+**The tilted basin — adding a landscape potential $V(x)$ so water flows both downhill ($-\nabla V$) and from deep to shallow ($-\nabla\log\rho$) — is the free energy functional $\mathcal{F}(\rho) = \int[\rho\log\rho + V\rho]\,dx$, whose Wasserstein gradient flow is the Fokker-Planck equation $\partial_t\rho_t = \Delta\rho_t + \nabla\cdot(\rho_t\nabla V)$.** The first variation $\frac{\delta\mathcal{F}}{\delta\rho} = \log\rho+1+V$ combines the entropy's first variation $\log\rho+1$ with the potential energy's first variation $V$. The Wasserstein gradient velocity $v_t = -\nabla(\log\rho_t+V) = -\frac{\nabla\rho_t}{\rho_t} - \nabla V$ is the superposition of the diffusive velocity $-\nabla\log\rho_t$ (spreading force from entropy) and the drift velocity $-\nabla V$ (concentrating force from potential). The equilibrium $\rho_\infty\propto e^{-V}$ — the Boltzmann distribution — is the water level at which hydraulic pressure exactly balances gravitational pull: $\nabla\rho_\infty + \rho_\infty\nabla V = 0$, which gives $\nabla\log\rho_\infty = -\nabla V$, solved by $\rho_\infty = Z^{-1}e^{-V}$. In the Koshi basin: the tilted basin floor $V(x)$ is the terrain elevation; the Boltzmann distribution $\rho_\infty\propto e^{-V}$ is the equilibrium water distribution with deep water in the valleys (low $V$) and no water on the peaks (high $V$).
+
+**The geodesic convexity of the free energy $\mathcal{F}$ when $V$ is $\lambda$-convex ($\nabla^2 V\geq\lambda I$) — giving exponential convergence $\text{KL}(\rho_t\|\rho_\infty)\leq e^{-2\lambda t}\text{KL}(\rho_0\|\rho_\infty)$ via the log-Sobolev inequality — is the Wasserstein analogue of the exponential convergence of gradient descent on $\lambda$-strongly convex functions from MATH 304: $f(x^{(k)})-f(x^*)\leq(1-2\lambda\eta)^k(f(x^{(0)})-f(x^*))$.** The condition number $\kappa = L/\lambda$ from MATH 304's convergence analysis appears here as the ratio governing how fast the Fokker-Planck flow converges to the Boltzmann equilibrium: strongly confining potentials (large $\lambda$) give fast convergence; weakly confining potentials (small $\lambda$) give slow convergence. The log-Sobolev inequality $\text{KL}(\rho\|\rho_\infty)\leq\frac{1}{2\lambda}\mathcal{I}(\rho\|\rho_\infty)$ is the functional-analytic quantification of this: the KL divergence from equilibrium is bounded by the Fisher information (the squared Wasserstein speed), with constant $1/(2\lambda)$ determined by the strong convexity of the potential. This is the same inequality structure as the Poincaré inequality from MATH 325's Analysis II — both bound an $L^2$-type quantity by a gradient $L^2$-type quantity, with constant determined by the spectral gap of the relevant operator.
+
+---
+
+**The score function $s_t(x) = \nabla\log\rho_t(x)$ — the spatial gradient of the log-density, pointing from low-density regions toward high-density regions — is the fundamental object driving all Wasserstein gradient flows, and learning it from data is the training objective of diffusion models.** The entropy gradient flow velocity is $v_t = -s_t$ — probability mass flows in the direction of decreasing log-density, away from high-density regions, spreading the distribution. The free energy gradient flow velocity is $v_t = -s_t - \nabla V$ — the score function plus the potential gradient, balancing spreading and concentration. The Fisher information $\mathcal{I}(\rho_t) = \int\|s_t(x)\|^2\rho_t(x)\,dx = \|s_t\|^2_{L^2(\rho_t)}$ is the squared Wasserstein speed of the entropy gradient flow — how fast the distribution is moving in Wasserstein space equals the average squared score magnitude. In the Koshi basin: the score function $s_t(x) = \nabla\log\rho_t(x)$ is the map of water level gradients across the basin — pointing uphill in water depth, from shallow to deep areas. The water flows against the score ($v_t = -s_t$), from deep to shallow, following the entropy gradient downhill.
+
+---
+
+**The reverse flow — the generative model pushing Gaussian noise back toward the data distribution — is the time-reversal of the Fokker-Planck equation, with the reversed velocity field $\tilde v_t = -v_t + 2\nabla\log\rho_t\cdot(\sigma^2/2) = v_t + \sigma^2 s_t$, where $s_t = \nabla\log\rho_t$ is the score function of the forward-time marginal $\rho_t$.** The Anderson reverse-time SDE $d\tilde X_t = (-b(\tilde X_t,t) + \sigma^2\nabla\log\rho_{T-t}(\tilde X_t))dt + \sigma d\tilde W_t$ — the time-reversal of the forward SDE $dX_t = b(X_t,t)dt + \sigma dW_t$ — requires knowing $\nabla\log\rho_t$ at every time $t$ and every location $x$. Score matching learns this function from data without computing the intractable normalizing constant of $\rho_t$. In the Koshi basin: the reverse flow is asking the water spread uniformly across the Terai plain to flow backward — uphill, against gravity, concentrating back into the Himalayan river channels where the monsoon deposited it. The score function is the map telling the water which direction is uphill at each basin point; the reverse flow follows this map, climbing back to the original concentrated distribution.
+
+---
+
+**The connection to MATH 217 is threefold.** The heat equation $\partial_t\rho = \Delta\rho$ is the canonical parabolic PDE from MATH 217, now identified as the gradient flow of $\mathcal{H}$. The Fokker-Planck equation $\partial_t\rho = \Delta\rho + \nabla\cdot(\rho\nabla V)$ is the variable-coefficient generalization, whose equilibrium $\rho_\infty\propto e^{-V}$ is found by setting $\partial_t\rho = 0$ and solving the resulting ODE $\nabla\log\rho = -\nabla V$ — a first-order ODE in $\log\rho$, solved by direct integration exactly as in MATH 217. The JKO scheme is the implicit Euler method for the gradient flow ODE $\dot\rho = -\text{grad}_{W_2}F(\rho)$, whose unconditional stability — the scheme converges for any $\tau > 0$ — is the parabolic PDE stability result of MATH 217 lifted to Wasserstein space. **The connection to MATH 325 is through the first variation and the log-Sobolev inequality.** The Gâteaux derivative $\frac{\delta F}{\delta\rho}[\psi] = \lim_{\epsilon\to 0}(F(\rho+\epsilon\psi)-F(\rho))/\epsilon$ is the functional derivative from Analysis II, computed by differentiating under the integral sign — the same technique used in MATH 325's treatment of variational calculus. The log-Sobolev inequality is a functional inequality on $L^1(\mathbb{R}^d)$ — the same class as the Sobolev and Poincaré inequalities studied in Analysis II, providing quantitative convergence rates for the gradient flow through the spectral gap of the Fokker-Planck operator. **The connection to MATH 304 is the proximal point algorithm.** The JKO step is MATH 304's proximal algorithm with Wasserstein penalty replacing Euclidean penalty; the convergence rates under geodesic convexity mirror MATH 304's rates under Euclidean convexity; the condition number $L/\lambda$ from MATH 304 reappears as the ratio governing log-Sobolev convergence.
+
+---
+
+The Department of Hydrology monsoon story — the Koshi basin water distribution, downhill flow velocity, heat equation emergence, proximal freeze-and-optimize, tilted landscape Fokker-Planck, equilibrium Boltzmann distribution, reverse flow toward data, and score function as gradient map — is now completely dissolved into its mathematical form. The water distribution is $\rho_t\in\mathcal{P}_2(\mathbb{R}^d)$. Conservation is the continuity equation $\partial_t\rho_t + \nabla\cdot(\rho_t v_t) = 0$. The flow direction is $v_t = -\nabla\log\rho_t$. The energy functional is $\mathcal{H}(\rho) = \int\rho\log\rho$. The first variation is $\frac{\delta\mathcal{H}}{\delta\rho} = \log\rho+1$. The Wasserstein gradient is $\text{grad}_{W_2}\mathcal{H} = -\nabla\cdot(\rho\nabla\log\rho) = -\Delta\rho$. The gradient flow is $\partial_t\rho = \Delta\rho$. The JKO step is $\rho^{k+1} = \arg\min_\rho\{F(\rho)+\frac{1}{2\tau}W_2^2(\rho,\rho^k)\}$. The tilted basin is $\mathcal{F} = \mathcal{H}+\mathcal{V}$. The Fokker-Planck equation is $\partial_t\rho = \Delta\rho+\nabla\cdot(\rho\nabla V)$. The equilibrium is $\rho_\infty\propto e^{-V}$. The score function is $s_t = \nabla\log\rho_t$. The De Bruijn identity is $\frac{d}{dt}\mathcal{H}(\rho_t) = -\mathcal{I}(\rho_t)$.
+
+---
+---

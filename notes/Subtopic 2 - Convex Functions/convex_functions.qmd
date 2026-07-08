@@ -1,0 +1,319 @@
+# Subtopic 2 - Convex Functions
+
+## Layer 1 (Story)
+
+You are a rice trader operating out of Asan Bazaar, and you have been in the business long enough to know that the market has moods. Some days the price of rice is stable and predictable. Other days it swings wildly. Your job is to manage risk — to make decisions about buying and storing rice that protect you against the worst outcomes while still letting you profit from the good ones.
+
+Your senior partner, a weathered trader who has been at Asan for forty years, teaches you the fundamental principle of risk management with a single observation. He points to two different price scenarios — two possible futures — and asks you to consider what happens when you average them.
+
+In the first scenario, the monsoon is good and rice is cheap: the price is 40 rupees per kilogram. In the second scenario, the monsoon fails and rice is expensive: the price is 80 rupees per kilogram. Each scenario is equally likely — probability one half each. The average price is 60 rupees per kilogram.
+
+Now he asks: if you have to pay for storage, transportation, and risk management, does your total cost behave nicely with respect to this averaging? Specifically, is the cost at the average price — the cost when price is 60 — less than or equal to the average of the costs at the two extreme prices?
+
+For some cost structures, yes. For others, no. And the distinction between these two cases, your partner tells you, is the most important structural property a cost function can have.
+
+---
+
+Let us make this concrete with three different cost functions that arise naturally in the rice trading business.
+
+**The first cost function is storage cost.** You store rice in a warehouse, and the cost of storage grows linearly with the amount stored, which grows with the price — say, cost equals price itself, $f(p) = p$. At price 40, cost is 40. At price 80, cost is 80. At the average price 60, cost is 60. The average of the two extreme costs is $\frac{1}{2}(40) + \frac{1}{2}(80) = 60$. Cost at the average equals the average of the costs. The function is flat — neither bowing upward nor downward. Linear functions sit exactly at the boundary between the two cases.
+
+**The second cost function is insurance cost.** You buy price insurance — a hedge against the price moving far from some target level — and the insurance premium is proportional to the squared deviation from the target, say $f(p) = (p - 60)^2$. At price 40, cost is $(40-60)^2 = 400$. At price 80, cost is $(80-60)^2 = 400$. The average of the two extreme costs is $\frac{1}{2}(400) + \frac{1}{2}(400) = 400$. At the average price 60, cost is $(60-60)^2 = 0$. Now the cost at the average is strictly less than the average of the costs: $0 < 400$. The function bows upward — it is lower in the middle than the average of the extremes. This is a convex function.
+
+**The third cost function is a government subsidy.** The government offers a subsidy that grows with the square root of the price — higher prices get larger subsidies — so your effective cost after subsidy is $f(p) = -\sqrt{p}$. At price 40, cost is $-\sqrt{40} \approx -6.32$. At price 80, cost is $-\sqrt{80} \approx -8.94$. The average of the two extreme costs is $\frac{1}{2}(-6.32) + \frac{1}{2}(-8.94) \approx -7.63$. At the average price 60, cost is $-\sqrt{60} \approx -7.75$. Now the cost at the average is strictly greater than the average of the costs: $-7.75 > -7.63$... wait, actually $-7.75 < -7.63$. Let us be more careful: $-7.75$ is less than $-7.63$ on the number line, meaning the function at the average gives a lower cost than the average of the costs. This function bows downward — it is higher in the middle than...
+
+Let us use a cleaner example. Consider $f(p) = \sqrt{p}$. At price 40, $f(40) = \sqrt{40} \approx 6.32$. At price 80, $f(80) = \sqrt{80} \approx 8.94$. Average of extreme costs: $\frac{1}{2}(6.32 + 8.94) \approx 7.63$. At average price 60: $f(60) = \sqrt{60} \approx 7.75$. Now the cost at the average is greater than the average of the costs: $7.75 > 7.63$. The function bows upward in the opposite sense — it is higher at the average than the average of the extremes. This is a concave function, and its negative $-\sqrt{p}$ is convex.
+
+---
+
+Your senior partner distills the observation into a rule. A cost function $f$ is **convex** if, for any two price scenarios $p_1$ and $p_2$ and any probability $\lambda \in [0,1]$ of being in scenario 1, the cost at the average price is always at most the average of the costs at the extreme prices:
+
+$$f(\lambda p_1 + (1-\lambda)p_2) \leq \lambda f(p_1) + (1-\lambda) f(p_2)$$
+
+Geometrically, this says: the chord connecting any two points on the graph of $f$ always lies above or on the graph. The function bows upward, like a bowl. If you draw a straight line between any two points on the function's curve, that line sits above the curve everywhere between those two points.
+
+This is the defining property of convex functions. The insurance cost $(p-60)^2$ satisfies it — its parabola bows upward, and any chord lies above the parabola. The linear storage cost $p$ satisfies it with equality — the chord is the function itself. The square root $\sqrt{p}$ violates it — its curve bows outward, and the chord lies below the curve.
+
+---
+
+Now your senior partner reveals why this property matters so deeply for risk management — and, by extension, for optimization.
+
+Suppose your total trading cost is a convex function $f$ of the price, and you must make a decision — how much rice to buy, how much insurance to purchase — before you know which scenario will occur. You know only the expected price. Your partner's rule is: if $f$ is convex, then the cost you will face in expectation is at least the cost you would face if you knew the expected price in advance. Uncertainty always makes convex costs worse than certainty. The convexity of the cost function is the mathematical expression of the principle that averaging scenarios always understates the true expected cost.
+
+This is Jensen's inequality, the subject of the next subtopic. But before getting there, your partner has one more observation about convex functions that transforms the entire theory of optimization.
+
+He points to the insurance cost parabola $f(p) = (p-60)^2$ and says: notice that this function has a unique lowest point — the bottom of the bowl, at $p = 60$. If you roll a marble down the inside of this bowl, it always reaches the bottom, regardless of where you start. It never gets stuck in a false valley, because there is only one valley — the global minimum. This is the fundamental optimization property of convex functions: every local minimum is a global minimum.
+
+Here is why. Suppose $p^*$ is a local minimum of a convex function — the cost at $p^*$ is lower than the cost at all nearby prices. Now suppose for contradiction that there is some other price $q$ where the cost is even lower: $f(q) < f(p^*)$. Consider any convex combination $p_\lambda = \lambda p^* + (1-\lambda)q$ for small $\lambda > 0$ — a price slightly between $p^*$ and $q$. By convexity: $f(p_\lambda) \leq \lambda f(p^*) + (1-\lambda)f(q) < \lambda f(p^*) + (1-\lambda)f(p^*) = f(p^*)$. So $f(p_\lambda) < f(p^*)$. But $p_\lambda$ is arbitrarily close to $p^*$ for small $\lambda$ — it is a local neighbor. This contradicts the assumption that $p^*$ is a local minimum. The contradiction proves that no cheaper price $q$ can exist — $p^*$ is already the global minimum.
+
+The marble cannot get stuck. There are no false valleys. Local is global. This property — so simple to state, so powerful in consequences — is what makes convex optimization the foundation of tractable machine learning.
+
+---
+
+Now your partner introduces three tools that let you recognize and work with convex functions without drawing their graphs every time.
+
+**The first tool is the tangent line test.** A differentiable function $f$ is convex if and only if it always lies above its tangent lines — for any price $p_0$ and any other price $p$, the function value at $p$ is at least the tangent line value at $p$: $f(p) \geq f(p_0) + f'(p_0)(p - p_0)$. The tangent line is the best linear approximation to $f$ at $p_0$, and convexity says the function is always at least as large as this linear approximation. In optimization terms: the gradient is a global underestimate of the function. If you follow the negative gradient downhill, you are guaranteed to be moving toward lower values, not toward a false local minimum that the gradient cannot see.
+
+**The second tool is the curvature test.** A twice-differentiable function $f$ is convex if and only if its second derivative is everywhere non-negative: $f''(p) \geq 0$ for all $p$. Non-negative second derivative means the function is bowing upward — its slope is non-decreasing. In multiple dimensions, this becomes the condition that the Hessian matrix $\nabla^2 f(x)$ is positive semidefinite everywhere. This is the second-order characterization of convexity — the one you used in MATH 201 when checking whether a critical point was a minimum.
+
+**The third tool is the epigraph.** The epigraph of a function $f$ is the set of all points on or above the graph: $\text{epi}(f) = \{(x, t) : f(x) \leq t\}$. A function is convex if and only if its epigraph is a convex set. This connection between convex functions and convex sets is the bridge that allows everything you proved about convex sets in the previous subtopic — separation theorems, projection, duality — to transfer directly to convex functions. The supporting hyperplanes to the epigraph at the graph of $f$ are precisely the tangent lines (or subgradients) of $f$.
+
+---
+
+Here is the break moment. The naive assumption is that convexity is a strong condition that rules out most interesting functions — surely most cost functions in the real world are non-convex, with multiple local minima and complicated shapes?
+
+This breaks in an unexpected direction. Convexity is preserved under a surprisingly rich set of operations: sums of convex functions are convex, non-negative scalar multiples of convex functions are convex, the maximum of convex functions is convex, compositions of convex functions with affine maps are convex. These preservation rules mean that many complicated functions built from simple convex building blocks are themselves convex. The log-sum-exp function $\log(\sum_i e^{x_i})$, which appears in the Sinkhorn algorithm of Phase 1, is convex. The KL divergence between two distributions, which appears in variational inference and diffusion model training, is convex in the first argument. The negative log-likelihood of an exponential family distribution is convex in the parameters. The optimal transport cost as a function of the source distribution is convex. These are not simple quadratic bowls — they are complicated, high-dimensional functions — but they are convex, and the entire machinery of convex optimization applies to them.
+
+The break is not that convexity is rare — it is that convexity is hidden. The functions that govern the most important optimization problems in the roadmap are convex, but their convexity is not obvious from their formulas. Recognizing convexity, proving it using the preservation rules and the second-order test, and exploiting it through duality and gradient methods — that is the skill this subtopic builds.
+
+---
+
+Hold three pictures simultaneously. The insurance cost parabola bowing upward — the chord always above the curve, the unique global minimum at the bottom of the bowl, the gradient pointing reliably toward the optimum. The linear storage cost — flat, sitting exactly at the boundary of convexity, its chord lying exactly on the function. And the square root function bowing outward — the chord below the curve, the function concave, the insurance cost's reflection. The three functions are three attitudes toward uncertainty, and the convex one is the tractable one.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the precise definition of convex functions and their variants, the first and second order characterizations, the subdifferential and subgradient theory for non-smooth convex functions, the operations that preserve convexity, the epigraph connection to convex sets, and the fundamental theorem that local minima are global minima with its consequences for optimization.
+
+### The Definition and Its Variants
+
+Let $C \subseteq \mathbb{R}^n$ be a convex set and let $f: C \to \mathbb{R}$ be a function. The function $f$ is **convex** if for all $x, y \in C$ and all $\lambda \in [0,1]$:
+
+$$f(\lambda x + (1-\lambda)y) \leq \lambda f(x) + (1-\lambda)f(y)$$
+
+The function $f$ is **strictly convex** if the inequality is strict for all $x \neq y$ and $\lambda \in (0,1)$:
+
+$$f(\lambda x + (1-\lambda)y) < \lambda f(x) + (1-\lambda)f(y) \quad \forall x \neq y, \; \lambda \in (0,1)$$
+
+The function $f$ is **strongly convex** with parameter $m > 0$ if for all $x, y \in C$ and $\lambda \in [0,1]$:
+
+$$f(\lambda x + (1-\lambda)y) \leq \lambda f(x) + (1-\lambda)f(y) - \frac{m}{2}\lambda(1-\lambda)\|x-y\|_2^2$$
+
+Strong convexity means the function curves upward at least as fast as a quadratic — it is bounded below by a paraboloid. The three levels form a strict hierarchy: strongly convex $\implies$ strictly convex $\implies$ convex.
+
+A function $f$ is **concave** if $-f$ is convex, equivalently if the inequality in the definition is reversed:
+
+$$f(\lambda x + (1-\lambda)y) \geq \lambda f(x) + (1-\lambda)f(y)$$
+
+A function is both convex and concave if and only if it is affine — of the form $f(x) = \langle a, x\rangle + b$.
+
+---
+
+### The Epigraph Characterization
+
+The **epigraph** of $f: C \to \mathbb{R}$ is:
+
+$$\text{epi}(f) = \{(x, t) \in C \times \mathbb{R} : f(x) \leq t\}$$
+
+It is the set of all points on or above the graph of $f$ in the extended space $\mathbb{R}^n \times \mathbb{R}$.
+
+**Theorem.** $f$ is convex if and only if $\text{epi}(f)$ is a convex subset of $\mathbb{R}^{n+1}$.
+
+**Proof.** Suppose $\text{epi}(f)$ is convex. Take any $x, y \in C$ and $\lambda \in [0,1]$. The points $(x, f(x))$ and $(y, f(y))$ are in $\text{epi}(f)$. By convexity of $\text{epi}(f)$, the convex combination $\lambda(x, f(x)) + (1-\lambda)(y, f(y)) = (\lambda x + (1-\lambda)y, \lambda f(x) + (1-\lambda)f(y))$ is also in $\text{epi}(f)$. By definition of the epigraph, $f(\lambda x + (1-\lambda)y) \leq \lambda f(x) + (1-\lambda)f(y)$. The converse is symmetric. $\square$
+
+This connection is the bridge between the theory of convex sets and the theory of convex functions. Every theorem proved for convex sets — the separation theorem, the projection theorem, the support theorem — applies to the epigraph of a convex function, and thereby to the function itself. The supporting hyperplanes to $\text{epi}(f)$ at points $(x_0, f(x_0))$ on the graph are precisely the tangent planes and subgradient planes of $f$ at $x_0$.
+
+---
+
+### First-Order Characterization
+
+**Theorem.** Let $f: C \to \mathbb{R}$ be differentiable on the open convex set $C \subseteq \mathbb{R}^n$. Then $f$ is convex if and only if for all $x, y \in C$:
+
+$$f(y) \geq f(x) + \langle \nabla f(x), y - x \rangle$$
+
+The right-hand side is the first-order Taylor expansion of $f$ at $x$ — the tangent hyperplane to the graph of $f$ at $(x, f(x))$. The condition says: the function always lies above its tangent hyperplanes. Equivalently, the tangent hyperplane is a global underestimate of $f$.
+
+**Proof sketch.** If $f$ is convex, then for any $t \in (0,1)$: $f(x + t(y-x)) \leq (1-t)f(x) + tf(y)$, so $\frac{f(x + t(y-x)) - f(x)}{t} \leq f(y) - f(x)$. Taking $t \to 0$ gives $\langle \nabla f(x), y-x\rangle \leq f(y) - f(x)$. $\square$
+
+For strongly convex $f$ with parameter $m$:
+
+$$f(y) \geq f(x) + \langle \nabla f(x), y-x\rangle + \frac{m}{2}\|y-x\|_2^2$$
+
+The quadratic term is the lower bound on the curvature — the function rises at least as fast as a paraboloid from every tangent point.
+
+An important consequence is the **monotonicity of the gradient**: $f$ is convex if and only if $\nabla f$ is monotone:
+
+$$\langle \nabla f(x) - \nabla f(y), x - y\rangle \geq 0 \quad \forall x, y \in C$$
+
+The gradient of a convex function always points in the direction of increasing function values — moving in the direction of $\nabla f$ always increases $f$, and moving against $\nabla f$ always decreases $f$. This is the analytic foundation of gradient descent.
+
+---
+
+### Second-Order Characterization
+
+**Theorem.** Let $f: C \to \mathbb{R}$ be twice continuously differentiable on the open convex set $C \subseteq \mathbb{R}^n$. Then:
+
+$$f \text{ is convex} \iff \nabla^2 f(x) \succeq 0 \quad \forall x \in C$$
+
+$$f \text{ is strictly convex} \impliedby \nabla^2 f(x) \succ 0 \quad \forall x \in C$$
+
+$$f \text{ is strongly convex with parameter } m \iff \nabla^2 f(x) \succeq mI \quad \forall x \in C$$
+
+where $\succeq$ denotes positive semidefiniteness and $\succ$ denotes positive definiteness. The condition $\nabla^2 f(x) \succeq 0$ means that for all directions $v \in \mathbb{R}^n$:
+
+$$v^T \nabla^2 f(x) v \geq 0$$
+
+This is the condition that the function curves upward in every direction at every point. In one dimension, it reduces to $f''(x) \geq 0$ — non-negative second derivative — which is the condition you used in MATH 201.
+
+**Canonical examples with their Hessians:**
+
+The quadratic $f(x) = \frac{1}{2}x^T Q x + b^T x + c$ for symmetric $Q$ has $\nabla^2 f = Q$. It is convex if and only if $Q \succeq 0$, strictly convex if $Q \succ 0$, and strongly convex with parameter $\lambda_{\min}(Q)$ — the smallest eigenvalue of $Q$.
+
+The log-sum-exp $f(x) = \log\sum_{i=1}^n e^{x_i}$ has Hessian $\nabla^2 f(x) = \text{diag}(z) - zz^T$ where $z_i = e^{x_i}/\sum_j e^{x_j}$ is the softmax vector. This matrix is positive semidefinite for all $x$, so log-sum-exp is convex.
+
+The negative entropy $f(p) = \sum_i p_i \log p_i$ on the probability simplex has $\nabla^2 f = \text{diag}(1/p_1, \ldots, 1/p_n) \succ 0$, so it is strictly convex.
+
+The KL divergence $D_{KL}(p \| q) = \sum_i p_i \log(p_i/q_i)$ is convex jointly in $(p, q)$ and convex in $p$ for fixed $q$.
+
+---
+
+### The Subdifferential — Convexity Without Smoothness
+
+Many important convex functions — the $L_1$ norm, the maximum function, the hinge loss — are not differentiable everywhere. The correct generalization of the gradient to non-smooth convex functions is the **subdifferential**.
+
+A vector $g \in \mathbb{R}^n$ is a **subgradient** of $f$ at $x_0$ if it defines a global affine underestimate:
+
+$$f(y) \geq f(x_0) + \langle g, y - x_0\rangle \quad \forall y \in C$$
+
+The **subdifferential** of $f$ at $x_0$ is the set of all subgradients:
+
+$$\partial f(x_0) = \{g \in \mathbb{R}^n : f(y) \geq f(x_0) + \langle g, y - x_0\rangle \; \forall y \in C\}$$
+
+For a differentiable convex function, the subdifferential is a singleton: $\partial f(x_0) = \{\nabla f(x_0)\}$. For a non-smooth convex function, the subdifferential is a convex set containing multiple subgradients — one for each supporting hyperplane to $\text{epi}(f)$ at the point $(x_0, f(x_0))$.
+
+**Canonical examples of subdifferentials:**
+
+For the absolute value $f(x) = |x|$ on $\mathbb{R}$:
+
+$$\partial f(x) = \begin{cases} \{-1\} & x < 0 \\ [-1, 1] & x = 0 \\ \{1\} & x > 0 \end{cases}$$
+
+At $x = 0$, the subdifferential is the entire interval $[-1,1]$ — any slope between $-1$ and $1$ defines a valid global underestimate of $|x|$.
+
+For the $L_1$ norm $f(x) = \|x\|_1$ on $\mathbb{R}^n$:
+
+$$\partial f(x) = \{g : g_i = \text{sign}(x_i) \text{ if } x_i \neq 0, \; g_i \in [-1,1] \text{ if } x_i = 0\}$$
+
+The subdifferential at $x = 0$ is the entire $L_\infty$ unit ball $[-1,1]^n$ — the dual of the $L_1$ ball, consistent with the duality between $L_1$ and $L_\infty$ norms.
+
+**Optimality condition via subdifferential.** A point $x^*$ is a global minimizer of a convex function $f$ over all of $\mathbb{R}^n$ if and only if:
+
+$$0 \in \partial f(x^*)$$
+
+For smooth $f$, this reduces to $\nabla f(x^*) = 0$ — the standard first-order condition. For non-smooth $f$, it requires $0$ to be a subgradient — that the zero vector defines a valid global underestimate of $f$ from $x^*$. This condition is both necessary and sufficient for global optimality when $f$ is convex.
+
+---
+
+### Operations That Preserve Convexity
+
+The following operations take convex functions and produce convex functions. They are the tools for recognizing convexity in complex functions built from simple components.
+
+**Non-negative linear combinations.** If $f_1, \ldots, f_k$ are convex and $\alpha_1, \ldots, \alpha_k \geq 0$, then $\sum_{i=1}^k \alpha_i f_i$ is convex. This follows directly from the definition.
+
+**Pointwise maximum.** If $\{f_\alpha\}_{\alpha \in \Lambda}$ is any collection of convex functions, then $g(x) = \sup_{\alpha \in \Lambda} f_\alpha(x)$ is convex. The epigraph of $g$ is the intersection of the epigraphs of the $f_\alpha$, and intersections of convex sets are convex. The pointwise maximum of convex functions is the basis of the support function construction in duality theory.
+
+**Composition with affine maps.** If $f$ is convex and $T(x) = Ax + b$ is affine, then $g(x) = f(Ax + b)$ is convex. The Hessian of $g$ is $A^T \nabla^2 f(Ax+b) A \succeq 0$ when $\nabla^2 f \succeq 0$.
+
+**Composition rules.** For general compositions $h(x) = f(g(x))$:
+
+$$h \text{ is convex if } f \text{ is convex nondecreasing and } g \text{ is convex}$$
+$$h \text{ is convex if } f \text{ is convex nonincreasing and } g \text{ is concave}$$
+
+These rules follow from applying the definition carefully to each case.
+
+**Infimal convolution.** The **infimal convolution** of two functions $f$ and $g$ is:
+
+$$(f \square g)(x) = \inf_{y} \{f(y) + g(x-y)\}$$
+
+If $f$ and $g$ are convex, then $f \square g$ is convex. The infimal convolution appears in the Moreau envelope and in the duality theory of the Legendre-Fenchel transform — the subject of the next topic.
+
+**Partial minimization.** If $f(x,y)$ is convex jointly in $(x,y)$ and $C$ is a convex set, then $g(x) = \inf_{y \in C} f(x,y)$ is convex in $x$. This is the operation of marginalizing out $y$ by minimization, and it preserves convexity. In Optimal Transport, the Wasserstein distance $W_p(\mu,\nu)$ is defined by partial minimization over transport plans — and convexity of the distance as a function of the measures follows from this preservation rule.
+
+---
+
+### Local Minima Are Global Minima
+
+**Theorem.** Let $f: C \to \mathbb{R}$ be convex and let $x^*$ be a local minimum of $f$ on the convex set $C$. Then $x^*$ is a global minimum.
+
+**Proof.** Suppose $x^*$ is a local minimum: there exists $r > 0$ such that $f(x^*) \leq f(x)$ for all $x \in C$ with $\|x - x^*\| < r$. Suppose for contradiction that there exists $y \in C$ with $f(y) < f(x^*)$. For any $\lambda \in (0,1)$, let $x_\lambda = x^* + \lambda(y - x^*) = (1-\lambda)x^* + \lambda y \in C$. By convexity:
+
+$$f(x_\lambda) \leq (1-\lambda)f(x^*) + \lambda f(y) < (1-\lambda)f(x^*) + \lambda f(x^*) = f(x^*)$$
+
+For small enough $\lambda$, $x_\lambda$ is within the local neighborhood: $\|x_\lambda - x^*\| = \lambda\|y - x^*\| < r$. But $f(x_\lambda) < f(x^*)$ contradicts the local minimality of $x^*$. Therefore no such $y$ exists, and $x^*$ is a global minimum. $\square$
+
+**Corollary.** For strictly convex $f$, the global minimum is unique if it exists.
+
+**Proof.** Suppose $x^*$ and $y^*$ are both global minima: $f(x^*) = f(y^*) = \min f$. By strict convexity: $f(\frac{1}{2}x^* + \frac{1}{2}y^*) < \frac{1}{2}f(x^*) + \frac{1}{2}f(y^*) = \min f$. This contradicts $\min f$ being the minimum. $\square$
+
+---
+
+### Convex Functions in Infinite Dimensions
+
+Everything above extends to infinite-dimensional Hilbert and Banach spaces, with the gradient replaced by the Fréchet derivative or Gâteaux derivative. A functional $F: L^2(\mu) \to \mathbb{R}$ is convex if:
+
+$$F(\lambda f + (1-\lambda)g) \leq \lambda F(f) + (1-\lambda)F(g) \quad \forall f, g \in L^2(\mu), \; \lambda \in [0,1]$$
+
+The KL divergence functional $F(p) = D_{KL}(p\|q) = \int p \log(p/q) \, d\mu$ is convex in $p$ as a functional on $L^1(\mu)$. The entropy functional $H(p) = -\int p \log p \, d\mu$ is concave. The squared $L^2$ norm $F(f) = \|f\|_{L^2}^2 = \int f^2 \, d\mu$ is strongly convex. These infinite-dimensional convexity statements are not merely analogies — they are the precise functional-analytic generalizations of the finite-dimensional definitions, and they govern the optimization problems of Phase 3.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 201 (Advanced Calculus), the second derivative test for local minima — $f''(x^*) > 0$ at a critical point $x^*$ — is the second-order characterization of local strong convexity. What you now know is that for a globally convex function, the local test is unnecessary: any critical point with $\nabla f(x^*) = 0$ is automatically a global minimum, because local minima are global for convex functions. The second derivative test was checking something stronger than necessary — it was verifying that the function curves upward at the critical point, which for a globally convex function is guaranteed everywhere. In MATH 304 (Computational Operations Research), every linear objective function is both convex and concave — it is affine — and the simplex method exploits the fact that the minimum of a linear function over a convex polyhedron is attained at a vertex, which is the extreme point of the convex set where the supporting hyperplane to the level set of the objective first touches the feasible set. In MATH 208 (Statistics and Probability), the maximum likelihood estimator for exponential family distributions is found by solving a convex optimization problem — the negative log-likelihood is convex in the natural parameters, and the MLE is its unique global minimum. Every time you computed an MLE in MATH 208, you were solving a convex optimization problem without needing to verify the solution was globally optimal, because the convexity of the negative log-likelihood guaranteed it automatically.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the rice trading story has a precise mathematical address. Let us walk through them one by one, until the three cost functions, the senior partner's rules, and the full formal apparatus are completely fused into a single picture.
+
+---
+
+**The rice market — the space of all possible price scenarios — is the domain $C \subseteq \mathbb{R}$.** In the story, $C$ is the positive real line — the set of all possible rice prices. In the optimization problems of the roadmap, the domain is $\mathbb{R}^n$ for finite-dimensional parameter spaces, or $L^2(\mu)$ for infinite-dimensional function spaces. The domain must itself be a convex set — the previous subtopic's subject — because the definition of a convex function requires that convex combinations of domain points stay in the domain. The convexity of the domain and the convexity of the function are two separate conditions, and both must hold for the theory to apply.
+
+**The trader's cost function assigning a total cost to each price scenario is the function $f: C \to \mathbb{R}$.** It maps each point in the domain — each possible price — to a real number — the associated cost. The three cost functions from the story are three specific choices of $f$, each embodying a different economic philosophy and a different geometric shape.
+
+**The senior partner's fundamental test — is the cost at the average price at most the average of the costs at the extreme prices? — is the definition of convexity $f(\lambda p_1 + (1-\lambda)p_2) \leq \lambda f(p_1) + (1-\lambda)f(p_2)$.** The average price $\lambda p_1 + (1-\lambda)p_2$ is the convex combination of the two extreme prices. The cost at the average is $f(\lambda p_1 + (1-\lambda)p_2)$. The average of the extreme costs is $\lambda f(p_1) + (1-\lambda)f(p_2)$. The test says: the function evaluated at the mixture is at most the mixture of the function values. The inequality direction — $\leq$ — is what distinguishes convex from concave: for concave functions the inequality reverses, and for affine functions it holds with equality.
+
+---
+
+**The insurance cost $f(p) = (p-60)^2$ — the parabola bowing upward — is the canonical strongly convex function.** Its second derivative is $f''(p) = 2 > 0$ everywhere — positive, constant, and equal to twice the strong convexity parameter $m = 1$. The second-order characterization $\nabla^2 f \succeq mI$ is satisfied with $m = 1$ and the Hessian equal to the scalar $2$. The parabola's bowl shape is the geometric expression of strong convexity: the function rises at least as fast as a quadratic from every point, with no flat directions and no directions of zero curvature. The unique global minimum at $p = 60$ — the bottom of the bowl — is the unique zero of $\nabla f(p) = 2(p-60)$, and the optimality condition $0 \in \partial f(p^*)$ is satisfied with $\partial f(60) = \{\nabla f(60)\} = \{0\}$. The marble rolls to the bottom and stays there.
+
+**The linear storage cost $f(p) = p$ — flat, sitting exactly at the boundary of convexity — is the canonical affine function, which is simultaneously convex and concave.** Its second derivative is $f''(p) = 0$ everywhere — exactly zero, the boundary between positive and negative curvature. The definition of convexity is satisfied with equality: $f(\lambda p_1 + (1-\lambda)p_2) = \lambda p_1 + (1-\lambda)p_2 = \lambda f(p_1) + (1-\lambda)f(p_2)$. The chord connecting any two points on the graph of $f$ lies exactly on the graph — not above it, not below it, exactly on it. The epigraph of a linear function is a halfspace — the simplest possible convex set, consistent with the epigraph characterization. Linear functions have no minimum on an unbounded domain, but on any compact convex domain, their minimum is attained at an extreme point of the domain — the fundamental theorem of linear programming.
+
+**The square root cost $f(p) = \sqrt{p}$ — bowing outward — is the canonical concave function, whose negative $-\sqrt{p}$ is convex.** Its second derivative is $f''(p) = -\frac{1}{4}p^{-3/2} < 0$ everywhere on $(0,\infty)$ — strictly negative, confirming concavity. The chord connecting any two points on the graph of $\sqrt{p}$ lies below the graph — the function value at the average exceeds the average of the function values, which is Jensen's inequality for concave functions. The negative $-\sqrt{p}$ has second derivative $\frac{1}{4}p^{-3/2} > 0$ — positive, confirming convexity of the negation. The concavity of $\sqrt{p}$ and the convexity of $-\sqrt{p}$ are two sides of the same geometric coin.
+
+---
+
+**The tangent line test — $f(p) \geq f(p_0) + f'(p_0)(p-p_0)$ for all $p$ — is the senior partner's rule that the cost function always lies above its local linear approximation.** For the insurance cost parabola, the tangent at $p_0 = 40$ is $f'(40)(p-40) + f(40) = -40(p-40) + 400 = -40p + 2000$. For any $p$, $(p-60)^2 \geq -40p + 2000$ — the parabola always lies above this tangent line. The tangent line is the best linear prediction of future costs based on current information, and convexity says reality is always at least as expensive as the linear prediction. In optimization terms, the gradient $\nabla f(x_0)$ is a global underestimate of the function's steepness — moving against the gradient always decreases the function, and the decrease is at least as large as the linear prediction. This is the foundation of gradient descent's correctness for convex functions.
+
+**The curvature test — $\nabla^2 f(x) \succeq 0$ everywhere — is the senior partner's rule that the cost function never flattens or inverts its curvature.** For the insurance cost, $\nabla^2 f = 2 > 0$: the curvature is constant and positive. For the linear storage cost, $\nabla^2 f = 0$: the curvature is zero — the boundary case. For the square root cost, $\nabla^2 f = -\frac{1}{4}p^{-3/2} < 0$: the curvature is negative — the function is concave, not convex. The second-order characterization is the algebraic certificate of convexity — it can be checked by computing the Hessian and verifying positive semidefiniteness, without drawing the graph. In MATH 201, you used this test to verify local minimality. What you now know is that for a globally convex function, this test at a critical point is redundant — any critical point is already globally optimal. The test is useful for proving convexity of a new function, not for verifying optimality.
+
+**The epigraph of the insurance cost parabola — the set of all points on or above the bowl — is the convex set $\text{epi}(f) = \{(p,t) : (p-60)^2 \leq t\}$.** This is the interior and boundary of an upward-opening parabolic region in $\mathbb{R}^2$. It is a convex set: any two points above the parabola can be connected by a line that stays above the parabola, because the parabola bows upward. The supporting hyperplanes to $\text{epi}(f)$ at the boundary points $(p_0, f(p_0))$ — the points directly on the graph — are exactly the tangent lines to the parabola at those points. Each tangent line is a supporting hyperplane touching the epigraph from below, with the entire epigraph on one side. The set of supporting hyperplanes to the epigraph is the set of subgradients of $f$, and the Legendre-Fenchel transform — the subject of the next topic — is the function that encodes all these supporting hyperplanes simultaneously.
+
+---
+
+**The subdifferential of the $L_1$ norm at zero — the interval $[-1,1]$ — is the set of all subgradients at the corner of the absolute value function.** The absolute value $f(x) = |x|$ is convex with a corner at $x = 0$. At this corner, there is no unique tangent line — there are infinitely many lines through the point $(0,0)$ with slope between $-1$ and $1$, each defining a valid global underestimate of $|x|$. Each such line is a subgradient. The subdifferential $\partial f(0) = [-1,1]$ is the set of all valid slopes — the set of all subgradients. The fact that $0 \in \partial f(0) = [-1,1]$ is the optimality condition confirming that $x = 0$ is the global minimum of $|x|$ — which is obvious geometrically but now proven rigorously by the subdifferential condition $0 \in \partial f(x^*)$.
+
+**The preservation operations — non-negative linear combinations, pointwise maximum, composition with affine maps — are the tools the rice trader uses to build complex cost functions from simple ones.** A trading firm's total cost might be $f(p) = \alpha_1 (p-60)^2 + \alpha_2 |p - 40| + \alpha_3 p$ — a sum of the insurance cost, an absolute deviation cost, and the linear storage cost. Each term is convex. Their non-negative linear combination is convex by the preservation rule. No graph needs to be drawn. No second derivative needs to be computed for the full sum — the preservation rule certifies convexity automatically. In the roadmap, the score matching objective $\mathbb{E}[\|\nabla \log p_\theta(x) - s(x)\|_2^2]$ is a non-negative linear combination — an expectation — of squared $L_2$ norms, each of which is strongly convex. The expectation preserves convexity. The objective is convex in the score function $s$, which is why score matching has a unique global minimizer.
+
+---
+
+**The local-implies-global theorem is the marble-in-the-bowl guarantee.** The proof mapped onto the story is exact. Suppose the trader finds a price $p^*$ that locally minimizes cost — no nearby price is cheaper. Suppose for contradiction there is a faraway price $q$ that is even cheaper: $f(q) < f(p^*)$. Consider the price $p_\lambda = (1-\lambda)p^* + \lambda q$ — a convex combination slightly closer to $q$ than to $p^*$. By convexity: $f(p_\lambda) \leq (1-\lambda)f(p^*) + \lambda f(q) < f(p^*)$. For small $\lambda$, $p_\lambda$ is close to $p^*$ — it is in the local neighborhood. But $f(p_\lambda) < f(p^*)$ contradicts local minimality. The contradiction eliminates $q$. The local minimum is global. The marble cannot get stuck in a false valley because convexity guarantees there is only one valley.
+
+**The uniqueness of the global minimum for strictly convex functions is the insurance cost's unique bottom.** The parabola $(p-60)^2$ has a unique global minimum at $p = 60$ — not a plateau, not a flat region, but a single point. If two prices $p^*$ and $q^*$ both achieved the global minimum, their midpoint $\frac{p^* + q^*}{2}$ would satisfy $f(\frac{p^*+q^*}{2}) < \frac{1}{2}f(p^*) + \frac{1}{2}f(q^*) = \min f$ by strict convexity, contradicting $\min f$ being the minimum. The strict inequality in the definition of strict convexity is exactly the condition that prevents two distinct global minima from coexisting.
+
+---
+
+**The connection to MATH 201 (Advanced Calculus) is now total.** The second derivative test $f''(x^*) > 0$ at a critical point $x^*$ — the test you used to verify local minima — is the second-order sufficient condition for local strong convexity. What you now know is that for a globally convex function, this test is superseded: any point where $\nabla f(x^*) = 0$ is automatically a global minimum, without needing to check $f''$. The second derivative test was checking local convexity at the critical point to distinguish local minima from saddle points and local maxima. But for globally convex functions, saddle points and local maxima cannot exist — every critical point is a global minimum. The test was a crutch for the non-convex case, and it becomes unnecessary once global convexity is established.
+
+**The connection to MATH 304 (Computational Operations Research) runs through linear programming.** Every linear objective $f(x) = c^Tx$ is both convex and concave — it is affine. The minimum of a linear function over a convex polyhedron is attained at a vertex of the polyhedron — an extreme point of the convex feasible set. This is the fundamental theorem of linear programming, and it is a consequence of the local-implies-global theorem: the minimum of a convex function over a convex set is always a global minimum, and for a linear function, the global minimum over a polyhedron is attained at a vertex because any interior point or edge point can be expressed as a convex combination of vertices with a lower objective value at one of them.
+
+**The connection to MATH 208 (Statistics and Probability) closes through maximum likelihood estimation.** The negative log-likelihood of a Gaussian distribution $-\log p_\theta(x) = \frac{1}{2\sigma^2}(x-\mu)^2 + \text{const}$ is a quadratic in $\mu$ — the insurance cost parabola translated to the statistics context. It is strongly convex in $\mu$, with a unique global minimum at $\hat\mu = x$ — the sample mean. For exponential family distributions more generally, the negative log-likelihood is convex in the natural parameters because the log-partition function is convex — its Hessian is the covariance matrix of the sufficient statistics, which is positive semidefinite. Every MLE you computed in MATH 208 was minimizing a convex function, and the guarantee that your computed MLE was globally optimal — not merely locally optimal — was the convexity of the negative log-likelihood.
+
+---
+
+**Looking forward across the roadmap**, convex functions are the objectives of every tractable optimization problem. In Phase 1, the Wasserstein distance is defined as the minimum of a linear objective over the convex set of coupling measures — and the minimum of a linear function over a convex set is a convex function of the constraint parameters, so the Wasserstein distance is convex as a function of the measures. The Kantorovich dual maximizes a concave objective — the negative of a convex function — over the convex set of dual potential functions, and the KL divergence regularizer in the Sinkhorn algorithm is a strictly convex function of the transport plan, guaranteeing a unique solution. In Phase 2, the loss functions of graph neural networks — cross-entropy, mean squared error — are convex in the output layer's parameters, which is why the final layer of a GNN can be trained to global optimality even when the full network is non-convex. In Phase 3, the score matching objective is convex in the score function, the ELBO of variational autoencoders involves a KL divergence that is convex in the variational parameters, and the JKO scheme minimizes a sum of a convex energy functional and a convex Wasserstein distance at each time step. Every tractable optimization in the roadmap either minimizes a convex function directly or exploits the convexity of a subproblem. The senior partner's bowl — the insurance cost parabola — is not a simple example. It is the shape of every well-behaved optimization landscape in the roadmap.
+
+---
+---

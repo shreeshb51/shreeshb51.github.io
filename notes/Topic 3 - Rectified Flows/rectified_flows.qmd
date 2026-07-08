@@ -1,0 +1,477 @@
+# Topic 3 - Rectified Flows: Straightening the Paths of Probability Transport
+
+## Introduction
+
+Topics 1 and 2 established the two dominant paradigms of continuous generative modeling. Neural ODEs parameterize the transformation from noise to data as an exact continuous flow, trained by maximum likelihood with the adjoint method and evaluated with the instantaneous change of variables formula. Score matching learns the score function $\nabla\log\rho_t$ of a fixed forward noising process, then runs the reverse SDE or probability flow ODE to generate samples. Both paradigms work. Both produce high-quality samples. Both are grounded in the Fokker-Planck and Wasserstein geometry of Chapter 1.
+
+But both share a structural inefficiency that becomes visible once you look at the trajectories they produce.
+
+In a score-based diffusion model, a particle traveling from noise to data does not move in a straight line. It follows a curved path — curving because the forward OU process adds noise isotropically, the reverse process must unwind this noise in a direction that depends on the local score, and the score field is a complex nonlinear function of position and time that produces trajectories with significant curvature. These curved trajectories require many integration steps to simulate accurately: the ODE or SDE solver must take small steps to track the curvature, and each step requires a full neural network evaluation. The computational cost of generation scales with the number of steps, and the number of steps required scales with the curvature of the trajectories. Curved trajectories are expensive.
+
+The question that rectified flows answer is: can you learn a probability flow whose trajectories are straight lines? And if so, can you do it without the computational overhead of computing score functions or solving the forward diffusion PDE?
+
+The answer to both questions is yes, and the key insight is disarmingly simple. If you pair a noise sample $X_0\sim\mathcal{N}(0,I)$ with a data sample $X_1\sim p_{\text{data}}$ — any pairing at all, even the independent coupling where $X_0$ and $X_1$ are drawn independently — then the straight line $X_t = (1-t)X_0 + tX_1$ is a valid interpolation from noise to data. The velocity along this straight line is constant: $\dot X_t = X_1 - X_0$. A neural network trained to predict this velocity — to output $X_1 - X_0$ given $X_t$ and $t$ — learns a velocity field that produces straight-line trajectories from noise to data. No score function. No forward diffusion process. No Fokker-Planck equation. Just linear interpolation and regression.
+
+This is the rectified flow, introduced independently by Liu, Gong, and Liu (2022) and by Lipman, Chen, Ben-Hamu, Nickel, and Le (2022) under the name flow matching. The training objective is a simple mean squared error: $\mathcal{L}_{\text{RF}}(\theta) = \mathbb{E}_{X_0,X_1,t}[\|f_\theta(X_t,t) - (X_1-X_0)\|^2]$. The generation procedure is the ODE $\dot x_t = f_\theta(x_t,t)$ integrated forward from $t=0$ to $t=1$. No backward SDE. No score function. No Hutchinson estimator. No adjoint method for likelihood computation. Just a velocity field trained by regression and evaluated by ODE integration.
+
+The depth of the rectified flow framework, however, goes far beyond this simple construction. It connects to Phase 1's Optimal Transport in a precise and beautiful way, and it provides a systematic procedure for improving the straightness of the learned flows — progressively approaching the optimal transport plan between noise and data through an iterative reflow procedure.
+
+The key insight is this. The independent coupling $(X_0, X_1)\sim\mathcal{N}(0,I)\otimes p_{\text{data}}$ produces trajectories that cross each other in probability space — different $(X_0,X_1)$ pairs produce straight lines that intersect at intermediate times $t\in(0,1)$. Crossing trajectories cannot all be simultaneously followed by a deterministic ODE: at a crossing point, the ODE must choose one direction, inevitably diverging from some of the trajectories it was trained to follow. This crossing is the source of the remaining curvature after training on the independent coupling — the velocity field must compromise between crossed trajectories, producing a smoothed average direction that curves away from all the individual straight lines.
+
+The reflow procedure resolves crossing by replacing the independent coupling with a better coupling. After training the first rectified flow with the independent coupling, use the trained ODE to pair noise samples with their corresponding data endpoints: for each $X_0\sim\mathcal{N}(0,I)$, integrate the ODE forward to get $X_1^{\text{new}} = \phi_1(X_0)$, and use the pair $(X_0, X_1^{\text{new}})$ as the new training coupling. The new coupling has non-crossing trajectories — by construction, the ODE flow produces a bijection from noise to data, so paired $(X_0, X_1^{\text{new}})$ never cross. Training a new rectified flow on this non-crossing coupling produces straighter trajectories. Repeating this reflow procedure progressively straightens the flow, converging toward the optimal transport plan between $\mathcal{N}(0,I)$ and $p_{\text{data}}$ — the Brenier map of Phase 1.
+
+This topic develops rectified flows across three components corresponding to the three bullet points of the roadmap's syllabus.
+
+The first component is **the linear interpolation construction and the flow matching training objective**. Starting from any coupling $(X_0,X_1)$, the linear interpolation $X_t=(1-t)X_0+tX_1$ defines a probability path $\rho_t$ from $\rho_0=\mathcal{N}(0,I)$ to $\rho_1=p_{\text{data}}$. The conditional velocity field $u_t(x|x_0,x_1) = X_1-X_0$ is constant along each trajectory. The marginal velocity field $u_t(x) = \mathbb{E}[X_1-X_0|X_t=x]$ is the conditional expectation of the straight-line velocity given the current position — a regression target computable from samples. The flow matching objective trains $f_\theta$ to approximate $u_t$ by minimizing $\mathbb{E}[\|f_\theta(X_t,t)-u_t(X_t)\|^2]$, which is equivalent to the simpler conditional flow matching objective $\mathbb{E}[\|f_\theta(X_t,t)-(X_1-X_0)\|^2]$ because the additional variance introduced by conditioning on $X_t$ rather than $(X_0,X_1)$ is constant in $\theta$.
+
+The second component is **the connection to Optimal Transport and the reflow procedure**. The independent coupling produces crossing trajectories and a residually curved flow. The Brenier optimal transport map $T^*: \mathbb{R}^d\to\mathbb{R}^d$ — the unique gradient-of-convex-function map pushing $\mathcal{N}(0,I)$ to $p_{\text{data}}$ — produces perfectly non-crossing straight-line trajectories: $(X_0, T^*(X_0))$ never cross because $T^*$ is a monotone map. The reflow procedure is the iterative algorithm for progressively approaching $T^*$: each reflow iteration straightens the trajectories by replacing the current coupling with the ODE-induced coupling, which is closer to the non-crossing optimal transport coupling than the previous one. After $k$ reflow iterations, the coupling $(X_0, X_1^{(k)})$ converges to the optimal transport plan, and the flow converges to the Brenier map. This is the bridge between Phase 1's Optimal Transport — which found the optimal coupling as an abstract mathematical object — and Phase 3's generative modeling — which learns a neural network that implements that optimal coupling.
+
+The third component is **the practical implementation and the unification of diffusion models and flow matching**. Conditional flow matching with the Gaussian probability path $p_t(x|x_1) = \mathcal{N}(x;\mu_t(x_1),\sigma_t^2 I)$ for a data-dependent mean $\mu_t(x_1)$ and variance schedule $\sigma_t^2$ recovers the diffusion model framework as a special case: the affine Gaussian probability path with $\mu_t(x_1) = \alpha_t x_1$ and $\sigma_t = \beta_t$ gives exactly the OU forward process, and the corresponding velocity field is $u_t(x|x_1) = \dot\alpha_t x_1 + \dot\beta_t\epsilon$ — a reparameterization of the score function. The linear probability path $\mu_t(x_1) = tx_1$ and $\sigma_t = 1-t$ gives exactly the rectified flow. The flow matching framework therefore unifies diffusion models and rectified flows as special cases of the same conditional flow matching recipe, parameterized by the choice of probability path interpolating between noise and data.
+
+The connections to your curriculum converge most powerfully here because Topic 3 is where Phase 1's Optimal Transport meets Phase 3's generative modeling in the most direct possible way.
+
+Phase 1's Wasserstein distance and Brenier map are the theoretical objects that the reflow procedure converges to — the OT plan between $\mathcal{N}(0,I)$ and $p_{\text{data}}$ is the target coupling that produces perfectly straight flows, and the Brenier map is the deterministic transport map that the reflow procedure approximates. Phase 1's displacement interpolation — the Wasserstein geodesic connecting two distributions — is the probability path $\rho_t = ((1-t)\text{Id}+tT^*)_\#\mathcal{N}(0,I)$ that the optimal rectified flow follows. Every result from Phase 1's Chapters 1 and 2 — the Kantorovich dual, the Brenier theorem, the Sinkhorn algorithm — finds its application in the rectified flow framework.
+
+Your MATH 304 course provides the linear programming and convex optimization theory underlying the optimal transport connection: the Kantorovich relaxation of the Monge problem is a linear program over the space of couplings, and the Brenier theorem is the characterization of its optimal solution as a gradient of a convex function. The reflow procedure is a primal-dual algorithm for this linear program, alternating between fixing the coupling and updating the velocity field.
+
+Your MATH 208 course provides the regression framework: the conditional flow matching objective $\mathbb{E}[\|f_\theta(X_t,t)-(X_1-X_0)\|^2]$ is a nonparametric regression of the velocity target $X_1-X_0$ on the position $X_t$ — the optimal predictor in the MSE sense is the conditional expectation $\mathbb{E}[X_1-X_0|X_t]$, which is the marginal velocity field $u_t(X_t)$.
+
+By the end of this topic, rectified flows will feel not like a simplified version of diffusion models but like the most natural possible answer to the question: what is the most efficient way to transport probability mass from noise to data? The answer — move in straight lines — is simultaneously the simplest possible geometric choice and the optimal transport theoretic one. Straight lines minimize the kinetic energy $\int\|\dot x_t\|^2\,dt$ of each trajectory, and the collection of straight-line trajectories that never cross is exactly the optimal transport plan between the noise and data distributions, attainable by the reflow procedure. The rectified flow is not a compromise between simplicity and principled geometry — it is both simultaneously.
+
+---
+
+## Layer 1 (Story)
+
+It is 2023. The Annapurna Conservation Area Project has commissioned a logistics study of the porter network that supplies the teahouse lodges along the Annapurna Circuit — the 230-kilometre trekking route that circumnavigates the Annapurna massif through the Marsyangdi and Kali Gandaki valleys. The lodges depend entirely on human porters who carry supplies from roadheads at Besisahar and Jomsom up to the high teahouses at Manang, Thorong La base camp, and Muktinath. Understanding and optimizing this supply network is critical for the conservation area's sustainability planning.
+
+Your team's task is to model the porter transport system as a generative model. The starting distribution is the set of supply depots — the sources of goods — scattered near the roadheads at altitudes between 800 and 1400 metres. The target distribution is the set of teahouse lodges — the destinations — scattered along the high circuit between 2500 and 5400 metres. A generative model of the supply network must be able to take any starting location in the supply depot distribution and produce a plausible destination location in the teahouse distribution — simulating where goods flow in the network.
+
+The previous team used a diffusion model. It worked, but the simulated porter trajectories were strange: they wandered up and down valleys, crossed rivers unnecessarily, doubled back on themselves, and took far more steps in the simulation than the actual porters take in reality. The trajectories were curved, indirect, and computationally expensive to simulate. Your task is to build a better model — one whose simulated trajectories look like actual porter routes: direct, efficient, following the natural logic of the terrain.
+
+---
+
+**The fundamental observation: porters walk in straight lines.**
+
+You spend three weeks trekking the circuit, observing the actual porters. What strikes you is how direct their routes are. A porter carrying rice from the Besisahar depot to the Manang teahouse does not wander. They walk the most direct feasible path — along the Marsyangdi valley, up the side valleys, ascending steadily toward Manang. The trajectory is approximately linear in terms of the key variables: altitude, valley position, and distance along the main trail. If you parameterize the porter's journey as a curve in some appropriate feature space, it is close to a straight line from start to finish.
+
+This is not accidental. Porters optimize. They carry heavy loads and cannot afford inefficiency. The natural outcome of individual optimization — each porter choosing the most direct feasible route from their depot to their lodge — is a transport network that approximately minimizes total path length and energy expenditure across all porter-depot-lodge pairings.
+
+This observation is the motivating intuition for rectified flows: if the individual trajectories from source to destination are approximately straight lines, then the velocity field governing those trajectories is approximately constant along each trajectory, and learning that velocity field is approximately learning to predict the displacement $X_1 - X_0$ from the current position $X_t$ — a simple regression problem.
+
+---
+
+**The independent coupling: pairing depots with lodges.**
+
+Your logistics coordinator, Deepak, has records of every porter journey over the past three years: 4,847 depot-to-lodge trips, each recorded as a starting location $x_0$ (depot coordinates) and ending location $x_1$ (lodge coordinates). He proposes the simplest possible generative model: randomly pair each depot sample with an independently drawn lodge sample, draw a straight line between them, and use the collection of straight lines as the training data for the velocity field.
+
+You visualize the result. The straight-line trajectories from the independent coupling look reasonable at the population level — each line goes from somewhere in the depot distribution to somewhere in the lodge distribution — but they cross each other extensively in the middle of the diagram. A trajectory from Besisahar north depot to Manang and a trajectory from Besisahar south depot to Muktinath cross near Chame, even though these two routes never actually cross in the real porter network. The crossing is an artifact of the random pairing: by randomly mixing which depot supplies which lodge, you have created unnecessary crossings that do not reflect the actual transport logic.
+
+The velocity field trained on this crossing dataset will be confused at the crossing points: at Chame, the velocity field must average over trajectories going northeast (toward Manang) and trajectories going northwest (toward Muktinath). The averaged velocity points in a compromise direction — roughly north — which is approximately right but introduces curvature as the flow tries to resolve the crossing that the training data forced upon it.
+
+---
+
+**The flow matching training objective: regression on velocity.**
+
+Deepak's straight-line construction defines a training procedure. For each paired $(x_0, x_1)$, the straight-line trajectory at time $t$ is:
+
+$$x_t = (1-t)x_0 + tx_1$$
+
+The velocity along this trajectory is constant: $\dot x_t = x_1 - x_0$. To train the generative model, you sample a time $t\in[0,1]$ uniformly, compute the interpolated position $x_t$, and train the neural network $f_\theta(x,t)$ to predict the velocity $x_1 - x_0$ from the position $x_t$ and time $t$:
+
+$$\mathcal{L}_{\text{RF}}(\theta) = \mathbb{E}_{(x_0,x_1),\,t}\left[\|f_\theta((1-t)x_0 + tx_1,\;t) - (x_1 - x_0)\|^2\right]$$
+
+This is mean squared error between the predicted velocity and the true displacement. No divergence. No score function. No Hutchinson estimator. No adjoint method. Just regression: given where the porter is right now ($x_t$) and how far along the journey they are ($t$), predict the direction and speed of travel ($x_1-x_0$).
+
+Generation uses the trained velocity field: sample a depot location $x_0$ from the source distribution $\mathcal{N}(0,I)$ (or whatever the noise distribution is), and integrate the ODE $\dot x_t = f_\theta(x_t,t)$ from $t=0$ to $t=1$ to produce a lodge location $x_1$ from the target distribution $p_{\text{data}}$.
+
+The simplicity is striking. The diffusion model required a carefully designed forward noising process, a score network trained by denoising, a reverse SDE or probability flow ODE, and either DDPM's 1000 sampling steps or DDIM's 50 steps. The rectified flow requires only a paired dataset, a regression objective, and a 1-step ODE integration — though in practice 10-50 ODE steps suffice for accurate integration.
+
+---
+
+**Why straight lines are efficient: the kinetic energy argument.**
+
+Your team's mathematician, Sunita, formalizes the efficiency claim. The kinetic energy of a trajectory $x_t$ from $t=0$ to $t=1$ is:
+
+$$\text{KE}(x_\cdot) = \int_0^1 \|\dot x_t\|^2\,dt$$
+
+For a straight line from $x_0$ to $x_1$: $\dot x_t = x_1-x_0$ is constant, so $\text{KE} = \|x_1-x_0\|^2$ — the squared Euclidean distance, which is the minimum possible for any path between these two endpoints (by the Cauchy-Schwarz inequality: $\|x_1-x_0\|^2 = \|\int_0^1\dot x_t\,dt\|^2\leq\int_0^1\|\dot x_t\|^2\,dt$ with equality for constant velocity). Straight-line trajectories minimize kinetic energy — they are the most efficient paths between endpoints.
+
+For a curved trajectory — like the diffusion model's reverse SDE path — the velocity $\dot x_t$ changes direction over time, so $\int_0^1\|\dot x_t\|^2\,dt > \|x_1-x_0\|^2$. The excess kinetic energy corresponds to unnecessary deviation from the straight-line path. In computational terms: the more the trajectory curves, the more ODE steps you need to track it accurately. Minimizing kinetic energy means minimizing curvature, which means minimizing the number of ODE steps needed — which means faster generation.
+
+The real Annapurna porters minimize their kinetic energy. The rectified flow does the same for the probability transport problem.
+
+---
+
+**The crossing problem and the curvature it creates.**
+
+Sunita draws the crossing trajectories from the independent coupling on the whiteboard and asks: what does the trained velocity field do at a crossing point?
+
+At a crossing point $x_c$ at time $t_c$, multiple trajectories pass through the same location at the same time: trajectory $(x_0^{(1)}, x_1^{(1)})$ passes through $x_c$ going northeast, and trajectory $(x_0^{(2)}, x_1^{(2)})$ passes through $x_c$ going northwest. The velocity field $f_\theta(x_c, t_c)$ must output a single vector at $(x_c, t_c)$ — it cannot simultaneously point northeast and northwest. The trained network averages over the crossing trajectories: $f_\theta(x_c,t_c) \approx \mathbb{E}[X_1-X_0|X_{t_c}=x_c]$, the conditional expectation of the velocity given the crossing point position.
+
+This conditional expectation points north — the average of northeast and northwest — which is a compromise direction that neither trajectory actually follows. A particle starting at a depot and reaching $x_c$ at time $t_c$ under this velocity field will be deflected from its actual destination: it will follow the average north direction rather than the northeast or northwest direction its true trajectory demanded. This deflection produces curvature in the actual ODE trajectories, even though the training data consisted entirely of straight lines. The crossing is the source of the curvature; eliminating crossings eliminates curvature.
+
+This is the break moment: straight-line training data does not guarantee straight-line ODE trajectories if the training data has crossing trajectories. The independent coupling produces crossings. Crossings produce averaged velocity fields. Averaged velocity fields produce curved ODE trajectories. Curved ODE trajectories require more integration steps. More integration steps mean slower generation.
+
+The fix is a better coupling — one that eliminates crossings.
+
+---
+
+**The reflow procedure: straightening by better pairing.**
+
+After training the first rectified flow on the independent coupling, Deepak proposes an experiment. Instead of using the original random depot-lodge pairings, use the trained model to pair them: for each depot location $x_0$, run the trained ODE forward to find the lodge location $x_1^{\text{new}} = \phi_1(x_0)$ that the model sends it to. Use the paired $(x_0, x_1^{\text{new}})$ as the new training data for a second rectified flow.
+
+Why does this help? The trained ODE $\phi_1$ is a deterministic bijection from depot locations to lodge locations — each depot maps to exactly one lodge, and each lodge is the image of exactly one depot. The pairs $(x_0, \phi_1(x_0))$ therefore never cross: if trajectories from two depots $x_0^{(1)}$ and $x_0^{(2)}$ crossed at time $t_c$, then $x_{t_c}^{(1)} = x_{t_c}^{(2)}$, which means both follow the same deterministic ODE trajectory from $t_c$ onward, so $\phi_1(x_0^{(1)}) = \phi_1(x_0^{(2)})$ — contradicting the bijectivity of $\phi_1$. Non-crossing trajectories. No crossing means the velocity field at each point points in a single consistent direction. Training the second rectified flow on the non-crossing $(x_0, \phi_1(x_0))$ pairs produces a straighter velocity field. Running the second ODE forward produces trajectories that are closer to straight lines than the first ODE's trajectories.
+
+Repeating this reflow procedure — train, pair, retrain, pair, retrain — progressively straightens the flow. After many iterations, the trajectories approach straight lines, the velocity field approaches a constant direction field, and the ODE can be integrated accurately in just one or two steps.
+
+The porter analogy: in the first model, Besisahar north depot sometimes supplies Muktinath and Besisahar south depot sometimes supplies Manang — a crossing pairing. After one reflow, the model has learned that Besisahar north naturally connects to Manang and Besisahar south naturally connects to Muktinath — a non-crossing pairing that reflects the actual geography. The second model learns a cleaner velocity field with no confusion at the Chame crossing point. The trajectories are straighter, the velocity field is simpler, and generation requires fewer ODE steps.
+
+---
+
+**The optimal transport connection: why non-crossing is optimal.**
+
+Sunita recognizes the non-crossing condition immediately from Phase 1. The Brenier optimal transport map $T^*: \mathbb{R}^d\to\mathbb{R}^d$ — the gradient-of-convex-function map that solves the quadratic optimal transport problem between $\rho_0$ and $\rho_1$ — has non-crossing transport trajectories by construction: it is a monotone map, meaning $(T^*(x) - T^*(y))\cdot(x-y)\geq 0$ for all $x,y$, and monotone maps cannot have crossing trajectories in one dimension, and their generalization to higher dimensions — the c-cyclical monotonicity of the OT plan — ensures non-crossing in the appropriate geometric sense.
+
+The straight-line trajectories from the OT coupling are therefore not merely non-crossing — they are the straightest possible trajectories between the two distributions, minimizing total kinetic energy $\mathbb{E}[\|X_1-X_0\|^2]$ over all possible couplings $(X_0,X_1)$ with marginals $\rho_0$ and $\rho_1$. This is exactly the Wasserstein-2 optimal transport problem: $W_2^2(\rho_0,\rho_1) = \min_{(X_0,X_1)}\mathbb{E}[\|X_0-X_1\|^2]$, minimized by the Brenier coupling. The reflow procedure converges to this minimum by progressively reducing the expected crossing and curvature of the trajectories, approaching the OT plan from the independent coupling.
+
+The porter network in equilibrium — after years of optimization where each depot-lodge pairing reflects actual geographic efficiency — is approximately the optimal transport solution: goods flow from each depot to the lodge that minimizes total transport cost, which is the Brenier map for the depot and lodge distributions. The reflow procedure learns to discover this equilibrium from data.
+
+---
+
+**Conditional flow matching: the general framework.**
+
+The final piece is the realization that the linear interpolation $x_t = (1-t)x_0 + tx_1$ is just one choice of probability path between $\rho_0$ and $\rho_1$. The general conditional flow matching framework allows any probability path $p_t(x|x_1)$ — a time-varying conditional distribution parameterized by the data point $x_1$ — whose marginal $p_t(x) = \int p_t(x|x_1)p_{\text{data}}(x_1)dx_1$ interpolates from $\rho_0$ at $t=0$ to $p_{\text{data}}$ at $t=1$.
+
+For each data point $x_1$ and each choice of probability path $p_t(\cdot|x_1)$, the conditional velocity field $u_t(x|x_1)$ is defined as the velocity that drives the continuity equation $\partial_t p_t(x|x_1) + \nabla\cdot(p_t(x|x_1)u_t(x|x_1)) = 0$. The marginal velocity field $u_t(x) = \int u_t(x|x_1)p_1(x_1|x)dx_1$ drives the marginal continuity equation and defines the ODE whose solution maps $\rho_0$ to $p_{\text{data}}$.
+
+The conditional flow matching objective:
+
+$$\mathcal{L}_{\text{CFM}}(\theta) = \mathbb{E}_{t,x_1,x\sim p_t(\cdot|x_1)}\left[\|f_\theta(x,t) - u_t(x|x_1)\|^2\right]$$
+
+trains the network to match the conditional velocity field — which is computable from the known probability path and the data point $x_1$ — rather than the intractable marginal velocity field.
+
+Different probability path choices recover different generative model families. The Gaussian probability path $p_t(x|x_1) = \mathcal{N}(x;\alpha_t x_1, \sigma_t^2 I)$ with affine parameters $\alpha_t = 1-t$ and $\sigma_t = t$ gives the rectified flow. The same path with $\alpha_t = e^{-t/2}$ and $\sigma_t = \sqrt{1-e^{-t}}$ gives the OU forward process of diffusion models. The same framework, different paths, different velocity fields. The porter analogy: different depot-to-lodge route planning strategies — direct straight-line paths, valley-following paths, elevation-minimizing paths — are all instances of the same conditional flow matching framework with different conditional probability paths.
+
+---
+
+**Three pictures to carry into the mathematics.**
+
+The first picture: the Annapurna Circuit porter network as a flow matching problem — depot locations $x_0\sim\rho_0$, lodge locations $x_1\sim p_{\text{data}}$, straight-line trajectories $x_t=(1-t)x_0+tx_1$, constant velocity $\dot x_t = x_1-x_0$, and the regression objective $\mathcal{L}_{\text{RF}} = \mathbb{E}[\|f_\theta(x_t,t)-(x_1-x_0)\|^2]$ that trains the velocity network without score functions, divergence computation, or adjoint methods.
+
+The second picture: the crossing trajectories from the independent coupling — Besisahar north to Muktinath and Besisahar south to Manang crossing at Chame — producing an averaged velocity field that curves ODE trajectories. The reflow fix: use the trained ODE to re-pair depots with lodges deterministically, producing non-crossing trajectories, training a straighter velocity field, converging toward the Brenier optimal transport map.
+
+The third picture: the conditional flow matching unification — the Gaussian probability path $p_t(x|x_1)=\mathcal{N}(x;\alpha_t x_1,\sigma_t^2 I)$ parameterizing both rectified flows (linear $\alpha_t$) and diffusion models (exponential $\alpha_t$) as special cases of the same training framework, with the velocity field $u_t(x|x_1) = (\dot\alpha_t/\alpha_t)(x-\sigma_t^2\alpha_t^{-1}\nabla\log p_t(x|x_1)\cdot\alpha_t) + \dot\sigma_t\epsilon$ encoding the probability path's kinematics.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the flow matching framework and marginal velocity field, the conditional flow matching objective and its equivalence to the marginal objective, the rectified flow construction and its properties, the reflow procedure and its convergence to optimal transport, the unified Gaussian probability path framework, and the connection to diffusion models and score matching.
+
+### The Flow Matching Framework
+
+**Setting.** Let $\rho_0 = \mathcal{N}(0,I_d)$ be the source distribution and $\rho_1 = p_{\text{data}}$ be the target distribution. The goal is to learn a time-dependent velocity field $v_t: \mathbb{R}^d\to\mathbb{R}^d$ such that the ODE:
+
+$$\frac{dx_t}{dt} = v_t(x_t), \quad x_0\sim\rho_0$$
+
+produces $x_1\sim\rho_1$ at time $t=1$.
+
+**Definition (Probability path).** A **probability path** is a family of densities $\{\rho_t\}_{t\in[0,1]}$ with $\rho_0 = \mathcal{N}(0,I)$ and $\rho_1 = p_{\text{data}}$, connected by the continuity equation:
+
+$$\partial_t\rho_t + \nabla\cdot(\rho_t v_t) = 0$$
+
+**Definition (Marginal velocity field).** The **marginal velocity field** $u_t: \mathbb{R}^d\to\mathbb{R}^d$ is the unique minimum-norm velocity field generating $\rho_t$:
+
+$$u_t(x) = \frac{\int v_t(x|x_0,x_1)\,p_t(x|x_0,x_1)\,\rho_0(x_0)\rho_1(x_1)\,dx_0\,dx_1}{\rho_t(x)}$$
+
+where $v_t(x|x_0,x_1)$ is any conditional velocity and $p_t(x|x_0,x_1)$ is the corresponding conditional density. For linear interpolation: $u_t(x) = \mathbb{E}[X_1-X_0 \mid X_t = x]$.
+
+**Flow matching objective (intractable form):**
+
+$$\mathcal{L}_{\text{FM}}(\theta) = \mathbb{E}_{t\sim U[0,1],\,x\sim\rho_t}\!\left[\|f_\theta(x,t) - u_t(x)\|^2\right]$$
+
+This is intractable: evaluating $u_t(x) = \mathbb{E}[X_1-X_0|X_t=x]$ requires marginalizing over all $(x_0,x_1)$ pairs consistent with $X_t=x$.
+
+---
+
+### Conditional Flow Matching
+
+**Definition (Conditional probability path).** For each data point $x_1\in\mathbb{R}^d$, let $p_t(\cdot|x_1)$ be a conditional probability path with:
+- $p_0(x|x_1) = \rho_0(x) = \mathcal{N}(x;0,I)$
+- $p_1(x|x_1) = \delta_{x_1}(x)$ (concentrates at $x_1$ at time $1$)
+
+The **marginal path** is:
+
+$$\rho_t(x) = \int p_t(x|x_1)\,p_{\text{data}}(x_1)\,dx_1$$
+
+which satisfies $\rho_0 = \mathcal{N}(0,I)$ and $\rho_1 = p_{\text{data}}$ automatically.
+
+**Definition (Conditional velocity field).** The **conditional velocity field** $u_t(x|x_1)$ is defined by the conditional continuity equation:
+
+$$\partial_t p_t(x|x_1) + \nabla\cdot(p_t(x|x_1)\,u_t(x|x_1)) = 0$$
+
+**Theorem (Conditional flow matching — Lipman et al. 2022).** The conditional flow matching objective:
+
+$$\mathcal{L}_{\text{CFM}}(\theta) = \mathbb{E}_{t,\,x_1\sim p_{\text{data}},\,x\sim p_t(\cdot|x_1)}\!\left[\|f_\theta(x,t) - u_t(x|x_1)\|^2\right]$$
+
+satisfies:
+
+$$\nabla_\theta\mathcal{L}_{\text{CFM}}(\theta) = \nabla_\theta\mathcal{L}_{\text{FM}}(\theta)$$
+
+**Proof.** Expand $\mathcal{L}_{\text{CFM}}$:
+
+$$\mathcal{L}_{\text{CFM}} = \mathbb{E}_{t,x_1,x}\!\left[\|f_\theta\|^2 - 2f_\theta\cdot u_t(x|x_1) + \|u_t(x|x_1)\|^2\right]$$
+
+The key identity: by the law of total expectation, marginalizing over $x_1|x$:
+
+$$\mathbb{E}_{x_1,x}\!\left[f_\theta(x,t)\cdot u_t(x|x_1)\right] = \mathbb{E}_x\!\left[f_\theta(x,t)\cdot\mathbb{E}[u_t(x|x_1)|x]\right] = \mathbb{E}_x\!\left[f_\theta(x,t)\cdot u_t(x)\right]$$
+
+since $u_t(x) = \mathbb{E}[u_t(x|x_1)|X_t=x]$. Therefore:
+
+$$\mathcal{L}_{\text{CFM}}(\theta) = \mathcal{L}_{\text{FM}}(\theta) + C(\text{constant in }\theta)$$
+
+so their gradients are equal. $\square$
+
+**Consequence.** Training with $\mathcal{L}_{\text{CFM}}$ — which uses the tractable conditional velocity $u_t(x|x_1)$ — is equivalent to training with $\mathcal{L}_{\text{FM}}$ — which uses the intractable marginal velocity $u_t(x)$ — since they share the same gradient.
+
+---
+
+### Rectified Flow
+
+**Definition (Rectified flow — Liu et al. 2022).** Given a coupling $(X_0, X_1)$ with $X_0\sim\rho_0$ and $X_1\sim\rho_1$, the **rectified flow** uses the linear interpolation:
+
+$$X_t = (1-t)X_0 + tX_1, \quad t\in[0,1]$$
+
+with conditional probability path $p_t(x|x_0,x_1) = \delta_{(1-t)x_0+tx_1}(x)$ (deterministic interpolation) and conditional velocity $u_t(x|x_0,x_1) = X_1 - X_0$ (constant along each trajectory).
+
+**Rectified flow training objective:**
+
+$$\mathcal{L}_{\text{RF}}(\theta) = \mathbb{E}_{(X_0,X_1)\sim\pi,\,t\sim U[0,1]}\!\left[\|f_\theta((1-t)X_0+tX_1,\,t) - (X_1-X_0)\|^2\right]$$
+
+where $\pi$ is any coupling with marginals $\rho_0$ and $\rho_1$.
+
+**Marginal velocity field of rectified flow:**
+
+$$u_t(x) = \mathbb{E}[X_1 - X_0 \mid X_t = x] = \mathbb{E}\!\left[\frac{X_1-X_0}{\|X_1-X_0\|}\cdot\|X_1-X_0\| \,\Bigg|\, X_t = x\right]$$
+
+The optimal $f_\theta^*$ satisfies $f_\theta^*(x,t) = u_t(x)$ — the conditional expectation of the displacement given the current position.
+
+**Kinetic energy minimization.** The rectified flow trajectory from $x_0$ to $x_1$ has kinetic energy:
+
+$$\text{KE}(x_\cdot) = \int_0^1\|\dot x_t\|^2\,dt = \|x_1-x_0\|^2$$
+
+By Cauchy-Schwarz: for any curve with $x_0$ and $x_1$ fixed:
+
+$$\|x_1-x_0\|^2 = \left\|\int_0^1\dot x_t\,dt\right\|^2 \leq \int_0^1\|\dot x_t\|^2\,dt$$
+
+with equality iff $\dot x_t$ is constant — i.e., the trajectory is a straight line. Straight lines minimize kinetic energy among all curves with fixed endpoints.
+
+**Straightness measure.** Define the **straightness** of a flow $\phi_t$ as:
+
+$$S(\phi) = \mathbb{E}\!\left[\left\|\phi_1(X_0) - X_0 - \int_0^1\dot\phi_t(X_0)\,dt\right\|^2\right] = \mathbb{E}\!\left[\int_0^1\|\dot\phi_t(X_0) - (\phi_1(X_0)-X_0)\|^2\,dt\right]$$
+
+A perfectly straight flow has $S(\phi) = 0$. Rectification reduces $S$.
+
+---
+
+### The Reflow Procedure and Optimal Transport Convergence
+
+**Definition (Reflow).** Given a rectified flow ODE with flow map $\phi_1^{(k)}: \mathbb{R}^d\to\mathbb{R}^d$ (the $k$-th rectified flow), define the **$(k+1)$-th rectified coupling**:
+
+$$(X_0, X_1^{(k+1)}) = (X_0, \phi_1^{(k)}(X_0))$$
+
+where $X_0\sim\rho_0$. Train the $(k+1)$-th rectified flow on this coupling.
+
+**Non-crossing property of ODE-induced coupling.** The coupling $(X_0, \phi_1^{(k)}(X_0))$ has non-crossing straight-line trajectories.
+
+**Proof.** Suppose trajectories from $(x_0^{(1)}, \phi_1^{(k)}(x_0^{(1)}))$ and $(x_0^{(2)}, \phi_1^{(k)}(x_0^{(2)}))$ cross at time $t_c$:
+
+$$(1-t_c)x_0^{(1)} + t_c\phi_1^{(k)}(x_0^{(1)}) = (1-t_c)x_0^{(2)} + t_c\phi_1^{(k)}(x_0^{(2)}) = x_c$$
+
+Both straight-line trajectories pass through $x_c$ at $t_c$. Now consider the ODE $\dot x = u_t^{(k+1)}(x)$ starting from $x_c$ at time $t_c$: by uniqueness of the ODE solution (Picard-Lindelöf), both trajectories follow the same path from $t_c$ to $t=1$, giving $\phi_1^{(k)}(x_0^{(1)}) = \phi_1^{(k)}(x_0^{(2)})$. But $\phi_1^{(k)}$ is injective (it is a diffeomorphism), so $x_0^{(1)} = x_0^{(2)}$ — contradiction. $\square$
+
+**Theorem (Kinetic energy reduction — Liu et al. 2022).** Let $\pi^{(k)}$ be the $k$-th rectified coupling and $\text{KE}^{(k)} = \mathbb{E}_{\pi^{(k)}}[\|X_1-X_0\|^2]$ the expected kinetic energy. Then:
+
+$$\text{KE}^{(k+1)} \leq \text{KE}^{(k)}$$
+
+**Proof sketch.** By the Cauchy-Schwarz inequality applied to the ODE flow:
+
+$$\|X_1^{(k+1)} - X_0\|^2 = \left\|\int_0^1\dot X_t^{(k)}\,dt\right\|^2 \leq \int_0^1\|\dot X_t^{(k)}\|^2\,dt$$
+
+Taking expectations: $\text{KE}^{(k+1)} \leq \mathbb{E}[\int_0^1\|\dot X_t^{(k)}\|^2\,dt] = \text{KE}^{(k)}$ since the $k$-th ODE has the same expected kinetic energy as the $k$-th rectified flow's trajectories. $\square$
+
+**Convergence to Optimal Transport.**
+
+**Theorem.** The kinetic energy $\text{KE}^{(k)}$ converges as $k\to\infty$:
+
+$$\lim_{k\to\infty}\text{KE}^{(k)} = W_2^2(\rho_0,\rho_1)$$
+
+the squared Wasserstein-2 distance between $\rho_0$ and $\rho_1$.
+
+**Proof sketch.** The minimum kinetic energy over all couplings is:
+
+$$\min_{\pi: \text{marginals}=\rho_0,\rho_1}\mathbb{E}_\pi[\|X_1-X_0\|^2] = W_2^2(\rho_0,\rho_1)$$
+
+by the Monge-Kantorovich theorem (Phase 1, Chapter 1). The reflow procedure is a descent algorithm on this functional — each reflow step reduces KE and the infimum is $W_2^2(\rho_0,\rho_1)$, achieved by the Brenier coupling. $\square$
+
+**The limiting flow.** The limiting rectified flow with the Brenier coupling $(X_0, T^*(X_0))$ where $T^* = \nabla\psi$ (gradient of a convex function) has:
+- Perfectly straight trajectories: $X_t = (1-t)X_0 + tT^*(X_0)$
+- Constant velocity: $\dot X_t = T^*(X_0) - X_0$
+- Non-crossing: guaranteed by monotonicity of $T^*$
+
+---
+
+### Gaussian Probability Paths and Unification
+
+**Definition (Gaussian probability path).** A **Gaussian conditional probability path** has:
+
+$$p_t(x|x_1) = \mathcal{N}(x;\,\mu_t(x_1),\,\sigma_t^2 I)$$
+
+with $\mu_0(x_1) = 0$, $\sigma_0 = 1$ (at $t=0$, the distribution is $\mathcal{N}(0,I)$) and $\mu_1(x_1) = x_1$, $\sigma_1 = 0$ (at $t=1$, it concentrates at $x_1$).
+
+**Sample from path.** $x\sim p_t(\cdot|x_1)$ is sampled as $x = \mu_t(x_1) + \sigma_t\epsilon$, $\epsilon\sim\mathcal{N}(0,I)$.
+
+**Conditional velocity field.** For the Gaussian path, the conditional velocity is:
+
+$$u_t(x|x_1) = \dot\mu_t(x_1) + \frac{\dot\sigma_t}{\sigma_t}(x - \mu_t(x_1))$$
+
+**Proof.** The continuity equation $\partial_t p_t(x|x_1) + \nabla\cdot(p_t(x|x_1)u_t(x|x_1)) = 0$ must hold. For the Gaussian path, differentiating $p_t(x|x_1) = \mathcal{N}(x;\mu_t,\sigma_t^2)$:
+
+$$\partial_t p_t = p_t\!\left[\frac{(x-\mu_t)\cdot\dot\mu_t}{\sigma_t^2} + \frac{(x-\mu_t)^2\cdot\dot\sigma_t}{\sigma_t^3} - \frac{d\dot\sigma_t}{\sigma_t}\right]$$
+
+Setting $u_t(x|x_1) = \dot\mu_t + \frac{\dot\sigma_t}{\sigma_t}(x-\mu_t)$ and computing $\nabla\cdot(p_t u_t)$:
+
+$$\nabla\cdot(p_t u_t) = -p_t\!\left[\frac{(x-\mu_t)\cdot\dot\mu_t}{\sigma_t^2} + \frac{(x-\mu_t)^2\dot\sigma_t}{\sigma_t^3} - \frac{d\dot\sigma_t}{\sigma_t}\right] = -\partial_t p_t$$
+
+confirming the continuity equation. $\square$
+
+**Affine path parameterization.** The general affine path $\mu_t(x_1) = \alpha_t x_1$, $\sigma_t$ with $\alpha_0=0$, $\alpha_1=1$, $\sigma_0=1$, $\sigma_1=0$:
+
+$$u_t(x|x_1) = \dot\alpha_t x_1 + \frac{\dot\sigma_t}{\sigma_t}(x - \alpha_t x_1)$$
+
+**Special cases:**
+
+**Rectified flow:** $\alpha_t = t$, $\sigma_t = 1-t$. Then $\mu_t(x_1) = tx_1$, so $x = tx_1 + (1-t)\epsilon$ — a point on the line from $\epsilon$ to $x_1$. Conditional velocity:
+
+$$u_t(x|x_1) = x_1 - \frac{x - tx_1}{1-t} = x_1 - \epsilon = x_1 - x_0$$
+
+(using $\epsilon = x_0$ for the noise sample). Constant velocity along the straight line. $\checkmark$
+
+**OU diffusion (DDPM path):** $\alpha_t = e^{-t/2}$, $\sigma_t = \sqrt{1-e^{-t}}$. Then:
+
+$$u_t(x|x_1) = -\frac{1}{2}e^{-t/2}x_1 + \frac{-\frac{1}{2}e^{-t/2}/\sqrt{1-e^{-t}}}{\sqrt{1-e^{-t}}/1}(x - e^{-t/2}x_1)$$
+
+simplifying to the score-based velocity field of the OU process — recovering the DDPM training target.
+
+**VP-SDE path:** $\alpha_t = \sqrt{\bar\alpha_t}$, $\sigma_t = \sqrt{1-\bar\alpha_t}$ (DDPM noise schedule). Conditional velocity:
+
+$$u_t(x|x_1) = \frac{\dot{\sqrt{\bar\alpha_t}}}{\sqrt{\bar\alpha_t}}x_1 + \frac{\dot{\sqrt{1-\bar\alpha_t}}}{\sqrt{1-\bar\alpha_t}}(x - \sqrt{\bar\alpha_t}x_1)$$
+
+---
+
+### Connection to Score Matching and Probability Flow ODE
+
+**Theorem (Score-velocity relationship).** For the Gaussian probability path $p_t(x|x_1) = \mathcal{N}(x;\mu_t(x_1),\sigma_t^2)$ with affine parameters, the marginal velocity field relates to the score function by:
+
+$$u_t(x) = \dot\mu_t(\hat x_1(x,t)) + \frac{\dot\sigma_t}{\sigma_t}(x - \mu_t(\hat x_1(x,t)))$$
+
+where $\hat x_1(x,t) = \mathbb{E}[X_1|X_t=x]$ is the optimal denoiser (Tweedie's formula).
+
+**Connection to score function:**
+
+$$u_t(x) = \frac{\dot\alpha_t}{\alpha_t}x + \left(\dot\sigma_t - \frac{\dot\alpha_t\sigma_t}{\alpha_t}\right)\sigma_t\nabla_x\log\rho_t(x)$$
+
+**Proof.** Using Tweedie's formula: $\nabla\log\rho_t(x) = -(x-\alpha_t\hat x_1)/\sigma_t^2 = -\epsilon_t(x)/\sigma_t$ where $\epsilon_t = (x-\alpha_t\hat x_1)/\sigma_t$ is the predicted noise. Substituting into the velocity formula and simplifying gives the stated relationship. $\square$
+
+**Consequence.** Training the flow matching network $f_\theta(x,t)\approx u_t(x)$ is equivalent (in terms of the learned velocity field) to training the score network $s_\theta(x,t)\approx\nabla\log\rho_t(x)$: both determine the same probability flow ODE, related by the linear transformation above.
+
+---
+
+### One-Step Generation: Consistency Models and Distillation
+
+**Motivation.** An ideal rectified flow after many reflows has approximately constant velocity $\dot x_t\approx x_1-x_0$ — the ODE can be integrated in one step: $x_1 \approx x_0 + f_\theta(x_0,0)$.
+
+**Consistency model (Song et al. 2023).** A **consistency model** $f_\theta: \mathbb{R}^d\times[0,T]\to\mathbb{R}^d$ satisfies the **self-consistency property**: for all $t,s\in[0,T]$ on the same ODE trajectory:
+
+$$f_\theta(x_t,t) = f_\theta(x_s,s) = x_0$$
+
+(all points on the same trajectory map to the same starting point $x_0$).
+
+**Consistency distillation loss:**
+
+$$\mathcal{L}_{\text{CD}}(\theta,\theta^-) = \mathbb{E}_{t,x_0,x_t}\!\left[d(f_\theta(x_t,t),\,f_{\theta^-}(x_{t-\Delta t},t-\Delta t))\right]$$
+
+where $\theta^-$ is an exponential moving average of $\theta$ (the teacher) and $d$ is a distance function. This enforces consistency between adjacent points on the ODE trajectory.
+
+**Flow consistency (Liu et al. 2023).** For a $k$-rectified flow, the one-step generation:
+
+$$x_1^{(1\text{-step})} = x_0 + f_\theta(x_0,0)$$
+
+has error bounded by the straightness measure $S(\phi)$:
+
+$$W_2^2(\rho_1^{(1\text{-step})},\rho_1) \leq C\cdot S(\phi)$$
+
+After sufficient reflows, $S(\phi)\to 0$ and one-step generation approaches exact generation.
+
+---
+
+### WHY THIS MATTERS
+
+In **MATH 208 (Statistics and Probability)**, the conditional flow matching objective $\mathcal{L}_{\text{CFM}}(\theta) = \mathbb{E}[\|f_\theta(x,t)-u_t(x|x_1)\|^2]$ is an MSE regression where the optimal predictor of $u_t(x|x_1)$ given $x=X_t$ is the conditional expectation $\mathbb{E}[u_t(X_t|X_1)|X_t=x] = u_t(x)$ — the marginal velocity field. The equivalence $\nabla_\theta\mathcal{L}_{\text{CFM}} = \nabla_\theta\mathcal{L}_{\text{FM}}$ uses the law of total expectation $\mathbb{E}_{x_1,x}[f_\theta\cdot u_t(x|x_1)] = \mathbb{E}_x[f_\theta\cdot\mathbb{E}[u_t(x|x_1)|x]]$ — the MATH 208 tower property of conditional expectations. The bias-variance decomposition of $\mathcal{L}_{\text{CFM}}-\mathcal{L}_{\text{FM}} = \mathbb{E}[\|u_t(x|x_1)-u_t(x)\|^2]$ is the variance of the conditional velocity $u_t(x|x_1)$ around its conditional mean $u_t(x)$ — a non-negative constant in $\theta$ that does not affect the gradient, confirming the training equivalence. The Brenier coupling minimizing $\mathbb{E}[\|X_1-X_0\|^2]$ is the minimum variance coupling for the displacement estimator $X_1-X_0\approx u_t$: it minimizes the variance of the training target around the optimal velocity field, producing the cleanest regression problem.
+
+In **MATH 304 (Computational Operations Research)**, the reflow convergence to the Wasserstein-2 optimal transport plan is the convergence of a primal descent algorithm on the Kantorovich problem $\min_\pi\mathbb{E}_\pi[\|X_1-X_0\|^2]$. The Brenier theorem from Phase 1 — the optimal transport plan is induced by the gradient of a convex function $T^*=\nabla\psi$ — is the optimality condition for the Kantorovich LP's dual, which is the MATH 304 LP duality result. The non-crossing condition for the ODE-induced coupling $(X_0,\phi_1(X_0))$ is the c-cyclical monotonicity condition from OT theory: the coupling $(x_0,\phi_1(x_0))$ is c-cyclically monotone because it is induced by a deterministic map (the ODE flow), and c-cyclically monotone couplings are exactly the optimal transport plans for cost $c(x,y)=\|x-y\|^2$ by the Brenier-McCann theorem. The kinetic energy reduction theorem $\text{KE}^{(k+1)}\leq\text{KE}^{(k)}$ is the descent lemma for the reflow algorithm — the Wasserstein-2 kinetic energy objective decreases at each reflow step, exactly as the objective decreases at each gradient step in MATH 304's optimization algorithms.
+
+In **MATH 217 (ODEs and PDEs)**, the non-crossing proof uses Picard-Lindelöf uniqueness: two ODE trajectories passing through the same point at the same time must coincide thereafter, so the ODE-induced coupling cannot have crossing trajectories. The conditional continuity equation $\partial_t p_t(x|x_1) + \nabla\cdot(p_t u_t(\cdot|x_1)) = 0$ is the PDE governing the conditional probability path — a first-order linear PDE in $(x,t)$ whose characteristics are the flow trajectories $x_t = \mu_t(x_1)+\sigma_t\epsilon$. The proof that the Gaussian velocity formula $u_t(x|x_1) = \dot\mu_t + \frac{\dot\sigma_t}{\sigma_t}(x-\mu_t)$ satisfies the conditional continuity equation is a direct PDE verification: substituting into $\partial_t p_t + \nabla\cdot(p_t u_t) = 0$ and expanding using the Gaussian density formula gives the identity by matching the time-derivative and divergence terms — a calculation from MATH 217's method of characteristics applied to the transport equation.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Annapurna Circuit logistics story has a precise mathematical address. We walk through them completely — Deepak's random depot-lodge pairings, the straight-line trajectories, the regression objective, the crossing problem at Chame, the reflow fix, Sunita's kinetic energy argument, the optimal transport convergence, and the conditional flow matching unification — until the story and the formalism are a single object seen from two angles.
+
+---
+
+**The supply depots scattered near the roadheads at 800-1400 metres altitude — the sources of goods — are the source distribution $\rho_0 = \mathcal{N}(0,I_d)$, and the teahouse lodges scattered along the high circuit at 2500-5400 metres — the destinations — are the target distribution $\rho_1 = p_{\text{data}}$.** The generative modeling problem is to learn a map from depot locations $x_0\sim\rho_0$ to lodge locations $x_1\sim p_{\text{data}}$ — the probability flow from source to target. In the actual logistics problem, $x_0$ and $x_1$ are geographic coordinates and altitude; in the machine learning context, they are points in the high-dimensional data space $\mathbb{R}^d$ representing images, molecular structures, or atmospheric states. The ODE $\dot x_t = f_\theta(x_t,t)$ with $x_0\sim\rho_0$ is the porter's journey parameterized as a continuous curve from depot to lodge, governed by a time-dependent velocity field $f_\theta$ that the neural network learns to produce direct, efficient transport.
+
+**The 4,847 recorded porter journeys — each a depot-lodge pair $(x_0^{(i)}, x_1^{(i)})$ — are the training samples from the coupling $\pi$ with marginals $\rho_0$ and $\rho_1$, and the straight-line interpolation $X_t = (1-t)X_0 + tX_1$ is the deterministic conditional probability path $p_t(x|x_0,x_1) = \delta_{(1-t)x_0+tx_1}(x)$.** The coupling $\pi$ specifies which depot supplies which lodge — the joint distribution over $(x_0,x_1)$ pairs. The independent coupling $\pi^{\text{ind}} = \rho_0\otimes\rho_1$ — Deepak's random pairing — draws each pair independently, ignoring the actual geographic pairing logic of the real porter network. The deterministic path $p_t(x|x_0,x_1) = \delta_{(1-t)x_0+tx_1}(x)$ concentrates all probability mass on the straight line between $x_0$ and $x_1$ at each time $t$ — a porter who follows a perfectly linear route deviates at no point from the straight-line path, so the conditional distribution of their position at time $t$ given their start and end points is exactly the delta function at $(1-t)x_0+tx_1$.
+
+---
+
+**The constant velocity $\dot X_t = X_1 - X_0$ along the straight-line trajectory — a porter walking at constant speed in a fixed direction from depot to lodge — is the conditional velocity field $u_t(x|x_0,x_1) = X_1 - X_0$, the key computational simplification of rectified flows relative to diffusion models.** For the general Gaussian probability path $p_t(x|x_1) = \mathcal{N}(x;\mu_t(x_1),\sigma_t^2 I)$, the conditional velocity is $u_t(x|x_1) = \dot\mu_t(x_1) + \frac{\dot\sigma_t}{\sigma_t}(x-\mu_t(x_1))$ — a position-dependent expression requiring knowledge of both $\dot\mu_t$, $\dot\sigma_t$, and the deviation $(x-\mu_t)$. For the rectified flow path $\mu_t(x_1) = tx_1$, $\sigma_t = 1-t$: $\dot\mu_t = x_1$, $\dot\sigma_t = -1$, $\sigma_t = 1-t$, so $u_t(x|x_1) = x_1 + \frac{-1}{1-t}(x-tx_1) = x_1 - \frac{x-tx_1}{1-t} = x_1 - x_0$ — using $x = (1-t)x_0+tx_1$ to identify $x_0 = (x-tx_1)/(1-t)$. The conditional velocity is exactly the displacement $x_1-x_0$, independent of $t$ and independent of the current position $x$ (given the endpoints). The training label for each training point $(x_t, t)$ is simply the displacement $x_1-x_0$ — the direction from starting depot to destination lodge — which does not require computing any score function, divergence, or Jacobian.
+
+**The rectified flow training objective $\mathcal{L}_{\text{RF}}(\theta) = \mathbb{E}_{(X_0,X_1)\sim\pi,t}[\|f_\theta((1-t)X_0+tX_1,t)-(X_1-X_0)\|^2]$ is MSE regression of the neural network's velocity prediction onto the displacement target $X_1-X_0$, computable directly from the training data without any auxiliary network, forward process, or special computational trick.** The training procedure: sample a depot-lodge pair $(x_0,x_1)\sim\pi$, sample a time $t\sim U[0,1]$, compute the interpolated position $x_t = (1-t)x_0+tx_1$, evaluate the network $f_\theta(x_t,t)$, compute the loss $\|f_\theta(x_t,t)-(x_1-x_0)\|^2$, backpropagate. No forward diffusion process is needed (unlike DDPM's $T$-step noising chain). No score function is needed (unlike denoising score matching). No adjoint method is needed (unlike neural ODE's backward ODE for gradients). No Hutchinson estimator is needed (unlike FFJORD's stochastic divergence computation). The simplicity is not an approximation — the conditional flow matching theorem guarantees that minimizing $\mathcal{L}_{\text{RF}}$ with the conditional velocity target produces the same gradient as minimizing the intractable marginal flow matching objective, by the law of total expectation: $\mathbb{E}_{x_1,x}[f_\theta\cdot u_t(x|x_1)] = \mathbb{E}_x[f_\theta\cdot\mathbb{E}[u_t(x|x_1)|x]] = \mathbb{E}_x[f_\theta\cdot u_t(x)]$.
+
+---
+
+**The crossing trajectories at Chame — the Besisahar north-to-Muktinath and Besisahar south-to-Manang routes crossing in the middle of the diagram — are pairs of straight-line trajectories from the independent coupling whose interpolated positions coincide at some intermediate time: $(1-t_c)x_0^{(1)}+t_c x_1^{(1)} = (1-t_c)x_0^{(2)}+t_c x_1^{(2)} = x_c$ for some $t_c\in(0,1)$.** The averaged velocity at the crossing point is $f_\theta^*(x_c,t_c) = u_{t_c}(x_c) = \mathbb{E}[X_1-X_0|X_{t_c}=x_c]$ — the conditional expectation of the displacement given that the trajectory passes through $x_c$ at time $t_c$. When two crossing trajectories contribute to this expectation — one with velocity $x_1^{(1)}-x_0^{(1)}$ pointing northeast and one with velocity $x_1^{(2)}-x_0^{(2)}$ pointing northwest — the conditional expectation averages them, producing a velocity pointing north. The ODE with this averaged velocity field follows the north direction from $x_c$, deviating from both contributing trajectories. The deviation produces curvature in the actual ODE flow: the simulated porter route curves away from the direct depot-to-lodge path because the velocity field has been compromised by crossing trajectories. This is the mathematical mechanism of the story's Chame crossing problem.
+
+**The variance term $\mathcal{L}_{\text{CFM}}(\theta) - \mathcal{L}_{\text{FM}}(\theta) = \mathbb{E}[\|u_t(x|x_1)-u_t(x)\|^2]$ — the gap between the conditional and marginal flow matching objectives — is the variance of the conditional velocity around its mean, which is strictly positive when trajectories cross and zero only when the coupling is non-crossing.** When the independent coupling produces crossing trajectories, the conditional velocity $u_t(x|x_1) = x_1-x_0$ at a crossing point $x_c$ takes multiple values for different $(x_0,x_1)$ pairs, so $\mathbb{E}[\|u_t(x_c|x_1)-u_t(x_c)\|^2] > 0$ — the variance is positive. When the ODE-induced coupling $(x_0,\phi_1(x_0))$ has non-crossing trajectories, the conditional velocity at each position is unique — there is only one $(x_0,x_1)$ pair whose trajectory passes through any given $(x,t)$ — so $u_t(x|x_1) = u_t(x)$ everywhere and the variance is zero. The variance of the training signal is the measure of crossing: eliminating crossings eliminates variance, simplifies the velocity field, and produces straighter ODE trajectories.
+
+---
+
+**Sunita's kinetic energy argument — straight lines minimize $\int_0^1\|\dot x_t\|^2\,dt$ among all paths with fixed endpoints, with equality iff $\dot x_t$ is constant, by Cauchy-Schwarz — is the variational characterization of rectified flow trajectories as kinetic energy minimizers, connecting the porter's efficiency intuition to the Wasserstein-2 optimal transport problem.** The Cauchy-Schwarz inequality $\|x_1-x_0\|^2 = \|\int_0^1\dot x_t\,dt\|^2\leq\int_0^1\|\dot x_t\|^2\,dt$ — with equality iff $\dot x_t$ is constant — shows that the straight-line trajectory $\dot x_t = x_1-x_0$ achieves the minimum kinetic energy $\|x_1-x_0\|^2$ among all paths from $x_0$ to $x_1$. Summing over all trajectories: $\mathbb{E}[\int_0^1\|\dot x_t\|^2\,dt]\geq\mathbb{E}[\|X_1-X_0\|^2]$, with equality iff all trajectories are straight lines with constant velocity. The minimum expected kinetic energy over all possible straight-line couplings is $\min_\pi\mathbb{E}_\pi[\|X_1-X_0\|^2] = W_2^2(\rho_0,\rho_1)$ — the Wasserstein-2 squared distance between $\rho_0$ and $\rho_1$, the Phase 1 optimal transport problem. The reflow procedure minimizes expected kinetic energy by improving the coupling at each iteration, converging toward the Brenier coupling that achieves $W_2^2(\rho_0,\rho_1)$.
+
+**The reflow coupling $(X_0, \phi_1^{(k)}(X_0))$ — pairing each depot with the lodge that the $k$-th ODE sends it to — has non-crossing straight-line trajectories by the Picard-Lindelöf uniqueness argument: two trajectories crossing at $(x_c, t_c)$ would force $\phi_1(x_0^{(1)}) = \phi_1(x_0^{(2)})$, contradicting the diffeomorphism property of $\phi_1$.** The proof is the story's reflow fix made rigorous: if trajectories from $(x_0^{(1)}, \phi_1(x_0^{(1)}))$ and $(x_0^{(2)}, \phi_1(x_0^{(2)}))$ cross at $x_c$ at time $t_c$, then the ODE $\dot x = u_{t}^{(k+1)}(x)$ (the second rectified flow) started from $x_c$ at $t_c$ follows a unique path forward by Picard-Lindelöf — both trajectories coincide from $t_c$ to $t=1$, giving $\phi_1(x_0^{(1)}) = \phi_1(x_0^{(2)})$. But $\phi_1$ is a diffeomorphism — it is the flow map of the ODE from $t=0$ to $t=1$, which is invertible by the ODE existence and uniqueness theorem applied at $t=0$. Therefore $x_0^{(1)} = x_0^{(2)}$, a contradiction. Non-crossing is a consequence of ODE uniqueness — the same Picard-Lindelöf theorem that guaranteed unique porter trajectories in the original neural ODE story of Topic 1.
+
+---
+
+**The kinetic energy reduction $\text{KE}^{(k+1)}\leq\text{KE}^{(k)}$ — each reflow step reduces the expected kinetic energy — is proved by Cauchy-Schwarz applied to the ODE flow: $\|X_1^{(k+1)}-X_0\|^2 = \|\phi_1^{(k)}(X_0)-X_0\|^2 = \|\int_0^1\dot X_t^{(k)}\,dt\|^2\leq\int_0^1\|\dot X_t^{(k)}\|^2\,dt$.** The first equality identifies $X_1^{(k+1)} = \phi_1^{(k)}(X_0)$ — the new coupling's lodge location is the $k$-th ODE's prediction for depot $X_0$. The second equality writes the displacement as the time integral of the velocity along the $k$-th ODE trajectory. Cauchy-Schwarz gives the bound; taking expectations: $\text{KE}^{(k+1)} = \mathbb{E}[\|X_1^{(k+1)}-X_0\|^2]\leq\mathbb{E}[\int_0^1\|\dot X_t^{(k)}\|^2\,dt] = \text{KE}^{(k)}$ — the expected kinetic energy of the new coupling's straight-line trajectories is bounded by the expected kinetic energy of the old ODE's curved trajectories. The sequence $\text{KE}^{(0)}\geq\text{KE}^{(1)}\geq\text{KE}^{(2)}\geq\cdots\geq W_2^2(\rho_0,\rho_1)\geq 0$ is monotone decreasing and bounded below, guaranteeing convergence to the Wasserstein-2 optimal transport cost — the Brenier coupling that sends each depot to the lodge minimizing total transport cost.
+
+**The limiting coupling $(X_0, T^*(X_0))$ where $T^* = \nabla\psi$ is the Brenier map — the unique gradient-of-convex-function map pushing $\rho_0$ to $\rho_1$ — is the non-crossing coupling with minimum kinetic energy, connecting the reflow procedure's convergence to Phase 1's central theorem.** The Brenier theorem from Phase 1: the optimal transport plan for cost $c(x,y) = \|x-y\|^2$ is unique and induced by the map $T^* = \nabla\psi$ for a convex function $\psi$. The monotonicity of $T^*$ — $(T^*(x)-T^*(y))\cdot(x-y)\geq 0$ for all $x,y$ — ensures non-crossing: if $(1-t_c)x_0^{(1)}+t_c T^*(x_0^{(1)}) = (1-t_c)x_0^{(2)}+t_c T^*(x_0^{(2)})$, then $(x_0^{(1)}-x_0^{(2)}) = -\frac{t_c}{1-t_c}(T^*(x_0^{(1)})-T^*(x_0^{(2)}))$, so $(x_0^{(1)}-x_0^{(2)})\cdot(T^*(x_0^{(1)})-T^*(x_0^{(2)})) = -\frac{t_c}{1-t_c}\|T^*(x_0^{(1)})-T^*(x_0^{(2)})\|^2\leq 0$, contradicting monotonicity unless $x_0^{(1)}=x_0^{(2)}$. The Brenier map's monotonicity is the non-crossing condition, derived from the convexity of $\psi$ — the same Legendre-Fenchel duality from Phase 0 that appeared in the Kantorovich dual of Phase 1. The reflow procedure is Phase 1's optimal transport theory made algorithmic: it converges to the Brenier map by iterative refinement of the coupling, starting from the independent coupling and ending at the transport-optimal coupling.
+
+---
+
+**The conditional flow matching theorem — $\nabla_\theta\mathcal{L}_{\text{CFM}} = \nabla_\theta\mathcal{L}_{\text{FM}}$ — is the law of total expectation from MATH 208 applied to the cross-term $\mathbb{E}[f_\theta\cdot u_t(x|x_1)] = \mathbb{E}[f_\theta\cdot u_t(x)]$, showing that training on the tractable conditional velocity target is equivalent to training on the intractable marginal velocity target.** The proof: $\mathbb{E}_{x_1,x}[f_\theta(x,t)\cdot u_t(x|x_1)] = \mathbb{E}_x[f_\theta(x,t)\cdot\mathbb{E}_{x_1}[u_t(x|x_1)|X_t=x]] = \mathbb{E}_x[f_\theta(x,t)\cdot u_t(x)]$ — the tower property $\mathbb{E}[Y] = \mathbb{E}[\mathbb{E}[Y|Z]]$ applied with $Y = f_\theta\cdot u_t(x|x_1)$ and $Z = X_t = x$. The term $\mathbb{E}[u_t(x|x_1)|X_t=x] = u_t(x)$ is the definition of the marginal velocity field as the conditional expectation of the conditional velocity. The constant gap $\mathcal{L}_{\text{CFM}}-\mathcal{L}_{\text{FM}} = \mathbb{E}[\|u_t(x|x_1)-u_t(x)\|^2]\geq 0$ — the variance of the conditional velocity — does not affect the gradient and can be ignored for training. The practical consequence: you never need to compute the intractable marginal velocity $u_t(x) = \mathbb{E}[X_1-X_0|X_t=x]$ during training; the simpler conditional velocity $u_t(x|x_1) = X_1-X_0$ (known because you generated $x_t$ from a known $(x_0,x_1)$ pair) gives the same gradient update.
+
+**The Gaussian probability path unification — $p_t(x|x_1) = \mathcal{N}(x;\alpha_t x_1, \sigma_t^2 I)$ with conditional velocity $u_t(x|x_1) = \dot\alpha_t x_1 + \frac{\dot\sigma_t}{\sigma_t}(x-\alpha_t x_1)$ — recovers both rectified flows ($\alpha_t=t$, $\sigma_t=1-t$, $u_t=x_1-x_0$) and diffusion models ($\alpha_t=e^{-t/2}$, $\sigma_t=\sqrt{1-e^{-t}}$, $u_t$ proportional to the score) as special cases of the same conditional flow matching recipe.** The verification for the rectified flow path: $\alpha_t=t$, $\dot\alpha_t=1$, $\sigma_t=1-t$, $\dot\sigma_t=-1$; $u_t(x|x_1) = 1\cdot x_1 + \frac{-1}{1-t}(x-tx_1) = x_1 - \frac{x-tx_1}{1-t}$. With $x=(1-t)x_0+tx_1$, the numerator $x-tx_1 = (1-t)x_0$ so $(x-tx_1)/(1-t) = x_0$ and $u_t = x_1-x_0$ — the constant displacement velocity, confirming the rectified flow recovery. The verification for the OU diffusion path: $\alpha_t=e^{-t/2}$, $\dot\alpha_t = -\frac{1}{2}e^{-t/2}$, $\sigma_t=\sqrt{1-e^{-t}}$, $\dot\sigma_t = \frac{e^{-t/2}}{2\sqrt{1-e^{-t}}}$; substituting into the conditional velocity formula and using $\nabla\log\rho_t = -(x-\alpha_t\hat x_1)/\sigma_t^2$ from Tweedie's formula recovers the probability flow ODE velocity $u_t = b_t - \frac{\sigma_t^2}{2}s_t$ of the OU process. Both families are instances of the same conditional continuity equation $\partial_t p_t(x|x_1)+\nabla\cdot(p_t u_t(\cdot|x_1))=0$ with different path parameters $(\alpha_t,\sigma_t)$.
+
+---
+
+**The connection to MATH 208 is the tower property, MSE regression, and optimal coupling.** The conditional flow matching theorem is the tower property $\mathbb{E}[\mathbb{E}[Y|Z]]=\mathbb{E}[Y]$ from MATH 208. The flow matching objective is MSE regression — the optimal predictor of $u_t(x|x_1)$ given $X_t=x$ is the conditional expectation $u_t(x)$. The Brenier coupling minimizing $\mathbb{E}[\|X_1-X_0\|^2]$ is the minimum variance coupling for the displacement estimator — it minimizes the training noise in the velocity regression. **The connection to MATH 304 is the Kantorovich LP and Brenier duality.** The reflow convergence $\text{KE}^{(k)}\to W_2^2(\rho_0,\rho_1)$ is descent on the Kantorovich objective — a linear program over couplings, with the Brenier theorem characterizing its optimal solution as $T^*=\nabla\psi$ for convex $\psi$, the MATH 304 LP optimality condition. The c-cyclical monotonicity of the OT plan — the non-crossing condition in the continuous setting — is the discrete LP optimality condition from MATH 304 extended to continuous transport. **The connection to MATH 217 is the ODE uniqueness for non-crossing.** The non-crossing proof uses Picard-Lindelöf: two ODE solutions agreeing at $(x_c,t_c)$ agree everywhere by uniqueness, so the ODE-induced coupling is injective. The conditional continuity equation $\partial_t p_t+\nabla\cdot(p_t u_t)=0$ is the first-order linear PDE of MATH 217, whose characteristics are the flow trajectories $x_t=\mu_t(x_1)+\sigma_t\epsilon$ — the method of characteristics from MATH 217 applied to the transport PDE.
+
+---
+
+The Annapurna Circuit porter network — depot distributions as $\rho_0$, lodge distributions as $p_{\text{data}}$, Deepak's random pairing as the independent coupling, straight-line trajectories as $x_t=(1-t)x_0+tx_1$, constant velocity as $u_t=x_1-x_0$, the regression objective $\mathcal{L}_{\text{RF}}=\mathbb{E}[\|f_\theta(x_t,t)-(x_1-x_0)\|^2]$, the Chame crossing as trajectory intersection, averaged velocity as the marginal field $u_t(x)=\mathbb{E}[X_1-X_0|X_t=x]$, Sunita's Cauchy-Schwarz kinetic energy bound, the reflow non-crossing proof by Picard-Lindelöf, kinetic energy reduction by Cauchy-Schwarz, convergence to the Brenier map $T^*=\nabla\psi$, the Gaussian path unification recovering both rectified flows and diffusion models, and the conditional flow matching equivalence by the tower property — is now completely dissolved into its mathematical form. The source is $\rho_0$. The target is $\rho_1$. The coupling is $\pi$. The interpolation is $X_t=(1-t)X_0+tX_1$. The conditional velocity is $u_t(x|x_1)=x_1-x_0$. The marginal velocity is $u_t(x)=\mathbb{E}[X_1-X_0|X_t=x]$. The CFM objective equals the FM objective up to a $\theta$-constant by the tower property. The reflow coupling is $(X_0,\phi_1(X_0))$. Non-crossing follows from Picard-Lindelöf. Kinetic energy reduction follows from Cauchy-Schwarz. Convergence is to $W_2^2(\rho_0,\rho_1)$ and the Brenier map. The Gaussian path $p_t(x|x_1)=\mathcal{N}(x;\alpha_t x_1,\sigma_t^2 I)$ unifies all families.
+
+---
+---

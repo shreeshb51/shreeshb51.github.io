@@ -1,0 +1,480 @@
+# Topic 1 - Geodesic Convolution: Sliding Filters Along Curved Surfaces
+
+## Introduction
+
+Chapter 2 defined convolution on graphs in two complementary ways. The spatial view slid messages along edges, aggregating neighborhood information hop by hop. The spectral view filtered in the graph Fourier domain, multiplying Fourier coefficients by a learned transfer function. Both views produced the same computation — local weighted aggregation of node features — because spatial locality and spectral polynomial filtering are two descriptions of the same constraint. The graph was discrete: a finite collection of nodes and edges with no notion of distance between nodes other than the hop count, and no notion of angle or orientation at each node other than what the adjacency structure implied.
+
+Now the domain is continuous. Instead of a finite graph of villages connected by roads, you have a smooth curved surface — the cortex of a human brain, the shell of a protein, the hull of an aircraft, the surface of the Earth. Instead of a finite set of node features, you have a smooth signal defined at every point of the surface — a temperature field, a pressure distribution, a chemical potential. Instead of graph edges defining neighborhood structure, you have the Riemannian metric of the surface defining distances along curves. The question is the same as it was in Chapter 2: how do you define a convolutional operation on this domain that respects its geometry and symmetry? But the answer requires the full machinery of differential geometry that Phase 0 built and that the Chapter 3 introduction has now framed.
+
+The na\"{i}ve approach is to ignore the curvature entirely. Flatten the surface into a plane — using any map projection you can construct — and apply standard 2D convolution on the flat image. This is exactly what cartographers do when they produce a flat map of the Earth's spherical surface, and you already know from cartography that it always distorts. The Mercator projection preserves angles but distorts areas — Greenland appears as large as Africa. The equal-area projection preserves areas but distorts shapes — coastlines become unrecognizable near the poles. The azimuthal projection preserves distances from one chosen center point but distorts everything else. No flat map of a curved surface preserves all geometric properties simultaneously — this is the content of Gauss's Theorema Egregium, which states that the Gaussian curvature of a surface is an intrinsic invariant that cannot be changed by any isometric embedding. Flattening a sphere into a plane necessarily distorts something, and applying a convolutional filter to the distorted flat image applies the filter in a geometrically dishonest coordinate system.
+
+The correct approach is to define convolution intrinsically — using only the manifold's own geometry, without reference to any ambient flattening or coordinate system. This is geodesic convolution: convolution defined through the manifold's own notion of distance, direction, and neighborhood, using the geodesic metric rather than any extrinsic Euclidean metric.
+
+This topic develops geodesic convolution across three components that build on each other in strict sequence.
+
+The first component is **the geodesic neighborhood and local polar coordinates**. On a flat plane, a convolutional filter is applied by centering it at each point $x$, reading off the signal values in a square patch around $x$, weighting them by the filter coefficients, and summing. The patch is defined by Euclidean distance: all points within a fixed radius $r$ in the flat metric. On a curved surface, the patch is defined by geodesic distance: the geodesic ball $B_r(x) = \{y \in \mathcal{M} : d_\mathcal{M}(x,y) < r\}$, the set of all surface points reachable from $x$ along a surface curve of length less than $r$. The geodesic ball is the intrinsically correct notion of a neighborhood on a manifold — it measures how far you must travel along the surface to reach a neighboring point, not how far you must travel through the ambient space. Having defined the neighborhood, you need a local coordinate system to parameterize it: the geodesic polar coordinates $(r, \theta)$ centered at $x$, where $r$ is the geodesic distance from $x$ and $\theta \in [0, 2\pi)$ is the angle in the local tangent plane $T_x\mathcal{M}$. The exponential map $\exp_x: T_x\mathcal{M} \to \mathcal{M}$ converts tangent vectors to points on the surface, mapping the flat geodesic polar coordinates in $T_x\mathcal{M}$ to the curved geodesic neighborhood on $\mathcal{M}$. This is the local flattening that avoids Gauss's Theorema Egregium's obstruction: it is not a global flattening (which would inevitably distort), but a local one centered at each point, valid within the injectivity radius of the exponential map.
+
+The second component is **the gauge ambiguity and its resolution**. The geodesic polar coordinate system at each point $x$ requires choosing an angular reference direction in the tangent plane $T_x\mathcal{M}$ — the direction that corresponds to angle $\theta = 0$. On a flat grid, this choice is canonical: the horizontal direction, defined globally across the entire grid. On a curved surface, there is no canonical global angular reference. The reference direction at each point is a choice of local frame, called a gauge, and different gauge choices at different points are related by local rotations of the tangent plane. The set of all gauge transformations — all possible local rotations, one per point — is the gauge group of the tangent bundle, the infinite-dimensional symmetry group that Chapter 1's Topic 2 identified as the symmetry group of manifold-valued data. A convolutional filter defined in local polar coordinates produces outputs that depend on the gauge choice: rotating the local reference frame at a point rotates the filter and produces a different output. For the convolution to be geometrically meaningful — independent of arbitrary gauge choices — the network must be gauge-equivariant: rotating the local frame at every point must rotate the output features at every point in a corresponding way. The gauge-equivariant convolution resolves this ambiguity by constructing filters that transform correctly under all gauge transformations, using the parallel transport along geodesics to consistently move local frames from point to point across the surface.
+
+The third component is **the MoNet framework and its connection to spatial graph convolution**. The Mixture Model Networks (MoNet) architecture of Monti et al. (2017) provides a unified framework for geodesic convolution that handles both continuous manifolds and discrete graphs as special cases. MoNet parameterizes the convolutional filter as a Gaussian mixture model in the local pseudo-coordinates $\mathbf{u}(x,y)$ — a vector of geometric quantities describing the relative position of point $y$ in the local coordinate system centered at point $x$. For a manifold, $\mathbf{u}(x,y) = (r, \theta)$ are the geodesic polar coordinates. For a graph, $\mathbf{u}(i,j)$ can be degree-normalized relative coordinates or other local structural features. The filter at point $x$ applied to signal $f$ is:
+
+$$(\mathcal{F} \star f)(x) = \sum_{k=1}^{K} w_k \sum_{y \in \mathcal{N}(x)} f(y) \cdot g_k(\mathbf{u}(x,y))$$
+
+where $g_k(\mathbf{u}) = \exp(-\frac{1}{2}(\mathbf{u} - \mu_k)^\top \Sigma_k^{-1}(\mathbf{u} - \mu_k))$ is the $k$-th Gaussian kernel with learnable mean $\mu_k$ and covariance $\Sigma_k$, and $w_k$ are learnable mixture weights. The Gaussian kernels learn to place weight on specific regions of the local coordinate patch — near the geodesic direction $\theta = 0$, or at a specific geodesic radius $r$, or across a broad angular range. This is the manifold analogue of the attention mechanism from Chapter 2's GAT: both learn data-dependent weights over the neighborhood, but the MoNet weights are defined in a geometric local coordinate system rather than a feature-space attention score.
+
+The connection to your curriculum runs through three courses simultaneously.
+
+Phase 0's differential geometry is the primary scaffold, and Chapter 3 is where it becomes unavoidable. The geodesic ball $B_r(x)$ requires the notion of geodesic distance, which requires the Riemannian metric $g$ and the geodesic equation from Phase 0. The exponential map $\exp_x: T_x\mathcal{M} \to \mathcal{M}$ requires the tangent bundle $T\mathcal{M}$ from Phase 0. The gauge ambiguity requires the understanding of tangent frames and their transformation under local rotations — the tangent bundle structure from Phase 0. Every operation in geodesic convolution has a Phase 0 prerequisite, and Chapter 3 is the moment when that investment pays off in architectural decisions.
+
+Your MATH 217 course on ODEs and PDEs provides the geodesic equation itself: geodesics on a Riemannian manifold satisfy the second-order ODE $\ddot{\gamma}^k + \Gamma^k_{ij}\dot{\gamma}^i\dot{\gamma}^j = 0$, where $\Gamma^k_{ij}$ are the Christoffel symbols of the Riemannian metric and $\dot{\gamma}$ is the velocity vector along the geodesic curve $\gamma$. This is a system of ODEs in the coordinates of the manifold, with initial conditions given by the starting point $x = \gamma(0)$ and starting direction $v = \dot{\gamma}(0) \in T_x\mathcal{M}$. The exponential map $\exp_x(v) = \gamma(1)$ is the value at time 1 of the geodesic starting at $x$ with initial velocity $v$ — the solution of this ODE system. The parallel transport equation — used to consistently move local frames along geodesics for gauge-equivariant convolution — is similarly a first-order ODE along the geodesic curve, and its solution defines the connection on the tangent bundle that makes gauge-equivariant convolution well-defined.
+
+Your MATH 204 course on Analytical Geometry provides the Euclidean intuitions that geodesic convolution generalizes. The distance formula in Euclidean space, the angle between vectors, the polar coordinate system — all of these are the flat-space special cases of geodesic distance, the angle in the tangent plane, and geodesic polar coordinates. Geodesic convolution is analytical geometry done correctly on a curved surface rather than on a flat plane.
+
+By the end of this topic, geodesic convolution will feel not like an exotic generalization of standard convolution to an unfamiliar setting, but like the only geometrically honest way to define convolution on a curved surface — the inevitable consequence of demanding that the convolutional operation respect the surface's intrinsic geometry rather than any extrinsic coordinate system imposed on it. The flat 2D convolution of a standard CNN will appear as the special case where the manifold is flat — where Gaussian curvature is zero everywhere, the exponential map is the identity, geodesic distances equal Euclidean distances, and the gauge ambiguity disappears because the global coordinate system provides a canonical angular reference everywhere. Geodesic convolution is the correct generalization; flat convolution is the degenerate special case.
+
+---
+
+## Layer 1 (Story)
+
+It is 2010. The International Centre for Integrated Mountain Development, headquartered in Kathmandu, has commissioned a geological survey of the Himalayan range. The goal is ambitious: build a neural network that can analyze surface signals defined on the mountain terrain — snow depth, rock temperature, seismic activity, atmospheric pressure — and predict avalanche risk at every point on the surface. The data is not tabular. It is not a grid. It is a signal defined on a curved surface — the terrain of the Himalayas itself, an enormously complex three-dimensional shape with ridges, valleys, cliff faces, and gentle slopes, none of which can be honestly represented as a flat image without destroying the geometry that makes the prediction meaningful.
+
+You are the lead mathematician on the project. Your first meeting with the engineering team reveals the instinct that almost every engineer reaches for: flatten the terrain into a 2D map, convert the surface signals to pixel values on that map, and apply a standard convolutional neural network. It is the obvious approach. It is also, as you are about to demonstrate, geometrically dishonest in a precise and consequential way.
+
+---
+
+**The cartographer's problem: why flattening always lies.**
+
+You unroll a large paper map of the Himalayas on the conference table. The map was produced by the Survey of India using the Mercator projection — the same projection used in most world atlases. You point to Mount Everest and to Kangchenjunga, two peaks separated by roughly 120 kilometres along the terrain surface.
+
+On the map, the distance between them appears to be about 8 centimetres. You point to two peaks at similar latitude in Greenland, also separated by about 120 kilometres along the terrain. On the map, the distance between them appears to be about 14 centimetres — nearly twice as large. The same physical distance on the Earth's surface appears as different distances on the flat map, depending on latitude.
+
+Now you draw a small square patch around Everest on the map and a small square patch of the same pixel size around the Greenlandic peak. A convolutional filter applied to these two patches looks at exactly the same number of pixels in a square of the same size. But the Everest patch corresponds to a geodesic neighbourhood of roughly 8 kilometres radius on the actual terrain, while the Greenlandic patch corresponds to a geodesic neighbourhood of roughly 14 kilometres radius. The filter is not doing the same computation at both locations — it is aggregating information from physically different-sized patches of terrain, even though the filter sees the same square of pixels. The convolution is a lie: it claims to be translation-equivariant and spatially consistent, but the underlying geometry of the surface has made it neither.
+
+This is Gauss's Theorema Egregium made practical. A sphere cannot be flattened into a plane without distortion. Any map projection distorts either distances, or areas, or angles, or some combination. A convolutional filter applied to a flat map of a curved surface aggregates information from geometrically inconsistent neighbourhoods — larger near the poles, smaller near the equator, twisted in unpredictable ways depending on the projection. The neural network trained on such a map must learn to compensate for the projection distortion before it can learn the actual physical relationship between the surface signal and the avalanche risk. The projection forces the network to waste capacity on an artifact of your coordinate choice rather than on the underlying geometry.
+
+The correct approach does not choose a global projection at all. It works directly on the curved surface, using the surface's own notion of distance and direction.
+
+---
+
+**Geodesic distance: measuring along the surface, not through the air.**
+
+You drive from Kathmandu to Nagarkot, a hilltop village east of the city. The straight-line Euclidean distance — through the hill, as a bird might fly or a tunnel might go — is about 25 kilometres. The road distance, following the terrain surface around and over the hills, is about 32 kilometres. If you were an ant living on the surface of the Earth, you would experience only the road distance. The Euclidean distance through the interior of the Earth is simply not accessible to a creature confined to the surface.
+
+This is the fundamental distinction between extrinsic and intrinsic distance. The Euclidean distance between two points on a surface — the straight-line distance through the ambient space — is extrinsic: it depends on how the surface is embedded in three-dimensional space. The geodesic distance between two points — the length of the shortest path along the surface connecting them — is intrinsic: it depends only on the geometry of the surface itself, not on how it sits in ambient space. For a creature living on the surface — for data defined on the surface — the intrinsic geodesic distance is the correct notion of proximity. Two points that are close in geodesic distance are genuinely nearby on the surface; two points that are close in Euclidean distance might be on opposite sides of a cliff face, accessible to each other only through a long journey along the terrain.
+
+The geodesic ball $B_r(x)$ centred at a terrain point $x$ with radius $r$ is the set of all surface points reachable from $x$ by a surface path of length less than $r$. This is the intrinsically correct neighbourhood for a convolutional filter centred at $x$: it aggregates information from all terrain points genuinely close to $x$ along the surface, regardless of how the surface curves through ambient three-dimensional space. A snow depth measurement at a point 500 metres from $x$ along the ridgeline is in $B_{500}(x)$; a snow depth measurement at a point that appears 300 metres away in Euclidean distance but is separated from $x$ by a 2-kilometre detour around a cliff face is not. The geodesic neighbourhood respects the terrain's geometry. The Euclidean neighbourhood does not.
+
+---
+
+**The exponential map: flattening locally without lying globally.**
+
+You cannot flatten the entire Himalayan surface into a plane without distortion. But you can flatten a small patch around each individual point — locally — without any distortion at all, to first order. This is the exponential map.
+
+Stand at base camp on the southern face of Everest. Look out across the terrain. In every direction from your feet, you can measure an angle $\theta \in [0, 2\pi)$ — north, northeast, east, and so on around the compass. In every direction, you can walk a certain distance $r$ along the terrain surface. The pair $(r, \theta)$ gives you a local coordinate system centred at your position — geodesic polar coordinates. The map that converts a direction-and-distance pair $(r, \theta)$ in your local tangent plane into the actual terrain point you reach by walking distance $r$ in direction $\theta$ is the exponential map. It is the function that converts the flat coordinate system of your local tangent plane into actual positions on the curved terrain surface.
+
+Near your feet — for small $r$ — the exponential map is nearly perfect: the curved terrain looks flat when you zoom in close enough, just as the Earth looks flat from street level even though it is spherical. The flat patch in your tangent plane and the curved terrain patch around you agree to first order. This is why the exponential map provides the correct local coordinate system for geodesic convolution: it allows you to define a filter in the flat tangent plane and apply it to the curved terrain surface, with the distortion being only second-order in the neighbourhood radius. Small neighbourhoods are nearly flat. Large neighbourhoods are curved. Geodesic convolution uses small local neighbourhoods — the same inductive bias of locality that made the spatial GNN from Chapter 2 work — so the local flattening via the exponential map is geometrically honest within the neighbourhood scale.
+
+The injectivity radius at a point $x$ is the maximum radius within which the exponential map is a bijection between the flat tangent disk and the curved terrain patch. At a smooth interior point of the terrain — a gentle slope — the injectivity radius is large: you can use a fairly large geodesic neighbourhood and still have a bijective local coordinate system. At a sharp ridge or cliff edge — a point of high curvature — the injectivity radius is small: two geodesics from the same point can converge and cross each other nearby, making the local coordinate system non-injective beyond a small radius. Geodesic convolution must use neighbourhood radii smaller than the injectivity radius to remain geometrically valid.
+
+---
+
+**The gauge ambiguity: which way is north at the top of Everest?**
+
+You are now designing the actual convolution. At each terrain point $x$, you have a local coordinate system $(r, \theta)$ given by the exponential map. You design a filter: a function of $(r, \theta)$ that specifies how to weight the snow depth signal at each relative position in the local neighbourhood. The filter is a function $F(r, \theta)$ — heavy weight near $r = 0$ (close to the centre), light weight at large $r$, perhaps asymmetric in $\theta$ to capture directional patterns like prevailing wind direction.
+
+Here is the problem. The local coordinate system requires you to choose an angular reference: the direction in the local tangent plane that corresponds to $\theta = 0$. On a flat grid, this choice is global and canonical: north is north everywhere, and $\theta = 0$ means north at every pixel. On the curved terrain surface, there is no canonical global notion of north in the tangent plane. At base camp, you can define north as the direction of the compass. But at the top of Everest, the tangent plane is tilted relative to the tangent plane at base camp — the surface has curved between the two points — and the compass direction at the summit, when transported to the summit's tangent plane along the geodesic from base camp, does not necessarily align with the compass direction at base camp in any canonical way. The choice of angular reference at each point — the gauge — is a local choice that cannot be made globally consistent on a curved surface.
+
+This means: apply the filter $F(r, \theta)$ at base camp with $\theta = 0$ pointing north; now slide the filter to a neighbouring point 500 metres away; at the new point, $\theta = 0$ might point slightly east of north because the surface has curved between the two points. The filter is being applied in a different orientation at the new point than at the original point, even though you intended to apply the same filter. The output of the convolution depends on your arbitrary gauge choice — your arbitrary choice of which direction to call $\theta = 0$ at each point.
+
+A gauge-equivariant network handles this ambiguity correctly: if you rotate your angular reference at every point — change the gauge — the output features at every point rotate correspondingly, rather than producing unpredictable and geometry-dependent artifacts. The network's predictions of avalanche risk must not depend on the arbitrary choice of which direction the surveyor calls north in the local coordinate system at each terrain point. Gauge equivariance is the manifold analogue of translation equivariance for CNNs: just as translation equivariance says the network's output should not depend on the arbitrary choice of origin in the image coordinate system, gauge equivariance says the network's output should not depend on the arbitrary choice of angular reference in the local tangent frame at each surface point.
+
+---
+
+**Parallel transport: carrying a frame along a path without twisting.**
+
+How do you move a local frame — a choice of angular reference — consistently from one terrain point to another? The answer is parallel transport: carry the frame along a geodesic path connecting the two points, rotating the frame only as much as the surface itself forces you to, and no more.
+
+Imagine carrying a compass across the terrain from base camp to the summit of Everest. As you walk, you keep the compass as steady as possible — you do not rotate it in your hands, you simply carry it along the path. But because the terrain surface curves, the compass direction rotates relative to the surface even though you are not actively turning it. At the summit, the compass points in a direction that has been rotated by the curvature of the terrain between the two points. The rotation accumulated by a frame carried by parallel transport along a closed loop — a path that starts and returns to the same point — is called the holonomy, and it measures the total curvature enclosed by the loop. On a flat surface, holonomy is always zero: parallel transporting a frame around any closed loop returns it unchanged. On a curved surface, holonomy is generally nonzero — the frame rotates by an angle proportional to the integral of the Gaussian curvature enclosed by the loop.
+
+Parallel transport is the correct way to move local frames between points for the purpose of geodesic convolution: it transports the filter's orientation from the source point to the target point along the geodesic connecting them, with exactly the rotation that the surface geometry forces and nothing more. The gauge-equivariant convolution uses parallel transport to define how the filter's local frame at the centre point $x$ relates to the local frames at the neighbouring points $y \in B_r(x)$: the frame at $y$ used to evaluate the filter is obtained by parallel transporting the frame at $x$ along the geodesic from $x$ to $y$.
+
+---
+
+**The MoNet filter: a learnable Gaussian mixture in local coordinates.**
+
+You have the local coordinate system $(r, \theta)$ at each terrain point. You have parallel transport to consistently orient the filter across the surface. Now you need to choose what the filter looks like.
+
+The naive approach: define the filter as a lookup table — one weight per discretized $(r, \theta)$ bin. For a neighbourhood of radius 500 metres discretized into 10 radial bins and 8 angular bins, this is 80 weights per filter. This is manageable, but the filter is not smooth (it is piecewise constant in the bins) and it is not transferable across different surface discretizations.
+
+The MoNet approach: parameterize the filter as a mixture of Gaussian kernels in the local coordinate space. Each kernel $g_k(r, \theta) = \exp(-\frac{1}{2}((r,\theta) - \mu_k)^\top \Sigma_k^{-1}((r,\theta)-\mu_k))$ places a smooth bump of weight at a specific location $\mu_k = (r_k, \theta_k)$ in the local coordinate patch, with spread determined by the covariance matrix $\Sigma_k$. The filter is a weighted sum of $K$ such Gaussian bumps: $F(r,\theta) = \sum_{k=1}^K w_k g_k(r,\theta)$. The parameters $\{\mu_k, \Sigma_k, w_k\}$ are learned from data. The applied filter at terrain point $x$ to signal $f$ gives:
+
+$$(F \star f)(x) = \sum_{k=1}^{K} w_k \sum_{y \in B_r(x)} f(y) \cdot g_k(r_{xy}, \theta_{xy})$$
+
+where $(r_{xy}, \theta_{xy})$ are the geodesic polar coordinates of terrain point $y$ relative to the centre $x$.
+
+What does a learned Gaussian kernel represent physically? A kernel with mean $\mu_k = (200\text{m}, \pi/4)$ — geodesic distance 200 metres in the northeast direction — places high weight on snow depth measurements 200 metres to the northeast of the current terrain point. After training, this kernel might learn to capture the effect of prevailing wind from the southwest: snow accumulates on the northeast faces of ridges, and the snow depth 200 metres to the northeast is a strong predictor of avalanche risk at the current point. The kernel has learned a directional, distance-specific physical pattern. Ten such kernels, each with a different learned centre and covariance, collectively represent a rich filter capturing complex spatial patterns in the local terrain neighbourhood.
+
+---
+
+**The break moment: the orientation problem that cannot be ignored.**
+
+You have designed the filter, implemented the local coordinate system, and are ready to train the network. Before training, you run a sanity check: you take the same terrain patch and survey it twice, once with your surveying drone flying north-to-south and once flying east-to-west. Both surveys produce the same terrain geometry and the same snow depth signal. But when you define the local angular reference — the $\theta = 0$ direction at each point — you use the drone's flight direction as the reference. The north-to-south survey defines $\theta = 0$ as north; the east-to-west survey defines $\theta = 0$ as east. The two surveys of the same terrain produce different local coordinate representations — the same physical signal, but with all angles rotated by $\pi/2$ relative to each other.
+
+You feed both representations into your MoNet network. The filter with a Gaussian kernel centred at $(200\text{m}, \pi/4)$ — northeast — in the first survey now sees the kernel centred at $(200\text{m}, \pi/4 - \pi/2) = (200\text{m}, -\pi/4)$ — southeast — in the second survey, because you have rotated the local coordinate frame by $\pi/2$. The network produces different avalanche risk predictions for the same terrain and the same snow depth signal, depending on which direction the drone happened to be flying. This is catastrophic: the prediction should not depend on the drone's flight direction.
+
+The naive assumption is: just always define $\theta = 0$ as north in the GPS coordinate system, and the problem disappears. This breaks on a curved surface in two ways. First, the GPS north direction at each surface point is a direction in the ambient three-dimensional space, not in the local tangent plane — projecting it into the tangent plane gives a well-defined reference direction only if the surface normal is not parallel to the GPS north direction, which fails at the North and South Poles and nearly fails at high latitudes. Second, even if you project GPS north into the local tangent plane at every point, the resulting frame field is not smooth across the surface — it has singularities at the poles and near-singularities at high latitudes, producing numerical instabilities in the local coordinate representations. No global smooth gauge exists on a closed surface with nonzero Euler characteristic — this is the hairy ball theorem of algebraic topology — and the Himalayan terrain, topologically, is a surface with boundaries and nonzero topology.
+
+The correct resolution is gauge equivariance: design the network so that rotating the local frame at every point by an arbitrary smooth function of rotations $g: \mathcal{M} \to SO(2)$ — one rotation per surface point, the gauge transformation — produces outputs that rotate correspondingly. Then the avalanche risk prediction does not depend on which direction the drone was flying when it defined the local coordinate system. The gauge group $\mathcal{G} = C^\infty(\mathcal{M}, SO(2))$ — the group of all smooth gauge transformations — is the symmetry group of the network, and gauge equivariance is the manifold-surface analogue of the $S_n$-equivariance of graph networks and the $SO(3)$-equivariance of molecular networks.
+
+---
+
+**The connection to Chapter 2: geodesic convolution as continuous message passing.**
+
+The senior engineer on your team, who implemented the postal network GNN from Chapter 2, looks at the MoNet formula and immediately recognizes the structure.
+
+In message passing, each node $i$ sends a message to each neighbor $j \in \mathcal{N}(i)$, weighted by an attention coefficient $\alpha_{ij}$ that depends on the relative features of $i$ and $j$. In geodesic convolution, each terrain point $x$ aggregates signal values from all points $y \in B_r(x)$ in its geodesic neighborhood, weighted by $g_k(r_{xy}, \theta_{xy})$ — a kernel that depends on the relative geometric position of $y$ with respect to $x$ in the local coordinate system. Both are local weighted aggregation of neighborhood information. The difference is that graph message passing uses the graph's adjacency structure to define neighborhoods and learns attention weights in the feature space, while geodesic convolution uses the manifold's geodesic distance to define neighborhoods and learns Gaussian kernels in the geometric coordinate space.
+
+This parallel is not a coincidence. When the continuous manifold $\mathcal{M}$ is approximated by a discrete point cloud — a finite set of sample points with geodesic distances approximated by shortest-path distances on a neighborhood graph — the MoNet geodesic convolution becomes exactly a spatially-weighted graph convolution on the neighborhood graph, with the Gaussian kernels providing the edge weights. This is MoNet's central claim: it unifies manifold convolution and graph convolution as special cases of the same pseudo-coordinate Gaussian mixture framework, with the choice of pseudo-coordinates $(r_{xy}, \theta_{xy})$ determining whether you are operating on a continuous manifold or a discrete graph. Every major surface-learning architecture — GCNN (Masci et al.), ACNN (Boscaini et al.), PointNet++, DiffusionNet — is a special case of this framework with a specific choice of local pseudo-coordinates and filter parameterization.
+
+---
+
+**What the network learns on the terrain.**
+
+After training, the avalanche risk prediction network has learned a collection of Gaussian kernels whose physical interpretation you can read directly from the learned parameters.
+
+One kernel has learned mean $(50\text{m}, \text{uphill})$ and narrow covariance — it looks at the slope directly uphill from each terrain point at short range. This kernel captures the local slope gradient: a steep uphill neighbor means the current point is at the base of a steep slope, which is a primary avalanche risk factor.
+
+Another kernel has learned mean $(300\text{m}, \text{upwind})$ — 300 metres in the direction of the prevailing wind. This kernel captures the snow loading effect: wind deposits snow on the leeward side of ridges, so heavy snow 300 metres upwind of a point predicts high snow loading at the current point.
+
+A third kernel has learned a large covariance in the angular direction and small covariance in the radial direction — it is nearly radially symmetric at a specific distance, capturing the average snow depth in a ring around the current point. This kernel captures the regional snow accumulation level independent of direction.
+
+These interpretable, physically meaningful filters have been learned entirely from terrain geometry and historical avalanche data, without any domain expertise encoded manually. The geodesic convolution framework provided the correct geometric structure — local polar coordinates, geodesic neighborhoods, parallel transport for consistent orientation — and the learning algorithm discovered the physically meaningful patterns within that structure.
+
+---
+
+**The three pictures to carry into the mathematics.**
+
+Before moving to the formalism, hold three geometric pictures simultaneously.
+
+The first picture: the geodesic ball $B_r(x)$ — a disk-like patch of terrain surface centred at point $x$, bounded by the set of points at geodesic distance exactly $r$ from $x$. This is the neighborhood over which the filter aggregates. It is a curved patch, not a flat square. Its shape depends on the curvature of the terrain at $x$: on a flat slope it is nearly circular; on a sharp ridge it is elongated along the ridge and truncated perpendicular to it; in a bowl-shaped valley it is compressed inward by the positive curvature.
+
+The second picture: the exponential map $\exp_x: T_x\mathcal{M} \to \mathcal{M}$ — the function that converts the flat tangent plane at $x$ into the curved surface, by following geodesics. The tangent plane is a flat 2D space; the exponential map wraps it onto the curved surface by shooting geodesics in every direction from $x$. Within the injectivity radius, this wrapping is bijective: every flat coordinate $(r,\theta)$ in the tangent plane corresponds to a unique terrain point $\exp_x(r\cos\theta, r\sin\theta)$. The filter is defined on the flat tangent plane and applied to the curved surface via this bijection.
+
+The third picture: parallel transport along a geodesic — a local frame (a pair of orthonormal vectors in the tangent plane) being carried along a terrain path without twisting relative to the surface, accumulating rotation only from the surface's intrinsic curvature. The frame does not rotate in the observer's hands; it rotates only because the surface curves beneath it. The rotation accumulated around a closed loop is the holonomy, measuring the total curvature enclosed. Parallel transport is what makes the filter's orientation consistent as it is slid across the surface, resolving the gauge ambiguity by defining a canonical way to relate frames at different surface points along geodesic paths.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: Riemannian manifolds and the geodesic distance, the exponential map and geodesic polar coordinates, the Laplace-Beltrami operator and its relationship to geodesic convolution, gauge transformations and the connection on the tangent bundle, the MoNet framework and its unification of manifold and graph convolution, and the discrete approximation connecting continuous geodesic convolution to graph neural networks.
+
+### Riemannian Manifolds and Geodesic Distance
+
+**Definition (Smooth manifold).** A **smooth manifold** $\mathcal{M}$ of dimension $d$ is a topological space that is locally homeomorphic to $\mathbb{R}^d$, with smooth transition maps between overlapping coordinate charts. Each point $x \in \mathcal{M}$ has a neighborhood $U \ni x$ and a smooth bijection $\varphi: U \to \mathbb{R}^d$ called a **chart**.
+
+**Definition (Tangent space).** The **tangent space** $T_x\mathcal{M}$ at $x \in \mathcal{M}$ is the $d$-dimensional real vector space of tangent vectors at $x$ — equivalence classes of smooth curves $\gamma: (-\epsilon, \epsilon) \to \mathcal{M}$ with $\gamma(0) = x$, where $\gamma_1 \sim \gamma_2$ iff $\dot{\gamma}_1(0) = \dot{\gamma}_2(0)$ in any chart. The **tangent bundle** is $T\mathcal{M} = \bigsqcup_{x\in\mathcal{M}} T_x\mathcal{M}$.
+
+**Definition (Riemannian metric).** A **Riemannian metric** $g$ on $\mathcal{M}$ is a smooth assignment of an inner product $g_x: T_x\mathcal{M} \times T_x\mathcal{M} \to \mathbb{R}$ to each tangent space, varying smoothly with $x$. In local coordinates $\{x^i\}$, the metric is represented by the **metric tensor** $g_{ij}(x) = g_x(\partial/\partial x^i, \partial/\partial x^j)$, a positive definite symmetric matrix at each point.
+
+**Length of a curve.** The length of a smooth curve $\gamma: [0,1] \to \mathcal{M}$ is:
+
+$$\ell(\gamma) = \int_0^1 \sqrt{g_{\gamma(t)}(\dot{\gamma}(t), \dot{\gamma}(t))} \, dt = \int_0^1 \|\dot{\gamma}(t)\|_g \, dt$$
+
+**Definition (Geodesic distance).** The **geodesic distance** between $x, y \in \mathcal{M}$ is:
+
+$$d_\mathcal{M}(x,y) = \inf_{\gamma: \gamma(0)=x,\, \gamma(1)=y} \ell(\gamma)$$
+
+the infimum of lengths over all smooth curves connecting $x$ to $y$. This defines a metric on $\mathcal{M}$ (positive definite, symmetric, triangle inequality).
+
+**Definition (Geodesic).** A **geodesic** is a curve $\gamma: [a,b] \to \mathcal{M}$ that locally minimizes length. In local coordinates, geodesics satisfy the **geodesic equation**:
+
+$$\ddot{\gamma}^k(t) + \Gamma^k_{ij}(\gamma(t))\,\dot{\gamma}^i(t)\,\dot{\gamma}^j(t) = 0, \quad k = 1,\ldots,d$$
+
+where $\Gamma^k_{ij} = \frac{1}{2}g^{kl}\left(\partial_i g_{jl} + \partial_j g_{il} - \partial_l g_{ij}\right)$ are the **Christoffel symbols** of the Levi-Civita connection. This is a system of $d$ second-order ODEs with initial conditions $\gamma(0) = x$ and $\dot{\gamma}(0) = v \in T_x\mathcal{M}$.
+
+**Geodesic ball.** The **geodesic ball** of radius $r$ centred at $x$ is:
+
+$$B_r(x) = \{y \in \mathcal{M} : d_\mathcal{M}(x,y) < r\}$$
+
+---
+
+### The Exponential Map and Geodesic Polar Coordinates
+
+**Definition (Exponential map).** For $x \in \mathcal{M}$ and $v \in T_x\mathcal{M}$, let $\gamma_v$ be the unique geodesic with $\gamma_v(0) = x$ and $\dot{\gamma}_v(0) = v$. The **exponential map** at $x$ is:
+
+$$\exp_x: T_x\mathcal{M} \to \mathcal{M}, \quad \exp_x(v) = \gamma_v(1)$$
+
+**Properties of the exponential map:**
+
+$\exp_x(0) = x$ (the zero vector maps to the base point).
+
+$d(\exp_x)_0 = \text{Id}_{T_x\mathcal{M}}$ (the differential at the origin is the identity — local isometry to first order).
+
+$\exp_x(tv) = \gamma_v(t)$ for all $t$ in the domain of $\gamma_v$ (geodesics are straight lines in the tangent plane under $\exp_x$).
+
+**Definition (Injectivity radius).** The **injectivity radius** at $x$ is:
+
+$$\text{inj}(x) = \sup\{r > 0 : \exp_x|_{B_r(0) \subset T_x\mathcal{M}} \text{ is a diffeomorphism onto } B_r(x) \subset \mathcal{M}\}$$
+
+For $r < \text{inj}(x)$, the exponential map is a diffeomorphism: every point $y \in B_r(x)$ has a unique preimage $\exp_x^{-1}(y) \in T_x\mathcal{M}$, the **logarithmic map** $\log_x(y)$.
+
+**Geodesic polar coordinates.** Choose an orthonormal basis $\{e_1, e_2\}$ for $T_x\mathcal{M}$ (in dimension $d=2$). The **geodesic polar coordinates** $(r, \theta)$ at $x$ are defined by:
+
+$$y = \exp_x(r\cos\theta\, e_1 + r\sin\theta\, e_2), \quad r \in [0, \text{inj}(x)),\; \theta \in [0,2\pi)$$
+
+The metric in geodesic polar coordinates takes the form (Gauss's lemma):
+
+$$g = dr^2 + f(r,\theta)^2\, d\theta^2$$
+
+where $f(r,\theta)$ satisfies $f(0,\theta) = 0$, $\partial_r f(0,\theta) = 1$, and deviates from $r$ (the flat-space value) according to the curvature:
+
+$$f(r,\theta) = r - \frac{K(x)}{6}r^3 + O(r^5)$$
+
+where $K(x)$ is the **Gaussian curvature** at $x$. For $K > 0$ (sphere): $f < r$, geodesic circles are smaller than Euclidean circles. For $K < 0$ (hyperbolic): $f > r$, geodesic circles are larger.
+
+**Volume element.** In geodesic polar coordinates:
+
+$$d\text{vol}_\mathcal{M} = f(r,\theta)\, dr\, d\theta$$
+
+The deviation of $f$ from $r$ measures the volumetric distortion due to curvature — the precise sense in which the surface is not flat.
+
+---
+
+### The Laplace-Beltrami Operator
+
+**Definition.** The **Laplace-Beltrami operator** on $(\mathcal{M}, g)$ is:
+
+$$\Delta_\mathcal{M} f = \text{div}(\text{grad}\, f) = \frac{1}{\sqrt{|g|}} \sum_{i,j} \frac{\partial}{\partial x^i}\!\left(\sqrt{|g|}\, g^{ij} \frac{\partial f}{\partial x^j}\right)$$
+
+where $|g| = \det(g_{ij})$ and $g^{ij}$ is the inverse metric tensor.
+
+**In geodesic polar coordinates:**
+
+$$\Delta_\mathcal{M} f = \frac{\partial^2 f}{\partial r^2} + \frac{\partial_r f(r,\theta)}{f(r,\theta)}\frac{\partial f}{\partial r} + \frac{1}{f(r,\theta)^2}\frac{\partial^2 f}{\partial \theta^2}$$
+
+For flat space ($f = r$): $\Delta f = \partial_r^2 f + \frac{1}{r}\partial_r f + \frac{1}{r^2}\partial_\theta^2 f$ — the standard Laplacian in polar coordinates.
+
+**Self-adjointness.** $\Delta_\mathcal{M}$ is self-adjoint on $L^2(\mathcal{M}, d\text{vol})$:
+
+$$\langle \Delta_\mathcal{M} f, h\rangle_{L^2} = \langle f, \Delta_\mathcal{M} h\rangle_{L^2} = -\int_\mathcal{M} g(\nabla f, \nabla h)\, d\text{vol}$$
+
+(integration by parts / Green's identity, assuming $\partial\mathcal{M} = \emptyset$ or Dirichlet/Neumann boundary conditions).
+
+**Eigenvalue problem.** The **manifold harmonics** are solutions to:
+
+$$\Delta_\mathcal{M} \phi_k = -\lambda_k \phi_k, \quad 0 = \lambda_0 \leq \lambda_1 \leq \lambda_2 \leq \cdots \nearrow \infty$$
+
+For compact $\mathcal{M}$ without boundary, the spectrum is discrete and the eigenfunctions $\{\phi_k\}_{k=0}^\infty$ form a complete orthonormal basis for $L^2(\mathcal{M})$:
+
+$$\langle \phi_j, \phi_k\rangle_{L^2} = \int_\mathcal{M} \phi_j(x)\phi_k(x)\, d\text{vol}(x) = \delta_{jk}$$
+
+**Special cases:**
+- $\mathcal{M} = S^1$: eigenfunctions $e^{in\theta}/\sqrt{2\pi}$, eigenvalues $n^2$ — Fourier basis.
+- $\mathcal{M} = S^2$: eigenfunctions $Y_\ell^m$, eigenvalues $\ell(\ell+1)$ — spherical harmonics.
+- $\mathcal{M} = \mathbb{T}^2$ (flat torus): eigenfunctions $e^{i(n_1 x^1 + n_2 x^2)}$, eigenvalues $n_1^2 + n_2^2$ — 2D Fourier basis.
+
+---
+
+### Connections, Parallel Transport, and Gauge Equivariance
+
+**Definition (Connection).** A **connection** $\nabla$ on the tangent bundle $T\mathcal{M}$ is a map $\nabla: \Gamma(T\mathcal{M}) \times \Gamma(T\mathcal{M}) \to \Gamma(T\mathcal{M})$ (where $\Gamma(T\mathcal{M})$ is the space of smooth vector fields) satisfying:
+
+$$\nabla_{fX}Y = f\nabla_X Y, \quad \nabla_X(fY) = (Xf)Y + f\nabla_X Y$$
+
+for smooth functions $f$ and vector fields $X, Y$. The **Levi-Civita connection** is the unique connection satisfying:
+- **Metric compatibility:** $X\langle Y,Z\rangle_g = \langle \nabla_X Y, Z\rangle_g + \langle Y, \nabla_X Z\rangle_g$
+- **Torsion-free:** $\nabla_X Y - \nabla_Y X = [X,Y]$
+
+**Definition (Parallel transport).** Given a curve $\gamma: [0,1] \to \mathcal{M}$, **parallel transport** of $v_0 \in T_{\gamma(0)}\mathcal{M}$ along $\gamma$ produces a vector field $V(t) \in T_{\gamma(t)}\mathcal{M}$ satisfying:
+
+$$\nabla_{\dot\gamma} V = 0, \quad V(0) = v_0$$
+
+In local coordinates, this is the ODE:
+
+$$\dot{V}^k(t) + \Gamma^k_{ij}(\gamma(t))\dot\gamma^i(t)V^j(t) = 0$$
+
+Parallel transport $P_\gamma: T_{\gamma(0)}\mathcal{M} \to T_{\gamma(1)}\mathcal{M}$ is a linear isometry — it preserves inner products: $g_{\gamma(1)}(P_\gamma u, P_\gamma v) = g_{\gamma(0)}(u,v)$.
+
+**Definition (Holonomy).** For a closed curve $\gamma: [0,1] \to \mathcal{M}$ with $\gamma(0) = \gamma(1) = x$, the parallel transport $P_\gamma: T_x\mathcal{M} \to T_x\mathcal{M}$ is an orthogonal transformation. For a simply connected region $\Omega$ bounded by $\gamma$:
+
+$$P_\gamma = \exp\!\left(-\int_\Omega K\, d\text{vol}\right) R \in SO(2)$$
+
+where $K$ is the Gaussian curvature and $R$ is the rotation by the holonomy angle — the **Gauss-Bonnet theorem** in local form.
+
+**Definition (Gauge transformation).** A **gauge transformation** is a smooth map $g: \mathcal{M} \to SO(2)$ assigning a local rotation $g(x) \in SO(2)$ to each point. The **gauge group** is:
+
+$$\mathcal{G} = C^\infty(\mathcal{M}, SO(2))$$
+
+A gauge transformation acts on a local frame field $\{e_1(x), e_2(x)\}$ at each point by rotating it: $\{e_1(x), e_2(x)\} \mapsto \{g(x)e_1(x), g(x)e_2(x)\}$.
+
+**Gauge-equivariant feature maps.** A feature map $F: \mathcal{M} \to \mathbb{R}^c$ (assigning a $c$-dimensional feature vector to each surface point) is a **gauge-equivariant section of a vector bundle** if it transforms as:
+
+$$F(x) \mapsto \rho(g(x)) F(x)$$
+
+under gauge transformation $g \in \mathcal{G}$, where $\rho: SO(2) \to GL(\mathbb{R}^c)$ is a representation of $SO(2)$ specifying how the feature vector transforms under local frame rotations. For scalar features ($\rho = 1$): invariant under gauge. For vector features ($\rho = D^{(1)}$): rotate with the frame. For higher-order features ($\rho = D^{(\ell)}$): transform under the $\ell$-th irreducible representation of $SO(2)$ — the 2D rotation matrix acting on $\mathbb{R}^2$ for $\ell=1$, the higher-order harmonics for $\ell \geq 2$.
+
+---
+
+### Geodesic Convolution: The Formal Definition
+
+**Definition (Geodesic convolution — continuous form).** Let $f: \mathcal{M} \to \mathbb{R}$ be a signal on $\mathcal{M}$ and $F: T_x\mathcal{M} \to \mathbb{R}$ a filter defined on the tangent plane. The **geodesic convolution** of $f$ with $F$ at point $x \in \mathcal{M}$ is:
+
+$$(F \star f)(x) = \int_{T_x\mathcal{M}} F(v) \cdot (f \circ \exp_x)(v) \cdot \chi_r(v)\, d\text{vol}_{T_x}(v)$$
+
+where $\chi_r(v) = \mathbf{1}[\|v\| < r]$ restricts integration to the geodesic ball of radius $r$, and $d\text{vol}_{T_x}(v) = f(\|v\|, \angle v)\, d\|v\|\, d\angle v$ is the pullback volume element via $\exp_x$.
+
+**In geodesic polar coordinates $(r,\theta)$:**
+
+$$(F \star f)(x) = \int_0^r \int_0^{2\pi} F(r', \theta') \cdot f(\exp_x(r'\cos\theta', r'\sin\theta')) \cdot f(r',\theta')\, d\theta'\, dr'$$
+
+**Gauge dependence.** The geodesic polar coordinates $(r,\theta)$ at $x$ depend on the choice of orthonormal basis $\{e_1(x), e_2(x)\}$ for $T_x\mathcal{M}$. Under gauge transformation $g(x) \in SO(2)$ rotating the frame by angle $\alpha$:
+
+$$(r, \theta) \mapsto (r, \theta - \alpha)$$
+
+The convolution output transforms as:
+
+$$(F_\alpha \star f)(x) = (F \star f)(x)\big|_{\theta \to \theta - \alpha}$$
+
+For the output to be gauge-invariant (a scalar), the filter $F$ must be radially symmetric: $F(r,\theta) = F(r)$. For the output to be gauge-equivariant of order $\ell$ (transforming under $e^{i\ell\alpha}$), the filter must have angular frequency $\ell$: $F(r,\theta) = F_\ell(r)e^{i\ell\theta}$.
+
+---
+
+### The MoNet Framework
+
+**Definition (Pseudo-coordinates).** A **pseudo-coordinate map** $\mathbf{u}: \mathcal{M} \times \mathcal{M} \to \mathbb{R}^m$ assigns to each pair $(x,y)$ an $m$-dimensional vector $\mathbf{u}(x,y)$ describing the relative geometric relationship of $y$ with respect to $x$ in a local coordinate system at $x$. For manifolds: $\mathbf{u}(x,y) = (\log_x(y)_1, \log_x(y)_2) = (r_{xy}\cos\theta_{xy}, r_{xy}\sin\theta_{xy})$. For graphs: $\mathbf{u}(i,j) = (\tilde{d}_i, \tilde{d}_j)$ for degree-normalized coordinates $\tilde{d}_i = 1/\sqrt{d_i}$.
+
+**Definition (MoNet layer — Monti et al. 2017).** The **Gaussian mixture model network** layer applies a learned filter parameterized as a $K$-component Gaussian mixture in pseudo-coordinate space:
+
+$$g_k(\mathbf{u}) = \exp\!\left(-\frac{1}{2}(\mathbf{u} - \boldsymbol{\mu}_k)^\top \boldsymbol{\Sigma}_k^{-1}(\mathbf{u} - \boldsymbol{\mu}_k)\right)$$
+
+with learnable parameters $\boldsymbol{\mu}_k \in \mathbb{R}^m$ (kernel centre) and $\boldsymbol{\Sigma}_k \in \mathbb{R}^{m\times m}$ (positive definite covariance matrix). The MoNet convolution of feature $f: \mathcal{M} \to \mathbb{R}^{d_{\text{in}}}$ is:
+
+$$(f \star_{\text{MoNet}} w)(x) = \sum_{k=1}^K \sum_{y \in \mathcal{N}(x)} f(y) \cdot g_k(\mathbf{u}(x,y)) \cdot w_k$$
+
+where $w_k \in \mathbb{R}^{d_{\text{in}} \times d_{\text{out}}}$ are learnable weight matrices and $\mathcal{N}(x)$ is the neighborhood of $x$ (geodesic ball for manifolds, graph neighborhood for graphs).
+
+**Multi-channel MoNet layer:**
+
+$$H^{\text{out}}(x) = \sigma\!\left(\sum_{k=1}^K w_k \sum_{y\in\mathcal{N}(x)} H^{\text{in}}(y) \cdot g_k(\mathbf{u}(x,y))\right)$$
+
+**Parameter count:** $K \times (m + m^2 + d_{\text{in}} \times d_{\text{out}})$ — independent of the number of surface points $n$, enabling transfer across different surface discretizations.
+
+**Unification theorem (Monti et al. 2017).** The following architectures are special cases of MoNet with specific pseudo-coordinate choices:
+
+| Architecture | Pseudo-coordinates $\mathbf{u}(x,y)$ | Filter |
+|---|---|---|
+| GCN | $\mathbf{u}(i,j) = (1/\sqrt{d_i}, 1/\sqrt{d_j})$ | Single Gaussian |
+| ACNN | $\mathbf{u}(x,y) = (r_{xy}, \theta_{xy})$ in geodesic polar | Gaussian mixture |
+| Geodesic CNN | $\mathbf{u}(x,y) = (r_{xy}, \theta_{xy})$ on mesh | Learned filter |
+| Spline CNN | $\mathbf{u}(x,y) = $ B-spline coordinates | B-spline mixture |
+
+---
+
+### Gauge-Equivariant Convolution
+
+**Definition (Gauge-equivariant convolution — Cohen et al. 2019).** A **gauge-equivariant convolutional layer** maps sections $f \in \Gamma(V_{\rho_{\text{in}}})$ (features transforming under representation $\rho_{\text{in}}$ of $SO(2)$) to sections $F \in \Gamma(V_{\rho_{\text{out}}})$ (features transforming under $\rho_{\text{out}}$) via:
+
+$$(Kf)(x) = \int_{B_r(x)} K_{P_\gamma}(\log_x(y)) f(y)\, d\text{vol}(y)$$
+
+where $K_{P_\gamma}$ is a **kernel that incorporates parallel transport** $P_\gamma: T_y\mathcal{M} \to T_x\mathcal{M}$ along the geodesic $\gamma$ from $y$ to $x$:
+
+$$K_{P_\gamma}(\log_x(y)) = K(\log_x(y)) \circ P_\gamma$$
+
+**Equivariance condition on the kernel.** The layer is gauge-equivariant iff the kernel $K$ satisfies:
+
+$$K(g \cdot v) = \rho_{\text{out}}(g) \circ K(v) \circ \rho_{\text{in}}(g)^{-1} \quad \forall g \in SO(2), v \in T_x\mathcal{M}$$
+
+By Schur's lemma for $SO(2)$: the space of equivariant kernels decomposes into blocks indexed by irreducible representations $D^{(\ell)}$ of $SO(2)$. For $\rho_{\text{in}} = D^{(\ell_1)}$ and $\rho_{\text{out}} = D^{(\ell_2)}$: equivariant kernels exist only for $\ell_2 = \ell_1 \pm \ell$ for integer $\ell$, and have the form $K_\ell(r) D^{(\ell)}(\theta)$ where $K_\ell(r)$ is a learnable radial function and $D^{(\ell)}(\theta) = \begin{pmatrix}\cos\ell\theta & -\sin\ell\theta\\\sin\ell\theta & \cos\ell\theta\end{pmatrix}$ is the rotation matrix at angular frequency $\ell$.
+
+**Architecture consequence.** A gauge-equivariant network on $\mathcal{M}$ with $SO(2)$ gauge group has:
+- Scalar ($\ell=0$) input features: invariant under gauge
+- Vector ($\ell=1$) intermediate features: rotate with the local frame
+- Higher-order ($\ell \geq 2$) features: transform under $D^{(\ell)}$
+- Scalar ($\ell=0$) output predictions: gauge-invariant, independent of local frame choice
+
+Equivariant nonlinearities act independently on the magnitude of each $\ell$-type feature (norm-preserving gating), analogous to the Clebsch-Gordan nonlinearities of $SO(3)$-equivariant networks from Chapter 1.
+
+---
+
+### Discrete Approximation: From Continuous Manifolds to Point Clouds
+
+**Discretization.** Let $\{x_1,\ldots,x_n\} \subset \mathcal{M}$ be a discrete sampling of the manifold. The continuous geodesic convolution approximates to the discrete operation:
+
+$$(F \star f)(x_i) \approx \sum_{j: d_\mathcal{M}(x_i,x_j)<r} f(x_j) \cdot F(\mathbf{u}(x_i,x_j)) \cdot A_j$$
+
+where $A_j$ is the area element (Voronoi cell area) associated with sample point $x_j$, approximating $d\text{vol}(y)$.
+
+**Geodesic distance approximation.** For a neighborhood graph $G_\epsilon$ with edges $(i,j)$ whenever $\|x_i - x_j\|_{\mathbb{R}^D} < \epsilon$, the graph shortest-path distance $d_G(i,j)$ approximates the geodesic distance $d_\mathcal{M}(x_i,x_j)$ as $\epsilon \to 0$:
+
+$$d_G(i,j) \to d_\mathcal{M}(x_i,x_j) \quad \text{as } n\to\infty,\, \epsilon\to 0,\, n\epsilon^d \to \infty$$
+
+**DiffusionNet (Sharp et al. 2022).** Rather than approximating geodesic convolution directly, DiffusionNet uses the heat diffusion process $e^{-t\Delta_\mathcal{M}}$ as the spatial support for feature propagation — intrinsically defined, robust to surface discretization, and directly connected to the spectral theory of $\Delta_\mathcal{M}$:
+
+$$h_i^{\text{out}} = \text{MLP}\!\left(h_i^{\text{in}},\, e^{-t_1 \Delta}h_i^{\text{in}},\, e^{-t_2\Delta}h_i^{\text{in}},\ldots,\, e^{-t_T\Delta}h_i^{\text{in}}\right)$$
+
+where $t_1 < t_2 < \cdots < t_T$ are learned diffusion times and $e^{-t\Delta}$ is computed via the truncated eigendecomposition $e^{-t\Delta} \approx \Phi\, e^{-t\Lambda}\Phi^\top$ using the first $K$ Laplace-Beltrami eigenfunctions.
+
+---
+
+### WHY THIS MATTERS
+
+In **MATH 217 (ODEs and PDEs)**, the geodesic equation $\ddot\gamma^k + \Gamma^k_{ij}\dot\gamma^i\dot\gamma^j = 0$ is a second-order nonlinear ODE system — the Euler-Lagrange equation for the length functional $\ell(\gamma) = \int\|\dot\gamma\|_g\,dt$. Existence and uniqueness of geodesics through any point with any initial velocity follows from the Picard-Lindelöf theorem applied to this ODE system, which is exactly the existence and uniqueness theorem for ODEs from MATH 217. The parallel transport equation $\dot V^k + \Gamma^k_{ij}\dot\gamma^i V^j = 0$ is a first-order linear ODE along $\gamma$ — it has a unique solution for any initial condition $V(0) = v_0$, also by Picard-Lindelöf, and the solution is the parallel transport of $v_0$ along $\gamma$. The Laplace-Beltrami eigenvalue problem $\Delta_\mathcal{M}\phi = -\lambda\phi$ is an elliptic PDE on $\mathcal{M}$ — the Riemannian analogue of the Sturm-Liouville eigenvalue problem $-(p(x)u')' + q(x)u = \lambda w(x)u$ from MATH 217, whose eigenfunctions form a complete orthonormal basis for the weighted $L^2$ space. The spectral theorem for the Laplace-Beltrami operator is the infinite-dimensional generalization of the Sturm-Liouville theorem, with the manifold playing the role of the interval $[a,b]$ and the Riemannian volume measure playing the role of the weight function $w(x)$.
+
+In **MATH 302 (Matrix Theory)**, the metric tensor $g_{ij}(x)$ is a positive definite symmetric matrix at each point — the same object studied in MATH 302 as a positive definite matrix, with the same spectral properties: positive eigenvalues, Cholesky factorization, and a well-defined square root $g^{1/2}_{ij}$ used in the definition of the volume element $\sqrt{|g|}$. The covariance matrix $\Sigma_k$ of each MoNet Gaussian kernel is a positive definite symmetric matrix — its inverse $\Sigma_k^{-1}$ defines the Mahalanobis distance $(\mathbf{u}-\mu_k)^\top\Sigma_k^{-1}(\mathbf{u}-\mu_k)$, which is the elliptical distance in the pseudo-coordinate space, generalizing the Euclidean distance by stretching and rotating the coordinate axes. The condition number of $\Sigma_k$ determines the aspect ratio of the Gaussian ellipse — a nearly singular $\Sigma_k$ (large condition number) gives a highly elongated kernel that responds strongly to signals in one specific direction and weakly in all others. The parallel transport $P_\gamma: T_{\gamma(0)}\mathcal{M} \to T_{\gamma(1)}\mathcal{M}$ is an orthogonal linear map — an element of $O(d)$ — preserving inner products, exactly the orthogonal matrices studied in MATH 302.
+
+In **MATH 213 and MATH 325 (Analysis I and II)**, the $L^2(\mathcal{M}, d\text{vol})$ inner product $\langle f,g\rangle = \int_\mathcal{M} f(x)g(x)\,d\text{vol}(x)$ is the generalization of the $L^2([a,b])$ inner product from Analysis — both are Hilbert space inner products, and the completeness of the Laplace-Beltrami eigenfunctions in $L^2(\mathcal{M})$ is the analogue of the completeness of the Fourier basis in $L^2([-\pi,\pi])$ established in Analysis II. Green's identity $\langle\Delta_\mathcal{M}f,h\rangle = -\int_\mathcal{M}g(\nabla f,\nabla h)\,d\text{vol}$ is the Riemannian analogue of the integration by parts formula from Analysis I: $\int_a^b f''(x)h(x)dx = -\int_a^b f'(x)h'(x)dx + [f'h]_a^b$. The self-adjointness of $\Delta_\mathcal{M}$ follows from Green's identity with boundary terms vanishing — the manifold analogue of a Sturm-Liouville operator being self-adjoint with appropriate boundary conditions, a result developed carefully in Analysis II.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the ICIMOD Himalayan terrain survey story has a precise mathematical address. We walk through them completely — the cartographer's distortion argument, the geodesic neighbourhood, the exponential map as local flattening, the gauge ambiguity of the compass direction, the parallel transport of the surveyor's frame, the MoNet Gaussian kernels as learned physical patterns, and the break moment of the orientation problem — until the story and the formalism are a single object seen from two angles.
+
+---
+
+**The flat map's distortion of the Himalayan terrain — the Mercator projection making Greenland appear twice as large as its true size relative to equatorial regions — is the failure of any global diffeomorphism from $\mathcal{M}$ to $\mathbb{R}^2$ to preserve the Riemannian metric $g$, expressed precisely by Gauss's Theorema Egregium: the Gaussian curvature $K(x)$ is an intrinsic invariant unchanged by isometric deformations, and a sphere with $K > 0$ cannot be isometrically embedded in the flat plane with $K = 0$.** The metric tensor $g_{ij}(x)$ at each terrain point $x$ encodes the true notion of length and angle on the surface — the inner product $g_x(u,v)$ between tangent vectors $u,v \in T_x\mathcal{M}$ gives the cosine of the angle between them and the products $\sqrt{g_x(v,v)}$ give their lengths. Any flat map projection is a smooth bijection $\varphi: U \subset \mathcal{M} \to \mathbb{R}^2$ that pulls back the flat Euclidean metric on $\mathbb{R}^2$ to a distorted metric $\varphi^*g_{\text{Eucl}}$ on $\mathcal{M}$ — a metric that differs from the true Riemannian metric $g$ by a position-dependent conformal factor (for angle-preserving projections like Mercator) or area-distorting deformation (for equal-area projections). A convolutional filter applied to the flat map reads distances in the distorted metric $\varphi^*g_{\text{Eucl}}$, not in the true metric $g$. The Everest versus Greenland example is the volume element distortion: $d\text{vol}_\mathcal{M} = \sqrt{|g|}\,dx^1\,dx^2 \neq dx^1\,dx^2 = d\text{vol}_{\mathbb{R}^2}$ in the projected coordinate chart, with $\sqrt{|g|}$ varying by a factor of two between equatorial and high-latitude regions in the Mercator projection. The network trained on the flat map must learn to compensate for the spatially varying $\sqrt{|g|}$ distortion factor before learning any terrain physics — wasting representational capacity on a coordinate artifact.
+
+**The road distance from Kathmandu to Nagarkot — 32 kilometres along the terrain surface versus 25 kilometres through the hill — is the geodesic distance $d_\mathcal{M}(\text{Kathmandu},\text{Nagarkot}) = \inf_\gamma \ell(\gamma)$, the infimum of path lengths over all surface curves $\gamma$ connecting the two points, with length measured by the Riemannian metric $\ell(\gamma) = \int_0^1\sqrt{g_{\gamma(t)}(\dot\gamma(t),\dot\gamma(t))}\,dt$.** The Euclidean distance through the hill is the ambient-space distance $\|\text{Kathmandu} - \text{Nagarkot}\|_{\mathbb{R}^3} = 25\text{km}$ — the length of the straight line segment connecting the two points in the embedding space $\mathbb{R}^3$, which passes through the interior of the Earth and is therefore inaccessible to any creature confined to the surface. The geodesic distance is intrinsic: it depends only on the Riemannian metric $g$ of the surface, not on how the surface sits in $\mathbb{R}^3$. Two different embeddings of the same abstract Riemannian manifold — a rubber sheet stretched into different shapes in ambient space — have the same geodesic distances between all pairs of points if the stretching is isometric (preserving $g$). The geodesic ball $B_r(x) = \{y\in\mathcal{M}: d_\mathcal{M}(x,y) < r\}$ is the set of terrain points accessible from $x$ by a surface path of length less than $r$ — the intrinsically correct neighbourhood for aggregating local signal information. The snow depth measurement separated from $x$ by a 2-kilometre geodesic detour around a cliff face is correctly excluded from $B_{500}(x)$ even if its Euclidean distance is only 300 metres: the cliff face makes it geometrically distant in the intrinsic sense that matters for surface phenomena.
+
+---
+
+**The surveyor standing at base camp and measuring angles and distances in every direction — defining a local coordinate system $(r,\theta)$ with $r$ the distance walked along the terrain and $\theta$ the compass bearing — is the geodesic polar coordinate system, and the function mapping each direction-distance pair to the terrain point reached is the exponential map $\exp_x: T_x\mathcal{M} \to \mathcal{M}$.** The tangent plane $T_x\mathcal{M}$ at base camp $x$ is the flat 2D space of all tangent vectors at $x$ — the mathematical formalization of the surveyor's local directional choices, which form a 2D plane regardless of how the terrain curves. A tangent vector $v = r(\cos\theta\, e_1 + \sin\theta\, e_2) \in T_x\mathcal{M}$ encodes direction $\theta$ and speed $r$ in the orthonormal frame $\{e_1, e_2\}$. The exponential map $\exp_x(v) = \gamma_v(1)$ is the endpoint of the geodesic $\gamma_v$ starting at $x$ with initial velocity $v$ — the terrain point reached by walking in direction $\theta$ for distance $r$ along the surface. The identity $d(\exp_x)_0 = \text{Id}$ — the differential of $\exp_x$ at the origin is the identity — is the mathematical statement that the terrain looks flat near your feet: for small $v$, $d_\mathcal{M}(x, \exp_x(v)) = \|v\| + O(\|v\|^3)$, so geodesic distances agree with tangent-plane distances to second order. The Gauss lemma — $g = dr^2 + f(r,\theta)^2\,d\theta^2$ in geodesic polar coordinates with $f(r,\theta) = r - \frac{K(x)}{6}r^3 + O(r^5)$ — quantifies exactly how much the terrain deviates from flatness at each radius $r$: the curvature term $-K(x)r^3/6$ is the leading-order distortion of geodesic circles relative to Euclidean circles. A convolutional filter applied in the tangent plane and mapped to the surface via $\exp_x$ experiences a distortion of order $r^3$ — negligible for small neighbourhoods (locality saves you) and growing for large neighbourhoods (curvature eventually matters).
+
+**The injectivity radius $\text{inj}(x)$ — the maximum radius within which the exponential map is a bijection — is large at smooth gentle slopes and small at sharp ridges and cliff edges, because at high-curvature points two geodesics from $x$ can intersect within a small radius, creating the conjugate points that destroy injectivity of $\exp_x$.** At a sharp mountain ridge, two geodesics from the ridge point — one going slightly left of the ridge direction and one slightly right — quickly converge on the two sides of the ridge and may intersect again a short distance away, meaning the exponential map sends two different tangent vectors to the same surface point. Beyond the first conjugate point, $\exp_x$ is no longer injective: the geodesic polar coordinate system is undefined, and the local flattening breaks down. The constraint that geodesic convolution must use neighbourhood radii $r < \text{inj}(x)$ is therefore not just a mathematical technicality — it is the precise statement that the filter must be local enough that the terrain it covers does not wrap around on itself, which fails first at high-curvature terrain features like ridge lines and cliff edges. This is the formal quantification of the story's intuition that the local flattening is honest for small patches but breaks down for large ones.
+
+---
+
+**The problem of choosing which direction is north in the local tangent plane at the summit of Everest — the gauge ambiguity — is the non-existence of a globally smooth section of the frame bundle on a curved surface, formalized as the non-triviality of the tangent bundle $T\mathcal{M}$ for surfaces with nonzero Euler characteristic.** A choice of local frame $\{e_1(x), e_2(x)\}$ at each point $x \in \mathcal{M}$ — an orthonormal basis for $T_x\mathcal{M}$ varying smoothly with $x$ — is a section of the orthonormal frame bundle $\text{O}(\mathcal{M})$. On a flat torus $\mathbb{T}^2$ (Euler characteristic zero), such a global section exists: you can consistently define a smooth north direction at every point. On the sphere $S^2$ (Euler characteristic $+2$), no smooth global section exists — the hairy ball theorem guarantees that any smooth tangent vector field on $S^2$ must vanish somewhere. The Himalayan terrain, as a surface with boundaries and potentially nontrivial topology, generally has no canonical global smooth frame field. The surveyor's choice of which compass direction to call $\theta = 0$ at each terrain point is a gauge choice — an arbitrary local convention that varies from point to point. Different drones defining $\theta = 0$ as north versus east produce gauge-related representations of the same terrain signal, related by the gauge transformation $g: \mathcal{M} \to SO(2)$ that rotates the local frame by $\pi/2$ everywhere. The gauge group $\mathcal{G} = C^\infty(\mathcal{M}, SO(2))$ is infinite-dimensional — one independent $SO(2)$ rotation per surface point — making gauge equivariance a strictly stronger requirement than global $SO(2)$ equivariance, because gauge transformations can rotate frames by different angles at different points independently.
+
+**The drone's flight direction determining the local angular reference — with north-to-south and east-to-west flights producing $\pi/2$-rotated coordinate systems for the same terrain — is the gauge transformation $g(x) = R_{\pi/2} \in SO(2)$ (constant gauge transformation by $\pi/2$), and the break moment showing that the Gaussian kernel centred at $(200\text{m}, \pi/4)$ sees a different terrain region under the two gauges is the formal failure of gauge invariance for a filter with angular dependence.** Under gauge transformation $g(x) = R_\alpha$ (rotation by $\alpha$ at every point), the geodesic polar coordinates transform as $(r,\theta) \mapsto (r, \theta - \alpha)$, so the kernel $g_k(r,\theta) = \exp(-\frac{1}{2}((r,\theta)-\mu_k)^\top\Sigma_k^{-1}((r,\theta)-\mu_k))$ with $\mu_k = (200\text{m}, \pi/4)$ becomes $g_k(r,\theta-\alpha)$ with effective centre $(200\text{m}, \pi/4 + \alpha)$. For $\alpha = \pi/2$: the kernel now centres at $(200\text{m}, 3\pi/4)$ — northwest rather than northeast. The output of the convolution changes because the kernel is responding to signal values in a different geometric direction. Gauge equivariance resolves this: a gauge-equivariant feature of angular type $\ell$ transforms as $F(x) \mapsto e^{i\ell\alpha} F(x)$ under constant gauge transformation by $\alpha$. For a scalar output ($\ell=0$): $F(x) \mapsto F(x)$ — the avalanche risk prediction is unchanged. For the intermediate vector features ($\ell=1$): $F(x) \mapsto e^{i\alpha}F(x)$ — they rotate with the local frame. The equivariant kernel constraint $K(g\cdot v) = \rho_{\text{out}}(g)\circ K(v)\circ\rho_{\text{in}}(g)^{-1}$ — derived from Schur's lemma for the gauge group $SO(2)$ exactly as Schur's lemma for $S_n$ and $SO(3)$ classified equivariant layers in earlier chapters — forces the kernel to decompose into radial-angular products $K_\ell(r)D^{(\ell)}(\theta)$, where the radial part $K_\ell(r)$ is a learnable function and the angular part $D^{(\ell)}(\theta)$ is fixed by the representation theory of $SO(2)$.
+
+---
+
+**The surveyor carrying a compass across the terrain from base camp to the summit, keeping it as steady as possible but watching it rotate relative to the surface because of the terrain's curvature — is parallel transport: the unique lifting of a curve $\gamma: [0,1]\to\mathcal{M}$ to a curve in the frame bundle that satisfies $\nabla_{\dot\gamma}V = 0$, the connection equation expressing that the frame is not actively rotated but only passively moved with the curvature of the surface.** The parallel transport ODE $\dot V^k(t) + \Gamma^k_{ij}(\gamma(t))\dot\gamma^i(t)V^j(t) = 0$ is a first-order linear ODE along the geodesic $\gamma$ — it has a unique solution for any initial frame $V(0) = v_0$ by the Picard-Lindelöf theorem from MATH 217, and this solution $V(t) = P_\gamma^t v_0$ is the parallel transport of $v_0$ to time $t$ along $\gamma$. The Christoffel symbols $\Gamma^k_{ij}$ — which appear in both the geodesic equation and the parallel transport equation — are the components of the Levi-Civita connection in local coordinates, encoding how the metric tensor $g_{ij}$ varies from point to point. They are the precise mathematical encoding of the terrain's local curvature that forces the compass to rotate as the surveyor walks: in a flat region ($\Gamma^k_{ij} = 0$), the compass does not rotate; near a sharp ridge (large $\Gamma^k_{ij}$), the compass rotates rapidly. The gauge-equivariant convolution kernel $K_{P_\gamma}(\log_x(y)) = K(\log_x(y))\circ P_\gamma$ incorporates parallel transport $P_\gamma: T_y\mathcal{M}\to T_x\mathcal{M}$ along the geodesic from $y$ to $x$: this transports the feature at $y$ to the reference frame at $x$ before applying the filter kernel $K$, ensuring that features at different surface points are compared in a consistent frame — the filter sees the terrain signal in the same coordinate system at every neighborhood point, corrected for the curvature-induced rotation of the parallel-transported frame.
+
+**The holonomy — the rotation accumulated by a frame carried by parallel transport around a closed terrain loop — is the integral $\oint_\gamma A = \int_\Omega K\,d\text{vol}$ of the Gaussian curvature over the region $\Omega$ enclosed by the loop, the local Gauss-Bonnet theorem.** At a summit point surrounded by a closed loop of terrain, the holonomy of a frame parallel-transported around the loop is the total Gaussian curvature enclosed — positive for a convex summit (the compass has rotated by a positive angle when it returns), negative for a saddle point. In the gauge-equivariant network, holonomy is not a problem to be solved but a geometric fact to be respected: the parallel transport $P_\gamma$ used in the kernel correctly accounts for the frame rotation accumulated along the geodesic from $y$ to $x$, so features at neighboring points are compared in frames that have been consistently transported rather than arbitrarily oriented. The holonomy angle — the curvature-dependent rotation — is exactly the mismatch that a naive non-gauge-equivariant network tries to learn away from data, wasting capacity on a geometric artifact. A gauge-equivariant network handles it structurally, by including $P_\gamma$ in the kernel definition.
+
+---
+
+**The MoNet Gaussian kernel $g_k(r,\theta) = \exp(-\frac{1}{2}((r,\theta)-\mu_k)^\top\Sigma_k^{-1}((r,\theta)-\mu_k))$ centred at $(200\text{m}, \pi/4)$ — the northeast-sensing kernel that learns to detect snow loading from prevailing winds — is a Gaussian probability density in the pseudo-coordinate space $\mathbb{R}^m$, with the Mahalanobis distance $(\mathbf{u}-\mu_k)^\top\Sigma_k^{-1}(\mathbf{u}-\mu_k)$ measuring the elliptical distance from the kernel centre in the local coordinate system.** The learnable mean $\mu_k\in\mathbb{R}^m$ is the centre of the kernel — the specific geometric relationship $(r_k, \theta_k)$ between receiver $x$ and sender $y$ that this kernel responds to most strongly. The learnable covariance $\Sigma_k\in\mathbb{R}^{m\times m}$ (positive definite by construction from MATH 302) determines the kernel's spatial extent and anisotropy: a diagonal $\Sigma_k = \text{diag}(\sigma_r^2, \sigma_\theta^2)$ produces an axis-aligned ellipse in $(r,\theta)$ space, responding strongly to signals within $\sigma_r$ metres radially and $\sigma_\theta$ radians angularly of the centre; a full $\Sigma_k$ produces a rotated ellipse capturing correlations between radial and angular sensitivity. The physical interpretation of learned kernels — northeast-sensing, uphill-sensing, ring-averaging — is the direct readout of the learned $\mu_k$ and $\Sigma_k$ in geometric coordinates, making MoNet's learned filters interpretable in physical terrain terms in a way that standard CNN filters on flat images are not.
+
+**The MoNet layer $(f\star_{\text{MoNet}}w)(x) = \sum_{k=1}^K\sum_{y\in\mathcal{N}(x)}f(y)\cdot g_k(\mathbf{u}(x,y))\cdot w_k$ — weighted aggregation of neighbourhood signal values with Gaussian mixture weights in local coordinates — unifies manifold geodesic convolution and graph spatial convolution as special cases of the same pseudo-coordinate framework.** For the Himalayan terrain: $\mathcal{N}(x) = B_r(x)$ is the geodesic ball, $\mathbf{u}(x,y) = (r_{xy}, \theta_{xy})$ are geodesic polar coordinates, and the kernel is a Gaussian in geodesic coordinate space — continuous geodesic convolution. For the Nepal Electricity Authority's transmission network from Chapter 2: $\mathcal{N}(x) = \mathcal{N}(i)$ is the graph neighbourhood, $\mathbf{u}(i,j) = (1/\sqrt{d_i}, 1/\sqrt{d_j})$ are degree-normalized pseudo-coordinates, and the kernel is a Gaussian in degree space — the GCN as a single-kernel MoNet. The unification theorem makes precise what the Chapter 2 spectral analysis showed informally: graph convolution and manifold convolution are both instances of locally-weighted neighbourhood aggregation, differing only in how the neighbourhood is defined (hop-count versus geodesic distance) and how the local coordinates are assigned (graph-structural versus geometric). The parameter count $(K\times(m + m^2 + d_{\text{in}}\times d_{\text{out}}))$ — independent of $n$, the number of surface sample points — enables transfer across different discretizations of the same manifold: a MoNet trained on a coarse terrain mesh transfers to a fine terrain mesh without retraining, because the learned Gaussian kernels are parameterized in geometric coordinates (metres and radians) rather than in node indices.
+
+---
+
+**The DiffusionNet architecture — using the heat operator $e^{-t\Delta_\mathcal{M}}$ as the spatial propagation mechanism — is the intrinsic alternative to geodesic convolution that bypasses the geodesic polar coordinate system entirely and operates directly in the spectral domain of the Laplace-Beltrami operator.** The heat equation $\partial_t u = \Delta_\mathcal{M}u$ on the manifold with initial condition $u(x,0) = f(x)$ has solution $u(x,t) = (e^{-t\Delta_\mathcal{M}}f)(x) = \sum_k e^{-\lambda_k t}\langle f,\phi_k\rangle\phi_k(x)$ — the heat diffused from the initial signal $f$ for time $t$, with each eigenmode $\phi_k$ decaying at rate $e^{-\lambda_k t}$. Short diffusion time $t\to 0$: only the signal at $x$ itself contributes (no diffusion has occurred). Long diffusion time $t\to\infty$: the signal diffuses to the global mean (all modes except $\phi_0$ have decayed). Intermediate $t$: the diffused signal at $x$ is a weighted average of the original signal over a geodesic neighbourhood of radius $\sim\sqrt{t}$, with the geodesic ball-like locality emerging from the heat kernel's Gaussian concentration. The DiffusionNet feature $e^{-t\Delta}h_i^{\text{in}}$ is computed via the truncated eigendecomposition $\Phi e^{-t\Lambda}\Phi^\top h^{\text{in}}$ using the first $K$ Laplace-Beltrami eigenvectors $\Phi = [\phi_1|\ldots|\phi_K]$ — making DiffusionNet's spatial support intrinsically defined by the manifold's own geometry, invariant to surface discretization (because $\Delta_\mathcal{M}$'s eigenfunctions are intrinsic), and directly continuous with the spectral graph theory of Chapter 2 (because the graph Laplacian eigenvectors converge to $\Delta_\mathcal{M}$'s eigenfunctions by the Belkin-Niyogi theorem).
+
+---
+
+**The three physical interpretations of learned MoNet kernels — the uphill kernel at $(50\text{m}, \text{uphill})$, the wind-loading kernel at $(300\text{m}, \text{upwind})$, and the ring-averaging kernel with large angular covariance — are the data-driven discoveries of physical transfer functions in the local geodesic coordinate space that capture the causal structure of avalanche dynamics.** Each Gaussian kernel $g_k(r,\theta)$ is a learned spatial filter in the intrinsic coordinate system of the terrain: its mean $\mu_k = (r_k,\theta_k)$ identifies the most relevant neighbour geometry, and its covariance $\Sigma_k$ identifies the spatial scale of the effect. The uphill kernel — small $r$, direction $\theta_{\text{uphill}}$, narrow covariance — is the discrete derivative operator in the slope direction: $\nabla_{\text{slope}}f(x) \approx \frac{f(\exp_x(50\text{m}\cdot e_{\text{uphill}})) - f(x)}{50\text{m}}$, capturing the local slope gradient as a first-order difference quotient in the geodesic uphill direction. The wind-loading kernel — larger $r$, direction $\theta_{\text{upwind}}$, moderate covariance — captures the non-local transfer of snow mass from upwind to downwind terrain through a spatial cross-correlation at the characteristic wind-transport distance of 300 metres. The ring-averaging kernel — fixed $r$, large $\sigma_\theta$ — is a radially symmetric mean filter at a specific distance, the geodesic-coordinate analogue of the isotropic GCN layer from Chapter 2: it aggregates signal values along a geodesic circle of radius $r$ around $x$, capturing the regional snow accumulation level without directional bias. All three are instances of the same MoNet formula with different learned $(\mu_k, \Sigma_k)$ — the geometric learning framework discovers directionally-sensitive, distance-specific physical patterns without any domain expertise encoded by hand.
+
+---
+
+**The connection to MATH 217 is threefold and complete.** The geodesic equation $\ddot\gamma^k + \Gamma^k_{ij}\dot\gamma^i\dot\gamma^j = 0$ is the Euler-Lagrange equation for the length functional — a second-order nonlinear ODE system whose unique solution for each initial condition $(x,v)$ is guaranteed by Picard-Lindelöf, giving the exponential map $\exp_x(v) = \gamma_v(1)$ as the value of the unique geodesic at time 1. The parallel transport equation $\dot V^k + \Gamma^k_{ij}\dot\gamma^i V^j = 0$ is a first-order linear ODE along $\gamma$ — uniquely solvable by Picard-Lindelöf, giving parallel transport as the solution operator mapping initial frames to transported frames. The Laplace-Beltrami eigenvalue problem $\Delta_\mathcal{M}\phi = -\lambda\phi$ is an elliptic PDE on $\mathcal{M}$ — the Riemannian Sturm-Liouville problem whose eigenfunctions $\{\phi_k\}$ form a complete orthonormal basis for $L^2(\mathcal{M})$ by the spectral theorem for compact self-adjoint operators, completing the circle from the one-dimensional Sturm-Liouville theory of MATH 217 to its infinite-dimensional Riemannian generalization. **The connection to MATH 302 is the positive definiteness of the metric tensor $g_{ij}(x)$ and MoNet covariance $\Sigma_k$ — both real symmetric positive definite matrices whose spectral properties (positive eigenvalues, Cholesky factorization, well-defined square root) enable the Riemannian volume element $\sqrt{|g|}$ and the Mahalanobis distance $(\mathbf{u}-\mu_k)^\top\Sigma_k^{-1}(\mathbf{u}-\mu_k)$.** The parallel transport $P_\gamma\in O(d)$ is an orthogonal matrix — preserving inner products $g(P_\gamma u, P_\gamma v) = g(u,v)$ — exactly the orthogonal matrices of MATH 302, here appearing as the linear isometry implementing consistent frame comparison across curved terrain. **The connection to MATH 213 and MATH 325 is the $L^2(\mathcal{M},d\text{vol})$ Hilbert space structure underlying the Laplace-Beltrami spectral theory** — Green's identity $\langle\Delta_\mathcal{M}f,h\rangle_{L^2} = -\int_\mathcal{M}g(\nabla f,\nabla h)\,d\text{vol}$ is the Riemannian integration by parts from Analysis I, and the completeness of the eigenfunction basis in $L^2(\mathcal{M})$ is the manifold generalization of the Fourier basis completeness in $L^2([-\pi,\pi])$ from Analysis II.
+
+---
+
+The ICIMOD Himalayan terrain survey — its flat map distortion, geodesic neighbourhood, exponential map flattening, gauge ambiguity of the compass, parallel transport of the surveyor's frame, MoNet Gaussian kernels, and avalanche risk prediction — is now completely dissolved into its mathematical form. The flat map distortion is the failure of any global isometric embedding of $(\mathcal{M},g)$ into $(\mathbb{R}^2,g_{\text{Eucl}})$ by Theorema Egregium. The geodesic distance is $d_\mathcal{M}(x,y) = \inf_\gamma\ell(\gamma)$. The geodesic ball is $B_r(x)$. The local flattening is $\exp_x: T_x\mathcal{M}\to\mathcal{M}$. The geodesic polar coordinates are $(r,\theta)$ in $T_x\mathcal{M}$. The metric distortion is $f(r,\theta) = r - \frac{K(x)}{6}r^3 + O(r^5)$. The gauge ambiguity is the non-existence of a global smooth section of $\text{O}(\mathcal{M})$. The gauge group is $\mathcal{G} = C^\infty(\mathcal{M},SO(2))$. Parallel transport is $\nabla_{\dot\gamma}V = 0$. Holonomy is $\int_\Omega K\,d\text{vol}$. The MoNet kernel is $g_k(\mathbf{u}) = \exp(-\frac{1}{2}(\mathbf{u}-\mu_k)^\top\Sigma_k^{-1}(\mathbf{u}-\mu_k))$. The gauge-equivariant kernel constraint is $K(g\cdot v) = \rho_{\text{out}}(g)\circ K(v)\circ\rho_{\text{in}}(g)^{-1}$.
+
+---
+---

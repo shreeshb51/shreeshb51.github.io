@@ -1,0 +1,264 @@
+# Subtopic 3 - Lebesgue Measure
+
+## Layer 1 (Story)
+
+You are the head of the land registry office in Kathmandu, and your job is to assign official areas to every plot of land in the valley. The government needs these areas for taxation, for urban planning, for dispute resolution. Every registered plot must have a number attached to it — its area in square metres — and that number must be consistent. If you split a plot into two non-overlapping pieces and measure them separately, their areas must sum to the area of the original. If two plots are congruent — one is just a shifted or rotated copy of the other — they must have the same area. And the standard unit square, one metre by one metre, must have area exactly one.
+
+These three requirements — additivity, translation invariance, and the unit normalization — seem so obvious that you would never think to question them. Of course area works this way. It always has. What could possibly go wrong?
+
+---
+
+For centuries, the answer was: nothing goes wrong, as long as you only measure plots with nice, regular boundaries. Rectangles, triangles, circles, polygons — these all have well-defined areas, computable by the formulas you learned in school. The Riemann integral, which you encountered in MATH 201, is essentially a systematic way of computing areas under curves by approximating them with thin rectangles from above and below. It works beautifully for continuous functions, for piecewise smooth functions, for the kinds of functions that arise in physics and engineering.
+
+But now the government asks you to assign an area to every plot in the valley — not just the nicely shaped ones, but every conceivable subset of the valley's terrain. Including the pathological ones. Including regions whose boundaries are fractal. Including the Vitali sets you encountered in the previous two subtopics.
+
+And here is where Riemann integration — your existing tool — begins to fail silently.
+
+---
+
+Consider a specific plot of land defined as follows: it consists of all points in the unit square $[0,1] \times [0,1]$ whose $x$-coordinate is a rational number. Call this plot $Q$. It is a perfectly well-defined subset of the valley. But what is its area?
+
+Try to compute it using the Riemann approach. You approximate the area by covering the plot with thin vertical strips of width $\Delta x$, and in each strip you ask: what fraction of the strip's height is covered by $Q$? The answer depends on whether $x$ is rational or irrational. At every rational $x$, the strip is fully covered — the indicator function of $Q$ equals 1. At every irrational $x$, the strip is empty — the indicator equals 0. But the rationals and irrationals are interleaved so densely that in every strip, no matter how thin, both rationals and irrationals are present. The Riemann upper sum — using the maximum value in each strip, which is always 1 — gives area 1. The Riemann lower sum — using the minimum value in each strip, which is always 0 — gives area 0. The upper and lower sums never agree, no matter how fine you make the partition. The Riemann integral does not exist for this function.
+
+And yet, intuitively, the area of $Q$ should be zero. The rationals form a countable set — they can be listed as $q_1, q_2, q_3, \ldots$ — and a countable collection of vertical lines in the plane, each of zero width, should have zero area. The Riemann framework cannot see this. It is blind to the difference between a countable and an uncountable set, because it operates by slicing space into intervals and asking about local maximum and minimum values, and the rationals and irrationals are indistinguishable at that local scale.
+
+This is the precise failure point of Riemann integration. It measures area by approximating from the outside and inside using intervals — a horizontal, geometry-based approach. It cannot handle functions that oscillate infinitely finely, because its approximation scheme operates at the wrong scale.
+
+---
+
+Henri Lebesgue, in 1902, had a completely different idea. Instead of slicing the domain into thin vertical strips and asking "how tall is the function here?", he proposed slicing the range — the set of output values — into thin horizontal strips and asking "how large is the set of inputs that map to this output level?"
+
+Here is the key insight. Instead of asking "what is the height of the function at each point of the plot?", Lebesgue asked "what is the area of the set of points where the function takes a given value?" For the indicator function of $Q$, this means: what is the area of the set of points where the function equals 1? That is the set of rational $x$-values, which is a countable set. And what is the area of a countable set? It should be zero — a countable collection of points has no width, no area. So the Lebesgue integral assigns:
+
+$$\int \mathbf{1}_Q \, d\mu = 1 \cdot \mu(\text{rationals in } [0,1]) + 0 \cdot \mu(\text{irrationals in } [0,1]) = 1 \cdot 0 + 0 \cdot 1 = 0$$
+
+The Lebesgue integral gives the intuitively correct answer — zero — by measuring the size of level sets rather than the height of vertical slices.
+
+---
+
+But to make this work, Lebesgue needed a precise, rigorous notion of the "size" or "area" of an arbitrary measurable set — not just intervals and rectangles, but the kinds of sets that appear as level sets of functions. He needed a function $\mu$ that assigns a non-negative real number to every Borel set, satisfying the three requirements from the beginning of the story: countable additivity, translation invariance, and unit normalization. This function is the **Lebesgue measure**.
+
+The construction of the Lebesgue measure begins with the simplest sets — intervals — and extends outward in concentric rings of generality. For an interval, the measure is its length: $\mu([a,b]) = b - a$. Full stop. This is the ground floor. Then the measure is extended to finite unions of disjoint intervals by adding their lengths. Then to open sets, by writing them as countable unions of disjoint intervals. Then to closed sets, by using complementation. Then to the full Borel $\sigma$-algebra, by a limiting process that fills in every Borel set from below using open sets and from above using closed sets, and checking that both approximations converge to the same value.
+
+The remarkable fact — and it is genuinely remarkable — is that this extension is unique. There is exactly one function on $\mathcal{B}(\mathbb{R})$ that assigns length $b-a$ to every interval $[a,b]$, is countably additive, and is translation invariant. The Lebesgue measure is not one of many possible choices. It is the only choice. The three requirements from the beginning completely pin down the measure.
+
+---
+
+Here is the break moment. The naive assumption is that every subset of $\mathbb{R}$ has a well-defined Lebesgue measure — that the construction, being so natural and so uniquely determined, must extend to all subsets. After all, the measure is the unique extension of the obvious notion of length. Surely it extends everywhere?
+
+It does not. The Vitali set construction — which appeared as a warning in the previous subtopics — is the formal proof that no translation-invariant, countably additive measure can be defined on all subsets of $\mathbb{R}$. The Vitali set is a subset of $[0,1]$ constructed by selecting exactly one representative from each equivalence class of the relation "$x \sim y$ if $x - y$ is rational." If this set had a Lebesgue measure $m$, then countable additivity and translation invariance together would force $m = 0$ and $m > 0$ simultaneously. The contradiction is not a computational accident. It is a theorem. The Lebesgue measure simply does not exist for Vitali sets — they are genuinely non-measurable, and the entire apparatus of $\sigma$-algebras from the previous subtopics exists precisely to exclude them from the domain of the measure.
+
+The three requirements that seemed so obviously correct — additivity, translation invariance, unit normalization — are not simultaneously satisfiable for all subsets of $\mathbb{R}$. The price of keeping all three is accepting that some subsets have no measure. The $\sigma$-algebra is the principled decision about which subsets to keep and which to exclude. The Lebesgue measure is the unique, correct notion of size on the sets that remain.
+
+---
+
+There is one more element of the story worth introducing here, because it connects directly to probability. A set $N \subseteq \mathbb{R}$ is called a **null set** if $\mu(N) = 0$ — if it has Lebesgue measure zero. The rationals are a null set. Any countable set is a null set. Some uncountable sets — like the Cantor set, which is uncountable but has measure zero — are also null sets. The concept of a null set gives you a precise language for the phrase "almost everywhere": a property holds **almost everywhere** if it holds for all points except possibly a null set. This phrase will appear constantly in the roadmap — "the sequence converges almost everywhere," "the function is differentiable almost everywhere," "two densities agree almost everywhere" — and it always means exactly this: the set of exceptions has Lebesgue measure zero.
+
+---
+
+Hold this picture in mind. The land registry office, confronted with the impossible task of assigning consistent areas to every conceivable plot, makes a disciplined decision: it will only register plots that are Borel measurable, and for those plots, it will use the unique, translation-invariant, countably additive extension of the obvious notion of length. That extension is the Lebesgue measure. It is the right notion of size — not because it is the most general, but because it is the most consistent. The plots it cannot measure are excluded not out of laziness, but out of mathematical necessity: their inclusion would corrupt the entire system.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in five stages: the abstract definition of a measure, the construction of Lebesgue measure on $\mathbb{R}$, its key properties, the concept of null sets and almost everywhere, and finally the Lebesgue integral itself — the payoff that the entire construction was designed to deliver.
+
+### Measures and Probability Measures
+
+Let $(\Omega, \mathcal{F})$ be a measurable space. A **measure** on $(\Omega, \mathcal{F})$ is a function $\mu: \mathcal{F} \to [0, \infty]$ satisfying exactly two axioms:
+
+$$\text{(i) } \mu(\emptyset) = 0 \quad \text{(empty set has zero measure)}$$
+
+$$\text{(ii) } \mu\left(\bigsqcup_{n=1}^{\infty} A_n\right) = \sum_{n=1}^{\infty} \mu(A_n) \quad \text{(countable additivity)}$$
+
+where $\bigsqcup$ denotes a countable union of pairwise disjoint sets — sets satisfying $A_i \cap A_j = \emptyset$ for all $i \neq j$. The triple $(\Omega, \mathcal{F}, \mu)$ is called a **measure space**.
+
+Notice that $\mu$ is allowed to take the value $+\infty$ — the Lebesgue measure of all of $\mathbb{R}$ is infinite, and this must be permitted. A measure satisfying $\mu(\Omega) < \infty$ is called a **finite measure**. A measure satisfying $\mu(\Omega) = 1$ is called a **probability measure**, and the triple $(\Omega, \mathcal{F}, P)$ with $P(\Omega) = 1$ is a **probability space** — the formal foundation of all probability theory, which was implicit in every problem you solved in MATH 208.
+
+Several important properties follow immediately from the two axioms. For any $A, B \in \mathcal{F}$:
+
+$$A \subseteq B \implies \mu(A) \leq \mu(B) \quad \text{(monotonicity)}$$
+
+$$\mu(A \cup B) = \mu(A) + \mu(B) - \mu(A \cap B) \quad \text{(inclusion-exclusion)}$$
+
+$$\mu\left(\bigcup_{n=1}^{\infty} A_n\right) \leq \sum_{n=1}^{\infty} \mu(A_n) \quad \text{(subadditivity, for non-disjoint sets)}$$
+
+And two continuity properties that connect measure theory to the sequential limits of MATH 213:
+
+$$A_1 \subseteq A_2 \subseteq \cdots \implies \mu\left(\bigcup_{n=1}^{\infty} A_n\right) = \lim_{n \to \infty} \mu(A_n) \quad \text{(continuity from below)}$$
+
+$$A_1 \supseteq A_2 \supseteq \cdots \text{ and } \mu(A_1) < \infty \implies \mu\left(\bigcap_{n=1}^{\infty} A_n\right) = \lim_{n \to \infty} \mu(A_n) \quad \text{(continuity from above)}$$
+
+These continuity properties are the measure-theoretic analogues of the sequential limit theorems you used in Analysis I — they say that measure behaves continuously with respect to monotone sequences of sets, exactly as continuous functions behave continuously with respect to convergent sequences of points.
+
+---
+
+### Construction of Lebesgue Measure on $\mathbb{R}$
+
+The Lebesgue measure $\lambda$ on $(\mathbb{R}, \mathcal{B}(\mathbb{R}))$ is constructed in three stages, each extending the previous one.
+
+**Stage 1 — Intervals.** The measure of any bounded interval is its length, regardless of whether endpoints are included:
+
+$$\lambda([a,b]) = \lambda((a,b]) = \lambda([a,b)) = \lambda((a,b)) = b - a$$
+
+This is the ground floor. The measure of a single point is zero: $\lambda(\{a\}) = \lambda([a,a]) = a - a = 0$. Countable additivity then immediately implies that any countable set has measure zero: $\lambda(\mathbb{Q} \cap [0,1]) = 0$.
+
+**Stage 2 — Open Sets.** Every open set $U \subseteq \mathbb{R}$ can be written uniquely as a countable disjoint union of open intervals:
+
+$$U = \bigsqcup_{n=1}^{\infty} (a_n, b_n)$$
+
+The Lebesgue measure of $U$ is then defined by countable additivity:
+
+$$\lambda(U) = \sum_{n=1}^{\infty} (b_n - a_n)$$
+
+**Stage 3 — General Borel Sets.** For an arbitrary Borel set $B \in \mathcal{B}(\mathbb{R})$, the Lebesgue measure is defined via outer approximation by open sets:
+
+$$\lambda(B) = \inf\left\{ \sum_{n=1}^{\infty} (b_n - a_n) : B \subseteq \bigcup_{n=1}^{\infty} (a_n, b_n) \right\}$$
+
+This is called the **Lebesgue outer measure** — you approximate $B$ from the outside by covering it with countably many open intervals, sum their lengths, and take the infimum over all such coverings. For well-behaved sets — intervals, open sets, closed sets — this infimum coincides with the intuitive notion of length. For Borel sets in general, it is the unique consistent extension.
+
+The fundamental theorem here is the **Carathéodory Extension Theorem**, which guarantees that this outer measure restricts to a genuine measure on $\mathcal{B}(\mathbb{R})$ — one that is countably additive, not just subadditive. The proof proceeds by identifying which sets split every other set additively, and showing that these sets form a $\sigma$-algebra containing all Borel sets. The uniqueness of this extension — the fact that there is exactly one translation-invariant measure on $\mathcal{B}(\mathbb{R})$ assigning length $b-a$ to each interval $[a,b]$ — follows from a result called the uniqueness of the Hahn extension.
+
+---
+
+### Key Properties of Lebesgue Measure
+
+The Lebesgue measure $\lambda$ on $(\mathbb{R}, \mathcal{B}(\mathbb{R}))$ satisfies three defining properties that uniquely characterize it:
+
+$$\text{(i) } \lambda([a,b]) = b - a \quad \text{(length normalization)}$$
+
+$$\text{(ii) } \lambda(B + t) = \lambda(B) \quad \forall t \in \mathbb{R}, \; B \in \mathcal{B}(\mathbb{R}) \quad \text{(translation invariance)}$$
+
+$$\text{(iii) } \mu \text{ is countably additive on } \mathcal{B}(\mathbb{R}) \quad \text{(countable additivity)}$$
+
+where $B + t = \{x + t : x \in B\}$ denotes the translation of $B$ by $t$. Any measure satisfying all three properties on $\mathcal{B}(\mathbb{R})$ must equal $\lambda$. These three properties together are exactly the registry office's three requirements from the story — and the uniqueness theorem is the formal proof that there is only one consistent land registry.
+
+In $\mathbb{R}^n$, the Lebesgue measure $\lambda^n$ is the unique translation-invariant measure satisfying:
+
+$$\lambda^n([a_1,b_1] \times \cdots \times [a_n,b_n]) = \prod_{i=1}^{n}(b_i - a_i)$$
+
+assigning to each rectangular box its volume. In $\mathbb{R}^2$ this is area, in $\mathbb{R}^3$ this is volume, and in $\mathbb{R}^n$ for $n > 3$ it is the $n$-dimensional volume that generalizes both.
+
+---
+
+### Null Sets and Almost Everywhere
+
+A set $N \in \mathcal{B}(\mathbb{R})$ is called a **null set** (or **Lebesgue null set**) if $\lambda(N) = 0$. The canonical examples are:
+
+$$\lambda(\{x\}) = 0 \quad \text{for any single point } x$$
+$$\lambda(A) = 0 \quad \text{for any countable set } A$$
+$$\lambda(\text{Cantor set}) = 0 \quad \text{despite being uncountable}$$
+
+The last example is striking: the Cantor set is constructed by repeatedly removing the middle third of intervals, and although it is uncountable — it has the same cardinality as $\mathbb{R}$ — it has Lebesgue measure zero. Size in the sense of cardinality and size in the sense of measure are entirely different concepts.
+
+A property $P(x)$ is said to hold **almost everywhere** (abbreviated **a.e.**), or **$\mu$-almost everywhere** when the measure needs to be specified, if the set of points where it fails is a null set:
+
+$$P(x) \text{ holds a.e.} \iff \lambda(\{x : P(x) \text{ is false}\}) = 0$$
+
+This language appears throughout analysis and probability. Two functions $f$ and $g$ are equal almost everywhere — written $f = g$ a.e. — if $\lambda(\{x : f(x) \neq g(x)\}) = 0$. In $L^p$ spaces, functions that agree almost everywhere are identified as the same element of the space — this is why $L^p$ elements are technically equivalence classes of functions rather than individual functions, a subtlety that the norm $\|f\|_{L^p}$ enforces by satisfying $\|f\|_{L^p} = 0 \iff f = 0$ a.e.
+
+---
+
+### The Lebesgue Integral
+
+With the measure in place, the Lebesgue integral can now be constructed rigorously. The construction proceeds in three stages, each building on the previous.
+
+**Stage 1 — Simple Functions.** A **simple function** is a finite linear combination of indicator functions of measurable sets:
+
+$$\phi(x) = \sum_{k=1}^{n} c_k \mathbf{1}_{A_k}(x)$$
+
+where $c_k \geq 0$ are non-negative constants and $A_k \in \mathcal{F}$ are measurable sets. The Lebesgue integral of a simple function is defined by:
+
+$$\int \phi \, d\mu = \sum_{k=1}^{n} c_k \mu(A_k)$$
+
+This is the formal version of the level-set idea from the story: instead of slicing the domain into thin vertical strips, you slice the range into levels $c_k$ and weight each level by the measure of its preimage $A_k$.
+
+**Stage 2 — Non-negative Measurable Functions.** For a non-negative measurable function $f \geq 0$, the Lebesgue integral is defined as:
+
+$$\int f \, d\mu = \sup\left\{ \int \phi \, d\mu : \phi \text{ simple}, \; 0 \leq \phi \leq f \right\}$$
+
+You approximate $f$ from below by simple functions and take the supremum of their integrals. The key theorem here is the **Monotone Convergence Theorem**: if $(f_n)$ is an increasing sequence of non-negative measurable functions converging pointwise to $f$, then:
+
+$$\lim_{n \to \infty} \int f_n \, d\mu = \int f \, d\mu$$
+
+You can pass the limit through the integral — a luxury that Riemann integration does not always permit.
+
+**Stage 3 — General Measurable Functions.** For a general measurable function $f$, decompose it into positive and negative parts:
+
+$$f^+(x) = \max(f(x), 0), \qquad f^-(x) = \max(-f(x), 0)$$
+
+so that $f = f^+ - f^-$ with both $f^+, f^- \geq 0$. Then:
+
+$$\int f \, d\mu = \int f^+ \, d\mu - \int f^- \, d\mu$$
+
+provided at least one of the two integrals is finite. The function $f$ is called **Lebesgue integrable** if both $\int f^+ \, d\mu < \infty$ and $\int f^- \, d\mu < \infty$, which is equivalent to $\int |f| \, d\mu < \infty$. The space of Lebesgue integrable functions is precisely $L^1(\mu)$ from the Banach space discussion in Subtopic 3 of Topic 1.
+
+---
+
+### The Dominated Convergence Theorem
+
+The most important theorem for the roadmap — the result that makes Lebesgue integration genuinely superior to Riemann integration for analysis and probability — is the **Dominated Convergence Theorem** (DCT). It states: if $(f_n)$ is a sequence of measurable functions converging pointwise almost everywhere to $f$, and if there exists an integrable function $g$ satisfying $|f_n(x)| \leq g(x)$ almost everywhere for all $n$, then:
+
+$$\lim_{n \to \infty} \int f_n \, d\mu = \int f \, d\mu$$
+
+The function $g$ is the dominating function — it acts as an envelope that prevents the $f_n$ from escaping to infinity. Under this single condition, the limit passes through the integral. This theorem is used in virtually every convergence argument in modern analysis, probability theory, and the study of generative models. Every time someone exchanges a limit and an integral in the roadmap, the DCT is the justification.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 201 (Advanced Calculus), you computed Riemann integrals of continuous and piecewise continuous functions. The Lebesgue integral agrees with the Riemann integral on every function for which the Riemann integral exists — they produce the same number. What the Lebesgue integral adds is the ability to integrate functions that the Riemann framework cannot handle, like the indicator of the rationals, and the ability to pass limits through integrals under the mild DCT condition rather than the stringent uniform convergence required by Riemann theory. In MATH 217 (ODEs and PDEs), every solution formula involving an integral is a Lebesgue integral — the Riemann interpretation works for smooth solutions, but the Lebesgue interpretation is what makes weak solutions and distributional derivatives rigorous. In MATH 208, every expectation $E[X] = \int x \, dP$ is a Lebesgue integral with respect to the probability measure $P$ — the notation $dP$ means exactly the integration theory you have now built.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the land registry story has a precise mathematical address. Let us walk through them one by one, until the registry office, the rational-valued plot, and the level-set revolution are completely fused with the formalism.
+
+---
+
+**The land registry office itself — the institution charged with assigning consistent areas to plots — is the measure space $(\Omega, \mathcal{F}, \mu)$.** The three components map directly onto the three components of the registry. The sample space $\Omega$ is the full terrain — every point in the valley that could conceivably belong to a plot. The $\sigma$-algebra $\mathcal{F}$ is the registry's list of legally registrable plots — the Borel sets, the measurable subsets that are allowed to receive an official area. The measure $\mu$ is the area function itself — the rule that assigns a non-negative number to every registered plot. The triple $(\Omega, \mathcal{F}, \mu)$ packages all three components into a single coherent object, and no component can be removed without the system collapsing.
+
+**The three requirements of the registry — additivity, translation invariance, and unit normalization — are the three defining properties of the Lebesgue measure $\lambda$.** The requirement that splitting a plot into non-overlapping pieces preserves total area is countable additivity: $\lambda(\bigsqcup_{n=1}^\infty A_n) = \sum_{n=1}^\infty \lambda(A_n)$. The requirement that two congruent plots have the same area regardless of location is translation invariance: $\lambda(B + t) = \lambda(B)$ for all $t \in \mathbb{R}$. The requirement that the unit square has area exactly one is the length normalization: $\lambda([a,b]) = b - a$, with $\lambda([0,1]) = 1$ as the canonical instance. The uniqueness theorem — that these three requirements pin down $\lambda$ completely — is the formal proof that there is exactly one honest land registry on the Borel sets of $\mathbb{R}$.
+
+---
+
+**The plot $Q$ whose boundary is defined by rational $x$-coordinates — the one that broke the Riemann framework — is the indicator function $\mathbf{1}_Q$ of the rationals in $[0,1]$.** It is a perfectly well-defined measurable function: $Q = \mathbb{Q} \cap [0,1]$ is a Borel set, being a countable union of singletons $\{q\}$, each of which is a closed set and hence Borel. The function $\mathbf{1}_Q$ is Borel measurable because the preimage of every Borel set under it is either $Q$, $Q^c$, $[0,1]$, or $\emptyset$ — all Borel sets. The plot exists. The function is measurable. The Riemann framework simply cannot compute its area.
+
+**The Riemann failure — the upper sum always equalling 1 and the lower sum always equalling 0 — is the statement that $\mathbf{1}_Q$ is not Riemann integrable.** The Riemann upper sum uses the supremum of $\mathbf{1}_Q$ on each interval, which is always 1 because every interval contains a rational. The Riemann lower sum uses the infimum, which is always 0 because every interval contains an irrational. The upper and lower Darboux sums never converge to the same value regardless of how fine the partition becomes, so the Riemann integral does not exist. The framework fails not because the function is pathological in any deep sense, but because the Riemann approximation scheme operates at the wrong scale — it cannot see the difference between a countable and an uncountable set within each interval.
+
+**Lebesgue's level-set revolution — slicing the range instead of the domain — is the construction of the Lebesgue integral via simple functions.** Instead of asking "what is the height of $\mathbf{1}_Q$ at each point $x$?", Lebesgue asks "what is the measure of the set of points where $\mathbf{1}_Q$ equals 1?" The answer is $\lambda(\mathbb{Q} \cap [0,1]) = 0$, because the rationals are a countable set and every countable set has Lebesgue measure zero. The simple function decomposition makes this precise: $\mathbf{1}_Q = 1 \cdot \mathbf{1}_Q + 0 \cdot \mathbf{1}_{Q^c}$, and the integral is $1 \cdot \lambda(Q) + 0 \cdot \lambda(Q^c) = 1 \cdot 0 + 0 \cdot 1 = 0$. The level-set approach and the simple function formula are the same computation, stated in two different registers.
+
+---
+
+**The three-stage construction of the Lebesgue measure — intervals, open sets, general Borel sets — is the registry expanding its operations outward from the simplest plots to the most general ones.** The ground floor assigns lengths to intervals: $\lambda([a,b]) = b-a$. The first floor extends to open sets by writing them as countable disjoint unions of intervals and summing lengths. The general floor extends to all Borel sets via the outer measure construction — approximating each Borel set from the outside by countable covers of open intervals, summing their lengths, and taking the infimum. The Carathéodory Extension Theorem is the administrative guarantee that this outer approximation produces a genuine measure on the full Borel $\sigma$-algebra — that the registry's expansion is consistent at every stage.
+
+**The outer measure formula $\lambda(B) = \inf\{\sum_{n=1}^\infty (b_n - a_n) : B \subseteq \bigcup_{n=1}^\infty (a_n, b_n)\}$ is the registry approximating an irregular plot from the outside by covering it with the simplest possible registered plots — open intervals.** The infimum is the tightest such approximation. For a well-behaved plot like a closed interval $[a,b]$, the infimum is achieved exactly: no cover of open intervals can have total length less than $b-a$. For a pathological set like the Vitali set, no consistent value can be assigned — the infimum of the outer approximations, combined with the demands of translation invariance and countable additivity, produces a contradiction. The Vitali set is the plot that the registry legally cannot register, not out of bureaucratic failure, but out of mathematical necessity.
+
+---
+
+**The null sets — the plots of area zero — are the formal version of the registry's category for land that exists but has no taxable area.** A single point $\{x\}$ has measure zero: $\lambda(\{x\}) = 0$. The rationals $\mathbb{Q}$ have measure zero: $\lambda(\mathbb{Q}) = 0$. The Cantor set has measure zero despite being uncountable — it is the precise formal example that separates the notion of size-by-cardinality from size-by-measure. The Cantor set has as many points as the real line, but Lebesgue measure sees it as having no width at all. Cardinality and measure are two entirely different ways of asking "how large is this set?", and the roadmap uses measure throughout, not cardinality.
+
+**The almost everywhere language — "$P(x)$ holds a.e." — is the registry's formal statement that exceptions on null sets do not affect official area calculations.** Two functions $f = g$ a.e. means the set where they disagree has measure zero — they agree on all of the terrain except possibly a countable or Cantor-like collection of points, which contributes nothing to any integral. In $L^p$ spaces, functions that agree almost everywhere are identified as the same element, because their $L^p$ norms are equal: $\|f - g\|_{L^p} = (\int |f-g|^p \, d\lambda)^{1/p} = 0$ when $f = g$ a.e. The almost everywhere equivalence class is the correct notion of equality for integrable functions — not pointwise equality, but equality up to measure-zero exceptions.
+
+---
+
+**The Monotone Convergence Theorem is the registry's guarantee that area calculations are stable under increasing approximations.** If you approximate a plot from below by a sequence of smaller registered plots $A_1 \subseteq A_2 \subseteq \cdots$ whose union is the target plot $A$, the areas $\lambda(A_n)$ converge to $\lambda(A)$. This is continuity from below in its measure-theoretic form, and it is what makes the supremum definition of the Lebesgue integral for non-negative functions well-defined: the supremum over simple functions approximating $f$ from below is achieved as a limit, not merely approached.
+
+**The Dominated Convergence Theorem is the registry's guarantee that area calculations are stable under pointwise limits, provided a bounding envelope exists.** If a sequence of functions $f_n$ converges almost everywhere to $f$, and if all of them fit under a single integrable roof $g$ — meaning $|f_n| \leq g$ a.e. for all $n$ — then the integrals converge: $\int f_n \, d\mu \to \int f \, d\mu$. The dominating function $g$ is the envelope that prevents the sequence from escaping to infinity and corrupting the limit exchange. In the roadmap, every time you see a limit passed through an integral — in the derivation of score matching objectives, in the proof that the Sinkhorn algorithm converges, in the analysis of neural ODE solutions — the DCT is the invisible hand making it legitimate.
+
+---
+
+**The connection to MATH 201 (Advanced Calculus) is now fully explicit.** Every Riemann integral you computed for a continuous function was also a Lebesgue integral — the two agree on all Riemann-integrable functions. What you can now do that MATH 201 could not is integrate functions like $\mathbf{1}_Q$, pass limits through integrals under the DCT condition rather than uniform convergence, and work with probability measures on continuous spaces without contradiction. The Lebesgue integral is not a replacement for the Riemann integral — it is a completion of it, in exactly the same sense that $\mathbb{R}$ is a completion of $\mathbb{Q}$: every hole that the Riemann framework left open has been filled.
+
+**The connection to MATH 208 (Statistics and Probability) is equally direct.** Every expectation you computed — $E[X] = \int x \, dP$, $E[f(X)] = \int f(x) \, dP$ — is a Lebesgue integral with respect to the probability measure $P$ on $(\mathbb{R}, \mathcal{B}(\mathbb{R}))$. The notation $dP$ means exactly the integration theory you have now built: integrate $f$ against the measure $P$, using simple function approximations and the level-set construction. The variance formula $\text{Var}(X) = E[X^2] - (E[X])^2$, the moment generating function, the characteristic function — every one of these is a Lebesgue integral, and their well-definedness depends on the functions being in $L^1(P)$ or $L^2(P)$, which are the Banach and Hilbert spaces from Topic 1.
+
+---
+
+**Looking forward across the roadmap**, the Lebesgue measure and integral are the computational foundation of everything that follows. In Phase 1, the cost functional of Optimal Transport — the quantity you minimize to find the Wasserstein distance — is a Lebesgue integral: $\int c(x,y) \, d\pi(x,y)$, where $\pi$ is a coupling measure and $c$ is a cost function. The Kantorovich duality transforms this into a dual problem involving Lebesgue integrals of potential functions. In Phase 2, the convolution operations in graph neural networks and the Laplacian eigenmaps are defined using integrals against measures on graphs and manifolds — all instances of the Lebesgue framework applied to non-Euclidean spaces. In Phase 3, the score function $\nabla \log p(x)$ only exists as a well-defined object because $p(x)$ is a Lebesgue integrable function — a member of $L^1(\lambda)$ — and the score matching objective is a Lebesgue integral of the squared norm of the score estimation error. The Radon-Nikodym theorem, coming next, is the result that turns the abstract measure $P$ into the concrete density function $p(x)$ that the score function differentiates.
+
+Every probability statement on the roadmap is a Lebesgue integral in disguise. The land registry office — with its disciplined list of registrable plots, its unique and consistent area function, and its level-set philosophy — is the silent foundation on which all of modern probability and generative AI stands.
+
+---
+---

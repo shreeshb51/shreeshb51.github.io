@@ -1,0 +1,379 @@
+# Topic 1 - The Monge Problem: The Search for a Deterministic Map
+
+## Introduction
+
+You have spent all of Phase 0 building the mathematical language for probability distributions — how to assign them sizes, how to integrate against them, how to compare them, how to move them through transformations. Every tool you built was, in some sense, preparation for the question you are now ready to ask in full generality: given two probability distributions $\mu$ and $\nu$ on the same space, what is the most efficient way to transform one into the other?
+
+The Monge problem is the original, deterministic answer to this question. It asks for a single function — a transport map $T$ — that moves every grain of mass from its starting location to a destination, such that the resulting rearrangement of mass exactly matches the target distribution, and such that the total cost of all these individual movements is as small as possible.
+
+The elegance of the Monge formulation is that it asks for something geometrically concrete and physically intuitive: a deterministic assignment, one destination per source, moving mass as efficiently as possible. The difficulty of the Monge formulation is that this concreteness makes the problem hard. The push-forward constraint $T_\#\mu = \nu$ — the requirement that applying $T$ to every grain of mass in $\mu$ produces exactly the distribution $\nu$ — is a nonlinear, infinite-dimensional constraint on the map $T$. The optimization is non-convex. Standard convex optimization tools from Chapter 2 of Phase 0 do not directly apply. And in many cases, no Monge map exists at all — for instance, if $\mu$ is a single point mass and $\nu$ is spread over two locations, there is no single function that can split the mass at the source.
+
+Despite these difficulties, the Monge problem has a beautiful and complete solution in the most important special case — the quadratic cost $c(x,y) = \|x-y\|_2^2$ when $\mu$ is absolutely continuous. This is the **Brenier theorem**, and it is one of the deepest results in all of Optimal Transport. Brenier proved that when the cost is quadratic and the source measure is absolutely continuous, the unique optimal Monge map is the gradient of a convex function: $T = \nabla\phi$ for some convex $\phi: \mathbb{R}^n \to \mathbb{R}$. The transport map does not just minimize cost — it is geometrically canonical, arising from the gradient of a single scalar convex potential. This connection between optimal transport and convex analysis — between the cheapest way to move mass and the gradient of a convex function — is the thread that runs from the Monge problem all the way to the Rectified Flows of Phase 3.
+
+This topic has three subtopics that develop the Monge problem from the ground up.
+
+The first subtopic is **the Monge formulation** — the precise mathematical statement of the problem, the push-forward constraint and what it means geometrically, the class of admissible transport maps, and the basic existence questions. Why does a Monge map exist in some cases and not others? What is the relationship between the existence of a Monge map and the absolute continuity of the source measure? These questions motivate the Kantorovich relaxation of the next topic, but they also reveal the geometric content of the Monge problem before any relaxation.
+
+The second subtopic is the **Brenier theorem** — the characterization of the optimal Monge map for quadratic cost as the gradient of a convex function. The Brenier map $T = \nabla\phi$ is not just optimal — it is the unique optimal coupling that is a deterministic map, and it is symmetric: the map from $\nu$ to $\mu$ is $(\nabla\phi)^{-1} = \nabla\phi^*$, the gradient of the Legendre-Fenchel conjugate. The Brenier theorem connects Optimal Transport to convex analysis through the deepest possible link: the optimal map is a subdifferential of a convex function, and the Legendre-Fenchel transform exchanges the roles of source and target.
+
+The third subtopic is **the polar factorization theorem** — Brenier's deeper result that every sufficiently regular vector field $u: \mathbb{R}^n \to \mathbb{R}^n$ can be uniquely factored as $u = \nabla\phi \circ s$, where $\nabla\phi$ is the gradient of a convex function (the Brenier map from the push-forward of the Lebesgue measure under $u$ back to the Lebesgue measure) and $s$ is a measure-preserving map. This is the vector field analogue of the polar decomposition of matrices — gradient of convex function plays the role of positive definite symmetric matrix, and measure-preserving map plays the role of orthogonal matrix. The polar factorization theorem is the geometric foundation of fluid dynamics on the diffeomorphism group and appears in the formulation of incompressible fluid mechanics as geodesics on the group of volume-preserving diffeomorphisms.
+
+By the end of this topic, when you see the neural network generator of a normalizing flow or a flow matching model, you will recognize it as an approximation to a Monge map — a deterministic transport map pushing a noise distribution to a data distribution. When the generator is trained to minimize the squared distance cost $\mathbb{E}[\|T(Z) - X\|_2^2]$ subject to $T_\#\mu_Z = \mu_X$, the optimal generator is the Brenier map — the gradient of a convex potential. The Monge problem is not history — it is the geometric ideal that every deterministic generative model is approximating.
+
+**ALL THREE SUBTOPICS ARE TREATED AS A SINGLE TOPIC FOR EASY COMPREHENSION.**
+
+---
+
+## Layer 1 (Story)
+
+You are the logistics director for the Nepal Food Corporation, and the monsoon has just ended badly. Drought has struck the eastern hill districts — Taplejung, Panchthar, Ilam — leaving their grain storage facilities nearly empty. Meanwhile, an unusually productive harvest in the western Terai districts — Kanchanpur, Kailali, Bardiya — has overfilled those storage facilities to capacity. The national food security mandate is clear: move grain from the western surplus to the eastern deficit, ensuring every district receives exactly the grain it needs.
+
+You have a fleet of trucks, a road network, and a detailed map showing exactly how much surplus grain sits at each western storage facility and exactly how much deficit grain each eastern district needs. The total surplus equals the total deficit — no grain will be created or destroyed, only moved. Your job is to design the transportation plan that moves all the grain from surplus to deficit locations at minimum total transportation cost, where cost is measured as tonnes of grain times kilometres traveled.
+
+This is the Monge problem. And before you begin solving it, you need to understand exactly what kind of answer you are looking for.
+
+---
+
+**The deterministic assignment requirement**
+
+Your first instinct is to draw arrows on the map — one arrow from each surplus location to some deficit location, specifying exactly where that location's grain goes. The plan must be deterministic: every grain stored at Kanchanpur must go to a single specific destination. You cannot split the Kanchanpur grain between Taplejung and Panchthar simultaneously, sending half to each. Either Kanchanpur's grain goes to Taplejung, or it goes to Panchthar — but not both.
+
+This deterministic requirement is the defining feature of the Monge formulation. You are looking for a function $T$ — a transport map — that assigns to every surplus location $x$ a single deficit destination $T(x)$. The map is a genuine function in the mathematical sense: each input has exactly one output.
+
+The transportation cost of a specific assignment $T$ is the total cost across all surplus locations: you take the amount of grain at each location $x$, multiply by the distance from $x$ to its assigned destination $T(x)$, and sum over all surplus locations. You want the assignment $T$ that minimizes this total cost while satisfying the fundamental constraint: the amount of grain arriving at each deficit location must exactly equal that location's need.
+
+This constraint — that the resulting distribution of grain across deficit locations exactly matches the demand distribution — is the push-forward constraint $T_\#\mu = \nu$. The source distribution $\mu$ describes how the surplus is distributed across western locations. The target distribution $\nu$ describes how the deficit is distributed across eastern locations. The push-forward condition says: if you apply the transport map $T$ to every grain particle in $\mu$, the resulting distribution of those particles exactly equals $\nu$.
+
+---
+
+**The first difficulty: when does a Monge map exist?**
+
+You begin designing your plan with a small example. Suppose you have exactly two surplus locations — Kanchanpur with 500 tonnes and Kailali with 500 tonnes — and two deficit locations — Taplejung needing 700 tonnes and Panchthar needing 300 tonnes.
+
+You need to assign each surplus location to a single deficit location. There are only two options. Option A: Kanchanpur goes to Taplejung and Kailali goes to Panchthar. Option B: Kanchanpur goes to Panchthar and Kailali goes to Taplejung.
+
+But wait. Kanchanpur has 500 tonnes and Taplejung needs 700 tonnes. If you send Kanchanpur's 500 tonnes to Taplejung, Taplejung still needs 200 more tonnes from somewhere — but Kailali is supposed to be going to Panchthar. There is no way to satisfy the demand with a deterministic Monge map in this discrete example, because no single assignment of surplus locations to deficit locations can simultaneously match all the demands when the individual surpluses and deficits do not align perfectly.
+
+This reveals the first fundamental difficulty of the Monge problem: a deterministic transport map that satisfies the push-forward constraint $T_\#\mu = \nu$ may not exist, or may be highly constrained in ways that prevent genuine cost optimization.
+
+In the continuous case — where the surplus is a continuous distribution of grain spread across the western Terai, not concentrated at discrete facilities — this difficulty largely disappears. A continuous source distribution can be mapped to any target distribution by a deterministic map, because you can split continuous regions of surplus mass arbitrarily finely and assign each infinitesimally thin sliver to a different destination. When $\mu$ is absolutely continuous — when it has a density function $f$ with respect to the Lebesgue measure, spreading mass continuously across the source region — a Monge map always exists for any target distribution $\nu$. The absolute continuity of $\mu$ is the mathematical condition that prevents the mass-splitting problem: an absolutely continuous measure assigns zero mass to every single point, so there is no discrete concentration of mass at a single location that would need to be split.
+
+---
+
+**The second difficulty: which Monge map is optimal?**
+
+Even when the Monge map exists, finding the optimal one is genuinely hard. The space of all valid transport maps is enormous — any bijection from the source region to the target region that satisfies the push-forward constraint is a candidate — and the cost function is non-convex over this space. There is no guarantee that gradient descent finds the global minimum, and no easy certificate of optimality.
+
+Your logistics team debates two natural heuristics. The first is the greedy nearest-neighbor assignment: for each surplus location, assign it to the closest deficit location with remaining capacity. The second is the balanced assignment: try to distribute the transport work evenly, never sending grain much farther than necessary.
+
+Neither heuristic is guaranteed to be optimal. And remarkably, the optimal assignment has a structure that neither heuristic captures: it is the plan that never crosses its own transport routes. If you draw the optimal transport plan on a map, the arrows from surplus to deficit never intersect.
+
+---
+
+**The no-crossing principle**
+
+Your senior logistics consultant — a mathematician who consults for the Food Corporation — explains this non-crossing property with a compelling argument.
+
+Suppose your current plan has two crossings: grain from location $x_1$ is going to $y_2$, and grain from location $x_2$ is going to $y_1$, with the paths crossing at some point in the middle. Consider what happens if you swap the destinations: send $x_1$'s grain to $y_1$ and $x_2$'s grain to $y_2$ instead.
+
+The total transport cost of the original plan is proportional to $d(x_1, y_2) + d(x_2, y_1)$. The cost of the swapped plan is proportional to $d(x_1, y_1) + d(x_2, y_2)$. By the triangle inequality and the geometry of crossing paths, the swapped plan is never more expensive and is generically cheaper: $d(x_1, y_1) + d(x_2, y_2) \leq d(x_1, y_2) + d(x_2, y_1)$ whenever the paths cross. Crossing paths are suboptimal — the optimal plan uncrosses them.
+
+This no-crossing principle — that the optimal transport map never has two source-destination pairs whose paths intersect — is the geometric heart of optimal transport in one dimension. In one dimension, it means the optimal map is monotone: the grain from the leftmost surplus location goes to the leftmost deficit location, the grain from the second-leftmost goes to the second-leftmost deficit location, and so on. The optimal Monge map in one dimension is completely determined by this monotone rearrangement, and it can be computed in closed form using the quantile functions of the two distributions.
+
+In higher dimensions, the non-crossing principle takes a more subtle form — but it retains the same geometric content. The optimal transport map never wastes effort by sending mass in conflicting directions. Every grain takes the most direct possible path, given the constraints imposed by all the other grains' paths.
+
+---
+
+**The Brenier theorem: the optimal map is a gradient**
+
+Your consultant now reveals the deep mathematical structure of the no-crossing principle in multiple dimensions.
+
+Consider the case where the transportation cost is the squared Euclidean distance: moving grain from location $x$ to location $T(x)$ costs $\|x - T(x)\|_2^2$ — the square of the distance traveled. This quadratic cost penalizes long journeys disproportionately, strongly preferring short local movements over long cross-country hauls.
+
+For this quadratic cost, the no-crossing principle takes a remarkably clean form. The optimal Monge map $T$ must satisfy the condition that for any two source locations $x_1$ and $x_2$:
+
+$$\langle x_1 - x_2, T(x_1) - T(x_2)\rangle \geq 0$$
+
+The destinations $T(x_1)$ and $T(x_2)$ must move in the same direction as the sources $x_1$ and $x_2$ — the map is monotone in the sense that points that are far apart in the source go to points that are far apart in the destination. This monotonicity condition in multiple dimensions is equivalent to the map being the gradient of a convex function.
+
+A map $T: \mathbb{R}^n \to \mathbb{R}^n$ is monotone in this sense if and only if $T = \nabla\phi$ for some convex function $\phi: \mathbb{R}^n \to \mathbb{R}$. The gradient of a convex function always points from less-convex to more-convex regions, and this directional consistency is exactly the multi-dimensional version of the no-crossing principle.
+
+Your consultant states the Brenier theorem: when the cost is quadratic and the source distribution $\mu$ is absolutely continuous, the unique optimal Monge map is $T = \nabla\phi$ for a convex function $\phi$ — the Brenier potential. There is no other optimal map. The optimal plan is uniquely determined by a single scalar function $\phi$, whose gradient field $\nabla\phi$ describes where every grain of source mass must go.
+
+---
+
+**The Brenier potential and the Legendre-Fenchel connection**
+
+The Brenier potential $\phi$ and its Legendre-Fenchel conjugate $\phi^*$ are not just analytically convenient — they encode the entire transport structure. The optimal map from $\mu$ to $\nu$ is $T = \nabla\phi$. The optimal inverse map from $\nu$ back to $\mu$ is $T^{-1} = \nabla\phi^*$ — the gradient of the conjugate potential. The two potentials are related by the Legendre-Fenchel duality from Chapter 3 of Phase 0: $\phi^*(y) = \sup_x\{\langle x,y\rangle - \phi(x)\}$.
+
+In the logistics story: the Brenier potential $\phi$ is the value function that assigns to each western surplus location $x$ a scalar measure of its "transport value" — how much it costs, in terms of the optimal transport plan, to access that location's grain. The gradient $\nabla\phi(x)$ is the destination for that location's grain. The conjugate potential $\phi^*$ assigns to each eastern deficit location $y$ a scalar measure of its "demand value" — the dual price of receiving grain at that location. The gradient $\nabla\phi^*(y)$ is the source location from which that deficit's grain should come.
+
+The Legendre-Fenchel duality between $\phi$ and $\phi^*$ is the mathematical expression of the buyer-seller duality in the grain market: the value of grain at source locations and the value of grain at deficit locations are dual to each other, related by the transport cost structure.
+
+---
+
+**The polar factorization: the deep generalization**
+
+Your consultant now gestures toward a deeper result. Any assignment of trucks to routes — any vector field on the map describing which direction each truck travels — can be decomposed into two independent components. The first component is the optimal transport part: the part that actually moves grain from surplus to deficit, described by a Brenier map. The second component is the circulation part: the part that moves trucks around without changing the net distribution of grain, described by a measure-preserving rearrangement.
+
+This decomposition — the polar factorization of a vector field into a gradient-of-convex-function part and a volume-preserving part — is the Brenier polar factorization theorem. It is the vector field version of the matrix polar decomposition you encountered in Chapter 4 of Phase 0: just as any matrix decomposes into a positive definite part (pure stretch) and an orthogonal part (pure rotation), any vector field decomposes into a gradient-of-convex part (optimal transport, the "stretch") and a volume-preserving part (circulation, the "rotation"). The Brenier map plays the role of the positive definite symmetric matrix. The measure-preserving rearrangement plays the role of the orthogonal matrix.
+
+---
+
+Here is the break moment. The naive assumption is that the optimal Monge map for any cost function must be the gradient of a convex function — that the Brenier structure is universal, not special to the quadratic cost.
+
+This breaks immediately for other cost functions. For the linear cost $c(x,y) = \|x-y\|_1$ — the $L_1$ distance — the optimal transport map is not generally the gradient of a convex function. The $L_1$ optimal map has a very different geometric structure: it transports mass along axis-aligned directions, never mixing coordinates. For the cost $c(x,y) = \mathbf{1}[x \neq y]$ — the zero-one cost that penalizes any movement — the optimal map is the identity whenever possible. For costs that are not convex functions of $x-y$, the optimal map can be highly non-unique, multivalued, and geometrically irregular.
+
+The Brenier theorem is a special property of the quadratic cost — it is the cost that makes the optimal map a gradient field, connecting Optimal Transport to convex analysis. The quadratic cost's special role is not a coincidence: it is the cost that makes the Wasserstein-2 distance the Riemannian distance on the Wasserstein manifold, whose geodesics are the displacement interpolations of Phase 1's third chapter. The quadratic cost is the cost that makes the geometry work out cleanly, and the Brenier theorem is the precise statement of that clean geometry.
+
+---
+
+Hold three pictures simultaneously.
+
+The grain transport on the Nepal map: surplus locations in the west, deficit locations in the east, arrows showing where each location's grain goes, with the optimal plan never crossing its own arrows — the Monge map as a deterministic assignment with the no-crossing property.
+
+The Brenier potential $\phi$ and its gradient field $\nabla\phi$: a single convex scalar function defined over the western Terai, whose gradient at each point gives the optimal destination for the grain at that point — the Brenier theorem as the reduction of the transport map to a single convex function.
+
+The polar factorization: any truck routing plan decomposed into the optimal transport part (gradient of convex function, the "positive definite stretch") and the circulation part (volume-preserving rearrangement, the "orthogonal rotation") — the Brenier polar factorization as the vector-field analogue of the matrix polar decomposition.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the precise statement of the Monge problem, the existence and non-existence of Monge maps, the Brenier theorem and its proof strategy, the polar factorization theorem, the connection to the Monge-Ampère equation, and the relationship between the Monge problem and the Kantorovich relaxation that motivates the next topic.
+
+### The Monge Problem — Precise Statement
+
+Let $(\mathcal{X}, d)$ and $(\mathcal{Y}, d)$ be Polish metric spaces (complete separable metric spaces) and let $\mu \in \mathcal{P}(\mathcal{X})$ and $\nu \in \mathcal{P}(\mathcal{Y})$ be Borel probability measures. Let $c: \mathcal{X} \times \mathcal{Y} \to [0,\infty]$ be a lower semicontinuous cost function.
+
+The **Monge problem** is:
+
+$$\inf_{T: T_\#\mu = \nu} \int_\mathcal{X} c(x, T(x)) \, d\mu(x)$$
+
+where the infimum is over all Borel measurable maps $T: \mathcal{X} \to \mathcal{Y}$ satisfying the **push-forward constraint**:
+
+$$T_\#\mu = \nu \iff \mu(T^{-1}(B)) = \nu(B) \quad \forall B \in \mathcal{B}(\mathcal{Y})$$
+
+The push-forward constraint says: the proportion of $\mu$-mass sent to any target region $B$ equals $\nu(B)$. A map $T$ satisfying $T_\#\mu = \nu$ is called a **transport map** from $\mu$ to $\nu$.
+
+The infimum in the Monge problem is taken over the set:
+
+$$\mathcal{T}(\mu,\nu) = \{T: \mathcal{X} \to \mathcal{Y} \text{ Borel measurable} : T_\#\mu = \nu\}$$
+
+When $\mathcal{T}(\mu,\nu)$ is empty — when no transport map exists — the Monge problem is infeasible and the infimum is $+\infty$ by convention.
+
+---
+
+### Existence and Non-Existence of Monge Maps
+
+**Non-existence for discrete measures.** If $\mu = \delta_{x_0}$ (a Dirac mass at a single point) and $\nu = \frac{1}{2}\delta_{y_1} + \frac{1}{2}\delta_{y_2}$ with $y_1 \neq y_2$, then $\mathcal{T}(\mu,\nu) = \emptyset$. Any map $T$ with $T_\#\delta_{x_0} = \delta_{T(x_0)}$ is a Dirac mass at a single point, which cannot equal $\nu$.
+
+More generally, if $\mu$ has an atom — a point $x_0$ with $\mu(\{x_0\}) > 0$ — and $\nu$ does not have an atom of the same mass at any single point, then no Monge map exists.
+
+**Existence for absolutely continuous measures.** When $\mu \ll \lambda^n$ (absolutely continuous with respect to Lebesgue measure on $\mathbb{R}^n$), $\mu$ assigns zero measure to every set of Lebesgue measure zero, and in particular to every singleton: $\mu(\{x\}) = 0$ for all $x$. In this case, transport maps exist in abundance — for any target measure $\nu$, one can construct explicit transport maps (e.g., the Knothe-Rosenblatt rearrangement using conditional quantile functions).
+
+**Theorem (Existence of Transport Maps).** If $\mu \ll \lambda^n$, then $\mathcal{T}(\mu,\nu) \neq \emptyset$ for any $\nu \in \mathcal{P}(\mathbb{R}^n)$.
+
+The proof constructs the Knothe-Rosenblatt map: transport $\mu$ to $\nu$ coordinate by coordinate using conditional quantile functions. The resulting map is measurable and satisfies $T_\#\mu = \nu$.
+
+---
+
+### The Brenier Theorem
+
+The Brenier theorem is the central result of the Monge problem for quadratic cost. It says that when the source is absolutely continuous, the optimal transport map is unique and has a specific algebraic structure.
+
+**Theorem (Brenier, 1991).** Let $\mu, \nu \in \mathcal{P}_2(\mathbb{R}^n)$ (probability measures with finite second moment) and suppose $\mu \ll \lambda^n$. Then:
+
+$$\text{(i)} \quad \inf_{T_\#\mu = \nu} \int \|x-T(x)\|_2^2 \, d\mu(x) = \min_{\pi \in \Pi(\mu,\nu)} \int \|x-y\|_2^2 \, d\pi(x,y)$$
+
+The Monge infimum equals the Kantorovich minimum.
+
+$$\text{(ii)} \quad \text{There exists a unique optimal transport map } T^* \in \mathcal{T}(\mu,\nu).$$
+
+$$\text{(iii)} \quad T^* = \nabla\phi \quad \mu\text{-almost everywhere}$$
+
+for a convex function $\phi: \mathbb{R}^n \to \mathbb{R} \cup \{+\infty\}$ (the **Brenier potential**).
+
+$$\text{(iv)} \quad T^* \text{ is the } \mu\text{-a.e. unique optimal transport map.}$$
+
+**Proof strategy.** The proof proceeds in three steps.
+
+**Step 1 — Kantorovich duality.** By the Kantorovich duality theorem (Topic 4 of this chapter), for quadratic cost:
+
+$$\min_{\pi \in \Pi(\mu,\nu)} \int \|x-y\|_2^2 \, d\pi = \max_{\phi,\psi: \phi(x)+\psi(y) \leq \|x-y\|_2^2} \left\{\int\phi\,d\mu + \int\psi\,d\nu\right\}$$
+
+The optimal dual potentials $(\phi^*, \psi^*)$ exist (by compactness of the dual feasible set under appropriate conditions).
+
+**Step 2 — Complementary slackness.** By KKT complementary slackness, the optimal coupling $\pi^*$ is supported on the set $\{(x,y): \phi^*(x) + \psi^*(y) = \|x-y\|_2^2\}$. For any $(x,y)$ in the support of $\pi^*$, the point $y$ maximizes $\langle x, y\rangle - \frac{1}{2}\|y\|^2 - \psi^*(y)$ over $y$ (after completing the square: $\|x-y\|^2 = \|x\|^2 - 2\langle x,y\rangle + \|y\|^2$). Setting $\tilde\phi(x) = \frac{1}{2}\|x\|^2 - \frac{1}{2}\phi^*(x)$ (a convex function), the optimality condition becomes: $y \in \partial\tilde\phi(x)$ — the subdifferential of a convex function.
+
+**Step 3 — From subdifferential to gradient.** Since $\mu \ll \lambda^n$, the convex function $\tilde\phi$ is differentiable $\mu$-almost everywhere (by Alexandrov's theorem: convex functions are twice differentiable almost everywhere). At differentiability points, the subdifferential is a singleton: $\partial\tilde\phi(x) = \{\nabla\tilde\phi(x)\}$. Therefore the optimal coupling $\pi^*$ is concentrated on $\{(x, \nabla\tilde\phi(x))\}$ — it is the graph of the gradient map $T^* = \nabla\tilde\phi$. Setting $\phi = \tilde\phi$ gives $T^* = \nabla\phi$. $\square$
+
+---
+
+### The Brenier Map — Convexity and Monotonicity
+
+The key algebraic property of the Brenier map $T = \nabla\phi$ is **cyclical monotonicity**: for any finite collection of points $x_1, \ldots, x_k \in \mathbb{R}^n$:
+
+$$\sum_{i=1}^k \langle x_i, T(x_i)\rangle \geq \sum_{i=1}^k \langle x_i, T(x_{i+1})\rangle$$
+
+(indices mod $k$). The optimal map does better than any cyclic permutation of its destinations. In particular, for $k=2$:
+
+$$\langle x_1 - x_2, T(x_1) - T(x_2)\rangle \geq 0$$
+
+This is the **monotonicity** condition — the map does not cross: points that are farther apart in the source are mapped to points that are at least as far apart in the destination (in the inner product sense).
+
+**Theorem.** A Borel map $T: \mathbb{R}^n \to \mathbb{R}^n$ is the gradient of a convex function if and only if it is cyclically monotone.
+
+This is the characterization of Brenier maps: optimal transport maps for quadratic cost are exactly the cyclically monotone maps, and these are exactly the gradients of convex functions. The no-crossing property of the story is the $k=2$ case of cyclical monotonicity.
+
+---
+
+### The Brenier Potential and the Legendre-Fenchel Transform
+
+The Brenier potential $\phi$ and its Legendre-Fenchel conjugate $\phi^*$ satisfy the **dual transport equations**:
+
+$$T = \nabla\phi: \mathbb{R}^n \to \mathbb{R}^n, \quad T_\#\mu = \nu$$
+$$T^{-1} = \nabla\phi^*: \mathbb{R}^n \to \mathbb{R}^n, \quad (T^{-1})_\#\nu = \mu$$
+
+The inverse of the Brenier map from $\mu$ to $\nu$ is the Brenier map from $\nu$ to $\mu$, given by the gradient of the conjugate potential. This follows from the Fenchel equality condition: $y = \nabla\phi(x) \iff x = \nabla\phi^*(y)$.
+
+The Brenier potential satisfies the **Monge-Ampère equation** — a fully nonlinear PDE connecting $\phi$ to the densities $f = d\mu/d\lambda$ and $g = d\nu/d\lambda$:
+
+$$\det(\nabla^2\phi(x)) = \frac{f(x)}{g(\nabla\phi(x))}$$
+
+This equation says: the Jacobian determinant of the transport map $T = \nabla\phi$ — which equals $\det(\nabla^2\phi)$, the determinant of the Hessian of $\phi$ — equals the ratio of the source density to the target density at the transported point. This is the change-of-variables formula for the push-forward: if $T_\#\mu = \nu$, then the density transforms as $f(x) = g(T(x)) |\det DT(x)|$ (from the push-forward density formula of Chapter 1 of Phase 0). For $T = \nabla\phi$, the Jacobian is the Hessian $\nabla^2\phi$, giving the Monge-Ampère equation.
+
+The Monge-Ampère equation is one of the central PDEs of geometric analysis. Its solutions are convex functions, and their regularity theory — when is $\phi$ smooth, how smooth is it — is a deep area of mathematics developed by Caffarelli, Urbas, and others. For the roadmap, the key point is that the Brenier potential satisfies a well-posed PDE that can in principle be solved numerically, connecting Optimal Transport to computational PDE methods.
+
+---
+
+### The One-Dimensional Case
+
+In one dimension ($n=1$), the Monge problem has an explicit solution for any cost function of the form $c(x,y) = h(|x-y|)$ with $h$ strictly convex.
+
+**Theorem.** For $\mu, \nu \in \mathcal{P}(\mathbb{R})$ with cumulative distribution functions $F_\mu$ and $F_\nu$, and any strictly convex cost $h$, the unique optimal Monge map is the **monotone rearrangement**:
+
+$$T^* = F_\nu^{-1} \circ F_\mu$$
+
+where $F_\nu^{-1}(t) = \inf\{y : F_\nu(y) \geq t\}$ is the quantile function of $\nu$.
+
+**Proof.** The monotone map $T^* = F_\nu^{-1} \circ F_\mu$ satisfies $T_\#^*\mu = \nu$ (by the quantile transform). By the rearrangement inequality for strictly convex costs, any non-monotone map has strictly higher cost than the monotone rearrangement — the no-crossing argument of the story made precise. $\square$
+
+The one-dimensional Wasserstein-2 distance is therefore:
+
+$$W_2^2(\mu,\nu) = \int_0^1 |F_\mu^{-1}(t) - F_\nu^{-1}(t)|^2 \, dt$$
+
+the $L^2$ distance between the quantile functions. This is one of the few cases where the Wasserstein distance has a completely explicit formula.
+
+---
+
+### The Polar Factorization Theorem
+
+The Brenier polar factorization theorem generalizes the matrix polar decomposition to infinite-dimensional maps.
+
+**Theorem (Brenier Polar Factorization).** Let $\lambda$ be the Lebesgue measure on a bounded domain $\Omega \subseteq \mathbb{R}^n$ (normalized to a probability measure). For any $u \in L^2(\Omega, \mathbb{R}^n)$ with $u_\#\lambda \ll \lambda$ (the push-forward of Lebesgue measure under $u$ is absolutely continuous), there exists a unique decomposition:
+
+$$u = \nabla\phi \circ s \quad \lambda\text{-a.e.}$$
+
+where:
+- $\phi: \Omega \to \mathbb{R}$ is a convex function (the **convex potential**)
+- $s: \Omega \to \Omega$ is a measure-preserving map ($s_\#\lambda = \lambda$)
+- $\nabla\phi: \Omega \to \mathbb{R}^n$ is the Brenier map from $\lambda$ to $u_\#\lambda$
+
+The decomposition is unique: $\phi$ is uniquely determined (up to constants) and $s = (\nabla\phi)^{-1} \circ u$ is uniquely determined $\lambda$-a.e.
+
+**Comparison with matrix polar decomposition.** For a matrix $A \in \mathbb{R}^{n\times n}$, the polar decomposition is $A = QS$ with $Q$ orthogonal and $S \succ 0$ symmetric. The Brenier polar factorization replaces: $Q$ (orthogonal, measure-preserving on spheres) with $s$ (measure-preserving map), and $S$ (positive definite symmetric, gradient of a quadratic convex function) with $\nabla\phi$ (gradient of a general convex function). Both decompositions factor a general linear/nonlinear map into a "rotation" (measure-preserving) component and a "stretch" (gradient-of-convex) component.
+
+**Application to fluid dynamics.** The group $\text{SDiff}(\Omega)$ of volume-preserving diffeomorphisms of $\Omega$ is the configuration space of an incompressible fluid — each element $s \in \text{SDiff}(\Omega)$ describes the current position of each fluid particle. Arnold showed that ideal incompressible fluid flow is the geodesic on $\text{SDiff}(\Omega)$ equipped with the $L^2$ metric. The Brenier polar factorization projects any diffeomorphism onto the nearest element of $\text{SDiff}(\Omega)$ (the measure-preserving part $s$) and the nearest gradient-of-convex map (the transport part $\nabla\phi$). The fluid dynamics interpretation is: $\nabla\phi$ is the irrotational (potential flow) component and $s$ is the rotational (solenoidal) component of the velocity field.
+
+---
+
+### The Knothe-Rosenblatt Rearrangement
+
+An important alternative to the Brenier map — less optimal but easier to compute — is the **Knothe-Rosenblatt rearrangement**, which transports $\mu$ to $\nu$ coordinate by coordinate using conditional quantile functions.
+
+For measures $\mu$ and $\nu$ on $\mathbb{R}^n$ with densities $f$ and $g$, define:
+
+$$T_1(x_1) = F_{\nu_1}^{-1}(F_{\mu_1}(x_1))$$
+$$T_2(x_1,x_2) = F_{\nu_2|\nu_1(T_1(x_1))}^{-1}(F_{\mu_2|\mu_1(x_1)}(x_2))$$
+$$\vdots$$
+$$T_n(x_1,\ldots,x_n) = F_{\nu_n|\nu_1(T_1),\ldots,\nu_{n-1}(T_{n-1})}^{-1}(F_{\mu_n|\mu_1,\ldots,\mu_{n-1}}(x_n))$$
+
+Each component is a one-dimensional quantile transport of the conditional distribution. The resulting map $T = (T_1,\ldots,T_n)$ satisfies $T_\#\mu = \nu$ and is lower triangular — each component depends only on earlier coordinates. The Knothe-Rosenblatt map is the basis of triangular flows in normalizing flow models and of the transport map used in sequential Monte Carlo methods.
+
+---
+
+### From Monge to Kantorovich — Motivating the Relaxation
+
+The Monge problem's infimum $\inf_{T_\#\mu=\nu}\int c\,dT$ and the Kantorovich problem's minimum $\min_{\pi\in\Pi(\mu,\nu)}\int c\,d\pi$ satisfy:
+
+$$\inf_{T_\#\mu=\nu}\int_\mathcal{X} c(x,T(x))\,d\mu(x) \geq \min_{\pi\in\Pi(\mu,\nu)}\int_{\mathcal{X}\times\mathcal{Y}} c(x,y)\,d\pi(x,y)$$
+
+The Kantorovich minimum is always at most the Monge infimum. This follows because every transport map $T$ induces a coupling $\pi_T = (\text{id},T)_\#\mu$ — the joint distribution concentrated on the graph $\{(x,T(x))\}$ — and $\int c(x,T(x))\,d\mu = \int c\,d\pi_T \geq \min_\pi\int c\,d\pi$.
+
+The Brenier theorem says that for quadratic cost with $\mu \ll \lambda^n$, equality holds: the Monge infimum equals the Kantorovich minimum, and the optimal Kantorovich coupling is induced by the Brenier map. In general, the Kantorovich problem is easier to analyze (convex linear program) and provides a lower bound for the Monge problem. This relationship motivates studying the Kantorovich problem first — which is Topic 2 of this chapter.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 201 (Advanced Calculus), the change-of-variables formula $\int_B f(T(x))|\det DT(x)|\,dx = \int_{T(B)} f(y)\,dy$ is the push-forward formula for absolutely continuous measures — it is the condition $T_\#(f\,d\lambda) = g\,d\lambda$ where $g(y) = f(T^{-1}(y))/|\det DT(T^{-1}(y))|$. The Monge-Ampère equation $\det(\nabla^2\phi) = f/g\circ\nabla\phi$ is this change-of-variables formula applied to the Brenier map $T = \nabla\phi$, with $DT = \nabla^2\phi$. In MATH 217 (ODEs and PDEs), the Monge-Ampère equation $\det(D^2u) = f$ is a fully nonlinear second-order PDE — its theory uses the viscosity solution framework and the regularity theory of convex functions. In MATH 304 (Computational Operations Research), the discrete Monge problem — assigning $n$ supply points to $n$ demand points to minimize total cost — is the assignment problem, solvable in $O(n^3)$ by the Hungarian algorithm. The Kantorovich relaxation of the assignment problem is a linear program with $n^2$ variables and $2n$ constraints — exactly the structure of the discrete Kantorovich problem of Topic 2.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Nepal Food Corporation grain transport story has a precise mathematical address. Let us walk through them one by one, until the trucks, the routes, the no-crossing principle, and the Brenier potential are completely fused with the formalism.
+
+---
+
+**The Nepal Food Corporation's grain transport problem — surplus in the western Terai, deficit in the eastern hills, move grain from one to the other at minimum cost — is the Monge problem $\inf_{T_\#\mu=\nu}\int c(x,T(x))\,d\mu(x)$.** The source distribution $\mu \in \mathcal{P}(\mathbb{R}^2)$ is the spatial distribution of surplus grain across the western Terai — how many tonnes sit at each geographic location. The target distribution $\nu \in \mathcal{P}(\mathbb{R}^2)$ is the spatial distribution of grain deficit across the eastern hills — how many tonnes each location needs. The cost function $c(x,T(x))$ is the transportation cost of moving one tonne of grain from location $x$ to location $T(x)$ — for the quadratic cost, this is $\|x-T(x)\|_2^2$, the squared distance. The Monge problem minimizes the total cost $\int c(x,T(x))\,d\mu(x)$ — the integral of the cost per particle over all source mass — subject to the push-forward constraint $T_\#\mu = \nu$.
+
+**The deterministic assignment — one destination per source location, no splitting of grain between multiple destinations — is the requirement that $T$ be a function, not a relation.** The transport map $T: \mathcal{X} \to \mathcal{Y}$ is a genuine function in the mathematical sense: each input $x$ has exactly one output $T(x)$. The grain at location $x$ goes to a single specific destination $T(x)$, not distributed across multiple destinations. This is the defining feature of the Monge formulation and what distinguishes it from the Kantorovich relaxation of the next topic. The set $\mathcal{T}(\mu,\nu) = \{T: T_\#\mu = \nu\}$ of all valid transport maps is the feasible set of the Monge problem, and the infimum is over this set.
+
+**The push-forward constraint $T_\#\mu = \nu$ — the requirement that the resulting distribution of grain at the destinations exactly matches the deficit distribution $\nu$ — is the mathematical statement of mass conservation.** The condition $\mu(T^{-1}(B)) = \nu(B)$ for all Borel sets $B$ says: the amount of grain sent to any target region $B$ (which is $\mu(T^{-1}(B))$, the source mass at all locations mapped into $B$) equals the deficit at region $B$ (which is $\nu(B)$). No grain is created. No deficit goes unmet. The push-forward constraint is the bookkeeping equation of the grain transport, and the Chapter 1 of Phase 0 topic on push-forward measures ($T_\#\mu$) was built precisely to formalize this constraint.
+
+---
+
+**The non-existence of a Monge map for discrete distributions — the example with Kanchanpur and Kailali sending grain to Taplejung and Panchthar — is the formal theorem that transport maps do not exist when $\mu$ has atoms and $\nu$ does not have matching atoms.** If $\mu = 500\delta_{x_1} + 500\delta_{x_2}$ (500 tonnes at each of two locations) and $\nu = 700\delta_{y_1} + 300\delta_{y_2}$ (700 tonnes needed at one location, 300 at another), then any transport map $T$ must send all of $x_1$'s 500 tonnes to a single destination and all of $x_2$'s 500 tonnes to a single destination — producing a distribution of the form $500\delta_{T(x_1)} + 500\delta_{T(x_2)}$, which can never equal $\nu = 700\delta_{y_1} + 300\delta_{y_2}$ because the atom sizes are wrong. The mass-splitting required to satisfy $T_\#\mu = \nu$ cannot be achieved by any function. The Monge problem is infeasible for discrete sources with non-matching atom sizes — this is the mathematical reason why the Kantorovich relaxation (allowing splitting) is necessary.
+
+**The absolute continuity condition $\mu \ll \lambda^n$ — the requirement that the source distribution is a continuous density spread across the western Terai, not concentrated at discrete storage facilities — is the condition that guarantees transport maps exist and that the Brenier theorem applies.** When $\mu$ has a density $f = d\mu/d\lambda$ — a non-negative integrable function satisfying $\mu(A) = \int_A f(x)\,dx$ — the measure assigns zero mass to every single point: $\mu(\{x\}) = \int_{\{x\}} f\,d\lambda = 0$. This prevents the mass-splitting problem: no single location carries a finite atom of mass that would need to go to a single destination, so infinitesimally thin slivers of mass can be freely distributed to different destinations. The absolute continuity of $\mu$ is the mathematical condition that makes the grain spatially continuous — a density rather than discrete lumps — and this is what makes optimal transport maps both exist and be uniquely determined by the Brenier theorem.
+
+---
+
+**The no-crossing principle — the optimal transport plan never has two routes that cross — is the geometric expression of the cyclical monotonicity condition $\langle x_1-x_2, T(x_1)-T(x_2)\rangle \geq 0$ for the $k=2$ case.** The proof in the story: if grain from $x_1$ goes to $T(x_2)$ and grain from $x_2$ goes to $T(x_1)$ — the crossing plan — while the uncrossed plan sends $x_1$ to $T(x_1)$ and $x_2$ to $T(x_2)$, then the cost of uncrossing is $\|x_1-T(x_1)\|_2^2 + \|x_2-T(x_2)\|_2^2$ and the cost of crossing is $\|x_1-T(x_2)\|_2^2 + \|x_2-T(x_1)\|_2^2$. Expanding: the uncrossed cost minus the crossed cost equals $2\langle x_1-x_2, T(x_1)-T(x_2)\rangle$. For the quadratic cost, uncrossing saves cost whenever $\langle x_1-x_2, T(x_1)-T(x_2)\rangle > 0$ — whenever the map is monotone in the inner product sense. The optimal plan maximizes this monotonicity, which is exactly the cyclical monotonicity condition. The no-crossing principle is the story's geometric picture of the algebraic condition that characterizes gradients of convex functions.
+
+**The monotone rearrangement in one dimension $T^* = F_\nu^{-1} \circ F_\mu$ — sending the $t$-th quantile of $\mu$ to the $t$-th quantile of $\nu$ — is the unique optimal Monge map in one dimension.** In the grain transport story restricted to a one-dimensional road from west to east: the monotone rearrangement sends the leftmost (westernmost) surplus to the leftmost (easternmost) deficit, the second-leftmost surplus to the second-leftmost deficit, and so on. This is the most efficient plan because any non-monotone assignment creates crossings, and uncrossing always saves cost. The one-dimensional Wasserstein-2 distance $W_2^2(\mu,\nu) = \int_0^1 |F_\mu^{-1}(t) - F_\nu^{-1}(t)|^2\,dt$ is the squared $L^2$ distance between the quantile functions — the total squared distance traveled by each percentile of the grain distribution. This formula is one of the few closed-form expressions for the Wasserstein distance, and it makes the one-dimensional Optimal Transport problem completely tractable.
+
+---
+
+**The Brenier potential $\phi$ — the scalar convex function whose gradient field $\nabla\phi$ gives the optimal destination for each source location — is the grain transport's value function.** The Brenier theorem says: for the quadratic cost with absolutely continuous $\mu$, there exists a unique convex function $\phi: \mathbb{R}^n \to \mathbb{R}$ such that $T^* = \nabla\phi$ is the unique optimal Monge map. In the grain story: $\phi(x)$ is the "convex value" of location $x$ as a grain source — a scalar summary of the optimal routing decision. The gradient $\nabla\phi(x)$ is the optimal destination for the grain at $x$. The convexity of $\phi$ is the mathematical expression of the no-crossing principle: a convex function's gradient is monotone, and a monotone map does not cross.
+
+**The proof strategy — Kantorovich duality gives dual potentials, complementary slackness concentrates the coupling on the subdifferential, absolute continuity collapses the subdifferential to a singleton gradient — is the three-step argument that forces the optimal coupling to be a deterministic map.** Step 1: The Kantorovich dual gives optimal potentials $\phi^*$ and $\psi^*$ satisfying $\phi^*(x) + \psi^*(y) \leq \|x-y\|_2^2$ for all $x,y$. Step 2: KKT complementary slackness (from Chapter 2 of Phase 0) says the optimal coupling $\pi^*$ concentrates on $\{(x,y): \phi^*(x)+\psi^*(y) = \|x-y\|_2^2\}$, equivalently on $\{(x,y): y \in \partial\tilde\phi(x)\}$ where $\tilde\phi$ is the modified potential. Step 3: Since $\mu \ll \lambda^n$, the convex function $\tilde\phi$ is differentiable $\mu$-almost everywhere (Alexandrov's theorem), so $\partial\tilde\phi(x) = \{\nabla\tilde\phi(x)\}$ is a singleton at $\mu$-almost every $x$. The coupling is concentrated on a graph — it is a deterministic map. The Kantorovich duality, KKT conditions, and Radon-Nikodym theorem from Phase 0 combine to prove the Brenier theorem.
+
+**The Monge-Ampère equation $\det(\nabla^2\phi(x)) = f(x)/g(\nabla\phi(x))$ — the PDE that the Brenier potential must satisfy — is the push-forward density formula from Chapter 1 of Phase 0 applied to the Brenier map.** The push-forward density formula says: if $T_\#\mu = \nu$ with densities $f$ and $g$, then $f(x) = g(T(x))|\det DT(x)|$. For the Brenier map $T = \nabla\phi$, the Jacobian is $DT = \nabla^2\phi$ — the Hessian matrix of the potential. The Monge-Ampère equation is this identity with $DT = \nabla^2\phi$: the ratio of the source density to the transported target density equals the Jacobian determinant of the Hessian of the potential. This equation governs the regularity of the Brenier map — how smooth the optimal transport map is — and its theory is a deep area connecting Optimal Transport to geometric PDE.
+
+---
+
+**The Legendre-Fenchel connection — the inverse Brenier map from $\nu$ to $\mu$ is $T^{-1} = \nabla\phi^*$, the gradient of the conjugate potential — is the Legendre-Fenchel transform from Chapter 2 of Phase 0 incarnated as a transport map.** The Fenchel equality condition $y = \nabla\phi(x) \iff x = \nabla\phi^*(y)$ says: if the optimal grain routing sends $x$ to $T^*(x) = \nabla\phi(x) = y$, then the optimal reverse routing sends $y$ to $T^{*-1}(y) = \nabla\phi^*(y) = x$. The Legendre-Fenchel transform exchanges the roles of source and target: the Brenier potential for routing from $\mu$ to $\nu$ is $\phi$, and the Brenier potential for routing from $\nu$ to $\mu$ is $\phi^*$. The Fenchel-Young inequality $\phi(x) + \phi^*(y) \geq \langle x,y\rangle$ — the fundamental inequality of the Legendre-Fenchel transform — is the dual feasibility condition of the Kantorovich problem: for the quadratic cost with the substitution $\phi(x) \to \frac{1}{2}\|x\|^2 - \phi(x)$, this inequality becomes the potential constraint $\phi(x) + \psi(y) \leq \|x-y\|_2^2$ of the Kantorovich dual. The Legendre-Fenchel transform is not just related to the Brenier potential — it is the Brenier potential from the other direction.
+
+---
+
+**The polar factorization theorem — any truck routing plan $u$ decomposes as $u = \nabla\phi \circ s$ with $\nabla\phi$ the optimal transport component and $s$ the measure-preserving circulation component — is the Brenier generalization of the matrix polar decomposition from Chapter 4 of Phase 0.** In the grain story: the full truck routing $u$ assigns to each location $x$ a direction of travel $u(x)$. Some of this routing is efficiently transporting grain from surplus to deficit — this is the $\nabla\phi$ component, the Brenier map that optimally moves mass from $u_\#\lambda$ to $\lambda$. The rest is trucks moving around in circles — rerouting grain locally without changing the net distribution — this is the $s$ component, the measure-preserving rearrangement that circulates mass without changing its distribution. The matrix polar decomposition $A = QS$ (orthogonal times positive definite symmetric) is the linear special case: if $u(x) = Ax$, then $\nabla\phi(x) = Sx$ (gradient of the quadratic convex function $\phi(x) = \frac{1}{2}x^TSx$) and $s(x) = Qx$ (orthogonal map, which is measure-preserving for the Gaussian measure).
+
+**The Knothe-Rosenblatt rearrangement — transporting $\mu$ to $\nu$ coordinate by coordinate using conditional quantile functions — is the triangular lower-triangular alternative to the Brenier map, the mathematical foundation of triangular normalizing flows.** In the grain story: instead of optimally routing all grain simultaneously (the Brenier map), the Knothe-Rosenblatt map routes grain one coordinate at a time — first routing the east-west component of the surplus to match the east-west component of the deficit, then routing the north-south component conditional on the east-west routing already done. The resulting map is lower triangular in the coordinate structure, making its Jacobian a lower triangular matrix with diagonal entries equal to the one-dimensional conditional transport derivatives — easy to compute and invert. Normalizing flows that use lower triangular architectures (RealNVP, NICE, Neural Autoregressive Flows) are computational implementations of the Knothe-Rosenblatt idea: build a transport map coordinate by coordinate, keeping the Jacobian triangular for tractable likelihood computation.
+
+---
+
+**The connection to MATH 201 (Advanced Calculus) is total and explicit.** The change-of-variables formula you applied to compute integrals by substitution — $\int_B f(T(x))|\det DT(x)|\,dx = \int_{T(B)} f(y)\,dy$ — is the push-forward density formula applied to the Monge map. The condition $T_\#(f\,d\lambda) = g\,d\lambda$ is the change-of-variables identity with $g(y) = f(T^{-1}(y))/|\det DT(T^{-1}(y))|$. For the Brenier map $T = \nabla\phi$, $DT = \nabla^2\phi$ and the identity becomes the Monge-Ampère equation. Every change-of-variables computation in MATH 201 was a transport map computation, and the Monge-Ampère equation is the PDE version of the change-of-variables formula applied to the optimal transport map.
+
+**The connection to MATH 304 (Computational Operations Research) closes through the assignment problem.** The discrete Monge problem — assigning $n$ surplus locations to $n$ deficit locations (one-to-one) at minimum total cost — is the assignment problem, solvable by the Hungarian algorithm in $O(n^3)$ operations. The Hungarian algorithm finds the optimal deterministic assignment, which is the discrete analogue of the Brenier map. The optimality conditions of the Hungarian algorithm — that no pair of assignments can be profitably swapped — is the discrete cyclical monotonicity condition: the optimal assignment is cyclically monotone, exactly as the Brenier map is cyclically monotone in the continuous case. Every LP duality argument you made in MATH 304 applies directly to the discrete Monge problem, and the Kantorovich relaxation is the continuous LP generalization of the assignment problem.
+
+---
+
+**Looking forward across the roadmap**, the Monge problem and the Brenier theorem are the geometric foundations of every deterministic generative model. In Phase 1's remaining topics, the Kantorovich relaxation converts the Monge problem to a tractable linear program (Topic 2), the Wasserstein distance is defined as the Kantorovich minimum (Topic 3), and the Kantorovich dual gives the potential functions that certify optimality (Topic 4). In Phase 3, the Rectified Flow algorithm — which trains a flow matching model to follow straight-line paths from noise to data — converges to the Brenier map as the number of training iterations increases: the learned flow approaches the gradient of a convex potential, the optimal transport map for the quadratic cost. Score-based models learn the score function $\nabla\log p_t(x)$, which is related to the Brenier potential through the Fokker-Planck equation. The entire architecture of Phase 3's generative models can be understood as computational approximations to the Monge map, with the Brenier theorem providing the theoretical optimality guarantee.
+
+The no-crossing arrows on the Nepal map — the grain routes that never intersect, the optimal assignment where every surplus location sends its grain directly to the destination that makes the total cost minimal — are the Brenier map $T^* = \nabla\phi$ made visible. The convex potential $\phi$ is the invisible organizing principle behind the optimal routing, and the Legendre-Fenchel transform connecting $\phi$ to $\phi^*$ is the duality between the source's routing problem and the destination's receiving problem.
+
+---
+---

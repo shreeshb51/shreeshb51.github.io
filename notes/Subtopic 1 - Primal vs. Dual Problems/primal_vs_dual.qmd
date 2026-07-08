@@ -1,0 +1,316 @@
+# Subtopic 1 - Primal vs Dual Problems
+
+## Layer 1 (Story)
+
+You are the chief procurement officer for a large construction project in Kathmandu — a new hospital being built in Bansbari. The project requires three types of materials: cement, steel, and timber. You need to procure specific minimum quantities of each: at least 100 tonnes of cement, at least 50 tonnes of steel, and at least 200 cubic metres of timber. These are your constraints — the minimum requirements that the project cannot proceed without.
+
+You have three suppliers to choose from. Each supplier sells bundles — pre-packaged combinations of all three materials — and each bundle has a fixed price. Supplier A sells a bundle containing 2 tonnes of cement, 1 tonne of steel, and 4 cubic metres of timber for 80,000 rupees. Supplier B sells a bundle containing 1 tonne of cement, 2 tonnes of steel, and 2 cubic metres of timber for 60,000 rupees. Supplier C sells a bundle containing 3 tonnes of cement, 1 tonne of steel, and 5 cubic metres of timber for 100,000 rupees. You can buy any non-negative number of bundles from each supplier — including fractional amounts, since suppliers accept partial orders.
+
+Your goal is to meet all three minimum requirements at minimum total cost. This is the **primal problem** — minimize the total procurement cost subject to the constraint that all material requirements are satisfied.
+
+You sit down with your procurement team, formulate the constraints, and begin solving. But before you can finish, your finance director — a sharp woman who trained as a mathematician before moving into construction — walks in and reframes the entire problem from a completely different angle.
+
+---
+
+She says: forget the bundles for a moment. Forget the suppliers. Imagine instead that you are not the buyer — you are a consultant hired by a rival company that wants to undercut you. The rival company does not sell bundles. It sells the raw materials directly: cement by the tonne, steel by the tonne, timber by the cubic metre. It wants to set prices — call them $\lambda_1$ rupees per tonne of cement, $\lambda_2$ rupees per tonne of steel, and $\lambda_3$ rupees per cubic metre of timber — such that buying from the rival is at least as attractive as buying any bundle from your three suppliers.
+
+The rival's pricing must satisfy a competitive constraint: for each supplier bundle, the total value of the materials in that bundle at the rival's prices must be at most the bundle's purchase price. Otherwise, a rational buyer would buy the bundle from the supplier and immediately resell the materials to the rival at a profit — a pure arbitrage opportunity that the rival cannot allow. So:
+
+For Supplier A's bundle: $2\lambda_1 + 1\lambda_2 + 4\lambda_3 \leq 80,000$
+For Supplier B's bundle: $1\lambda_1 + 2\lambda_2 + 2\lambda_3 \leq 60,000$
+For Supplier C's bundle: $3\lambda_1 + 1\lambda_2 + 5\lambda_3 \leq 100,000$
+
+These are the rival's pricing constraints — the no-arbitrage conditions. And the prices must be non-negative: $\lambda_1, \lambda_2, \lambda_3 \geq 0$. The rival cannot offer negative prices.
+
+Now the rival's total revenue from selling you exactly the quantities you need — 100 tonnes of cement, 50 tonnes of steel, 200 cubic metres of timber — at its prices is:
+
+$$100\lambda_1 + 50\lambda_2 + 200\lambda_3$$
+
+The rival wants to maximize this revenue, subject to the no-arbitrage pricing constraints. This is the **dual problem** — maximize the rival's revenue from satisfying your requirements, subject to the constraint that no bundle can be profitably arbitraged.
+
+---
+
+Your finance director pauses and makes a remarkable observation. The dual problem — the rival's revenue maximization — is not merely an alternative problem. It is the shadow of your primal problem. And the two problems are related by a theorem so elegant that it seems almost too good to be true:
+
+The rival's maximum revenue is always at most your minimum procurement cost.
+
+Think about why. If the rival sets prices $\lambda_1, \lambda_2, \lambda_3$ satisfying the no-arbitrage constraints, then for any procurement plan you choose — buying $x_A$ bundles from A, $x_B$ from B, $x_C$ from C — the rival's revenue from the materials in your plan is:
+
+$$\lambda_1(\text{cement in plan}) + \lambda_2(\text{steel in plan}) + \lambda_3(\text{timber in plan})$$
+
+$$\leq 80,000 x_A + 60,000 x_B + 100,000 x_C = \text{your total cost}$$
+
+The inequality holds because the no-arbitrage constraint says the rival's value of each bundle is at most the bundle's price. The rival's total revenue from the materials in your plan is at most your total procurement cost, for any feasible plan. In particular, if your plan is optimal and the rival's prices are optimal: the rival's maximum revenue is at most your minimum cost.
+
+This is **weak duality**: the dual objective value never exceeds the primal objective value.
+
+---
+
+But the finance director's deeper insight is about when equality holds — when the rival's maximum revenue exactly equals your minimum procurement cost. This is **strong duality**, and it holds here. Here is the intuition for why.
+
+Suppose you have found the optimal procurement plan — the cheapest combination of bundles that meets all requirements. Some suppliers may be used heavily, others lightly, others not at all. Now ask: which constraints are binding at the optimal plan? If you need exactly 100 tonnes of cement and your optimal plan provides exactly 100 tonnes, the cement constraint is binding — the requirement is met with no excess. If your plan provides 120 tonnes of cement when only 100 is needed, the cement constraint is slack — you have excess cement.
+
+Strong duality requires that the rival's prices align perfectly with the binding constraints. The rival should assign a positive price to materials whose constraints are binding at the optimum — these materials are genuinely scarce and valuable. The rival should assign zero price to materials whose constraints are slack at the optimum — these materials are in excess supply and have no marginal value. The condition that matches prices to binding constraints is called **complementary slackness**, and it is the mechanism by which the primal and dual problems lock together at optimality.
+
+---
+
+Here is the break moment. The naive assumption is that strong duality — the equality of primal and dual values — always holds whenever both the primal and dual problems are well-posed. After all, the story above made it sound inevitable: the rival's prices align with your binding constraints, and the gap closes. Surely this happens for any reasonable optimization problem?
+
+This breaks in a specific and illuminating way. Consider a slight modification of the procurement problem: you still want to minimize cost, but now one of your constraints is non-convex — say, the cement requirement must be met but the cement quantity must be either zero or at least 150 tonnes, with no fractional amounts allowed. The feasible set is no longer convex. The primal problem is now a mixed-integer program, and the gap between the primal minimum and the dual maximum — called the **duality gap** — is in general strictly positive. The rival's maximum revenue is strictly less than your minimum cost, and no pricing scheme can close the gap entirely.
+
+Strong duality requires the problem to be convex — or more precisely, it requires a constraint qualification: a condition ensuring that the feasible set is well-behaved enough that the separating hyperplane argument can be applied at the boundary of the feasible region. The most common constraint qualification is **Slater's condition**: there must exist a strictly feasible point — a point that satisfies all constraints strictly, not just at equality. In the procurement story, Slater's condition requires that you can buy bundles in quantities that strictly exceed all three material requirements simultaneously, before minimizing cost. If such a point exists, strong duality holds and the gap closes to zero.
+
+The duality gap is the price you pay for non-convexity or infeasibility. It is the amount by which the rival's best pricing scheme underestimates your true minimum cost. In convex problems with Slater's condition, the gap is exactly zero — the primal and dual problems are two windows onto the same optimal solution.
+
+---
+
+Now the finance director completes her insight by showing that the dual problem is always easier in one crucial respect: it is always convex, even when the primal is not. The dual function — the rival's revenue as a function of the prices $\lambda$ — is a concave function of $\lambda$, because it is the infimum of affine functions. The maximum of a concave function is a convex optimization problem. So the dual is always convex, regardless of the primal's structure.
+
+This asymmetry is what makes the dual so useful. When you face a non-convex primal, you can solve the convex dual as a lower bound. When you face a convex primal with Slater's condition, you can solve the dual instead of the primal, and the solution is identical — you get the primal optimal solution for free from the dual, through the KKT conditions of the next subtopic. The dual is not a second-class citizen of optimization — it is an equal partner that sometimes reveals the structure of the primal solution more clearly than the primal itself.
+
+---
+
+Hold two pictures simultaneously.
+
+The procurement officer's picture: you are buying bundles to meet material requirements at minimum cost. Every feasible plan — every combination of bundle quantities that meets all requirements — corresponds to a point in the feasible region of the primal. The minimum cost point is the primal optimal solution.
+
+The rival's picture: you are setting material prices to maximize revenue from the buyer's requirements, subject to no-arbitrage constraints. Every feasible pricing scheme — every set of non-negative prices that does not create arbitrage — corresponds to a point in the feasible region of the dual. The maximum revenue point is the dual optimal solution.
+
+The two pictures are looking at the same economic reality from opposite sides of the market — buyer and seller, quantity and price, primal and dual. When the problem is convex and Slater's condition holds, the two pictures agree at optimality: the buyer's minimum cost equals the seller's maximum revenue, the primal and dual solutions are connected by complementary slackness, and the duality gap is exactly zero.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the standard form primal problem and its Lagrangian, the dual function and dual problem, weak duality, strong duality and constraint qualifications, the value function and sensitivity analysis, and the connection to the Fenchel duality theorem of the previous topic.
+
+### The Primal Problem
+
+The **standard form primal problem** is:
+
+$$p^* = \inf_{x \in \mathbb{R}^n} f_0(x)$$
+$$\text{subject to } f_i(x) \leq 0, \quad i = 1, \ldots, m$$
+$$h_j(x) = 0, \quad j = 1, \ldots, p$$
+
+where $f_0: \mathbb{R}^n \to \mathbb{R}$ is the objective function, $f_i: \mathbb{R}^n \to \mathbb{R}$ are the inequality constraint functions, and $h_j: \mathbb{R}^n \to \mathbb{R}$ are the equality constraint functions. The **feasible set** is:
+
+$$\mathcal{D} = \{x \in \mathbb{R}^n : f_i(x) \leq 0 \; \forall i, \; h_j(x) = 0 \; \forall j\}$$
+
+The problem is **convex** if $f_0, f_1, \ldots, f_m$ are all convex functions and $h_j(x) = a_j^T x - b_j$ are affine — linear equality constraints are always convex, being simultaneously convex and concave. For a convex problem, the feasible set $\mathcal{D}$ is convex — an intersection of convex sublevel sets and affine hyperplanes.
+
+The primal optimal value is $p^* \in \mathbb{R} \cup \{\pm\infty\}$. The problem is **infeasible** if $\mathcal{D} = \emptyset$, in which case $p^* = +\infty$. The problem is **unbounded below** if $\inf_{x \in \mathcal{D}} f_0(x) = -\infty$.
+
+---
+
+### The Lagrangian
+
+The **Lagrangian** $L: \mathbb{R}^n \times \mathbb{R}^m \times \mathbb{R}^p \to \mathbb{R}$ is defined by:
+
+$$L(x, \lambda, \nu) = f_0(x) + \sum_{i=1}^m \lambda_i f_i(x) + \sum_{j=1}^p \nu_j h_j(x)$$
+
+The vectors $\lambda = (\lambda_1, \ldots, \lambda_m) \in \mathbb{R}^m$ are the **dual variables** or **Lagrange multipliers** for the inequality constraints, and $\nu = (\nu_1, \ldots, \nu_p) \in \mathbb{R}^p$ are the dual variables for the equality constraints. The Lagrangian is a weighted sum of the objective and all constraint functions, where the weights are the dual variables.
+
+The key insight is that the Lagrangian is an affine function of $(\lambda, \nu)$ for fixed $x$. This linearity is what makes the dual function concave and the dual problem convex, regardless of the primal's structure.
+
+**Connection to penalization.** The Lagrangian can be interpreted as a penalized objective: if a constraint $f_i(x) \leq 0$ is violated — if $f_i(x) > 0$ — then the term $\lambda_i f_i(x)$ adds a positive penalty to the objective, provided $\lambda_i \geq 0$. The multiplier $\lambda_i$ is the penalty rate — how much each unit of constraint violation costs. At the optimum, the penalty rates are calibrated so that the penalized unconstrained problem and the constrained problem have the same solution.
+
+---
+
+### The Dual Function and Dual Problem
+
+The **Lagrange dual function** (or simply **dual function**) $g: \mathbb{R}^m \times \mathbb{R}^p \to \mathbb{R} \cup \{-\infty\}$ is defined as the infimum of the Lagrangian over the primal variable $x$:
+
+$$g(\lambda, \nu) = \inf_{x \in \mathbb{R}^n} L(x, \lambda, \nu) = \inf_{x \in \mathbb{R}^n} \left\{f_0(x) + \sum_{i=1}^m \lambda_i f_i(x) + \sum_{j=1}^p \nu_j h_j(x)\right\}$$
+
+The dual function $g$ is always **concave** in $(\lambda, \nu)$, regardless of the convexity of the primal problem. This follows because $g$ is the pointwise infimum of affine functions of $(\lambda, \nu)$ — for each fixed $x$, the function $(\lambda, \nu) \mapsto L(x, \lambda, \nu)$ is affine, and the infimum of a family of affine (hence concave) functions is concave.
+
+The **Lagrange dual problem** is:
+
+$$d^* = \sup_{\lambda \geq 0, \nu} g(\lambda, \nu)$$
+
+The constraint $\lambda \geq 0$ — that all inequality constraint multipliers are non-negative — is the **dual feasibility** condition. There is no sign constraint on $\nu$ because equality constraints can be violated in either direction, and the multipliers must be able to penalize both directions.
+
+The dual problem is always a **convex optimization problem** — maximizing a concave function over a convex domain $\{\lambda \geq 0\} \times \mathbb{R}^p$ — regardless of whether the primal is convex. This is the fundamental asymmetry: the dual is always convex, providing a tractable lower bound on the primal even when the primal is intractable.
+
+---
+
+### Weak Duality
+
+**Theorem (Weak Duality).** For any primal feasible $x$ and any dual feasible $(\lambda, \nu)$ with $\lambda \geq 0$:
+
+$$g(\lambda, \nu) \leq p^*$$
+
+equivalently $d^* \leq p^*$.
+
+**Proof.** For any primal feasible $x$ — satisfying $f_i(x) \leq 0$ and $h_j(x) = 0$ — and any $\lambda \geq 0$:
+
+$$g(\lambda, \nu) \leq L(x, \lambda, \nu) = f_0(x) + \sum_i \lambda_i \underbrace{f_i(x)}_{\leq 0} + \sum_j \nu_j \underbrace{h_j(x)}_{= 0} \leq f_0(x)$$
+
+The first inequality holds because $g$ is the infimum of $L$ over all $x$, so it is at most $L$ at any particular $x$. The second inequality holds because $\lambda_i \geq 0$ and $f_i(x) \leq 0$, so $\lambda_i f_i(x) \leq 0$. Taking the infimum over all feasible $x$ on the right gives $g(\lambda, \nu) \leq p^*$. Taking the supremum over all dual feasible $(\lambda, \nu)$ on the left gives $d^* \leq p^*$. $\square$
+
+The **duality gap** is $p^* - d^* \geq 0$. Weak duality says the gap is always non-negative. Strong duality says it is zero under appropriate conditions.
+
+---
+
+### Strong Duality and Constraint Qualifications
+
+**Theorem (Strong Duality for Convex Problems).** If the primal problem is convex and satisfies **Slater's condition** — there exists a strictly feasible point $\tilde{x}$ with $f_i(\tilde{x}) < 0$ for all $i = 1, \ldots, m$ and $h_j(\tilde{x}) = 0$ for all $j$ — then:
+
+$$d^* = p^*$$
+
+and the dual supremum is attained at some $(\lambda^*, \nu^*)$.
+
+**Slater's condition** is a **constraint qualification** — a regularity condition on the feasible set that prevents the boundary of the feasible region from having degenerate geometry. It requires that the feasible set has a non-empty interior relative to the equality constraint manifold. Geometrically, Slater's condition ensures that the feasible set is not a lower-dimensional manifold — that there is genuine interior volume to the feasible region.
+
+The proof of strong duality proceeds via the separating hyperplane theorem applied to two convex sets derived from the primal problem. Define the set:
+
+$$\mathcal{G} = \{(u, v, t) \in \mathbb{R}^m \times \mathbb{R}^p \times \mathbb{R} : \exists x \text{ with } f_i(x) \leq u_i, h_j(x) = v_j, f_0(x) \leq t\}$$
+
+This is the set of achievable constraint residuals and objective values. Under Slater's condition, $\mathcal{G}$ is a convex set with non-empty interior, and the point $(0, 0, p^*)$ lies on its boundary. The separating hyperplane theorem produces a hyperplane separating $(0, 0, p^* - \epsilon)$ from $\mathcal{G}$ for any $\epsilon > 0$, and the normal to this hyperplane is the optimal dual variable $(\lambda^*, \nu^*, 1)$ — the dual solution. Letting $\epsilon \to 0$ establishes $d^* = p^*$.
+
+**Refined Slater's condition.** For problems where some constraints are affine, Slater's condition only requires strict feasibility for the non-affine constraints. Affine constraints are automatically qualified — they cannot cause degeneracy — so only the nonlinear convex constraints need to be strictly satisfied.
+
+---
+
+### The Value Function and Sensitivity Analysis
+
+The **value function** or **perturbation function** $V: \mathbb{R}^m \times \mathbb{R}^p \to \mathbb{R} \cup \{+\infty\}$ is defined by:
+
+$$V(u, v) = \inf_{x} \{f_0(x) : f_i(x) \leq u_i \; \forall i, \; h_j(x) = v_j \; \forall j\}$$
+
+It gives the optimal primal value when the constraints are perturbed by $(u,v)$ — the right-hand sides of the constraints are shifted. The original primal value is $V(0,0) = p^*$.
+
+The dual function is the Legendre-Fenchel conjugate of the value function (up to a sign):
+
+$$g(\lambda, \nu) = -V^*(-\lambda, -\nu)$$
+
+This connection reveals the deepest relationship between Lagrangian duality and the Legendre-Fenchel transform: the Lagrangian dual is the Fenchel dual of the value function. The duality gap $p^* - d^*$ is the gap between $V(0,0)$ and its biconjugate $V^{**}(0,0)$ — it is zero if and only if $V$ is convex and closed at the origin, which is exactly what Slater's condition guarantees.
+
+**Sensitivity interpretation of dual variables.** When strong duality holds and $V$ is differentiable at the origin:
+
+$$\lambda_i^* = -\frac{\partial V}{\partial u_i}(0,0), \qquad \nu_j^* = -\frac{\partial V}{\partial v_j}(0,0)$$
+
+The optimal dual variable $\lambda_i^*$ measures the rate at which the optimal objective value decreases when the $i$-th inequality constraint is relaxed — when $u_i$ increases from 0. This is the **shadow price** interpretation: $\lambda_i^*$ is the marginal value of relaxing the $i$-th constraint. In the procurement story, $\lambda_i^*$ is the marginal cost of one additional unit of material $i$ — the price the rival assigns to material $i$ at the dual optimum.
+
+---
+
+### Minimax and the Saddle Point Characterization
+
+The primal and dual problems can be written as a minimax problem. Observe that for $\lambda \geq 0$:
+
+$$\sup_{\lambda \geq 0, \nu} L(x, \lambda, \nu) = \begin{cases} f_0(x) & \text{if } x \text{ is primal feasible} \\ +\infty & \text{otherwise} \end{cases}$$
+
+Therefore:
+
+$$p^* = \inf_x \sup_{\lambda \geq 0, \nu} L(x, \lambda, \nu)$$
+
+And the dual problem is:
+
+$$d^* = \sup_{\lambda \geq 0, \nu} \inf_x L(x, \lambda, \nu)$$
+
+Weak duality is the minimax inequality $\sup \inf \leq \inf \sup$ — always true for any function. Strong duality is the minimax equality $\sup \inf = \inf \sup$ — a deeper result requiring convexity and constraint qualifications.
+
+A pair $(x^*, \lambda^*, \nu^*)$ is a **saddle point** of the Lagrangian if:
+
+$$L(x^*, \lambda, \nu) \leq L(x^*, \lambda^*, \nu^*) \leq L(x, \lambda^*, \nu^*) \quad \forall x, \; \forall \lambda \geq 0, \; \forall \nu$$
+
+**Theorem.** $(x^*, \lambda^*, \nu^*)$ is a saddle point of $L$ if and only if $x^*$ is primal optimal, $(\lambda^*, \nu^*)$ is dual optimal, and strong duality holds: $f_0(x^*) = g(\lambda^*, \nu^*)$.
+
+The saddle point condition is the simultaneous solution of the primal minimization and dual maximization — the point where the two problems lock together at the same value.
+
+---
+
+### Connecting to the Fenchel Duality Theorem
+
+The Fenchel duality theorem from the previous topic is a special case of Lagrangian duality. The Fenchel primal $\inf_x\{f(x) + g(Ax)\}$ can be written in standard form by introducing a splitting variable $z = Ax$:
+
+$$\inf_{x, z} \{f(x) + g(z)\} \quad \text{subject to} \quad Ax - z = 0$$
+
+The Lagrangian is:
+
+$$L(x, z, \nu) = f(x) + g(z) + \langle \nu, Ax - z\rangle = f(x) + \langle A^T\nu, x\rangle + g(z) - \langle \nu, z\rangle$$
+
+The dual function is:
+
+$$g(\nu) = \inf_x \{f(x) + \langle A^T\nu, x\rangle\} + \inf_z\{g(z) - \langle \nu, z\rangle\} = -f^*(-A^T\nu) - g^*(\nu)$$
+
+The dual problem $\sup_\nu\{-f^*(-A^T\nu) - g^*(\nu)\}$ is exactly the Fenchel dual from the previous topic. The Fenchel duality theorem is Lagrangian duality applied to the equality-constrained splitting formulation. Every result from the Legendre-Fenchel topic is a special case of Lagrangian duality, and Lagrangian duality is the general framework that subsumes it.
+
+---
+
+### Canonical Examples
+
+**Linear programming.** Primal: $\min c^Tx$ subject to $Ax = b$, $x \geq 0$. The Lagrangian is $L(x, \lambda, \nu) = c^Tx - \lambda^Tx + \nu^T(Ax-b) = (c - \lambda + A^T\nu)^Tx - \nu^Tb$. The dual function is $g(\lambda, \nu) = -\nu^Tb$ if $c - \lambda + A^T\nu = 0$, and $-\infty$ otherwise. The dual problem is: $\max -\nu^Tb$ subject to $A^T\nu \leq c$, $\lambda \geq 0$, which simplifies to $\max -b^T\nu$ subject to $A^T\nu \leq c$ — the standard LP dual. Strong duality holds whenever both primal and dual are feasible — the LP strong duality theorem, which requires no Slater condition because all constraints are affine.
+
+**Quadratic programming.** Primal: $\min \frac{1}{2}x^TQx + c^Tx$ subject to $Ax \leq b$, with $Q \succ 0$. The Lagrangian is $L(x,\lambda) = \frac{1}{2}x^TQx + c^Tx + \lambda^T(Ax-b)$. Minimizing over $x$: $Qx + c + A^T\lambda = 0 \implies x^*(\lambda) = -Q^{-1}(c + A^T\lambda)$. Substituting: $g(\lambda) = -\frac{1}{2}(c + A^T\lambda)^TQ^{-1}(c+A^T\lambda) - b^T\lambda$. The dual is $\max_{\lambda \geq 0} g(\lambda)$ — a concave quadratic program. Strong duality holds under Slater's condition, which requires $\exists \tilde{x}: A\tilde{x} < b$.
+
+**Support vector machines.** Primal: $\min \frac{1}{2}\|w\|_2^2$ subject to $y_i(w^Tx_i + b) \geq 1$ for all $i$. Rewriting as $\min \frac{1}{2}\|w\|_2^2$ subject to $1 - y_i(w^Tx_i+b) \leq 0$. The Lagrangian is $L(w,b,\lambda) = \frac{1}{2}\|w\|_2^2 + \sum_i\lambda_i(1-y_i(w^Tx_i+b))$. Minimizing over $w$ and $b$: $w^* = \sum_i\lambda_iy_ix_i$ and $\sum_i\lambda_iy_i = 0$. Substituting: $g(\lambda) = \sum_i\lambda_i - \frac{1}{2}\sum_{i,j}\lambda_i\lambda_jy_iy_j\langle x_i,x_j\rangle$. The dual SVM is $\max_{\lambda \geq 0}\{g(\lambda) : \sum_i\lambda_iy_i = 0\}$ — a quadratic program involving only inner products $\langle x_i, x_j\rangle$, enabling the kernel trick.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 304 (Computational Operations Research), LP duality is the canonical example of Lagrangian duality — the dual of a maximization LP is a minimization LP, and strong duality holds by the LP strong duality theorem without requiring Slater's condition because all constraints are affine. The dual variables you computed as shadow prices are exactly the optimal Lagrange multipliers $(\lambda^*, \nu^*)$ of the Lagrangian dual. In MATH 201 (Advanced Calculus), the method of Lagrange multipliers for equality-constrained optimization is a special case of the KKT conditions — with only equality constraints and no inequality constraints, the stationarity condition $\nabla f_0(x^*) + \sum_j \nu_j^* \nabla h_j(x^*) = 0$ is exactly the Lagrange multiplier condition you derived by the method of undetermined coefficients. The multipliers $\nu_j^*$ are the Lagrange multipliers, now understood as the optimal dual variables measuring the sensitivity of the optimal value to the equality constraint right-hand sides.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Bansbari hospital construction story has a precise mathematical address. Let us walk through them one by one, until the procurement officer, the rival supplier, the bundle prices, and the full formal apparatus are completely fused into a single picture.
+
+---
+
+**The hospital construction project — the full procurement problem with its material requirements and supplier options — is the standard form primal optimization problem.** The primal problem packages everything the procurement officer faces: an objective to minimize, a feasible set defined by constraints, and a domain of decision variables. Every element of the story maps onto every element of the primal — the decision variables are bundle quantities, the objective is total cost, the constraints are material requirements, and the feasible set is the collection of all procurement plans that satisfy all requirements simultaneously.
+
+**The procurement officer's decision variables — how many bundles to buy from each supplier — are the primal variables $x = (x_A, x_B, x_C) \in \mathbb{R}^3_+$.** Each component $x_i \geq 0$ is the number of bundles purchased from supplier $i$. The non-negativity constraints $x_i \geq 0$ are the feasibility conditions that prevent the officer from selling bundles back to suppliers — you cannot buy negative quantities. These are the implicit domain constraints, and they can be handled either as explicit inequality constraints $-x_i \leq 0$ or as part of the domain definition.
+
+**The total procurement cost — 80,000$x_A$ + 60,000$x_B$ + 100,000$x_C$ — is the objective function $f_0(x)$.** It is a linear function of the decision variables — a special case of a convex function, being simultaneously convex and concave. The primal problem minimizes this objective over all feasible procurement plans. The optimal value $p^*$ is the minimum cost achievable while meeting all material requirements.
+
+**The minimum material requirements — at least 100 tonnes of cement, 50 tonnes of steel, 200 cubic metres of timber — are the inequality constraints $f_i(x) \leq 0$.** Written in standard form: the cement constraint is $100 - (2x_A + x_B + 3x_C) \leq 0$, the steel constraint is $50 - (x_A + 2x_B + x_C) \leq 0$, and the timber constraint is $200 - (4x_A + 2x_B + 5x_C) \leq 0$. Each constraint says the requirement is met — the procured quantity is at least the required amount. Written as $f_i(x) \leq 0$, each $f_i$ is the shortfall — how much the plan falls short of the requirement — and feasibility requires the shortfall to be non-positive. The feasible set $\mathcal{D}$ is the intersection of these three halfspaces with the non-negative orthant — a convex polyhedron, being a finite intersection of halfspaces.
+
+---
+
+**The rival supplier's material prices — $\lambda_1$ rupees per tonne of cement, $\lambda_2$ per tonne of steel, $\lambda_3$ per cubic metre of timber — are the dual variables $\lambda = (\lambda_1, \lambda_2, \lambda_3) \in \mathbb{R}^3_+$.** The dual variables are prices — not quantities, not costs, but the rates at which the objective value responds to constraint perturbation. The non-negativity requirement $\lambda \geq 0$ is the dual feasibility condition: the rival cannot set negative prices, because negative prices would mean the rival pays buyers to take materials, which is economically absurd and mathematically corresponds to the dual variable signing requirement for inequality constraints.
+
+**The Lagrangian $L(x, \lambda) = f_0(x) + \sum_i \lambda_i f_i(x)$ is the procurement officer's penalized cost — total bundle cost plus penalty for unmet requirements.** Expanding: $L(x, \lambda) = (80,000 x_A + 60,000 x_B + 100,000 x_C) + \lambda_1(100 - 2x_A - x_B - 3x_C) + \lambda_2(50 - x_A - 2x_B - x_C) + \lambda_3(200 - 4x_A - 2x_B - 5x_C)$. Each term $\lambda_i f_i(x)$ is the penalty for shortfall in material $i$ — if the plan falls short by $f_i(x)$ units and the rival charges $\lambda_i$ per unit, the penalty is $\lambda_i f_i(x)$. The Lagrangian is the total cost including these penalties. For a feasible plan where $f_i(x) \leq 0$, the penalties are non-positive — the plan meets requirements and faces no penalty, so $L(x,\lambda) \leq f_0(x)$ for all $\lambda \geq 0$ and all feasible $x$. This is the mechanism of weak duality.
+
+**The no-arbitrage constraints on the rival's prices — the conditions that no bundle can be profitably resold — are the dual feasibility conditions hidden inside the dual function's domain.** For Supplier A's bundle: $2\lambda_1 + \lambda_2 + 4\lambda_3 \leq 80,000$. For Supplier B: $\lambda_1 + 2\lambda_2 + 2\lambda_3 \leq 60,000$. For Supplier C: $3\lambda_1 + \lambda_2 + 5\lambda_3 \leq 100,000$. These constraints emerge from minimizing the Lagrangian over $x \geq 0$: $g(\lambda) = \inf_{x \geq 0} L(x,\lambda)$. Collecting terms in $x_A$: the coefficient of $x_A$ in $L$ is $80,000 - 2\lambda_1 - \lambda_2 - 4\lambda_3$. For the infimum over $x_A \geq 0$ to be finite, this coefficient must be non-negative — otherwise taking $x_A \to \infty$ drives $L \to -\infty$. The no-arbitrage constraint for Supplier A is exactly the condition that this coefficient is non-negative: $2\lambda_1 + \lambda_2 + 4\lambda_3 \leq 80,000$. The rival's pricing constraints are not imposed externally — they emerge automatically from the requirement that the dual function is finite.
+
+---
+
+**The dual function $g(\lambda) = \inf_{x \geq 0} L(x,\lambda)$ — the rival's revenue from the optimal response of the procurement officer at prices $\lambda$ — is always concave in $\lambda$.** For fixed $x$, the Lagrangian $L(x,\lambda)$ is affine in $\lambda$ — linear with intercept $f_0(x)$ and slope vector $(f_1(x), f_2(x), f_3(x))$. The dual function is the infimum of this family of affine functions indexed by $x$, and the infimum of a family of affine functions is concave. Geometrically: the dual function is the lower envelope of a family of hyperplanes in $\lambda$-space, and lower envelopes are always concave. The rival's revenue function is always concave — regardless of whether the procurement problem is convex — because it is defined by an infimum over linear functions.
+
+**The dual problem $d^* = \sup_{\lambda \geq 0} g(\lambda)$ — the rival's optimal pricing scheme — is always a convex optimization problem.** Maximizing a concave function over the convex domain $\{\lambda \geq 0\}$ is a convex problem. This is the fundamental asymmetry: even if the primal procurement problem were non-convex — if the bundle quantities had to be integers, for example — the dual pricing problem is still convex. The dual always offers a tractable lower bound on the intractable primal.
+
+**The rival's total revenue from satisfying the procurement requirements $100\lambda_1 + 50\lambda_2 + 200\lambda_3$ is the dual objective, which equals $-g(\lambda)$ plus a constant when the no-arbitrage constraints are satisfied.** More precisely, when the no-arbitrage constraints hold — when the dual function is finite — the dual objective equals the Lagrangian evaluated at the optimal bundle quantities for those prices, which reduces to the rival's revenue from the required quantities minus the penalty for the constraint shortfalls. The dual problem maximizes this revenue over all feasible prices.
+
+---
+
+**Weak duality — the rival's maximum revenue is at most the procurement officer's minimum cost — is the inequality $d^* \leq p^*$.** The proof in the story was: for any feasible procurement plan $x$ and any feasible prices $\lambda \geq 0$, the rival's revenue from the required quantities is at most the bundle cost of the plan, because the no-arbitrage constraints say the rival's value of each bundle is at most the bundle's price. In the formal proof: $g(\lambda) \leq L(x,\lambda) \leq f_0(x)$ for any feasible $x$ and $\lambda \geq 0$. The first inequality holds because $g$ is the infimum of $L$ over $x$, so it is at most $L$ at any particular $x$. The second holds because $\lambda_i \geq 0$ and $f_i(x) \leq 0$ make the penalty terms non-positive. Taking the supremum over $\lambda$ and infimum over $x$ preserves the inequality: $d^* \leq p^*$.
+
+**The duality gap $p^* - d^* \geq 0$ is the gap between what the procurement officer must pay and what the rival can extract.** It is always non-negative by weak duality. When the problem is convex and Slater's condition holds, the gap closes to zero: the rival's maximum revenue exactly equals the officer's minimum cost. The gap is the price of non-convexity — if the officer must buy integer quantities of bundles, the feasible set is non-convex, and the rival's linear pricing scheme cannot perfectly replicate the integer structure. The rival systematically underprices the materials relative to what the officer must pay.
+
+**Slater's condition — there exists a strictly feasible procurement plan — is the condition that the officer can meet all material requirements with strict excess before optimizing.** Formally: there exists $\tilde{x} \geq 0$ with $2\tilde{x}_A + \tilde{x}_B + 3\tilde{x}_C > 100$, $\tilde{x}_A + 2\tilde{x}_B + \tilde{x}_C > 50$, and $4\tilde{x}_A + 2\tilde{x}_B + 5\tilde{x}_C > 200$ simultaneously. This is obviously satisfied — buy 100 bundles from each supplier, and all requirements are vastly exceeded. When Slater's condition holds, strong duality holds: the rival's maximum revenue equals the officer's minimum cost, and the duality gap is exactly zero.
+
+---
+
+**The shadow price interpretation of dual variables — $\lambda_i^* = -\partial V/\partial u_i(0,0)$ — is the marginal value of relaxing constraint $i$.** In the procurement story: $\lambda_1^*$ is the rate at which the minimum procurement cost decreases when the cement requirement is relaxed by one tonne. If the cement requirement drops from 100 to 99 tonnes, the minimum cost decreases by approximately $\lambda_1^*$ rupees. The rival's optimal price for cement is exactly the shadow price of the cement constraint — the marginal economic value of one additional tonne of cement to the construction project. The dual variables are not arbitrary multipliers. They are the precise economic valuations of the constraints — the shadow prices that the market would assign to each scarce resource at the optimum.
+
+**The value function $V(u,v)$ — the minimum procurement cost when requirements are shifted by $(u,v)$ — is the bridge between the Lagrangian dual and the Legendre-Fenchel transform.** The dual function $g(\lambda,\nu) = -V^*(-\lambda,-\nu)$ says: the dual function is the negative Fenchel conjugate of the value function. The duality gap $p^* - d^*$ is $V(0,0) - V^{**}(0,0)$ — the gap between the value function and its biconjugate at the origin. Strong duality is the condition that this gap closes — that $V$ is convex and closed at the origin, which Slater's condition guarantees. The entire Lagrangian duality theory is the Legendre-Fenchel transform applied to the value function. The procurement officer's minimum cost and the rival's maximum revenue are the primal and dual descriptions of the same value function, exactly as the factory's cost function and profit function were the primal and dual descriptions of the same production process.
+
+---
+
+**The minimax characterization $p^* = \inf_x \sup_{\lambda \geq 0} L(x,\lambda) \geq \sup_{\lambda \geq 0} \inf_x L(x,\lambda) = d^*$ is the game between the officer and the rival.** The officer moves first: she chooses a procurement plan $x$ that is feasible — if she violates a constraint, the rival can set $\lambda_i \to \infty$ and push the Lagrangian to $+\infty$, so the officer is forced to be feasible. The rival moves second: given the officer's plan, the rival sets prices $\lambda$ to maximize the Lagrangian. The officer wants to minimize the maximum the rival can extract. The rival wants to maximize the minimum the officer must pay. The minimax inequality says the rival's maximum of minimums is always at most the officer's minimum of maximums. Strong duality — the minimax equality — is the condition that the order of play does not matter: the outcome is the same whether the officer or the rival moves first.
+
+**The LP duality from MATH 304 is Lagrangian duality for the linear procurement problem.** The standard LP dual that you computed in MATH 304 — taking the transpose of the constraint matrix, swapping minimization and maximization, reversing constraint directions — is exactly the dual problem produced by the Lagrangian construction with linear $f_0$ and affine $f_i$. The shadow prices you computed for LP constraints are the optimal dual variables $\lambda^*$. The complementary slackness conditions you applied — "if a constraint is not binding, its dual variable is zero; if a dual variable is positive, its constraint is binding" — are the KKT conditions of the next subtopic, which we will derive precisely in Layer 1 of Subtopic 2.
+
+**The Lagrange multiplier method from MATH 201 is Lagrangian duality for equality-constrained optimization.** When you minimized $f(x,y)$ subject to $g(x,y) = 0$ using the method of Lagrange multipliers — writing $\nabla f = \lambda \nabla g$ and solving — you were finding the stationarity condition of the Lagrangian $L(x,y,\lambda) = f(x,y) + \lambda g(x,y)$ with respect to $(x,y)$. The multiplier $\lambda$ is the dual variable for the equality constraint — the sensitivity of the optimal value to the constraint right-hand side. The condition $\nabla f = \lambda \nabla g$ is the stationarity KKT condition, and the condition $g(x,y) = 0$ is the primal feasibility KKT condition. The method of Lagrange multipliers is the KKT system for equality-constrained optimization, and every Lagrange multiplier problem you solved in MATH 201 was a two-variable Lagrangian dual computation.
+
+---
+
+**Looking forward to the roadmap**, the Lagrangian duality framework is the operational machinery of every constrained optimization in every phase. In Phase 1, the Kantorovich problem is a linear program over the infinite-dimensional space of coupling measures, with equality constraints enforcing the marginal conditions. The dual variables are the potential functions $\phi$ and $\psi$ — the Lagrange multipliers for the marginal constraints — and the Kantorovich duality theorem is strong duality for this infinite-dimensional LP. The complementary slackness conditions say: a pair $(x,y)$ is in the support of the optimal coupling if and only if $\phi(x) + \psi(y) = c(x,y)$ — the constraint is active at every point that is actually used for transport. In Phase 2, the equivariance constraints of geometric deep learning — requiring network outputs to transform correctly under symmetry operations — are linear equality constraints on the weight matrices, and their Lagrange multipliers measure the marginal cost of enforcing each equivariance condition. In Phase 3, the JKO scheme minimizes a sum of an energy functional and a Wasserstein distance at each time step, subject to the constraint that the output is a probability measure — a constraint whose Lagrange multiplier is the time step size, appearing as the temperature parameter governing the trade-off between energy minimization and distribution spreading.
+
+The rival supplier sitting across the market from the procurement officer is not a competitor — it is the dual problem, looking at the same optimization from the other side of the market. The primal minimizes over quantities. The dual maximizes over prices. At optimality, under convexity and Slater's condition, they see exactly the same solution from exactly opposite directions. The duality gap between them is zero.
+
+---
+---

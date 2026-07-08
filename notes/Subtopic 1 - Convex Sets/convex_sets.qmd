@@ -1,0 +1,265 @@
+# Subtopic 1 - Convex Sets
+
+## Layer 1 (Story)
+
+You are a urban land developer in Kathmandu, and you have just acquired a large irregularly shaped plot of land somewhere between Boudhanath and Chabahil. Your architect hands you three different proposed site plans, each carving the land into a different shape for the development project. Before evaluating aesthetics or cost, you apply a single preliminary test to each plan — a test so simple a child could perform it, and yet so powerful that it determines whether the entire engineering and logistics plan for the development is feasible or not.
+
+The test is this: pick any two points inside the proposed site boundary. Now draw the straight line segment connecting them. Does the entire line segment stay inside the boundary?
+
+If yes, for every possible pair of points — not just the ones you checked, but every pair — the site is convex. If no, for even a single pair, the site is non-convex.
+
+This is the definition of a convex set. And the reason this simple test matters so deeply for the development project is that it determines whether you can move freely between any two locations on the site without leaving the property. A convex site has no bays, no peninsulas, no concavities, no hidden alcoves that require leaving the property to access from another part. A non-convex site has gaps in its interior connectivity — there exist pairs of locations you cannot travel between in a straight line without stepping off the property.
+
+---
+
+Let us walk through the three proposed site plans and apply the test.
+
+**Site Plan A** is a simple rectangular block — a solid rectangle, fully filled in, no holes. You pick any two points inside it. The straight line connecting them stays inside the rectangle, because the interior of a rectangle has no concavities. You cannot draw a chord that exits the rectangle and re-enters it, because the rectangle has no bays or inlets. Site Plan A passes the test. It is convex.
+
+**Site Plan B** is an L-shaped plot — the kind you get when you take a rectangle and remove one corner. Imagine the plot covers the area from coordinate $(0,0)$ to $(3,3)$, but with the upper-right square from $(2,2)$ to $(3,3)$ removed. Now pick two points: one at $(0.5, 2.5)$, in the upper-left arm of the L, and one at $(2.5, 0.5)$, in the lower-right arm. Draw the line connecting them. The midpoint of this line is at $(1.5, 1.5)$ — which sits inside the plot. But a point like $(2.3, 2.3)$ on the line segment lies outside the L-shaped boundary, in the removed corner. The line exits the plot. Site Plan B fails the test. It is non-convex.
+
+**Site Plan C** is a circular plot — a perfect disk. Any two points inside a disk can be connected by a line segment that stays inside the disk. The disk passes the test. It is convex.
+
+---
+
+Now here is why this simple geometric test determines the feasibility of the entire engineering plan.
+
+The development project requires laying a water main from any supply point to any usage point on the site. If the site is convex, the engineer can always run a straight pipe between any two points — the shortest possible route — without leaving the property. No detours, no easements, no permission to run pipes under neighboring land. The convexity of the site is the guarantee that straight-line connectivity is always available.
+
+But if the site is non-convex — like the L-shaped plan — then there exist pairs of points for which the straight pipe route exits the property. The engineer must either acquire additional land rights, route the pipe in a bend that stays on the property, or use a longer path. The non-convexity introduces feasibility complications that ramify through the entire project. The preliminary test catches this complication before a single rupee is spent on detailed engineering.
+
+This is precisely why convex sets are the natural constraint sets for optimization. When you minimize an objective function over a convex feasible region, you can always travel from any feasible point to any other feasible point in a straight line and stay feasible. The optimizer never gets trapped in a pocket of the feasible region with no straight-line escape route to the optimum. The geometry of the constraint set does not create hidden traps.
+
+---
+
+Now let us enrich the picture with three properties of convex sets that will appear constantly in the roadmap, introduced through the site development story.
+
+**Intersections preserve convexity.** Suppose you have two overlapping site proposals — both convex — and the city council insists you use only the land that both proposals agree on. The intersection of two convex sets is always convex. Here is why: if you pick any two points in the intersection, both points are in Site A (which is convex, so the connecting line stays in A) and both points are in Site B (which is convex, so the connecting line stays in B). Therefore the connecting line stays in both A and B simultaneously — it stays in the intersection. The intersection of any number of convex sets, finite or infinite, is always convex. This is the principle behind convex constraint systems: the feasible set defined by multiple convex constraints is the intersection of multiple convex sets, and therefore convex.
+
+**Convex combinations stay inside.** A convex combination of two points $x$ and $y$ is any point of the form $\lambda x + (1-\lambda)y$ for $\lambda \in [0,1]$ — a point on the straight line segment between $x$ and $y$. Saying a set is convex is exactly the same as saying it is closed under convex combinations: for any two points in the set and any $\lambda \in [0,1]$, the convex combination is also in the set. This is just the definition restated algebraically. But the algebraic form is useful because it extends naturally: a convex combination of $k$ points $x_1, \ldots, x_k$ is any point $\sum_{i=1}^k \lambda_i x_i$ where $\lambda_i \geq 0$ and $\sum_i \lambda_i = 1$ — a weighted average of the points. The **convex hull** of a set $S$ is the smallest convex set containing $S$ — equivalently, the set of all convex combinations of points in $S$. If the site proposals give you a finite collection of corner points, the convex hull is the smallest convex land plot containing all of them — the polygon you would get by wrapping a rubber band around the corner stakes.
+
+**Separating hyperplanes divide the world cleanly.** Suppose the city has two competing development groups, each claiming a different convex site, and their sites do not overlap. Can you always draw a straight property boundary line — a hyperplane — that separates the two sites, with one group's site entirely on one side and the other group's site entirely on the other side? If both sites are convex and disjoint, the answer is always yes. This is the **Separating Hyperplane Theorem**: two disjoint convex sets can always be separated by a hyperplane. Moreover, if a point lies outside a convex set, there exists a hyperplane that separates the point from the set — the **Supporting Hyperplane Theorem**. These theorems are the geometric foundation of support vector machines, the KKT optimality conditions, and the duality theory of convex optimization. Every time an algorithm finds a certificate that a point is not in a convex set, it is constructing a separating hyperplane.
+
+---
+
+Here is the break moment. The naive assumption is that convexity is a mild or easily satisfied condition — that most naturally arising sets in optimization and machine learning are convex or at least close to convex. After all, rectangles, circles, ellipses, and norm balls are all convex. Surely the feasible sets of most practical problems are convex?
+
+This breaks badly in machine learning. The parameter space of a neural network — the set of all weight matrices and bias vectors — is a perfectly convex set: it is just $\mathbb{R}^n$ for some large $n$, the most convex set possible. But the set of neural network functions achievable by varying those parameters is not convex in function space. Two neural networks can each approximate a given target function well, but their average — the network whose weights are the average of the two networks' weights — may approximate the target function poorly. The set of functions representable by a fixed neural network architecture is highly non-convex in function space, riddled with local minima, saddle points, and flat regions. This is why training neural networks is hard: the optimization problem is not convex, and gradient descent offers no global optimality guarantee. Convexity is not mild — it is exceptional, and the entire edifice of convex optimization theory exists precisely because the convex case is the rare, tractable case that we understand completely and exploit whenever possible.
+
+The non-convexity of neural network optimization is also why the roadmap spends so much time on the convex theory first. The Legendre-Fenchel transform, Lagrangian duality, and the Kantorovich duality of Phase 1 are all tools that work because the relevant problems — not the neural network training problem, but the optimal transport problem and its dual — are convex. Understanding the convex theory completely is the prerequisite for understanding both when it applies and why it fails when it does not.
+
+---
+
+Hold this picture in mind. The land developer's preliminary test — can every pair of points be connected by a line that stays on the property? — is the definition of convexity. The rectangular site passes. The L-shaped site fails. The circular disk passes. The test determines straight-line connectivity, which determines whether the optimizer can always travel directly toward the minimum without being forced off the feasible set. Convexity is the geometric condition that makes optimization reliable, duality meaningful, and certificates of optimality constructible. And it is the exceptional, precious condition that the roadmap exploits whenever the problem structure permits.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in five stages: the precise definition of a convex set, the canonical examples and non-examples, the fundamental operations that preserve convexity, the separation and support theorems, and the connection to convex cones and affine sets that will appear in the duality theory of the next two topics.
+
+### The Definition
+
+Let $V$ be a vector space over $\mathbb{R}$. A subset $C \subseteq V$ is called **convex** if for every pair of points $x, y \in C$ and every scalar $\lambda \in [0,1]$, the convex combination $\lambda x + (1-\lambda)y$ belongs to $C$:
+
+$$C \text{ is convex} \iff \forall x, y \in C, \; \forall \lambda \in [0,1], \quad \lambda x + (1-\lambda)y \in C$$
+
+The point $\lambda x + (1-\lambda)y$ traces the straight line segment from $y$ (at $\lambda = 0$) to $x$ (at $\lambda = 1$) as $\lambda$ varies over $[0,1]$. Convexity requires that this entire segment remains within $C$ for every pair of points. The empty set $\emptyset$ and the whole space $V$ are both convex by convention — the condition is vacuously satisfied for $\emptyset$ and trivially satisfied for $V$.
+
+More generally, a **convex combination** of $k$ points $x_1, \ldots, x_k \in V$ is any point of the form:
+
+$$\sum_{i=1}^k \lambda_i x_i \quad \text{where} \quad \lambda_i \geq 0 \; \forall i \quad \text{and} \quad \sum_{i=1}^k \lambda_i = 1$$
+
+A set $C$ is convex if and only if it contains all convex combinations of its elements — not just pairwise combinations, but combinations of any finite number of points. This equivalence follows by induction: if $C$ contains all pairwise convex combinations, it contains all finite convex combinations.
+
+---
+
+### Canonical Examples and Non-Examples
+
+The following sets are convex, and you should hold their geometric pictures alongside their algebraic definitions:
+
+**Affine subspaces.** Any affine subspace $\{x_0 + v : v \in W\}$ — a translate of a linear subspace $W$ — is convex, because convex combinations of points in an affine subspace stay in the affine subspace. Lines, planes, and hyperplanes in $\mathbb{R}^n$ are all convex.
+
+**Norm balls.** For any norm $\|\cdot\|$ and any $r > 0$, the closed ball $\{x : \|x\| \leq r\}$ is convex. The proof uses the triangle inequality: if $\|x\| \leq r$ and $\|y\| \leq r$, then $\|\lambda x + (1-\lambda)y\| \leq \lambda\|x\| + (1-\lambda)\|y\| \leq \lambda r + (1-\lambda)r = r$. The diamond $B_1$, the sphere $B_2$, and the hypercube $B_\infty$ from the previous topic are all convex sets.
+
+**Halfspaces.** A closed halfspace is a set of the form $\{x \in \mathbb{R}^n : \langle a, x \rangle \leq b\}$ for some $a \in \mathbb{R}^n$ and $b \in \mathbb{R}$. It is convex because the inner product is linear: if $\langle a, x\rangle \leq b$ and $\langle a, y\rangle \leq b$, then $\langle a, \lambda x + (1-\lambda)y\rangle = \lambda\langle a,x\rangle + (1-\lambda)\langle a,y\rangle \leq b$.
+
+**Polyhedra.** A polyhedron is a finite intersection of halfspaces: $\{x : Ax \leq b\}$ for a matrix $A$ and vector $b$. Since each halfspace is convex and intersections of convex sets are convex, every polyhedron is convex. Linear programming — the optimization over polyhedra — is a special case of convex optimization.
+
+**Positive semidefinite cone.** The set $\mathbb{S}^n_+ = \{X \in \mathbb{R}^{n\times n} : X = X^T, \; v^T X v \geq 0 \; \forall v\}$ of positive semidefinite symmetric matrices is convex. This is the constraint set of semidefinite programming, and it will appear in the spectral theory of the Advanced Linear Algebra chapter.
+
+The following sets are non-convex and serve as essential counterexamples:
+
+**The unit sphere surface** $\{x \in \mathbb{R}^n : \|x\|_2 = 1\}$ — the boundary of the Euclidean ball without its interior — is non-convex. The midpoint of two antipodal points $x$ and $-x$ is the origin, which has norm 0, not 1.
+
+**The L-shaped region** from the story: $[0,3]^2 \setminus [2,3]^2$ is non-convex because the chord between $(0.5, 2.5)$ and $(2.5, 0.5)$ passes through the removed corner.
+
+**The set of rank-$k$ matrices** for $k < n$ is non-convex. The average of two rank-1 matrices is generally rank 2.
+
+---
+
+### Operations That Preserve Convexity
+
+The power of convexity in optimization comes partly from the rich set of operations under which it is preserved. These operations allow you to construct complex convex sets from simple ones.
+
+**Intersection.** If $\{C_\alpha\}_{\alpha \in \Lambda}$ is any collection of convex sets — finite, countably infinite, or uncountably infinite — then:
+
+$$\bigcap_{\alpha \in \Lambda} C_\alpha \text{ is convex}$$
+
+The proof is immediate: if $x$ and $y$ are in every $C_\alpha$, then $\lambda x + (1-\lambda)y$ is in every $C_\alpha$ by convexity of each, hence in the intersection. This is the most important preservation property: the feasible set of any system of convex constraints is convex, because it is the intersection of the individual convex constraint sets.
+
+**Image under affine maps.** If $C \subseteq \mathbb{R}^n$ is convex and $f: \mathbb{R}^n \to \mathbb{R}^m$ is an affine map $f(x) = Ax + b$, then the image $f(C) = \{Ax + b : x \in C\}$ is convex. The proof: $f(\lambda x + (1-\lambda)y) = \lambda f(x) + (1-\lambda)f(y)$.
+
+**Preimage under affine maps.** If $D \subseteq \mathbb{R}^m$ is convex and $f(x) = Ax + b$ is affine, then the preimage $f^{-1}(D) = \{x : Ax + b \in D\}$ is convex.
+
+**Cartesian product.** If $C_1 \subseteq \mathbb{R}^n$ and $C_2 \subseteq \mathbb{R}^m$ are convex, then $C_1 \times C_2 \subseteq \mathbb{R}^{n+m}$ is convex.
+
+**Minkowski sum.** The Minkowski sum of two sets $C_1$ and $C_2$ is $C_1 + C_2 = \{x + y : x \in C_1, y \in C_2\}$. If both sets are convex, their Minkowski sum is convex. The Minkowski sum appears in robust optimization: if your decision variable $x$ is uncertain within a convex uncertainty set $U$, and you require $x + u$ to be feasible for all $u \in U$, the robust feasible set is the Minkowski difference $C \ominus U$.
+
+**Closure and interior.** The closure $\overline{C}$ and interior $\text{int}(C)$ of a convex set $C$ in a topological vector space are both convex.
+
+---
+
+### The Convex Hull
+
+The **convex hull** of a set $S \subseteq V$, written $\text{conv}(S)$, is the smallest convex set containing $S$:
+
+$$\text{conv}(S) = \bigcap\{C : C \text{ convex}, S \subseteq C\}$$
+
+Equivalently, $\text{conv}(S)$ is the set of all convex combinations of finite subsets of $S$:
+
+$$\text{conv}(S) = \left\{\sum_{i=1}^k \lambda_i x_i : k \geq 1, \; x_i \in S, \; \lambda_i \geq 0, \; \sum_{i=1}^k \lambda_i = 1\right\}$$
+
+The equivalence of these two definitions follows from the fact that the set of all convex combinations is itself convex — easily verified — and is contained in every convex set containing $S$.
+
+**Carathéodory's Theorem.** In $\mathbb{R}^n$, every point in $\text{conv}(S)$ can be expressed as a convex combination of at most $n+1$ points from $S$:
+
+$$x \in \text{conv}(S) \implies x = \sum_{i=1}^{n+1} \lambda_i x_i \quad \text{for some } x_1, \ldots, x_{n+1} \in S$$
+
+This theorem says that in $n$-dimensional space, you never need more than $n+1$ points to represent any convex combination. In the plane ($n=2$), any point in a convex hull is a convex combination of at most 3 points — a triangle. In $\mathbb{R}^3$, at most 4 points — a tetrahedron.
+
+---
+
+### Separation and Support Theorems
+
+The two most powerful theorems about convex sets are the separation theorems, which are the geometric foundation of duality theory.
+
+**Theorem (Separating Hyperplane Theorem).** Let $C$ and $D$ be two nonempty disjoint convex subsets of $\mathbb{R}^n$: $C \cap D = \emptyset$. Then there exists a nonzero vector $a \in \mathbb{R}^n$ and a scalar $b \in \mathbb{R}$ such that:
+
+$$\langle a, x \rangle \leq b \leq \langle a, y \rangle \quad \forall x \in C, \; \forall y \in D$$
+
+The hyperplane $\{z : \langle a, z\rangle = b\}$ separates $C$ and $D$: $C$ is contained in the halfspace $\{\langle a, z\rangle \leq b\}$ and $D$ is contained in the halfspace $\{\langle a, z\rangle \geq b\}$.
+
+If the sets are additionally closed and at least one is compact, the separation is **strict**: there exists $b_1 < b_2$ such that $\langle a, x\rangle \leq b_1 < b_2 \leq \langle a, y\rangle$ for all $x \in C$ and $y \in D$.
+
+**Theorem (Supporting Hyperplane Theorem).** Let $C \subseteq \mathbb{R}^n$ be a nonempty convex set and let $x_0 \in \partial C$ be a boundary point of $C$. Then there exists a nonzero vector $a \in \mathbb{R}^n$ such that:
+
+$$\langle a, x \rangle \leq \langle a, x_0 \rangle \quad \forall x \in C$$
+
+The hyperplane $\{z : \langle a, z\rangle = \langle a, x_0\rangle\}$ is a **supporting hyperplane** of $C$ at $x_0$ — it touches $C$ at $x_0$ and $C$ lies entirely in the halfspace on one side of it. The vector $a$ is called a **support vector** at $x_0$.
+
+The supporting hyperplane theorem is the geometric foundation of the subdifferential theory of convex functions: at every boundary point of the epigraph of a convex function, there is a supporting hyperplane, and the slopes of those supporting hyperplanes are the subgradients of the function. This connection will be made precise in the next subtopic on convex functions.
+
+**Theorem (Farkas' Lemma).** For $A \in \mathbb{R}^{m \times n}$ and $b \in \mathbb{R}^m$, exactly one of the following holds:
+
+$$\text{(i) There exists } x \geq 0 \text{ such that } Ax = b$$
+$$\text{(ii) There exists } y \in \mathbb{R}^m \text{ such that } A^T y \geq 0 \text{ and } b^T y < 0$$
+
+Farkas' Lemma is the separation theorem applied to polyhedral cones. It is the foundation of linear programming duality and a special case of the more general KKT conditions for convex optimization.
+
+---
+
+### Convex Cones
+
+A set $K \subseteq V$ is a **cone** if for every $x \in K$ and every $\lambda > 0$, $\lambda x \in K$ — the set is closed under positive scaling. A **convex cone** is a set that is both convex and a cone, equivalently a set satisfying:
+
+$$x, y \in K \implies \alpha x + \beta y \in K \quad \forall \alpha, \beta \geq 0$$
+
+The canonical examples are: the non-negative orthant $\mathbb{R}^n_+ = \{x : x_i \geq 0 \; \forall i\}$, the second-order cone (ice-cream cone) $\{(x,t) : \|x\|_2 \leq t\}$, and the positive semidefinite cone $\mathbb{S}^n_+$.
+
+The **dual cone** of $K$ is:
+
+$$K^* = \{y : \langle x, y\rangle \geq 0 \; \forall x \in K\}$$
+
+It is always a closed convex cone, regardless of whether $K$ is. The dual cone of $\mathbb{R}^n_+$ is $\mathbb{R}^n_+$ itself — the non-negative orthant is self-dual. The dual cone of $\mathbb{S}^n_+$ is $\mathbb{S}^n_+$ itself — the PSD cone is self-dual. The dual cone construction is the conic analogue of the dual norm, and it plays the same role in conic optimization that dual norms play in norm-constrained optimization.
+
+---
+
+### The Projection onto a Convex Set
+
+The **projection** of a point $x \in V$ onto a closed convex set $C$ is the unique nearest point in $C$:
+
+$$\text{proj}_C(x) = \argmin_{y \in C} \|x - y\|_2$$
+
+Uniqueness follows from the strict convexity of the squared $L_2$ norm — the function $y \mapsto \|x-y\|_2^2$ is strictly convex, so it has at most one minimizer over any convex set $C$. Existence follows from the Hilbert Projection Theorem: $C$ is a closed convex subset of the Hilbert space $L^2$, and every point has a unique nearest neighbor in such a set.
+
+The projection satisfies the **variational inequality** characterization:
+
+$$\hat{y} = \text{proj}_C(x) \iff \langle x - \hat{y}, y - \hat{y}\rangle \leq 0 \quad \forall y \in C$$
+
+This says: the vector from the projection $\hat{y}$ to the original point $x$ makes an obtuse angle with every vector from $\hat{y}$ into the set $C$. Geometrically, the projection is the point on the boundary of $C$ closest to $x$, and the line from $x$ to $\hat{y}$ is perpendicular — or more than perpendicular — to every direction that points further into $C$.
+
+The projection onto convex sets (POCS) algorithm alternates projections onto multiple convex sets to find a point in their intersection, and it is the foundation of many iterative algorithms in signal processing, image reconstruction, and machine learning.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 304 (Computational Operations Research), the feasible sets of linear programs — defined by linear inequality constraints $Ax \leq b$ — are polyhedra, which are intersections of halfspaces, which are convex sets. The simplex method navigates the vertices of these polyhedra, and the vertices are exactly the extreme points of the convex feasible set — points that cannot be written as convex combinations of other feasible points. In MATH 208, the support of a probability distribution — the smallest closed set carrying all the probability mass — is a convex set when the distribution is unimodal and log-concave, a fact used implicitly every time you assumed a distribution is well-behaved for optimization. In MATH 201, every time you checked that a critical point was a minimum by verifying the second-order sufficient conditions — the Hessian being positive definite — you were verifying that the function was locally convex, making the critical point a local and therefore global minimum of the local approximation.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the land developer's story has a precise mathematical address. Let us walk through them one by one, until the site plans, the property boundary test, and the full formal apparatus are completely fused into a single picture.
+
+---
+
+**The land being developed — the full terrain across which the developer is working — is the vector space $V$.** In the story, this was the physical plane of Kathmandu's geography — a two-dimensional space. In the optimization problems of the roadmap, $V$ is $\mathbb{R}^n$ for the parameter space of a neural network, or $L^2(\mu)$ for a space of probability densities, or the space of transport plans in Phase 1. The vector space is always the ambient universe — the full set of points among which the feasible region is carved.
+
+**The proposed site boundary — the region the developer is allowed to build on — is the convex set $C \subseteq V$.** It is a subset of the ambient space, and the convexity test determines whether this subset has the straight-line connectivity property. The rectangular site plan A is the closed rectangle $[0,3] \times [0,3]$ — a polyhedron, being a finite intersection of four halfspaces, and therefore convex by the intersection preservation property. The circular disk of site plan C is the Euclidean ball $\{x \in \mathbb{R}^2 : \|x\|_2 \leq r\}$ — a norm ball, and therefore convex by the triangle inequality proof. The L-shaped site plan B is $[0,3]^2 \setminus [2,3]^2$ — a non-convex set, because it fails to contain the chord between $(0.5, 2.5)$ and $(2.5, 0.5)$.
+
+**The preliminary test — pick any two points and check whether the connecting line stays inside the boundary — is the definition of convexity $\forall x, y \in C, \forall \lambda \in [0,1]: \lambda x + (1-\lambda)y \in C$.** The two points are $x$ and $y$. The connecting line segment is the family of convex combinations $\lambda x + (1-\lambda)y$ for $\lambda \in [0,1]$. The test passes if and only if every such convex combination stays in $C$. The story's formulation — "does the line stay inside?" — is the geometric reading of the algebraic condition. Both say the same thing: the set contains all weighted averages of its members.
+
+---
+
+**The straight pipe between any two supply and usage points is the line segment $\{\lambda x + (1-\lambda)y : \lambda \in [0,1]\}$ between points $x, y \in C$.** The engineer's requirement that the pipe stay on the property without detour or easement is the requirement that every point on this segment belongs to $C$. Convexity is the property that makes this requirement satisfiable for every pair of points simultaneously. The connection between straight-line connectivity and convexity is not a metaphor — it is the definition. Convexity says: the straight path between any two feasible points is entirely feasible.
+
+**The routing detour forced by the L-shaped site's non-convexity is the geometric manifestation of the failure condition $\exists x, y \in C, \exists \lambda \in [0,1]: \lambda x + (1-\lambda)y \notin C$.** The specific failure point — the midpoint $(1.5, 1.5)$ of the chord from $(0.5, 2.5)$ to $(2.5, 0.5)$ lying outside the L-shape — is one witness to the non-convexity. A single such witness is sufficient to certify non-convexity, exactly as a single counterexample suffices to disprove a universal statement. In optimization, a non-convex feasible set means there exist pairs of feasible points that cannot be connected by a straight feasible path, which means gradient-based methods can get trapped on one side of the concavity without being able to reach the other side directly.
+
+---
+
+**The city council's instruction to use only land that both proposals agree on is the intersection $C_1 \cap C_2$.** If both site proposals $C_1$ and $C_2$ are convex — say both are norm balls or halfspaces — then their intersection is convex by the intersection preservation theorem. The proof in the story was: if $x$ and $y$ are in both sites simultaneously, then the chord from $x$ to $y$ stays in site 1 (by convexity of $C_1$) and stays in site 2 (by convexity of $C_2$), therefore it stays in $C_1 \cap C_2$. This is the formal proof of intersection preservation, stated in the language of the preliminary test. The consequence for optimization is: any feasible set defined by multiple convex constraints — each constraint carving out a convex region — is convex, being the intersection of convex sets.
+
+**The rubber band wrapped around the corner stakes of a site proposal is the convex hull $\text{conv}(S)$.** The stakes are the points in $S$. The rubber band, pulled tight, traces the boundary of the smallest convex region containing all the stakes. Every point inside the rubber band is a convex combination of some subset of the stakes — by Carathéodory's theorem, at most $n+1$ stakes in $\mathbb{R}^n$. In the plane, every interior point of the convex hull is a convex combination of at most 3 corner stakes — it sits inside some triangle formed by three stakes. The convex hull is the tightest convex site plan that includes all the specified corner points, and it is uniquely determined by those points.
+
+**Carathéodory's theorem is the statement that in the plane, any point inside the developer's rubber-band boundary can be expressed as a weighted average of at most three corner stakes.** In $\mathbb{R}^n$, at most $n+1$ stakes suffice. This theorem limits the complexity of convex combination representations: you never need an infinite number of points to represent a convex combination, just at most $n+1$. This is a finiteness guarantee that makes convex hull computations tractable.
+
+---
+
+**The property boundary line separating two competing developers' non-overlapping convex sites is the separating hyperplane $\{z : \langle a, z\rangle = b\}$.** The separating hyperplane theorem says: whenever two convex sites $C$ and $D$ are disjoint — they share no land — there always exists a straight boundary line that puts all of $C$ on one side and all of $D$ on the other. The vector $a$ is the normal to the boundary line — the direction perpendicular to it. The scalar $b$ is the threshold. The halfspace $\{\langle a, z\rangle \leq b\}$ contains $C$, and the halfspace $\{\langle a, z\rangle \geq b\}$ contains $D$. The existence of such a line is not obvious for general shapes — but it is always guaranteed when both shapes are convex and disjoint.
+
+**The supporting hyperplane at a boundary point $x_0$ of a convex site is the tangent line that touches the site at $x_0$ with the entire site on one side.** The supporting hyperplane theorem says: at every boundary point of a convex set, there exists at least one hyperplane that touches the set there, with the entire set lying on one side of the hyperplane. The supporting vector $a$ points outward — away from the set. This theorem is the geometric foundation of the subdifferential theory of convex functions coming in the next subtopic: the subgradients of a convex function at a point are exactly the slopes of the supporting hyperplanes to its epigraph at that point.
+
+**The break moment — the non-convexity of neural network function space — is the formal proof that convexity is exceptional, not typical.** The parameter space $\mathbb{R}^n$ of a neural network is perfectly convex — it is the most convex set possible. But the map from parameters to functions is nonlinear, and the image of a convex set under a nonlinear map need not be convex. Two neural networks, each individually good at approximating a target, may have an average — a network with averaged weights — that is poor. The set of representable functions is not closed under convex combinations. This failure is the geometric reason why training neural networks is hard: the effective optimization landscape is non-convex, full of saddle points and local minima, and no global optimality guarantee exists. Convexity is the exception that the roadmap exploits whenever the problem structure — as in Optimal Transport and Kantorovich duality — permits it.
+
+---
+
+**The projection $\text{proj}_C(x)$ onto a convex set is the nearest feasible point to an infeasible point $x$.** In the site development story, if the engineer specifies a pipe junction at an infeasible location $x$ outside the property boundary, the projection finds the nearest point on the boundary — the point $\hat{y} \in C$ minimizing $\|x - \hat{y}\|_2$. The variational inequality $\langle x - \hat{y}, y - \hat{y}\rangle \leq 0$ for all $y \in C$ says: the vector from the projection to the original point makes an obtuse angle with every direction pointing further into the site. The projection is the point where you hit the boundary when you walk straight from $x$ toward the site. In optimization, projection onto convex sets is the operation that takes an infeasible iterate and returns it to the feasible region, and it is the building block of projected gradient descent algorithms.
+
+**Farkas' Lemma is the land registry's certification theorem.** It says: either the disputed land allocation $b$ can be expressed as a non-negative combination of the developers' individual allocations (the columns of $A$) — in which case the allocation is feasible — or there exists a pricing vector $y$ that simultaneously certifies all individual allocations as non-negatively priced while giving the disputed allocation a negative total price — a certificate of infeasibility. The two cases are mutually exclusive and exhaustive. This is the separation theorem applied to the polyhedral cone generated by the columns of $A$: either $b$ is in the cone, or a separating hyperplane exists that puts $b$ on the infeasible side. Farkas' Lemma is the algebraic form of this geometric fact, and it is the foundation of linear programming duality and the KKT conditions.
+
+---
+
+**The connection to MATH 304 (Computational Operations Research) is now fully explicit.** Every linear programming problem you solved — maximizing a linear objective over a polyhedral feasible set $\{x : Ax \leq b, x \geq 0\}$ — was convex optimization over a convex set. The feasible set was a polyhedron — a finite intersection of halfspaces — and therefore convex. The simplex method navigated the vertices of this polyhedron, which are the extreme points of the convex feasible set — the points that cannot be written as convex combinations of other feasible points. The optimality of the simplex method's solution follows from the fundamental theorem of linear programming: the maximum of a linear function over a compact convex polyhedron is always achieved at a vertex. This is a direct consequence of the separating hyperplane theorem: the maximum level set of the linear objective that touches the polyhedron must touch it at a vertex, because a linear function's level sets are hyperplanes, and a hyperplane touching a polyhedron touches it at a face, and the maximum is achieved at the lowest-dimensional face — a vertex.
+
+**The connection to MATH 201 (Advanced Calculus) runs through the second-order sufficient conditions.** When you checked that a critical point $x^*$ was a local minimum by verifying $\nabla^2 f(x^*) \succ 0$ — the Hessian is positive definite — you were verifying that $f$ is locally strongly convex near $x^*$. A strongly convex function has a unique global minimum, and the positive definite Hessian condition is the analytic certificate of local convexity. The connection between positive definiteness, convexity, and global minimality is now explicit: the Hessian being positive definite at a critical point means the level sets of $f$ near $x^*$ are approximately ellipsoids — convex sets — and the critical point sits at their center.
+
+---
+
+**Looking forward across the roadmap**, convex sets are the constraint sets of every tractable optimization problem. In Phase 1, the set of coupling measures — the feasible set of the Kantorovich problem — is convex: it is the intersection of two sets of linear equality constraints, each of which is a convex halfspace, and their intersection is convex. The Wasserstein distance is the minimum of a linear functional over this convex feasible set, and its dual is the maximum of another linear functional over another convex set — the set of pairs of potential functions satisfying the constraint $\phi(x) + \psi(y) \leq c(x,y)$. The entire duality theory of Optimal Transport lives inside the geometry of convex sets and separating hyperplanes. In Phase 2, the equivariance constraints of geometric deep learning define convex constraint sets on the space of network parameters — the set of weight matrices satisfying a linear equivariance condition is an affine subspace, which is convex. In Phase 3, the set of probability distributions with a given mean and covariance is a convex set, and the JKO scheme minimizes a functional over this convex set at each time step.
+
+Every optimization problem in the roadmap either is convex — in which case all the guarantees of this chapter apply directly — or is non-convex but approximated, relaxed, or dualized into a convex problem. The preliminary test that the land developer applied to her site plans — does every chord stay inside? — is the question that separates the tractable from the intractable throughout the entire journey.
+
+---
+---

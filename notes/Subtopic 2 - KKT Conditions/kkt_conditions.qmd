@@ -1,0 +1,339 @@
+# Subtopic 2 - KKT Conditions
+
+## Layer 1 (Story)
+
+You are a senior engineer at the Melamchi Water Supply Project, and you have been handed an assignment that sounds deceptively simple. The project has just completed a new distribution network serving five reservoir zones across the Kathmandu valley. Each zone has a pipe of fixed diameter connecting it to the main supply line, and each pipe has a maximum flow capacity. The total water available from the Melamchi source is fixed — a hard physical limit on daily supply. Your job is to allocate the daily water supply across the five zones to maximize total welfare — a measure of how well each zone's needs are met — subject to the capacity constraints on each pipe and the total supply constraint.
+
+You set up the optimization problem, run the calculations, and find an optimal allocation. But your project director — a meticulous engineer who has overseen water projects across South Asia for thirty years — does not accept the answer until you can certify it. Not just compute it — certify it. She wants a proof, not a number. She wants conditions that simultaneously and conclusively verify that your allocation is truly optimal and cannot be improved, without requiring her to check every other possible allocation.
+
+What would such a certification look like?
+
+---
+
+Your director suggests thinking about it from first principles. An allocation is optimal if no small perturbation can improve the welfare. This is the informal content of every first-order optimality condition. But in a constrained problem, perturbations are not free — you cannot adjust one zone's allocation without respecting the pipe capacities and the total supply limit. The certification must account for the constraints.
+
+She proposes four conditions that together constitute a complete certificate of optimality. She calls them the four pillars of the certificate, and she insists that all four must be verified simultaneously. No single pillar alone is sufficient. No three of the four together are sufficient. All four, together, certify optimality — and in a convex problem, they are not just sufficient but necessary as well. Every optimal solution satisfies all four, and every point satisfying all four is optimal.
+
+---
+
+**The First Pillar: Primal Feasibility.**
+
+The allocation must actually be feasible. Every zone must receive a non-negative water supply. No zone's pipe capacity must be exceeded. The total allocation must not exceed the available supply. This seems obvious — of course the optimal solution must be feasible, otherwise it is not even a valid allocation. But primal feasibility is one of the four pillars precisely because it must be explicitly verified. A numerical algorithm might converge to an infeasible point, or an analytical formula might produce a solution that violates a constraint. The first pillar is the baseline check: is the solution actually in the feasible set?
+
+In the formal language of the previous subtopic: every inequality constraint $f_i(x^*) \leq 0$ must be satisfied, and every equality constraint $h_j(x^*) = 0$ must be satisfied. The optimal allocation $x^*$ must lie inside the feasible region $\mathcal{D}$.
+
+**The Second Pillar: Dual Feasibility.**
+
+The Lagrange multipliers — the shadow prices of the constraints — must be non-negative for the inequality constraints. Recall from the previous subtopic that the dual variables $\lambda_i$ are the prices the rival supplier assigns to each resource — here, the price per cubic metre of water allocated to each zone's capacity constraint, and the price per cubic metre of total supply. These prices must be non-negative: the rival cannot offer to pay the project to use more pipe capacity or more total supply — additional capacity and supply are always weakly desirable, so their shadow prices are non-negative.
+
+Formally: $\lambda_i^* \geq 0$ for all inequality constraints $i$. There is no sign requirement on the multipliers $\nu_j^*$ for equality constraints — the total supply constraint could be relaxed in either direction, and its shadow price can be positive or negative depending on whether the constraint is binding from above or below.
+
+**The Third Pillar: Stationarity.**
+
+At the optimal allocation, the gradient of the objective must be balanced by the gradients of the active constraints, weighted by the Lagrange multipliers. In the water allocation story: at optimality, the marginal welfare of adding one more cubic metre of water to any zone must equal the shadow price of the total supply constraint, adjusted for which pipe capacity constraints are active. If zone 1's pipe is at full capacity and zone 2's pipe is not, then the marginal welfare of zone 1 — weighted by the binding pipe capacity shadow price — must equal the marginal welfare of adding water to zone 2 through the unconstrained pipe. If these marginal welfares were unequal, you could improve the total welfare by shifting water from the zone with lower marginal welfare to the zone with higher marginal welfare, contradicting optimality.
+
+Formally: at the optimal point $x^*$, the gradient of the Lagrangian with respect to $x$ must vanish: $\nabla_x L(x^*, \lambda^*, \nu^*) = 0$, which expands to $\nabla f_0(x^*) + \sum_i \lambda_i^* \nabla f_i(x^*) + \sum_j \nu_j^* \nabla h_j(x^*) = 0$. The gradient of the objective is balanced by the weighted gradients of the constraints. This is the stationarity condition — the condition that the optimal point is a stationary point of the Lagrangian, not just of the objective.
+
+**The Fourth Pillar: Complementary Slackness.**
+
+This is the most subtle and important pillar, and it is the one your director emphasizes most strongly. At the optimal allocation, for each pipe capacity constraint: either the pipe is at full capacity — the constraint is active, $f_i(x^*) = 0$ — or the shadow price of that constraint is zero — $\lambda_i^* = 0$. Never both active and zero simultaneously unless the problem is degenerate. Never both inactive and positive simultaneously.
+
+The logic is compelling. If a pipe is not at full capacity — if zone $i$ is receiving less water than its pipe can carry — then the capacity constraint is not limiting the allocation. It is irrelevant to the optimum. The shadow price of an irrelevant constraint must be zero: there is no value to relaxing a constraint that is not binding. If the shadow price were positive, it would be claiming that relaxing the non-binding constraint would improve the objective — but the constraint is already slack, so relaxing it does nothing. Contradiction. Therefore, if a constraint is inactive, its shadow price must be zero: $f_i(x^*) < 0 \implies \lambda_i^* = 0$.
+
+Conversely, if a constraint has a positive shadow price — if the capacity of zone $i$'s pipe is genuinely limiting the allocation — then the pipe must be at full capacity. If the pipe were not full, there would be room to push more water through at positive marginal value, contradicting the positive shadow price. Therefore, if a shadow price is positive, the constraint must be active: $\lambda_i^* > 0 \implies f_i(x^*) = 0$.
+
+Both directions combined give the complementary slackness condition: $\lambda_i^* f_i(x^*) = 0$ for all $i$. The product of the shadow price and the constraint value is always zero. Either the price is zero (constraint inactive, irrelevant) or the constraint value is zero (constraint active, binding), but not both nonzero simultaneously.
+
+---
+
+Your director draws a picture to make the fourth pillar vivid. Imagine the feasible region as a polygon — the set of all valid water allocations — and the optimal point as the corner where the objective level set first touches the polygon as you increase welfare. At a corner of the polygon, exactly some constraints are active — the walls of the polygon that form the corner — and others are inactive — the walls that are not part of the corner. The active constraints have positive shadow prices: they are the walls you are pressing against, and pressing harder would move the optimum. The inactive constraints have zero shadow prices: they are the walls you are not touching, and their location does not affect the optimum at all. Complementary slackness is the formal statement of this geometric picture: the shadow prices of the walls you are not touching are zero.
+
+---
+
+Here is the break moment. The naive assumption is that the four KKT conditions are merely necessary for optimality — that every optimal solution satisfies them, but many non-optimal solutions might satisfy them too, making them useful for identifying candidates but not for certifying the optimum. Surely you need additional conditions — second-order conditions, global convexity checks — to confirm that a KKT point is truly optimal?
+
+This breaks cleanly for convex problems. For a convex optimization problem where strong duality holds — which requires Slater's condition, as you learned in the previous subtopic — the KKT conditions are both necessary and sufficient for global optimality. A point satisfying all four KKT conditions is not merely a candidate for the optimum. It is the optimum — guaranteed, certified, conclusively. No additional checks are required. The four pillars together are a complete certificate of global optimality for convex problems.
+
+The reason is the local-implies-global theorem from the Convex Functions subtopic. For a convex objective over a convex feasible set, every local minimum is a global minimum. The KKT stationarity condition identifies points where the Lagrangian has zero gradient — local stationary points of the Lagrangian. For convex problems, these local stationary points are global minima of the Lagrangian, and when combined with complementary slackness, they are global minima of the original constrained problem. The convexity of the problem turns a local certificate into a global one.
+
+For non-convex problems, the KKT conditions remain necessary — every local minimum satisfies them, under appropriate constraint qualifications — but they are no longer sufficient. A non-convex problem can have many KKT points that are local minima, saddle points, or even local maxima, and distinguishing among them requires additional second-order conditions or global search. The four pillars certify the global optimum only when the building they support is convex.
+
+---
+
+Now your director applies the four pillars to the water allocation problem explicitly, and the picture becomes concrete.
+
+Suppose the optimal allocation sets zone 1's pipe to full capacity — the pipe is running at its maximum flow rate — and leaves zone 2's pipe with spare capacity. Complementary slackness says: the shadow price of zone 1's capacity constraint is positive (the constraint is active and limiting), and the shadow price of zone 2's capacity constraint is zero (the constraint is inactive and irrelevant). Stationarity says: the marginal welfare of water in zone 1, adjusted for the positive shadow price of its capacity constraint, equals the marginal welfare of water in zone 2, which has no capacity shadow price. The optimal allocation has equalized the adjusted marginal welfares across all zones — those with binding capacity constraints adjusted by the positive shadow price, those without binding constraints unadjusted.
+
+This equilibration principle — the KKT stationarity condition — is the first-order optimality condition for constrained optimization, and it is the formal generalization of the unconstrained condition $\nabla f = 0$ to the constrained setting. Instead of the gradient of the objective being zero, the gradient of the Lagrangian — the objective's gradient adjusted by the constraint gradients weighted by shadow prices — is zero. The KKT conditions are the correct first-order conditions for constrained optimization, and every solution algorithm for constrained convex problems is ultimately finding the point where all four pillars are satisfied.
+
+---
+
+Hold the four pillars as a single unified picture. An optimal water allocation is certified by: the allocation is feasible (primal feasibility); the shadow prices are non-negative (dual feasibility); the marginal welfares are equalized across constraints (stationarity); and the shadow prices of inactive constraints are zero (complementary slackness). These four conditions together say, without any ambiguity, that the allocation is optimal and cannot be improved. They are the mathematical equivalent of your director's signature on the engineering certificate — complete, rigorous, and sufficient.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the precise statement of the KKT conditions, their necessity under constraint qualifications, their sufficiency for convex problems, the geometric interpretation via normal cones, the connection to complementary slackness in linear programming, and the role of KKT conditions in the Kantorovich duality of Phase 1.
+
+---
+
+### The KKT Conditions — Precise Statement
+
+Consider the standard form primal problem:
+
+$$p^* = \inf_{x \in \mathbb{R}^n} f_0(x) \quad \text{subject to} \quad f_i(x) \leq 0, \; i = 1,\ldots,m, \quad h_j(x) = 0, \; j = 1,\ldots,p$$
+
+with Lagrangian $L(x,\lambda,\nu) = f_0(x) + \sum_i \lambda_i f_i(x) + \sum_j \nu_j h_j(x)$.
+
+A triple $(x^*, \lambda^*, \nu^*)$ satisfies the **KKT conditions** if:
+
+**KKT 1 — Primal Feasibility:**
+$$f_i(x^*) \leq 0 \quad \forall i = 1,\ldots,m$$
+$$h_j(x^*) = 0 \quad \forall j = 1,\ldots,p$$
+
+**KKT 2 — Dual Feasibility:**
+$$\lambda_i^* \geq 0 \quad \forall i = 1,\ldots,m$$
+
+**KKT 3 — Stationarity:**
+$$\nabla_x L(x^*, \lambda^*, \nu^*) = 0$$
+$$\nabla f_0(x^*) + \sum_{i=1}^m \lambda_i^* \nabla f_i(x^*) + \sum_{j=1}^p \nu_j^* \nabla h_j(x^*) = 0$$
+
+**KKT 4 — Complementary Slackness:**
+$$\lambda_i^* f_i(x^*) = 0 \quad \forall i = 1,\ldots,m$$
+
+For non-smooth problems where $f_0$ or $f_i$ are not differentiable, the stationarity condition is replaced by the subdifferential inclusion:
+
+$$0 \in \partial_x L(x^*, \lambda^*, \nu^*) = \partial f_0(x^*) + \sum_{i=1}^m \lambda_i^* \partial f_i(x^*) + \sum_{j=1}^p \nu_j^* \nabla h_j(x^*)$$
+
+This is the subdifferential form of stationarity — the zero vector must be a subgradient of the Lagrangian at $x^*$.
+
+---
+
+### Necessity — KKT Conditions as Necessary for Optimality
+
+**Theorem (KKT Necessity).** Suppose $x^*$ is a local minimum of the primal problem and a constraint qualification holds at $x^*$. Then there exist multipliers $(\lambda^*, \nu^*)$ such that $(x^*, \lambda^*, \nu^*)$ satisfies all four KKT conditions.
+
+The constraint qualification is a regularity condition on the active constraints at $x^*$. Several constraint qualifications are used in practice; the most important are:
+
+**Slater's Condition (for convex problems).** There exists $\tilde{x}$ with $f_i(\tilde{x}) < 0$ for all $i$ and $h_j(\tilde{x}) = 0$ for all $j$. This is the weakest qualification for convex problems and suffices for both necessity and strong duality.
+
+**Linear Independence Constraint Qualification (LICQ).** The gradients of the active inequality constraints and all equality constraints at $x^*$ are linearly independent:
+
+$$\{\nabla f_i(x^*) : f_i(x^*) = 0\} \cup \{\nabla h_j(x^*)\} \text{ are linearly independent}$$
+
+LICQ guarantees uniqueness of the multipliers $(\lambda^*, \nu^*)$ in addition to their existence.
+
+**Mangasarian-Fromovitz Constraint Qualification (MFCQ).** The equality constraint gradients are linearly independent, and there exists a direction $d$ satisfying $\langle \nabla f_i(x^*), d\rangle < 0$ for all active $i$ and $\langle \nabla h_j(x^*), d\rangle = 0$ for all $j$. MFCQ is weaker than LICQ but stronger than Slater's condition for non-convex problems.
+
+**Proof sketch of necessity under LICQ.** Since $x^*$ is a local minimum, no feasible descent direction exists. A feasible descent direction $d$ would satisfy $\langle \nabla f_0(x^*), d\rangle < 0$ (descent), $\langle \nabla f_i(x^*), d\rangle \leq 0$ for active $i$ (maintaining feasibility), and $\langle \nabla h_j(x^*), d\rangle = 0$ for all $j$ (maintaining equality feasibility). The non-existence of such $d$ is a statement about the intersection of halfspaces and hyperplanes, and by Farkas' Lemma — the polyhedral separation theorem — this non-existence is equivalent to the existence of non-negative multipliers $\lambda^*$ and unrestricted multipliers $\nu^*$ satisfying the stationarity condition. $\square$
+
+---
+
+### Sufficiency — KKT Conditions as Sufficient for Convex Optimality
+
+**Theorem (KKT Sufficiency for Convex Problems).** Suppose the primal problem is convex — $f_0, f_1, \ldots, f_m$ are convex and $h_j$ are affine. If $(x^*, \lambda^*, \nu^*)$ satisfies all four KKT conditions, then $x^*$ is a global minimum of the primal problem.
+
+**Proof.** For any feasible $x$:
+
+$$f_0(x) \geq f_0(x) + \sum_i \lambda_i^* f_i(x) + \sum_j \nu_j^* h_j(x) = L(x, \lambda^*, \nu^*)$$
+
+The first inequality holds because $\lambda_i^* \geq 0$ (dual feasibility) and $f_i(x) \leq 0$ (primal feasibility of $x$), so $\lambda_i^* f_i(x) \leq 0$, and $h_j(x) = 0$ so $\nu_j^* h_j(x) = 0$.
+
+Now, the Lagrangian $L(\cdot, \lambda^*, \nu^*)$ is convex in $x$ — it is a non-negative linear combination of convex functions $f_0, f_i$ plus affine functions $h_j$. A convex function achieves its global minimum at any stationary point. The stationarity condition $\nabla_x L(x^*, \lambda^*, \nu^*) = 0$ makes $x^*$ a stationary point of the Lagrangian. Therefore $x^*$ globally minimizes $L(\cdot, \lambda^*, \nu^*)$:
+
+$$L(x, \lambda^*, \nu^*) \geq L(x^*, \lambda^*, \nu^*) = f_0(x^*) + \sum_i \lambda_i^* \underbrace{f_i(x^*)}_{=0 \text{ or } \lambda_i^*=0} + \sum_j \nu_j^* \underbrace{h_j(x^*)}_{=0} = f_0(x^*)$$
+
+The second equality uses complementary slackness: $\lambda_i^* f_i(x^*) = 0$ for all $i$. Combining:
+
+$$f_0(x) \geq L(x, \lambda^*, \nu^*) \geq L(x^*, \lambda^*, \nu^*) = f_0(x^*)$$
+
+Therefore $f_0(x) \geq f_0(x^*)$ for all feasible $x$ — $x^*$ is a global minimum. $\square$
+
+The proof structure reveals the four pillars working in concert. Dual feasibility and primal feasibility of $x$ give the first inequality. Convexity and stationarity give the second inequality. Complementary slackness and primal feasibility of $x^*$ give the final equality. Remove any one pillar and the proof collapses.
+
+---
+
+### Complementary Slackness — Geometric Interpretation
+
+The complementary slackness condition $\lambda_i^* f_i(x^*) = 0$ partitions the inequality constraints into two categories:
+
+**Active constraints:** $f_i(x^*) = 0$ with $\lambda_i^* \geq 0$ (possibly positive). These are the constraints that are binding at the optimum — the feasible boundary walls that the optimal solution is pressing against. Their shadow prices are non-negative, reflecting the cost of tightening them.
+
+**Inactive constraints:** $f_i(x^*) < 0$ with $\lambda_i^* = 0$. These are the constraints that have slack at the optimum — the feasible boundary walls that the optimal solution is not touching. Their shadow prices are zero, reflecting the fact that tightening them slightly does not affect the optimal value.
+
+The **active set** at $x^*$ is $\mathcal{A}(x^*) = \{i : f_i(x^*) = 0\}$. The KKT conditions restricted to the active set are:
+
+$$\nabla f_0(x^*) + \sum_{i \in \mathcal{A}(x^*)} \lambda_i^* \nabla f_i(x^*) + \sum_j \nu_j^* \nabla h_j(x^*) = 0, \quad \lambda_i^* \geq 0 \; \forall i \in \mathcal{A}(x^*)$$
+
+The inactive constraints drop out entirely — their multipliers are zero and their gradients do not appear in the stationarity condition. The KKT conditions effectively reduce the constrained problem to an equality-constrained problem on the active constraint manifold.
+
+---
+
+### Normal Cone Characterization
+
+The KKT conditions have a clean geometric interpretation using normal cones. The **normal cone** to a convex set $C$ at a point $x^* \in C$ is:
+
+$$N_C(x^*) = \{g \in \mathbb{R}^n : \langle g, x - x^*\rangle \leq 0 \; \forall x \in C\}$$
+
+It is the set of all outward-pointing directions at $x^*$ — directions that point away from $C$ or along its boundary.
+
+**Theorem.** $x^*$ minimizes $f_0$ over a closed convex set $C$ if and only if:
+
+$$-\nabla f_0(x^*) \in N_C(x^*)$$
+
+equivalently $\langle \nabla f_0(x^*), x - x^*\rangle \geq 0$ for all $x \in C$.
+
+The KKT stationarity condition is the expansion of this normal cone condition for the specific convex set $\mathcal{D} = \{x : f_i(x) \leq 0, h_j(x) = 0\}$. The normal cone to $\mathcal{D}$ at $x^*$ is:
+
+$$N_\mathcal{D}(x^*) = \left\{\sum_{i \in \mathcal{A}(x^*)} \lambda_i \nabla f_i(x^*) + \sum_j \nu_j \nabla h_j(x^*) : \lambda_i \geq 0\right\}$$
+
+under the appropriate constraint qualification. The KKT stationarity condition $\nabla f_0(x^*) + \sum_i \lambda_i^* \nabla f_i(x^*) + \sum_j \nu_j^* \nabla h_j(x^*) = 0$ is exactly $-\nabla f_0(x^*) \in N_\mathcal{D}(x^*)$ — the gradient of the objective points into the normal cone of the feasible set at $x^*$. The objective cannot be decreased while remaining feasible: every direction of decreasing objective is blocked by the normal cone, meaning it points into the infeasible region.
+
+---
+
+### Primal-Dual Optimality Conditions
+
+When strong duality holds, the KKT conditions provide a complete characterization of the primal-dual optimal pair. The zero duality gap condition $f_0(x^*) = g(\lambda^*, \nu^*)$ is equivalent to all four KKT conditions simultaneously:
+
+$$f_0(x^*) = g(\lambda^*, \nu^*) \iff \text{all four KKT conditions hold at } (x^*, \lambda^*, \nu^*)$$
+
+**Proof.** From the sufficiency proof: $f_0(x^*) \geq L(x,\lambda^*,\nu^*) \geq L(x^*,\lambda^*,\nu^*) = f_0(x^*)$ when KKT holds, so equality holds throughout. But $g(\lambda^*,\nu^*) = \inf_x L(x,\lambda^*,\nu^*) = L(x^*,\lambda^*,\nu^*) = f_0(x^*)$, confirming zero duality gap. Conversely, zero duality gap plus feasibility force complementary slackness and stationarity by the same chain of inequalities reversed. $\square$
+
+This equivalence means: the KKT conditions are the optimality certificate for the primal-dual pair — they hold if and only if both the primal and dual are at their respective optima and the duality gap is zero.
+
+---
+
+### KKT Conditions for Specific Problems
+
+**Unconstrained minimization.** With no constraints, the KKT conditions reduce to $\nabla f_0(x^*) = 0$ — the standard first-order condition. KKT necessity and sufficiency for convex $f_0$ reduce to: $\nabla f_0(x^*) = 0$ is necessary and sufficient for global optimality. This is the familiar result from MATH 201.
+
+**Equality-constrained minimization.** With only equality constraints $h_j(x) = 0$, the KKT conditions are: $h_j(x^*) = 0$ (primal feasibility) and $\nabla f_0(x^*) + \sum_j \nu_j^* \nabla h_j(x^*) = 0$ (stationarity). This is exactly the method of Lagrange multipliers from MATH 201 — the KKT stationarity condition is $\nabla f_0 = -\sum_j \nu_j^* \nabla h_j$, the condition that the objective gradient is a linear combination of constraint gradients.
+
+**Inequality-constrained quadratic program.** For $\min \frac{1}{2}x^TQx + c^Tx$ subject to $Ax \leq b$ with $Q \succ 0$:
+
+$$Qx^* + c + A^T\lambda^* = 0 \quad \text{(stationarity)}$$
+$$Ax^* \leq b \quad \text{(primal feasibility)}$$
+$$\lambda^* \geq 0 \quad \text{(dual feasibility)}$$
+$$\lambda_i^*(Ax^* - b)_i = 0 \; \forall i \quad \text{(complementary slackness)}$$
+
+This system of equations and inequalities is the **linear complementarity problem** (LCP) associated with the quadratic program. Active-set methods and interior-point methods for quadratic programming both solve this LCP, either by explicitly tracking the active set or by following a central path that approaches the KKT point from the interior.
+
+**LASSO.** For $\min \frac{1}{2}\|y - Ax\|_2^2 + \lambda\|x\|_1$, the subdifferential stationarity condition is:
+
+$$0 \in A^T(Ax^* - y) + \lambda \partial\|x^*\|_1$$
+
+For each coordinate $i$:
+
+$$[A^T(Ax^* - y)]_i + \lambda s_i^* = 0 \quad \text{where} \quad s_i^* \in \partial|x_i^*| = \begin{cases} \{\text{sign}(x_i^*)\} & x_i^* \neq 0 \\ [-1,1] & x_i^* = 0 \end{cases}$$
+
+The complementary slackness for the LASSO is encoded in the subdifferential: if $x_i^* \neq 0$, then $[A^T(Ax^*-y)]_i = -\lambda \text{sign}(x_i^*)$ — the residual correlation exactly equals $\pm\lambda$. If $x_i^* = 0$, then $|[A^T(Ax^*-y)]_i| \leq \lambda$ — the residual correlation is strictly below the threshold. The sparsity of the LASSO solution is encoded in the subdifferential stationarity condition: coordinate $i$ is zero if and only if its residual correlation is below threshold.
+
+---
+
+### Interior Point Methods and the Central Path
+
+Interior point methods solve convex optimization problems by following the **central path** — a family of approximate solutions parameterized by a barrier parameter $t > 0$:
+
+$$x^*(t) = \argmin_x \left\{tf_0(x) - \sum_i \log(-f_i(x)) + \sum_j \nu_j^*(t) h_j(x)\right\}$$
+
+The logarithmic barrier $-\sum_i \log(-f_i(x))$ replaces the inequality constraints with a smooth penalty that approaches $+\infty$ as any $f_i(x) \to 0$. As $t \to \infty$, $x^*(t) \to x^*$, the primal optimum.
+
+The KKT conditions for the barrier problem produce approximate KKT conditions for the original problem:
+
+$$\nabla f_0(x^*(t)) + \sum_i \lambda_i^*(t) \nabla f_i(x^*(t)) + \sum_j \nu_j^*(t) \nabla h_j(x^*(t)) = 0$$
+
+where $\lambda_i^*(t) = -\frac{1}{tf_i(x^*(t))} > 0$. The approximate complementary slackness is:
+
+$$-\lambda_i^*(t) f_i(x^*(t)) = \frac{1}{t} \quad \forall i$$
+
+The product $\lambda_i^* f_i^*$ approaches zero at rate $1/t$ as $t \to \infty$ — the central path drives complementary slackness to zero, converging to the exact KKT conditions at the optimum. The duality gap at each point on the central path is exactly $m/t$ — the number of inequality constraints divided by the barrier parameter — so the algorithm terminates when $m/t < \epsilon$ for a desired tolerance $\epsilon$.
+
+---
+
+### KKT Conditions and Kantorovich Duality
+
+The Kantorovich optimal transport problem is an infinite-dimensional linear program, and its KKT conditions take a specific form that is worth stating explicitly.
+
+The primal problem minimizes $\int c \, d\pi$ over couplings $\pi \in \Pi(\mu,\nu)$. The equality constraints — $\pi$ has marginals $\mu$ and $\nu$ — are:
+
+$$\int \pi(x,y) \, dy = \mu(x) \quad \text{and} \quad \int \pi(x,y) \, dx = \nu(y)$$
+
+The Lagrange multipliers for these constraints are functions $\phi(x)$ and $\psi(y)$ — the dual potentials. The Lagrangian is:
+
+$$L(\pi, \phi, \psi) = \int c(x,y) \, d\pi - \int \phi(x)(\pi_x - \mu(x)) \, dx - \int \psi(y)(\pi_y - \nu(y)) \, dy$$
+
+The KKT conditions are:
+
+**Primal feasibility:** $\pi \geq 0$, marginals of $\pi$ are $\mu$ and $\nu$.
+
+**Dual feasibility:** $\phi(x) + \psi(y) \leq c(x,y)$ for all $x,y$ — the potential constraint.
+
+**Stationarity:** $c(x,y) - \phi(x) - \psi(y) \geq 0$ for all $x,y$ — the transport cost exceeds the sum of potentials everywhere.
+
+**Complementary slackness:** $\pi$-almost everywhere, $c(x,y) = \phi(x) + \psi(y)$ — the transport cost equals the sum of potentials on the support of the optimal coupling.
+
+The complementary slackness condition is the most important: it says that mass is only transported along pairs $(x,y)$ where the transport cost is exactly exhausted by the potentials. Pairs where $c(x,y) > \phi(x) + \psi(y)$ — where the potential sum is strictly below the cost — receive zero mass in the optimal coupling. This is the optimality condition for optimal transport: the optimal plan transports mass only along cost-minimizing paths, and the dual potentials certify this minimality.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 201 (Advanced Calculus), the method of Lagrange multipliers — finding $\nabla f_0 = \lambda \nabla g$ at a constrained optimum — is the KKT stationarity condition for equality-constrained problems with a single constraint and no inequality constraints. Every Lagrange multiplier problem you solved in MATH 201 was a two-condition KKT system: primal feasibility ($g(x^*) = 0$) and stationarity ($\nabla f_0(x^*) = \nu^* \nabla g(x^*)$). The multiplier $\nu^*$ is the sensitivity of the optimal value to the constraint — exactly the shadow price interpretation from the previous subtopic. In MATH 304 (Computational Operations Research), the simplex method implicitly solves the KKT conditions for LP: primal feasibility is maintained throughout, dual feasibility is achieved when the reduced costs are non-negative, stationarity is the reduced cost condition, and complementary slackness is the condition that non-basic variables have zero value while basic variables have zero reduced cost. The simplex method terminates exactly when all four KKT conditions are satisfied simultaneously.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Melamchi water allocation story has a precise mathematical address. Let us walk through them one by one, until the five reservoir zones, the four certification pillars, and the full formal apparatus are completely fused into a single picture.
+
+---
+
+**The Melamchi water supply system — the full allocation problem with its pipe capacities, total supply limit, and welfare objective — is the standard form primal optimization problem.** The project director's demand for a certificate rather than a number is the demand for the KKT conditions rather than merely the optimal value. A number tells you what the optimum is. The KKT conditions tell you why it is optimal — they are the structural proof that no perturbation can improve welfare, that the constraints are correctly accounted for, and that the shadow prices are economically consistent. The certificate is more informative than the solution value alone, and in computational practice, finding the KKT point is finding the solution.
+
+**The five reservoir zones and their water allocations are the primal variables $x = (x_1, x_2, x_3, x_4, x_5) \in \mathbb{R}^5_+$.** Each component $x_i$ is the cubic metres of water allocated to zone $i$ per day. The non-negativity $x_i \geq 0$ is the implicit domain constraint — you cannot allocate negative water to a zone. The pipe capacity constraints $x_i \leq c_i$ for each zone $i$ are the inequality constraints $f_i(x) = x_i - c_i \leq 0$. The total supply constraint $\sum_i x_i \leq S$ is an additional inequality constraint. The total welfare functional $\sum_i w_i(x_i)$ — with each $w_i$ concave, reflecting diminishing marginal welfare — is the objective $f_0(x) = -\sum_i w_i(x_i)$, negated because we minimize.
+
+---
+
+**The first pillar — the allocation must be feasible — is KKT Condition 1: Primal Feasibility $f_i(x^*) \leq 0$ for all $i$ and $h_j(x^*) = 0$ for all $j$.** In the water story: every zone's allocation must be non-negative, every pipe capacity must be respected, and the total allocation must not exceed the available supply. The formal condition $f_i(x^*) \leq 0$ is the requirement that the shortfall function — the amount by which the plan fails to violate each constraint — is non-positive. Primal feasibility is the necessary precondition for any discussion of optimality: a plan that violates a constraint is not in the feasible set $\mathcal{D}$ and cannot be optimal regardless of its objective value. In the procurement story of the previous subtopic, primal feasibility was the condition that the officer's procurement plan actually meets all material requirements. Here it is the condition that the water allocation respects all physical limits.
+
+**The second pillar — the shadow prices of the capacity constraints must be non-negative — is KKT Condition 2: Dual Feasibility $\lambda_i^* \geq 0$ for all $i$.** In the water story: the shadow price of each pipe capacity constraint is the marginal value of one additional cubic metre of daily pipe capacity — how much welfare would improve if the constraint were relaxed by one unit. This must be non-negative because relaxing a capacity constraint — increasing it — can only weakly improve welfare: you gain additional allocation flexibility without losing anything. A negative shadow price would claim that tighter constraints improve welfare, which is impossible for a resource capacity constraint. The dual feasibility condition $\lambda_i^* \geq 0$ is the formal statement of this physical monotonicity — relaxing constraints weakly helps, never hurts. In MATH 304, this was the condition that the dual variables of an LP are non-negative, which you verified at every simplex iteration when checking for dual feasibility.
+
+**The third pillar — the marginal welfares must be balanced across zones — is KKT Condition 3: Stationarity $\nabla f_0(x^*) + \sum_i \lambda_i^* \nabla f_i(x^*) + \sum_j \nu_j^* \nabla h_j(x^*) = 0$.** In the water story: for each zone $k$, the stationarity condition says $-w_k'(x_k^*) + \lambda_k^* + \nu^* = 0$, where $\lambda_k^*$ is the shadow price of zone $k$'s capacity constraint and $\nu^*$ is the shadow price of the total supply constraint. Rearranging: $w_k'(x_k^*) = \lambda_k^* + \nu^*$ — the marginal welfare of water in zone $k$ equals the sum of the pipe capacity shadow price and the total supply shadow price. For zones with binding capacity constraints ($\lambda_k^* > 0$), the marginal welfare is higher than for zones with slack capacity ($\lambda_k^* = 0$), because the binding constraint is preventing the allocation of welfare-improving additional water. The stationarity condition is the economic equilibrium condition: at the optimum, no reallocation of water across zones can improve total welfare, because all adjusted marginal welfares are equal.
+
+**The fourth pillar — inactive constraints have zero shadow prices — is KKT Condition 4: Complementary Slackness $\lambda_i^* f_i(x^*) = 0$ for all $i$.** In the water story: for each zone $k$, either the pipe is at full capacity ($f_k(x^*) = x_k^* - c_k = 0$, constraint active) and the shadow price $\lambda_k^*$ can be positive, or the pipe has spare capacity ($f_k(x^*) < 0$, constraint inactive) and the shadow price must be zero ($\lambda_k^* = 0$). The product $\lambda_k^* f_k(x^*) = 0$ — one factor must always be zero. This is the complementary slackness condition, and it is the most operationally informative of the four pillars: it identifies which constraints are genuinely binding at the optimum and which are irrelevant. A water engineer reading the KKT solution immediately knows which pipes are operating at capacity — they are the ones with positive shadow prices — and which pipes have room to spare — they are the ones with zero shadow prices.
+
+---
+
+**The director's geometric picture — the feasible polygon with the objective level set touching a corner — is the normal cone characterization of stationarity.** The feasible set $\mathcal{D}$ is a convex polygon in the allocation space. The optimal allocation $x^*$ is the corner where the level set of the negative welfare function — a convex function — first touches $\mathcal{D}$ as welfare decreases. At this corner, the gradient of the objective $-\nabla f_0(x^*) = \sum_i w_i'(x_i^*) e_i$ points outward from the feasible set — it points in the direction of increasing welfare, away from the feasible region. The stationarity condition $-\nabla f_0(x^*) \in N_\mathcal{D}(x^*)$ says the objective gradient points into the normal cone of the feasible set at $x^*$ — it is a direction that cannot be followed while staying feasible. The normal cone at a corner of the polygon is the cone spanned by the outward normals to the active walls — $\nabla f_i(x^*)$ for each active constraint $i$. The stationarity condition expresses $-\nabla f_0(x^*)$ as a non-negative combination of these outward normals: $-\nabla f_0(x^*) = \sum_{i \in \mathcal{A}(x^*)} \lambda_i^* \nabla f_i(x^*)$ — the objective gradient is in the cone of active constraint normals.
+
+**The active set $\mathcal{A}(x^*) = \{i : f_i(x^*) = 0\}$ — the pipes at full capacity — determines which constraints appear in the stationarity condition.** The inactive constraints — pipes with spare capacity — drop out entirely: their shadow prices are zero by complementary slackness, so their gradients $\nabla f_i(x^*)$ do not appear in the stationarity condition. The KKT conditions effectively reduce the constrained optimization problem to an equality-constrained problem on the active constraint manifold — the face of the feasible polygon where the active walls meet. This reduction is what makes the KKT conditions computationally tractable: instead of handling all constraints simultaneously, the algorithm need only find the correct active set and solve the resulting equality-constrained problem.
+
+---
+
+**The sufficiency proof — showing that KKT conditions imply global optimality for convex problems — is the four pillars working in concert.** The chain of inequalities $f_0(x) \geq L(x,\lambda^*,\nu^*) \geq L(x^*,\lambda^*,\nu^*) = f_0(x^*)$ maps onto the water story as follows. The first inequality ($f_0(x) \geq L(x,\lambda^*,\nu^*)$) uses dual feasibility ($\lambda_i^* \geq 0$) and primal feasibility of $x$ ($f_i(x) \leq 0$) — the shadow prices are non-negative and the constraint functions are non-positive, so the penalty terms are non-positive and the Lagrangian is at most the objective. The second inequality ($L(x,\lambda^*,\nu^*) \geq L(x^*,\lambda^*,\nu^*)$) uses stationarity — $x^*$ is a stationary point of the convex Lagrangian, hence its global minimum. The equality ($L(x^*,\lambda^*,\nu^*) = f_0(x^*)$) uses complementary slackness ($\lambda_i^* f_i(x^*) = 0$) and primal feasibility of $x^*$ ($h_j(x^*) = 0$) — the penalty terms vanish at $x^*$. The four pillars are the four logical steps of the proof.
+
+**The break moment — KKT conditions being sufficient only for convex problems — maps onto the integer allocation version of the water problem.** If the project requires water to be allocated in integer amounts — say, full tanker-loads rather than continuous quantities — the feasible set is no longer convex: it is a finite collection of discrete points, not a connected region. The KKT conditions remain necessary for local optima under LICQ, but they are no longer sufficient for global optimality. A KKT point at an integer allocation might be a local optimum — no nearby integer allocation improves welfare — while a distant integer allocation achieves higher welfare. The local-implies-global theorem fails because the non-convex feasible set has multiple disconnected components, each potentially containing a different KKT point. The four pillars are a complete certificate only when the building they support — the feasible set and the objective — is convex.
+
+---
+
+**The Lagrange multiplier method from MATH 201 is the KKT conditions for equality-constrained problems with smooth objective and constraints.** When your MATH 201 problem asked you to minimize $f(x,y)$ subject to $g(x,y) = 0$, the KKT conditions were: primal feasibility $g(x^*,y^*) = 0$, and stationarity $\nabla f(x^*,y^*) = -\nu^* \nabla g(x^*,y^*)$. There were no inequality constraints, so dual feasibility and complementary slackness were vacuous. The multiplier $\nu^*$ you solved for is the dual variable — the sensitivity of the optimal objective value to the constraint. Every Lagrange multiplier you computed in MATH 201 was a dual variable in the KKT system, measuring the shadow price of the equality constraint. What you did not know then is that this method is a special case of the four-pillar certification framework, and its correctness rests on the fact that equality-constrained problems with affine constraints always satisfy the constraint qualification — no Slater condition is needed.
+
+**The simplex method from MATH 304 implicitly solves the KKT conditions for LP at every iteration.** The simplex algorithm maintains a basic feasible solution — a vertex of the feasible polyhedron — and moves to adjacent vertices by changing the basis. Primal feasibility is maintained throughout: every basic feasible solution satisfies all constraints. At each iteration, the algorithm checks the reduced costs — the dual feasibility condition. If all reduced costs are non-negative, the current vertex satisfies dual feasibility and stationarity simultaneously, because the LP stationarity condition is exactly the zero reduced cost condition. Complementary slackness is satisfied at every vertex of the polyhedron: non-basic variables are at zero (active bound constraint) and basic variables have zero reduced cost (active dual constraint). The simplex method terminates when all four KKT conditions are satisfied simultaneously — when the dual feasibility check passes. Every LP solution you certified in MATH 304 using the simplex optimality criterion was a KKT certification.
+
+---
+
+**The LASSO complementary slackness — the subdifferential stationarity condition — is the water allocation story applied to sparse recovery.** The LASSO allocates "budget" $\lambda$ across coefficients, and each coefficient $x_i^*$ is either zero (inactive, receiving no allocation) or nonzero (active, receiving allocation equal to its residual correlation minus the threshold). The condition $|[A^T(Ax^*-y)]_i| \leq \lambda$ for zero coefficients is complementary slackness: if the residual correlation is below threshold, the coefficient is inactive and its $L_1$ constraint shadow price is zero. The condition $[A^T(Ax^*-y)]_i = -\lambda \text{sign}(x_i^*)$ for nonzero coefficients is stationarity: the residual correlation exactly equals the threshold, confirming the coefficient is at its capacity. The sparsity of the LASSO solution is directly encoded in the KKT conditions — zeros correspond to inactive constraints, nonzeros correspond to active constraints, and the threshold $\lambda$ is the shadow price of the $L_1$ ball constraint.
+
+**The Kantorovich complementary slackness — $c(x,y) = \phi(x) + \psi(y)$ on the support of the optimal coupling — is the water allocation story applied to optimal transport.** The pairs $(x,y)$ in the support of the optimal coupling $\pi^*$ are the "active" pairs — the pipes that carry positive mass flow. Their transport cost $c(x,y)$ equals the sum of potentials $\phi(x) + \psi(y)$ — the cost is exactly exhausted by the dual potentials, just as the water allocation in active zones equals the pipe capacity. Pairs where $c(x,y) > \phi(x) + \psi(y)$ are "inactive" — no mass flows along them — just as zones with spare pipe capacity have zero shadow prices. The optimal transport plan carries mass only along the cheapest paths, certified by the dual potentials, and the complementary slackness condition identifies exactly which paths those are. The Kantorovich complementary slackness is the water project director's four-pillar certification applied to the infinite-dimensional transport problem.
+
+**The interior point method's central path is the water project's path from strictly infeasible prices to the boundary where complementary slackness holds exactly.** The barrier parameter $t$ plays the role of the director's tolerance for near-optimal certification: at large $t$, the solution is far from the boundary and complementary slackness is approximately satisfied with gap $m/t$. As $t \to \infty$, the central path converges to the KKT point where complementary slackness holds exactly — where every pipe is either exactly at capacity with a positive shadow price, or strictly below capacity with a zero shadow price. The interior point method drives complementary slackness from approximate to exact by following the central path, and it terminates when the KKT gap $m/t$ falls below the desired tolerance. The convergence of the central path is the convergence of the four KKT pillars from approximate satisfaction to exact satisfaction.
+
+---
+
+**Looking forward across the roadmap**, the KKT conditions are the optimality certificate of every phase. In Phase 1, the Kantorovich complementary slackness condition — mass transported only where potentials exhaust the cost — is the structural characterization of the optimal transport plan. Every algorithm for computing optimal transport, from the simplex method applied to discretized transport problems to the Sinkhorn algorithm applied to entropically regularized transport, is solving the KKT system of the Kantorovich problem. The Sinkhorn iterates converge to the point where the approximate complementary slackness condition $-\lambda_i^*(t) f_i(x^*(t)) = 1/t$ becomes exact complementary slackness $\lambda_i^* f_i(x^*) = 0$ as $t \to \infty$. In Phase 2, the equivariance constraints of graph neural networks impose linear equality constraints on weight matrices, and the KKT stationarity conditions for the equivariance-constrained training problem characterize the optimal weights as the unconstrained gradient step projected onto the equivariant subspace — a projection that is itself a KKT condition for the equality-constrained problem. In Phase 3, the score matching objective is an unconstrained convex problem in the score function, and its KKT condition — stationarity — reduces to the condition that the learned score equals the true score almost everywhere, the global optimality condition for score matching. The JKO scheme's KKT conditions at each time step characterize the optimal distribution update as the point where the sum of the energy gradient and the Wasserstein distance gradient — in the dual potential sense — vanishes, connecting the JKO optimality condition to the Fokker-Planck equation that governs the diffusion dynamics.
+
+The project director's four pillars — primal feasibility, dual feasibility, stationarity, complementary slackness — are not bureaucratic conditions imposed on top of optimization. They are the structural facts that every optimal solution must embody, and in convex problems they are precisely the conditions that characterize the optimum. Every tractable optimization algorithm in the roadmap is, at its core, a method for finding the point where all four pillars are simultaneously satisfied.
+
+---
+---

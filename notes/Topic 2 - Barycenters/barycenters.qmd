@@ -1,0 +1,431 @@
+# Topic 2 - Wasserstein Barycenters: The Geometric Mean of Distributions
+
+## Introduction
+
+Topic 1 answered the question of how to interpolate between two probability distributions along the geometrically correct straight line — the geodesic in Wasserstein space. The displacement interpolation between $\mu$ and $\nu$ at parameter $t$ is the distribution $\mu_t$ that sits exactly $t$ fraction of the Wasserstein distance from $\mu$ to $\nu$, with mass moving along straight-line trajectories from the optimal transport plan. For two distributions, this is complete.
+
+The natural next question is: what happens with more than two distributions? If you have a collection of distributions $\mu_1, \mu_2, \ldots, \mu_k$ — not just two endpoints of a geodesic but a whole ensemble of geometric objects — what is their average? What is the single distribution that sits, in the Wasserstein-geometric sense, at the center of the ensemble?
+
+The naive answer is again the linear mixture $\sum_{i=1}^k \lambda_i \mu_i$ — the weighted average of the densities, pixel by pixel. And this naive answer fails for exactly the same reason it failed for two distributions: it averages in the wrong space. The linear mixture of $k$ distributions produces a superposition, not a geometric center. The average of $k$ Gaussians placed at different locations is a multi-modal mixture, not a single Gaussian centered at the average location. The average of $k$ medical images of different hearts is a blurry superposition of $k$ overlapping shapes, not a single representative heart shape. The geometry is destroyed by the flat averaging.
+
+The correct answer is the Wasserstein barycenter — the Fréchet mean of the ensemble in the Wasserstein metric space. The Fréchet mean is the generalization of the arithmetic mean to curved metric spaces: instead of the point minimizing the sum of squared Euclidean distances to the data points, it is the point minimizing the sum of squared Wasserstein distances to the input distributions. In Euclidean space, the Fréchet mean reduces to the arithmetic mean. In Wasserstein space, it produces a distribution that captures the geometric center of the ensemble — a single representative shape that inherits the structural features of all input distributions, positioned optimally in the curved geometry of the Wasserstein manifold.
+
+This topic develops the Wasserstein barycenter in full, covering the two bullet points of the roadmap's syllabus through four interconnected components.
+
+The first component is **the Fréchet mean formulation** — the definition of the Wasserstein barycenter as the minimizer of the weighted sum of squared Wasserstein distances:
+
+$$\mu^* = \arg\min_{\mu \in \mathcal{P}_2(\mathbb{R}^n)} \sum_{i=1}^k \lambda_i W_2^2(\mu, \mu_i)$$
+
+where $\lambda_1, \ldots, \lambda_k > 0$ with $\sum_i \lambda_i = 1$ are the barycentric weights. This is the Wasserstein-space analogue of the weighted least squares problem: find the distribution closest to all input distributions simultaneously, with each input weighted by $\lambda_i$. Existence of the barycenter follows from the lower semicontinuity of $W_2^2$ and the compactness of the set of distributions with bounded support. Uniqueness requires additional regularity — when at least one input distribution $\mu_i$ is absolutely continuous, the barycenter is unique and absolutely continuous. The Fréchet formulation is the definition that makes the barycenter the correct generalization of the arithmetic mean to Wasserstein space.
+
+The second component is **the fixed-point characterization** — the system of equations that the barycenter must satisfy, expressed in terms of optimal transport maps between the barycenter and each input distribution. When the barycenter $\mu^*$ is absolutely continuous, the optimality conditions of the Fréchet problem say that the barycenter is the unique distribution satisfying:
+
+$$\sum_{i=1}^k \lambda_i T_i(x) = x \quad \mu^*\text{-almost surely}$$
+
+where $T_i: \mathbb{R}^n \to \mathbb{R}^n$ is the optimal transport map from $\mu^*$ to $\mu_i$. This is the barycenter equation: the weighted average of the optimal destinations from the barycenter to each input distribution must equal the identity — the barycenter is the distribution from which the weighted average transport map is the identity. This fixed-point equation is the Wasserstein analogue of the normal equations $\sum_i \lambda_i (x - x_i) = 0$ that characterize the Euclidean weighted mean: the barycenter is the point from which the weighted sum of displacement vectors to the data points is zero.
+
+The third component is **the free-support algorithm** — the practical iterative algorithm for computing the Wasserstein barycenter by alternating between two steps: fixing the barycenter support and solving $k$ optimal transport problems from the current barycenter to each input distribution, then updating the barycenter as the weighted Fréchet mean of the transported points. This is the Wasserstein analogue of Lloyd's algorithm for $k$-means clustering: alternate between assigning data points to clusters and updating cluster centers. For fixed discrete support, each iteration reduces the Fréchet objective, and the algorithm converges to a local minimum. For continuous distributions, the algorithm alternates Sinkhorn computations across all $k$ input distributions simultaneously, inheriting the $O(n^2)$ per-iteration complexity of Chapter 2.
+
+The fourth component is **the entropic barycenter** — the regularized version of the Wasserstein barycenter that replaces the exact $W_2^2$ terms with the entropic approximations $\text{OT}_\varepsilon^2$, producing a smooth, strictly convex Fréchet problem with a unique solution that can be computed by iterating the Sinkhorn algorithm across all $k$ marginals simultaneously. The entropic barycenter converges to the true Wasserstein barycenter as $\varepsilon \to 0$, and its computation is a direct generalization of the two-marginal Sinkhorn algorithm: instead of scaling vectors $u$ and $v$ for two marginals, you maintain $k$ scaling vectors, one per input distribution, updating them in round-robin fashion until convergence.
+
+By the end of this topic, the Wasserstein barycenter will feel like the only geometrically honest notion of average for probability distributions — the distribution that sits at the true geometric center of an ensemble, inheriting the shape, location, and structural features of its inputs in a way that the linear mixture cannot. Its applications span medical image averaging, style transfer in deep learning, point cloud aggregation in 3D computer vision, and the aggregation of probability distributions across federated learning nodes. In Phase 3, the connection between the Wasserstein barycenter and the training objective of flow matching models — where the model learns to map noise to a barycenter of the data distribution across multiple noise levels — makes the barycenter the distributional object at the heart of the most powerful generative models currently in use.
+
+---
+
+## Layer 1 (Story)
+
+You are the chief medical imaging analyst at the B.P. Koirala Institute of Health Sciences in Dharan, and your department has just received an unusual research mandate. A consortium of five hospitals across Nepal — in Kathmandu, Pokhara, Butwal, Biratnagar, and Dharan itself — has collected echocardiogram scans of healthy adult hearts, one hundred patients per hospital. Each hospital has independently computed the probability distribution of heart shape in its patient population — a distribution over the space of possible two-dimensional cardiac cross-sections, encoding the range of shapes, sizes, and orientations of healthy hearts seen in that hospital's demographic.
+
+The five hospitals serve different populations. Kathmandu's patients are urban, predominantly sedentary. Pokhara's patients include a significant fraction of Gurung and Magar highlanders with distinct cardiopulmonary adaptations. Butwal's population skews younger and more agricultural. Biratnagar's patients come from the eastern Terai, with dietary patterns different from the hill populations. Dharan's patients include a large Rai and Limbu demographic from the eastern hills.
+
+The research mandate is to produce a single representative healthy heart shape distribution for Nepal — one canonical distribution that can serve as the national reference standard for cardiac screening. A distribution that is, in the most rigorous geometric sense, the average of the five hospital distributions.
+
+Five of your colleagues immediately propose the obvious solution. They will take the five hospital distributions and mix them linearly — weighted by hospital population size — to produce a single mixture distribution. The mixture will assign to each possible heart shape the weighted average probability it receives across the five hospitals.
+
+You already know this is wrong. You have just finished reading the displacement interpolation chapter, and you recognize immediately that the linear mixture is interpolation in the wrong space. You need the Wasserstein barycenter.
+
+---
+
+**Why the linear mixture fails for heart shapes**
+
+To see the failure concretely, consider a simplified version of the problem. Forget the full distribution of heart shapes and focus on the mean shape alone. The Kathmandu population has hearts that are, on average, slightly enlarged and oriented with a leftward tilt — their mean shape distribution is a Gaussian concentrated around a large, leftward-tilted ellipse. The Pokhara highland population has hearts that are more compact and more vertically oriented — their mean shape distribution is a Gaussian concentrated around a smaller, more vertical ellipse.
+
+The linear mixture of these two Gaussians is a bimodal distribution — a distribution with two peaks, one at the large leftward ellipse and one at the small vertical ellipse. The mixture assigns high probability to both shapes and low probability to everything in between. The national reference distribution says: a healthy Nepali heart is either large and leftward-tilted, or compact and vertical, with nothing in between being typical.
+
+This is not a cardiac fact. It is a mathematical artifact. A Nepali heart that is medium-sized and moderately tilted — exactly between the two regional extremes — is assigned low probability by the mixture, even though it is the most representative heart for a person of mixed demographic background. The mixture distribution is bimodal because linear averaging in function space does not move shapes — it superimposes them.
+
+The Wasserstein barycenter moves shapes. It finds the single Gaussian — the single representative cardiac shape distribution — that sits at the geometric center of the five hospital distributions in the Wasserstein metric. The barycenter Gaussian has a mean shape that is the transport-optimal average of the five mean shapes, and a covariance that is the transport-optimal average of the five covariances. It is a single, unimodal distribution concentrated around a single representative cardiac shape. It is geometrically honest.
+
+---
+
+**The Fréchet mean: the center that minimizes total squared distance**
+
+Your mathematician colleague explains the precise formulation.
+
+In Euclidean space, the weighted mean of $k$ points $x_1, \ldots, x_k$ with weights $\lambda_1, \ldots, \lambda_k$ is the point $x^*$ that minimizes the weighted sum of squared distances:
+
+$$x^* = \arg\min_{x} \sum_{i=1}^k \lambda_i \|x - x_i\|^2$$
+
+The solution is the weighted average $x^* = \sum_i \lambda_i x_i$. This is the Fréchet mean in Euclidean space — the point at the geometric center of the data, in the sense of minimum total squared distance.
+
+The Wasserstein barycenter is the Fréchet mean in Wasserstein space. Replace the Euclidean points $x_i$ with probability distributions $\mu_i$ — the five hospital heart shape distributions. Replace the Euclidean squared distance $\|x - x_i\|^2$ with the squared Wasserstein distance $W_2^2(\mu, \mu_i)$. The barycenter is:
+
+$$\mu^* = \arg\min_{\mu \in \mathcal{P}_2(\mathbb{R}^n)} \sum_{i=1}^k \lambda_i W_2^2(\mu, \mu_i)$$
+
+The solution $\mu^*$ is the distribution that minimizes the total weighted squared Wasserstein distance to all five hospital distributions simultaneously. It is the single distribution that is, on average, as close as possible to all five hospitals in the geometric sense defined by optimal transport.
+
+The weights $\lambda_i$ encode the relative importance of each hospital. Weighting by patient population size gives more influence to larger hospitals. Equal weights $\lambda_i = 1/k$ give a pure geometric mean. The weights are the analyst's choice — but whatever the weights, the problem of finding $\mu^*$ is well-posed, and its solution is the Wasserstein barycenter.
+
+---
+
+**What the barycenter looks like: the Gaussian case**
+
+For the simplified Gaussian case — where each hospital distribution is a Gaussian $\mu_i = \mathcal{N}(m_i, \Sigma_i)$ with mean $m_i$ and covariance matrix $\Sigma_i$ — the Wasserstein barycenter is itself a Gaussian $\mu^* = \mathcal{N}(m^*, \Sigma^*)$.
+
+The barycenter mean is the weighted Euclidean average of the hospital means:
+
+$$m^* = \sum_{i=1}^k \lambda_i m_i$$
+
+This is just the arithmetic mean of the mean shapes — no surprise here. The Wasserstein geometry and the Euclidean geometry agree on where the center of mass should be when the means are the only distinguishing feature.
+
+The barycenter covariance $\Sigma^*$ is the solution to a fixed-point equation:
+
+$$\Sigma^* = \sum_{i=1}^k \lambda_i (\Sigma^{1/2} \Sigma_i \Sigma^{1/2})^{1/2} \cdot (\Sigma^*)^{-1/2}$$
+
+This fixed-point equation is not the arithmetic average of the covariances — it is the geometric average in the space of positive definite matrices, a curved space with its own Riemannian metric. The arithmetic average of the covariances would give a bimodal-looking distribution for significantly different $\Sigma_i$. The Wasserstein barycenter covariance gives a single unimodal distribution that genuinely interpolates the shapes.
+
+In the cardiac imaging story: the barycenter heart shape is not the superposition of the Kathmandu ellipse and the Pokhara ellipse. It is a single ellipse whose size, orientation, and aspect ratio are the geometric averages of all five hospital ellipses — a single representative cardiac shape that genuinely lies at the center of the five populations in the Wasserstein metric.
+
+---
+
+**The fixed-point equation: what it means to be the barycenter**
+
+Your colleague now derives the condition that $\mu^*$ must satisfy to be the barycenter.
+
+Consider the Fréchet objective $F(\mu) = \sum_i \lambda_i W_2^2(\mu, \mu_i)$. To minimize $F$, take the gradient in Wasserstein space — the gradient with respect to $\mu$ in the Otto metric — and set it to zero. The gradient of $W_2^2(\mu, \mu_i)$ with respect to $\mu$ in the Otto metric is the velocity field of the geodesic from $\mu$ to $\mu_i$ evaluated at time zero — which is the optimal transport map $T_i - \text{id}$, where $T_i$ is the Brenier map from $\mu$ to $\mu_i$.
+
+Setting the Wasserstein gradient of $F$ to zero:
+
+$$\sum_{i=1}^k \lambda_i (T_i(x) - x) = 0 \quad \mu^*\text{-almost surely}$$
+
+Rearranging:
+
+$$\sum_{i=1}^k \lambda_i T_i(x) = x \quad \mu^*\text{-almost surely}$$
+
+This is the barycenter fixed-point equation. The Wasserstein barycenter $\mu^*$ is the distribution from which the weighted average of the optimal transport maps to all input distributions is the identity map. In the cardiac story: the national reference heart shape is the shape from which the weighted average of the optimal migrations to each hospital's typical heart shape is zero displacement — you are already at the center, so the average migration takes you nowhere.
+
+This fixed-point equation is the Wasserstein analogue of the normal equations of Euclidean statistics: $\sum_i \lambda_i(x^* - x_i) = 0$, which gives $x^* = \sum_i \lambda_i x_i$. In Wasserstein space, the Euclidean displacements $x^* - x_i$ are replaced by the optimal transport maps $T_i - \text{id}$, and the fixed-point equation is the condition that the weighted sum of these transport-optimal displacements is zero at $\mu^*$.
+
+---
+
+**The iterative algorithm: alternating between transporting and averaging**
+
+Computing the barycenter from the fixed-point equation directly is circular — $T_i$ depends on $\mu^*$, which is what you are trying to find. Your colleague proposes an iterative algorithm.
+
+Start with an initial guess $\mu^{(0)}$ — perhaps the linear mixture of the five hospital distributions, as a convenient starting point. Then alternate between two steps.
+
+Step 1 — Transport: For the current estimate $\mu^{(0)}$, compute the optimal transport map $T_i^{(0)}$ from $\mu^{(0)}$ to each hospital distribution $\mu_i$, for $i = 1, \ldots, k$. In practice, this means running $k$ Sinkhorn computations in parallel — one for each hospital — using the algorithm from Chapter 2.
+
+Step 2 — Average: Update the estimate by pushing $\mu^{(0)}$ forward under the weighted average transport map:
+
+$$\mu^{(1)} = \left(\sum_{i=1}^k \lambda_i T_i^{(0)}\right)_\# \mu^{(0)}$$
+
+The new estimate is the pushforward of the current estimate under the weighted average of the $k$ optimal transport maps. This is the Wasserstein analogue of the $k$-means update: just as the new cluster center is the arithmetic mean of the points assigned to it, the new barycenter estimate is the pushforward under the average transport map.
+
+Repeat. The sequence of estimates $\mu^{(0)}, \mu^{(1)}, \mu^{(2)}, \ldots$ converges to the true barycenter $\mu^*$.
+
+In the cardiac story: start with the linear mixture of all five hospital distributions. Compute the optimal transport map from this initial estimate to each hospital's distribution — the optimal assignment of initial heart shapes to each hospital's characteristic shapes. Take the weighted average of these five transport maps, and push the initial estimate through this average map. The result is a new estimate of the national reference distribution. Repeat until the estimate stabilizes.
+
+---
+
+**The entropic barycenter: making computation practical with Sinkhorn**
+
+The iterative algorithm requires solving $k$ exact optimal transport problems per iteration — each at $O(n^3)$ cost. For $k = 5$ hospitals and a fine discretization of heart shape space, this is computationally prohibitive.
+
+The fix is the same as in Chapter 2: replace exact OT with entropic OT. The entropic barycenter replaces each $W_2^2(\mu, \mu_i)$ in the Fréchet objective with $\text{OT}_\varepsilon(\mu, \mu_i)$ — the entropically regularized Wasserstein distance. The resulting problem:
+
+$$\mu^*_\varepsilon = \arg\min_{\mu} \sum_{i=1}^k \lambda_i \text{OT}_\varepsilon(\mu, \mu_i)$$
+
+has a unique solution for every $\varepsilon > 0$, and it converges to the true barycenter $\mu^*$ as $\varepsilon \to 0$.
+
+Crucially, the entropic barycenter can be computed by a multi-marginal Sinkhorn algorithm — a direct generalization of the two-marginal Sinkhorn from Chapter 2. Instead of maintaining two scaling vectors $u$ and $v$, you maintain $k+1$ scaling vectors — one for the barycenter and one for each input distribution. The iterations update each scaling vector in round-robin fashion, exactly as in the two-marginal case, with the barycenter's scaling vector updated by taking the geometric mean of the contributions from all $k$ input distributions. Each full sweep through all $k+1$ scaling vectors costs $O(kn^2)$ — linear in the number of input distributions and quadratic in the discretization — making the barycenter computation practical at the scale of medical imaging.
+
+---
+
+**The break moment**
+
+Here is the naive assumption that breaks.
+
+You might think: the Wasserstein barycenter, being the Fréchet mean in a metric space, always exists and is unique — just as the Euclidean mean always exists and is unique. It is the minimizer of a sum of squared distances, and such minimizers are always well-defined.
+
+This breaks in two ways.
+
+The first way: existence is guaranteed, but uniqueness is not — not in general. The function $F(\mu) = \sum_i \lambda_i W_2^2(\mu, \mu_i)$ is lower semicontinuous and coercive on $\mathcal{P}_2(\mathbb{R}^n)$, so a minimizer always exists. But if all input distributions $\mu_i$ are discrete — concentrated on finite sets of atoms — the Fréchet problem can have multiple minimizers. The barycenter is not unique because the Wasserstein space restricted to discrete measures with fixed support is not a geodesically convex space. Two different discrete distributions can sit at equal Wasserstein distance from all inputs simultaneously, both qualifying as barycenters.
+
+The second way: even when the barycenter is unique, the iterative algorithm is not guaranteed to find it. The Fréchet objective $F(\mu)$ is geodesically convex in Wasserstein space — convex along every geodesic — so the global minimum is unique when it exists. But the fixed-point iteration — alternating between transporting and averaging — is not a gradient descent on $F$ in any strict sense. It is a majorization-minimization algorithm that decreases $F$ at every step but can converge to a local fixed point that is not the global minimum when the input distributions are discrete and the support of the barycenter is not fixed in advance. In practice, the free-support barycenter algorithm — which allows the support of $\mu^*$ to vary during the optimization — is needed for guaranteed convergence to the global minimum, but it requires solving a harder optimization problem that fixes the number of support points in advance and is sensitive to initialization.
+
+The rigorous resolution requires restricting to the absolutely continuous setting — when at least one input $\mu_i$ is absolutely continuous, the barycenter is unique, absolutely continuous, and the fixed-point iteration converges globally. This is the setting of medical imaging: the heart shape distributions are continuous densities, not discrete point masses, and in this setting the barycenter is well-defined, unique, and computable by the iterative algorithm.
+
+---
+
+Hold five pictures simultaneously as you move to the mathematics.
+
+The bimodal linear mixture: the weighted average of five hospital heart shape distributions producing a five-peaked superposition that represents no actual heart — the failure of flat averaging in function space, identical in nature to the pixel mixer's failure in displacement interpolation.
+
+The Fréchet mean formulation: the barycenter $\mu^*$ as the minimizer of $\sum_i\lambda_i W_2^2(\mu,\mu_i)$ — the Wasserstein-space analogue of the weighted least squares problem whose Euclidean solution is the arithmetic mean.
+
+The fixed-point equation $\sum_i\lambda_i T_i(x) = x$ almost surely under $\mu^*$: the barycenter is the distribution from which the weighted average of all optimal transport maps is the identity — the zero-displacement center of the ensemble.
+
+The alternating algorithm: transport to each input distribution using Sinkhorn, average the transport maps with weights $\lambda_i$, push the current estimate through the average map, repeat — the Wasserstein analogue of Lloyd's k-means algorithm.
+
+The break moment: non-uniqueness for discrete inputs and the failure of the fixed-point iteration to guarantee global convergence, resolved by the absolutely continuous regularity condition that holds in the medical imaging setting.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the precise statement of the Wasserstein barycenter problem and its existence theory, the fixed-point optimality conditions, the Gaussian barycenter in closed form, the free-support and fixed-support algorithms, the multi-marginal Sinkhorn algorithm for the entropic barycenter, and the geodesic convexity of the Fréchet objective.
+
+### The Wasserstein Barycenter Problem — Precise Statement
+
+**Definition (Wasserstein Barycenter).** Let $\mu_1, \ldots, \mu_k \in \mathcal{P}_2(\mathbb{R}^n)$ and let $\lambda = (\lambda_1, \ldots, \lambda_k) \in \Sigma_k$ be a probability vector with $\lambda_i > 0$ and $\sum_i \lambda_i = 1$. The **Wasserstein barycenter** with weights $\lambda$ is:
+
+$$\mu^* \in \arg\min_{\mu \in \mathcal{P}_2(\mathbb{R}^n)} F(\mu), \qquad F(\mu) = \sum_{i=1}^k \lambda_i W_2^2(\mu, \mu_i)$$
+
+The functional $F: \mathcal{P}_2(\mathbb{R}^n) \to [0,\infty)$ is the **Fréchet functional** — the weighted sum of squared Wasserstein distances to the input distributions.
+
+**Theorem (Existence, Agueh-Carlier 2011).** For any $\mu_1,\ldots,\mu_k \in \mathcal{P}_2(\mathbb{R}^n)$ and weights $\lambda \in \Sigma_k$, the Wasserstein barycenter exists: $\arg\min F \neq \emptyset$.
+
+**Proof sketch.** The functional $F$ is lower semicontinuous in the weak topology of $\mathcal{P}_2(\mathbb{R}^n)$ — each $W_2^2(\cdot, \mu_i)$ is lower semicontinuous as a function of the first argument. The sublevel sets $\{F \leq C\}$ are tight — by Markov's inequality, $\mu(\|x\|^2 > R) \leq F(\mu)/(\lambda_{\min} R)$ for any $\mu$ in the sublevel set, so the measures have uniformly bounded second moments and are tight by Prokhorov's theorem. A minimizing sequence has a weakly convergent subsequence whose limit achieves the infimum by lower semicontinuity. $\square$
+
+**Theorem (Uniqueness, Agueh-Carlier 2011).** If at least one $\mu_j$ is absolutely continuous ($\mu_j \ll \lambda^n$), then $\mu^*$ is unique and absolutely continuous.
+
+**Proof sketch.** The functional $F$ is geodesically convex on $\mathcal{P}_2(\mathbb{R}^n)$ — strictly so when the Wasserstein space is non-branching, which holds when one input is absolutely continuous. Strict geodesic convexity implies a unique minimizer. $\square$
+
+---
+
+### The Multi-Marginal Formulation
+
+The Wasserstein barycenter has an equivalent formulation as a **multi-marginal optimal transport problem**. Define the joint optimization over couplings of all $k+1$ measures (the barycenter $\mu$ and the $k$ inputs):
+
+$$\inf_{\pi \in \Pi(\mu, \mu_1, \ldots, \mu_k)} \int_{\mathbb{R}^{n(k+1)}} \sum_{i=1}^k \lambda_i \|x_0 - x_i\|^2 \, d\pi(x_0, x_1, \ldots, x_k)$$
+
+where $\Pi(\mu, \mu_1,\ldots,\mu_k)$ is the set of joint distributions with marginals $\mu, \mu_1,\ldots,\mu_k$, and $x_0$ is the barycenter variable. Optimizing simultaneously over $\mu$ and $\pi$ gives:
+
+$$\min_\mu F(\mu) = \min_{\pi: (\text{proj}_i)_\#\pi = \mu_i \forall i} \int \sum_{i=1}^k \lambda_i \|x_0 - x_i\|^2 \, d\pi$$
+
+where $x_0 = \sum_{i=1}^k \lambda_i x_i$ is the weighted Euclidean barycenter of $(x_1,\ldots,x_k)$ — the optimal barycenter variable in terms of the joint coupling is the weighted average of the other variables. The multi-marginal formulation reduces the barycenter problem to a single optimal transport problem over the product space $(\mathbb{R}^n)^k$, with cost function $c(x_1,\ldots,x_k) = \sum_i\lambda_i\|\sum_j\lambda_j x_j - x_i\|^2 = \sum_i\lambda_i\|x_i\|^2 - \|\sum_i\lambda_i x_i\|^2$ — the weighted variance of the points.
+
+---
+
+### Fixed-Point Optimality Conditions
+
+**Theorem (Barycenter fixed-point equation).** Suppose $\mu^*$ is the Wasserstein barycenter, absolutely continuous, and let $T_i: \mathbb{R}^n \to \mathbb{R}^n$ be the optimal transport map from $\mu^*$ to $\mu_i$ (the Brenier map $T_i = \nabla\phi_i$ for convex $\phi_i$). Then:
+
+$$\sum_{i=1}^k \lambda_i T_i(x) = x \qquad \mu^*\text{-almost surely}$$
+
+**Proof.** The Wasserstein gradient of $W_2^2(\cdot, \mu_i)$ at $\mu^*$ is the velocity field of the geodesic from $\mu^*$ to $\mu_i$ at time zero — which is $(T_i - \text{id})$ by the displacement interpolation formula $\mu_t = ((1-t)\text{id} + tT_i)_\#\mu^*$, giving velocity $T_i - \text{id}$ at $t=0$. The Wasserstein gradient of $F$ at $\mu^*$ is therefore $\sum_i \lambda_i(T_i - \text{id})$. Setting this to zero gives $\sum_i \lambda_i T_i = \text{id}$, i.e. $\sum_i \lambda_i T_i(x) = x$ $\mu^*$-almost surely. $\square$
+
+**Equivalent formulation via Brenier potentials.** Since $T_i = \nabla\phi_i$ with $\phi_i$ convex, the fixed-point equation is:
+
+$$\sum_{i=1}^k \lambda_i \nabla\phi_i(x) = x \qquad \mu^*\text{-a.s.}$$
+
+This is the gradient of the equation $\sum_i \lambda_i \phi_i(x) = \frac{\|x\|^2}{2} + \text{const}$, suggesting that the barycenter potentials $\phi_i$ satisfy a weighted sum condition relating them to the squared-norm function. The dual potentials of the multi-marginal problem encode this structure.
+
+**Inverse map characterization.** Let $S_i = T_i^{-1} = \nabla\phi_i^*$ be the optimal map from $\mu_i$ to $\mu^*$ (the inverse Brenier map, gradient of the conjugate potential). Then the fixed-point equation rewrites as:
+
+$$\mu^* = \left(\sum_{i=1}^k \lambda_i S_i\right)_\# \tilde\mu$$
+
+for appropriately defined $\tilde\mu$ — the barycenter is the pushforward of a reference measure under the weighted average of the inverse transport maps. This form is the basis of the iterative algorithm.
+
+---
+
+### The Gaussian Barycenter
+
+When all input distributions are Gaussian, $\mu_i = \mathcal{N}(m_i, \Sigma_i)$, the Wasserstein barycenter is Gaussian $\mu^* = \mathcal{N}(m^*, \Sigma^*)$ with:
+
+$$m^* = \sum_{i=1}^k \lambda_i m_i$$
+
+and $\Sigma^*$ the unique positive definite solution to the **matrix fixed-point equation**:
+
+$$\Sigma^* = \sum_{i=1}^k \lambda_i \left((\Sigma^*)^{1/2} \Sigma_i (\Sigma^*)^{1/2}\right)^{1/2}$$
+
+**Proof.** The optimal transport map between Gaussians $\mathcal{N}(m, \Sigma)$ and $\mathcal{N}(m_i, \Sigma_i)$ is the affine map $T_i(x) = m_i + A_i(x - m)$ where:
+
+$$A_i = \Sigma^{-1/2}(\Sigma^{1/2}\Sigma_i\Sigma^{1/2})^{1/2}\Sigma^{-1/2}$$
+
+is the symmetric positive definite matrix satisfying $A_i\Sigma A_i = \Sigma_i$ — the geometric mean of $\Sigma^{-1}$ and $\Sigma_i$ in the matrix sense. Substituting into the fixed-point equation $\sum_i\lambda_i T_i(x) = x$:
+
+$$\sum_i \lambda_i (m_i + A_i(x-m)) = x$$
+$$m^* = \sum_i\lambda_i m_i \quad \text{(mean equation)}$$
+$$\sum_i \lambda_i A_i = I \quad \text{(covariance equation)}$$
+
+The covariance equation $\sum_i\lambda_i A_i = I$ with $A_i = \Sigma^{-1/2}(\Sigma^{1/2}\Sigma_i\Sigma^{1/2})^{1/2}\Sigma^{-1/2}$ multiplied by $\Sigma$ gives $\sum_i\lambda_i(\Sigma^{1/2}\Sigma_i\Sigma^{1/2})^{1/2} = \Sigma$, the stated fixed-point equation for $\Sigma^* = \Sigma$. $\square$
+
+**Fixed-point iteration for $\Sigma^*$.** The matrix equation is solved by the iteration:
+
+$$\Sigma^{(\ell+1)} = \sum_{i=1}^k \lambda_i \left((\Sigma^{(\ell)})^{1/2}\Sigma_i(\Sigma^{(\ell)})^{1/2}\right)^{1/2}$$
+
+initialized at $\Sigma^{(0)} = I$ or $\Sigma^{(0)} = \sum_i\lambda_i\Sigma_i$. This iteration converges linearly to the unique positive definite fixed point $\Sigma^*$ — the **geometric mean** of the covariances in the Riemannian geometry of positive definite matrices (the Bures metric), which coincides with the Wasserstein metric restricted to Gaussians.
+
+**Comparison with arithmetic mean.** The arithmetic mean covariance $\bar\Sigma = \sum_i\lambda_i\Sigma_i$ satisfies $\bar\Sigma \succeq \Sigma^*$ (by Jensen's inequality applied to the concave matrix function $\Sigma \mapsto (\Sigma^{1/2}\Sigma_i\Sigma^{1/2})^{1/2}$). The Wasserstein barycenter covariance is always smaller (in the PSD order) than the arithmetic mean covariance — it is more concentrated, more representative, less spread-out. This is the matrix-level manifestation of the story's observation that the barycenter gives a single unimodal shape while the arithmetic mean gives a superposition.
+
+---
+
+### The Free-Support Barycenter Algorithm
+
+For general (non-Gaussian) input distributions, the barycenter is computed iteratively. The **free-support algorithm** (Cuturi-Doucet 2014) represents $\mu^*$ as a discrete measure with $N$ support points $\{z_1,\ldots,z_N\} \subset \mathbb{R}^n$ and uniform weights $1/N$, and iterates:
+
+**Initialization:** $z_j^{(0)} \sim \text{Uniform}(\mathbb{R}^n)$ or sampled from one of the $\mu_i$.
+
+**Iteration $\ell$:**
+1. For each $i = 1,\ldots,k$: compute the optimal transport plan $P_i^{(\ell)}$ from $\mu^{(\ell)} = \frac{1}{N}\sum_j\delta_{z_j^{(\ell)}}$ to $\mu_i$ using the Sinkhorn algorithm. Extract the transport map $T_i^{(\ell)}(z_j) = N\sum_l P_{i,jl}^{(\ell)} y_{i,l}$ — the conditional expectation of the destination given source $z_j$ under $P_i^{(\ell)}$.
+
+2. Update the support points:
+$$z_j^{(\ell+1)} = \sum_{i=1}^k \lambda_i T_i^{(\ell)}(z_j)$$
+
+The new support points are the weighted average of the transported positions under all $k$ transport plans.
+
+**Convergence.** Each iteration decreases $F(\mu^{(\ell)})$ by the majorization-minimization argument: the update $z_j^{(\ell+1)} = \sum_i\lambda_i T_i^{(\ell)}(z_j)$ minimizes a quadratic upper bound on $F$ that is tight at $\mu^{(\ell)}$. The algorithm converges to a stationary point of $F$ — a local minimum when the support is fixed, the global minimum when the support is free to move.
+
+**Per-iteration complexity.** Each iteration requires $k$ Sinkhorn computations, each costing $O(N^2/\varepsilon)$ for $N$ support points and regularization $\varepsilon$. Total per-iteration cost: $O(kN^2/\varepsilon)$.
+
+---
+
+### The Multi-Marginal Sinkhorn Algorithm
+
+The entropic barycenter replaces $W_2^2$ with $\text{OT}_\varepsilon$:
+
+$$\mu^*_\varepsilon = \arg\min_{\mu} \sum_{i=1}^k \lambda_i \text{OT}_\varepsilon(\mu, \mu_i)$$
+
+For discrete $\mu_i$ supported on $n_i$ points with weight vectors $b_i \in \Sigma_{n_i}$, and a barycenter supported on $N$ points with weight vector $a \in \Sigma_N$, the entropic barycenter is computed by the **iterative Bregman projection algorithm** (Benamou et al. 2015):
+
+**Maintain** $k$ coupling matrices $P_i \in \mathbb{R}^{N\times n_i}_{++}$ with Gibbs kernels $K_i \in \mathbb{R}^{N\times n_i}$ where $K_{i,jl} = e^{-\|z_j - y_{i,l}\|^2/\varepsilon}$, and scaling vectors $u_i \in \mathbb{R}^N_{++}$, $v_i \in \mathbb{R}^{n_i}_{++}$ for each $i$.
+
+**Algorithm:**
+
+```
+Initialize: v_i = 1_{n_i} for all i
+Repeat until convergence:
+    For each i = 1,...,k:
+        u_i ← a / (K_i v_i)          [row normalization for coupling i]
+
+    a ← (∏_i (K_i v_i)^{λ_i})        [geometric mean update for barycenter weights]
+    a ← a / sum(a)                    [normalize to probability vector]
+
+    For each i = 1,...,k:
+        v_i ← b_i / (K_i^T u_i)      [column normalization for coupling i]
+```
+
+**The geometric mean update.** The key step distinguishing the barycenter algorithm from $k$ independent Sinkhorn runs is the geometric mean update for $a$:
+
+$$a_j \propto \prod_{i=1}^k (K_i v_i)_j^{\lambda_i}$$
+
+This is the elementwise geometric mean of the $k$ row-sum vectors $(K_i v_i)$, raised to the powers $\lambda_i$. In log-domain, this becomes the weighted arithmetic mean of the log-row-sums — a stabilized operation using the log-sum-exp trick from Topic 3.
+
+**Log-domain multi-marginal Sinkhorn.** In terms of potentials $f_i = \varepsilon\log u_i$ and $g_i = \varepsilon\log v_i$:
+
+$$f_i \leftarrow \varepsilon\log a - \varepsilon\cdot\text{LSE}_l\left(\frac{g_{i,l} - C_{i,jl}}{\varepsilon}\right)$$
+
+$$\log a_j \leftarrow \sum_{i=1}^k \lambda_i \left[\varepsilon\log b_{i} - \varepsilon\cdot\text{LSE}_l\left(\frac{g_{i,l} - C_{i,jl}}{\varepsilon}\right)\right] + \text{const}$$
+
+$$g_i \leftarrow \varepsilon\log b_i - \varepsilon\cdot\text{LSE}_j\left(\frac{f_{i,j} - C_{i,jl}}{\varepsilon}\right)$$
+
+All operations are numerically stable via the log-sum-exp stabilization of Topic 3.
+
+**Convergence to the true barycenter.** As $\varepsilon \to 0$, the entropic barycenter $\mu^*_\varepsilon$ converges weakly to the true Wasserstein barycenter $\mu^*$. The approximation error satisfies:
+
+$$F(\mu^*_\varepsilon) - F(\mu^*) \leq \varepsilon \sum_{i=1}^k \lambda_i \log(N \cdot n_i)$$
+
+mirroring the two-marginal approximation error bound $\text{OT}_\varepsilon - W_2 \leq \varepsilon\log(mn)$ from Topic 1.
+
+---
+
+### Geodesic Convexity of the Fréchet Functional
+
+**Definition (Geodesic convexity).** A functional $F: \mathcal{P}_2(\mathbb{R}^n) \to \mathbb{R}$ is **geodesically convex** if for every constant-speed geodesic $\{\mu_t\}_{t\in[0,1]}$ in Wasserstein space:
+
+$$F(\mu_t) \leq (1-t)F(\mu_0) + tF(\mu_1) \quad \forall t\in[0,1]$$
+
+**Theorem (McCann 1997).** The functional $\mu \mapsto W_2^2(\mu, \nu)$ is geodesically convex for any fixed $\nu \in \mathcal{P}_2(\mathbb{R}^n)$.
+
+**Proof sketch.** Along the geodesic $\mu_t = (\iota_t)_\#\pi^{\mu_0\nu}$ (displacement interpolation from $\mu_0$ to $\nu$ composed with the geodesic from $\mu_0$ to $\mu_1$), the function $t \mapsto W_2^2(\mu_t,\nu)$ is convex by the triangle inequality and the parallelogram law in Wasserstein space. $\square$
+
+**Corollary.** The Fréchet functional $F(\mu) = \sum_i\lambda_i W_2^2(\mu,\mu_i)$ is geodesically convex as a non-negative linear combination of geodesically convex functionals. When one $\mu_j$ is absolutely continuous, $F$ is strictly geodesically convex, giving a unique minimizer.
+
+**Implication for the algorithm.** Strict geodesic convexity means $F$ has no spurious local minima in the Wasserstein geometry — every stationary point is the global minimum. The fixed-point iteration converges to the global minimum when initialized in a sufficiently regular function space. This is the Wasserstein-space analogue of the convexity of the Euclidean least-squares objective $\sum_i\lambda_i\|x-x_i\|^2$, whose unique minimum $x^* = \sum_i\lambda_i x_i$ is found by setting the gradient to zero.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 208 (Statistics and Probability), the **sample mean** $\bar x = \frac{1}{n}\sum_i x_i$ minimizes $\sum_i\|x - x_i\|^2$ — the sum of squared Euclidean distances. The Wasserstein barycenter minimizes $\sum_i W_2^2(\mu,\mu_i)$ — the same problem with Euclidean distance replaced by Wasserstein distance. The normal equations $\sum_i(x^* - x_i) = 0$ characterizing the Euclidean mean are replaced by the fixed-point equation $\sum_i\lambda_i T_i(x) = x$ characterizing the Wasserstein barycenter. Every statistical concept built on the Euclidean mean — variance, principal components, clustering — has a Wasserstein analogue built on the barycenter, forming the emerging field of Wasserstein statistics.
+
+In MATH 302 (Matrix Theory), the **geometric mean** of positive definite matrices is the unique positive definite matrix $G$ satisfying $G = (\prod_i A_i^{\lambda_i})$ in the Riemannian geometry of positive definite matrices. The Gaussian barycenter covariance $\Sigma^*$ satisfying $\Sigma^* = \sum_i\lambda_i((\Sigma^*)^{1/2}\Sigma_i(\Sigma^*)^{1/2})^{1/2}$ is the Wasserstein geometric mean of the covariances — a matrix Fréchet mean in the Bures metric on positive definite matrices, which coincides with the $W_2$ metric restricted to zero-mean Gaussians. The spectral theorem from MATH 302 — diagonalizing symmetric positive definite matrices via the eigendecomposition — is the computational tool for evaluating the matrix square roots $(\Sigma^{1/2}\Sigma_i\Sigma^{1/2})^{1/2}$ that appear in the Gaussian barycenter formula.
+
+In COMP 202 (Data Structures and Algorithms), the **$k$-means clustering algorithm** alternates between assigning data points to their nearest cluster center and updating cluster centers as the arithmetic mean of their assigned points. The free-support Wasserstein barycenter algorithm has exactly the same two-step structure: assign mass to optimal transport destinations (the transport step, analogous to assignment) and update the barycenter support as the weighted average of transported points (the averaging step, analogous to centroid update). The convergence analysis of $k$-means — each iteration decreases the objective, convergence to a local minimum, global convergence with good initialization — applies verbatim to the free-support barycenter algorithm, with the Euclidean assignment cost replaced by the Sinkhorn transport cost.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the B.P. Koirala Institute cardiac imaging story has a precise mathematical address. Let us walk through them one by one until the five hospital distributions, the bimodal mixture failure, the Fréchet formulation, the fixed-point equation, and the multi-marginal Sinkhorn algorithm are completely fused with the formalism.
+
+---
+
+**The five hospital heart shape distributions — $\mu_1, \ldots, \mu_5 \in \mathcal{P}_2(\mathbb{R}^n)$, one per hospital, each encoding the probability distribution of cardiac cross-section shapes in that hospital's patient population — are the input measures to the Wasserstein barycenter problem.** Each $\mu_i$ is an absolutely continuous probability measure on the shape space $\mathbb{R}^n$ (the space of two-dimensional cardiac cross-sections, parametrized by a finite-dimensional feature vector), with density $f_i = d\mu_i/d\lambda^n$ describing the probability of each possible heart shape in that hospital's demographic. The absolute continuity of each $\mu_i$ — the fact that the heart shape distribution is a continuous density rather than a discrete point mass — is the regularity condition that guarantees uniqueness of the Wasserstein barycenter: by the Agueh-Carlier theorem, when at least one input is absolutely continuous, the Fréchet minimizer $\mu^*$ is unique and absolutely continuous. The five hospitals serve different demographics, so the five distributions are genuinely different — different mean shapes, different covariance structures, different support regions — and the barycenter must find the genuine geometric center of this ensemble.
+
+**The barycentric weights $\lambda_i > 0$ with $\sum_i\lambda_i = 1$ — encoding the relative importance of each hospital in the national reference standard — are the weights of the Fréchet functional $F(\mu) = \sum_{i=1}^5\lambda_i W_2^2(\mu,\mu_i)$.** Weighting by patient population size gives $\lambda_i = n_i/\sum_j n_j$ where $n_i$ is the number of patients at hospital $i$ — the larger the hospital's contribution to the national patient pool, the more influence its distribution has on the national reference standard. Equal weights $\lambda_i = 1/5$ give a pure geometric average with no demographic weighting. The weights are the analyst's design choice, but whatever the weights, the mathematical problem of minimizing $F$ is well-posed, and its solution is the Wasserstein barycenter. The weights $\lambda_i$ are the Wasserstein-space analogue of the weights in a weighted arithmetic mean $x^* = \sum_i\lambda_i x_i$ — they control the relative pull of each input on the central tendency.
+
+---
+
+**The linear mixture failure — the five colleagues proposing $\sum_i\lambda_i\mu_i$ as the national reference distribution and producing a five-peaked superposition — is the straight line in the flat vector space of signed measures, which is not a geodesic in Wasserstein space and does not minimize any geometrically meaningful notion of central tendency.** The mixture $\sum_i\lambda_i\mu_i$ assigns density $\sum_i\lambda_i f_i(x)$ to each shape $x$ — a weighted sum of the five hospital densities at each point. For the simplified two-Gaussian case with Kathmandu distribution $\mathcal{N}(m_1,\Sigma_1)$ and Pokhara distribution $\mathcal{N}(m_2,\Sigma_2)$ with $m_1 \neq m_2$, the mixture $\frac{1}{2}\mathcal{N}(m_1,\Sigma_1) + \frac{1}{2}\mathcal{N}(m_2,\Sigma_2)$ is bimodal — it has two peaks at $m_1$ and $m_2$ and a valley between them. The Wasserstein distance from this mixture to either input Gaussian is not minimized by the mixture — the mixture does not minimize $F$. The Fréchet functional evaluated at the mixture satisfies $F(\sum_i\lambda_i\mu_i) \geq F(\mu^*)$ with strict inequality in the bimodal case. The mixture minimizes $\sum_i\lambda_i\text{KL}(\mu_i\|\mu)$ — the KL-weighted average — not $\sum_i\lambda_i W_2^2(\mu_i,\mu)$. Different distance, different optimizer, different geometric content.
+
+**The bimodal covariance failure — the arithmetic mean covariance $\bar\Sigma = \sum_i\lambda_i\Sigma_i$ being larger in PSD order than the Wasserstein barycenter covariance $\Sigma^*$ — is the inequality $\bar\Sigma \succeq \Sigma^*$ derived from Jensen's inequality applied to the concave matrix square root function.** The arithmetic mean covariance inherits the spread of both input covariances simultaneously — it is large enough to cover both ellipses — producing a distribution that is more diffuse than either input. The Wasserstein barycenter covariance $\Sigma^*$, solving the fixed-point equation $\Sigma^* = \sum_i\lambda_i((\Sigma^*)^{1/2}\Sigma_i(\Sigma^*)^{1/2})^{1/2}$, is the geometric mean in the Bures-Wasserstein metric on positive definite matrices — a genuinely smaller, more concentrated covariance that represents the shape that sits at the transport-optimal center of the ensemble. In the cardiac story: the arithmetic mean heart shape is an over-diffuse superposition of all five demographic shapes, while the Wasserstein barycenter heart shape is a single concentrated representative that is optimally close to all five simultaneously.
+
+---
+
+**The Fréchet mean formulation — $\mu^* = \arg\min_\mu\sum_i\lambda_i W_2^2(\mu,\mu_i)$ — is the precise Wasserstein-space generalization of the weighted least-squares problem $x^* = \arg\min_x\sum_i\lambda_i\|x-x_i\|^2$ whose solution is the arithmetic mean $x^* = \sum_i\lambda_i x_i$.** In Euclidean space, the squared distance $\|x-x_i\|^2$ is the quadratic cost of displacement from $x$ to $x_i$. In Wasserstein space, the squared Wasserstein distance $W_2^2(\mu,\mu_i)$ is the minimum quadratic transport cost of morphing $\mu$ into $\mu_i$ — the minimum work required to move the mass of $\mu$ to match the distribution of $\mu_i$. The Fréchet functional $F(\mu) = \sum_i\lambda_i W_2^2(\mu,\mu_i)$ is the total minimum work of morphing $\mu$ into all five hospital distributions simultaneously. The barycenter $\mu^*$ is the distribution that minimizes this total work — the distribution from which all five hospital distributions are, on average, as geometrically close as possible. Existence follows from lower semicontinuity of $W_2^2$ and tightness of sublevel sets via Prokhorov's theorem — the same compactness argument from measure theory that underlies the existence of optimal couplings in the Kantorovich problem.
+
+**The multi-marginal formulation — reducing the barycenter problem to a single optimal transport problem over the product space $(\mathbb{R}^n)^5$ with cost $c(x_1,\ldots,x_5) = \sum_i\lambda_i\|x_i\|^2 - \|\sum_i\lambda_i x_i\|^2$ — is the reformulation that reveals the barycenter variable as the weighted Euclidean mean $x_0 = \sum_i\lambda_i x_i$ of the joint coupling's other marginals.** The joint distribution $\pi \in \Pi(\mu_1,\ldots,\mu_5)$ over the five hospital shape spaces simultaneously encodes the full coupling structure of the barycenter problem: the marginal $(\text{proj}_i)_\#\pi = \mu_i$ for each hospital, and the barycenter distribution is the marginal $(\text{proj}_0)_\#\pi$ where $x_0 = \sum_i\lambda_i x_i$ is the weighted average of the joint variables. The multi-marginal cost $c(x_1,\ldots,x_5)$ is the weighted variance of the five shape variables — it measures how spread out the five hospital shapes are around their weighted average. Minimizing the total variance over all couplings with correct marginals produces the barycenter as a byproduct: the distribution of weighted averages under the optimal coupling. This is the multi-marginal generalization of the Kantorovich problem from Chapter 1, with five marginals instead of two and the barycenter arising as the Euclidean average of the optimal joint variables.
+
+---
+
+**The fixed-point equation $\sum_i\lambda_i T_i(x) = x$ $\mu^*$-almost surely — the barycenter is the distribution from which the weighted average of all optimal transport maps to the input distributions is the identity — is derived by setting the Wasserstein gradient of $F$ to zero, using the fact that the Wasserstein gradient of $W_2^2(\cdot,\mu_i)$ at $\mu^*$ is the initial velocity of the geodesic from $\mu^*$ to $\mu_i$, which is $T_i - \text{id}$.** The derivation is the Wasserstein-space analogue of setting $\nabla_x\sum_i\lambda_i\|x-x_i\|^2 = 2\sum_i\lambda_i(x-x_i) = 0$ to find the Euclidean mean: in Wasserstein space, the gradient of $W_2^2(\cdot,\mu_i)$ at $\mu^*$ is the velocity field $(T_i - \text{id})$ pointing from $\mu^*$ toward $\mu_i$ along the geodesic, and the first-order condition $\sum_i\lambda_i(T_i(x) - x) = 0$ is the vanishing of the weighted sum of these geodesic velocities. The fixed-point equation $\sum_i\lambda_i T_i(x) = x$ says: at the barycenter, the weighted average destination of the optimal migration to all five hospitals is the current location — you are already at the center, so the average migration takes you nowhere. This is the Otto calculus in action: the gradient of the Fréchet functional in the Riemannian geometry of Wasserstein space, set to zero to characterize the minimum.
+
+**The Brenier map representation $T_i = \nabla\phi_i$ — each optimal transport map from the barycenter to the $i$-th hospital distribution being the gradient of a convex potential $\phi_i$ — connects the fixed-point equation to the system of Monge-Ampère PDEs governing the barycenter potentials.** The fixed-point equation $\sum_i\lambda_i\nabla\phi_i(x) = x$ is the gradient of $\sum_i\lambda_i\phi_i(x) = \frac{\|x\|^2}{2} + \text{const}$ — a system relating the five Brenier potentials to the squared-norm function. Each potential $\phi_i$ satisfies the Monge-Ampère equation $\det(\nabla^2\phi_i(x)) = f^*(x)/f_i(\nabla\phi_i(x))$ — the PDE from Chapter 1, Topic 1 — connecting the barycenter density $f^*$ to the $i$-th hospital density $f_i$ through the Jacobian of $T_i = \nabla\phi_i$. The barycenter problem is equivalent to simultaneously solving $k$ Monge-Ampère equations coupled through the fixed-point equation — a fully nonlinear system of PDEs whose solution is the barycenter density $f^*$ and the $k$ transport potentials $\phi_i$.
+
+---
+
+**The Gaussian barycenter mean $m^* = \sum_i\lambda_i m_i$ — the arithmetic mean of the hospital mean shapes — is the consequence of the fixed-point equation for Gaussian distributions, where the optimal transport map between Gaussians is affine: $T_i(x) = m_i + A_i(x-m^*)$.** Substituting into $\sum_i\lambda_i T_i(x) = x$ and evaluating at $x = m^*$: $\sum_i\lambda_i(m_i + A_i\cdot 0) = m^*$, giving $m^* = \sum_i\lambda_i m_i$. The Wasserstein geometry and Euclidean geometry agree on the location of the center of mass for Gaussian distributions — the optimal transport between Gaussians is an affine map that translates and stretches, and the translation component averages linearly just as in the Euclidean case. In the cardiac story: the national reference mean heart shape is the population-weighted average of the five hospital mean shapes — a single cardiac shape at the demographic center of Nepal's patient population.
+
+**The Gaussian barycenter covariance fixed-point equation $\Sigma^* = \sum_i\lambda_i((\Sigma^*)^{1/2}\Sigma_i(\Sigma^*)^{1/2})^{1/2}$ — solved by the iteration $\Sigma^{(\ell+1)} = \sum_i\lambda_i((\Sigma^{(\ell)})^{1/2}\Sigma_i(\Sigma^{(\ell)})^{1/2})^{1/2}$ — is the matrix Fréchet mean in the Bures-Wasserstein metric on positive definite matrices, whose convergence is guaranteed by the spectral theorem from MATH 302.** The matrix square root $(\Sigma^{1/2}\Sigma_i\Sigma^{1/2})^{1/2}$ is computed via the eigendecomposition $\Sigma = Q\Lambda Q^\top$: $\Sigma^{1/2} = Q\Lambda^{1/2}Q^\top$, and the product $\Sigma^{1/2}\Sigma_i\Sigma^{1/2}$ is then symmetric positive definite (being a congruence transform of $\Sigma_i \succ 0$), so its square root is well-defined and positive definite. The fixed-point iteration decreases the Bures-Wasserstein distance to $\Sigma^*$ at every step — it is the matrix analogue of the scalar fixed-point iteration $\sigma \leftarrow \sum_i\lambda_i(\sigma\sigma_i)^{1/2}$ which converges to the geometric mean of the $\sigma_i$. The inequality $\bar\Sigma = \sum_i\lambda_i\Sigma_i \succeq \Sigma^*$ — the arithmetic mean covariance is larger than the Wasserstein barycenter covariance — is Jensen's inequality applied to the matrix concave function $\Sigma \mapsto (\Sigma^{1/2}\Sigma_i\Sigma^{1/2})^{1/2}$, the same Jensen's inequality from MATH 208 now applied to matrix-valued functions.
+
+---
+
+**The free-support alternating algorithm — Step 1: compute $k$ Sinkhorn transport plans from current barycenter estimate to each input distribution; Step 2: update support points as the weighted average of transported positions — is the Wasserstein-space Lloyd's algorithm, with the Sinkhorn transport step playing the role of the $k$-means assignment step and the weighted-average update playing the role of the centroid update.** The transport step $T_i^{(\ell)}(z_j) = N\sum_l P_{i,jl}^{(\ell)} y_{i,l}$ is the conditional expectation of the destination given source $z_j$ under the entropic coupling $P_i^{(\ell)}$ — the soft assignment of each barycenter support point to the $i$-th hospital's shape space, weighted by the Sinkhorn coupling probabilities. The update step $z_j^{(\ell+1)} = \sum_i\lambda_i T_i^{(\ell)}(z_j)$ is the weighted average of the five soft assignments — the new support point is the optimal transport center of the five hospitals' recommendations for where that support point should go. Each iteration decreases the Fréchet objective $F$ by the majorization-minimization argument: the update minimizes a quadratic upper bound on $F$ constructed by fixing the transport plans and minimizing over the support point positions, exactly as the $k$-means centroid update minimizes the within-cluster sum of squares with cluster assignments held fixed.
+
+**The per-iteration complexity $O(kN^2/\varepsilon)$ — $k$ Sinkhorn runs, each costing $O(N^2)$ per iteration with $O(1/\varepsilon)$ iterations — is the multi-distribution generalization of the two-marginal Sinkhorn complexity $O(N^2/\varepsilon)$ from Chapter 2, linear in the number of input distributions $k$ and quadratic in the discretization $N$.** For the cardiac imaging application with $k=5$ hospitals, $N=1000$ shape space discretization points, and $\varepsilon = 0.1$, each barycenter iteration requires $5\times 10^6/0.1 = 5\times 10^7$ operations — feasible on a modern GPU in seconds. Without entropic regularization, each of the $k$ exact OT subproblems costs $O(N^3) = O(10^9)$ — three orders of magnitude more expensive per iteration, making the barycenter computation impractical at medical imaging scale. The entropic regularization from Chapter 2 is not a luxury but a necessity: the Wasserstein barycenter at machine learning scale is only computationally accessible through the Sinkhorn algorithm.
+
+---
+
+**The multi-marginal Sinkhorn algorithm — maintaining $k+1$ scaling vectors ($k$ for the input distributions and one for the barycenter), updating them in round-robin fashion with the barycenter scaling vector updated via the geometric mean $a_j \propto \prod_i(K_iv_i)_j^{\lambda_i}$ — is the direct generalization of the two-marginal Sinkhorn iterations from Chapter 2, with the arithmetic marginal correction replaced by a geometric mean across the $k$ input couplings.** The two-marginal update $u \leftarrow a/(Kv)$ is a ratio — the target marginal divided by the current row sum. The multi-marginal barycenter update $a_j \propto \prod_i(K_iv_i)_j^{\lambda_i}$ is a geometric mean of the $k$ current row sums, raised to the barycentric powers — the product structure reflects the simultaneous coupling to all $k$ input distributions through the single barycenter variable. In log-domain: $\log a_j = \sum_i\lambda_i\log(K_iv_i)_j + \text{const}$ — the log-barycenter is the weighted arithmetic mean of the log-row-sums, stabilized by the log-sum-exp trick from Topic 3. The round-robin update structure is the multi-marginal Bregman alternating projection: each step projects the current joint coupling onto one of the $k+2$ marginal constraint sets ($k$ input marginals plus the barycenter normalization constraint), converging to the unique intersection by the Bregman projection theorem.
+
+---
+
+**The break moment — the non-uniqueness of the barycenter for discrete inputs, and the failure of the fixed-point iteration to guarantee global convergence for free-support optimization — is the manifestation of the non-geodesic-convexity of the Wasserstein space restricted to discrete measures with fixed support.** For continuous absolutely continuous inputs, the Fréchet functional $F$ is strictly geodesically convex by the McCann theorem, guaranteeing a unique global minimum. For discrete inputs supported on fixed atom sets, the Wasserstein space restricted to these discrete measures is not geodesically convex — the geodesic between two discrete measures passes through continuous distributions not in the discrete feasible set. The fixed-point iteration, which performs a majorization-minimization on the restricted discrete problem, can get trapped at local minima corresponding to different assignments of barycenter support points to input distribution atoms. The resolution — restricting to absolutely continuous inputs, or using free-support optimization with multiple initializations — is the practical acknowledgment that the geodesic convexity guarantee requires the full continuous Wasserstein space, not a discretized approximation. In the cardiac imaging story: the heart shape distributions are continuous densities, so the regularity condition holds, the barycenter is unique, and the algorithm converges globally — the discrete approximation failure is a computational artifact, not a mathematical one.
+
+---
+
+**The connection to MATH 208 (Statistics and Probability) is complete and bilateral.** The Wasserstein barycenter is the population-level analogue of the sample mean: just as the sample mean $\bar x = \frac{1}{n}\sum_i x_i$ minimizes $\sum_i\|x-x_i\|^2$ over points $x \in \mathbb{R}^n$, the Wasserstein barycenter $\mu^*$ minimizes $\sum_i W_2^2(\mu,\mu_i)$ over distributions $\mu \in \mathcal{P}_2(\mathbb{R}^n)$. The normal equations $\sum_i(x^*-x_i)=0$ and the fixed-point equation $\sum_i\lambda_i T_i(x) = x$ are structurally identical — both express that the displacement from the mean to each data point averages to zero, with Euclidean displacement replaced by optimal transport displacement. Jensen's inequality — which you applied in MATH 208 to derive that $E[f(X)] \geq f(E[X])$ for convex $f$ — gives the PSD inequality $\bar\Sigma \succeq \Sigma^*$ for the Gaussian barycenter covariance, identifying the arithmetic mean covariance as the Jensen upper bound on the Wasserstein geometric mean. The law of total variance, the bias-variance tradeoff, and the concentration of measure inequalities from MATH 208 all have Wasserstein analogues built on the barycenter in place of the arithmetic mean.
+
+**The connection to MATH 302 (Matrix Theory) runs through the spectral theorem, positive definite matrices, and matrix means.** The Gaussian barycenter covariance $\Sigma^*$ is the Fréchet mean of the covariance matrices $\Sigma_1,\ldots,\Sigma_k$ in the Riemannian geometry of positive definite matrices — a geometry where the geodesic between $A$ and $B$ is $A^{1/2}(A^{-1/2}BA^{-1/2})^t A^{1/2}$ and the distance is $\|(log(A^{-1/2}BA^{-1/2}))\|_F$. The spectral theorem from MATH 302 — every symmetric positive definite matrix has a unique symmetric positive definite square root, computed via eigendecomposition — is the computational primitive for the matrix square roots in the fixed-point iteration. The convergence of the fixed-point iteration is controlled by the condition number of the covariance matrices — matrices with well-separated eigenvalues converge faster, matrices with clustered eigenvalues converge more slowly — directly connecting the convergence theory to the spectral theory of MATH 302.
+
+---
+
+**Looking forward across the roadmap**, the Wasserstein barycenter is the distributional object that connects Phase 1 to Phases 2 and 3 at the deepest level. In Phase 2, the Wasserstein barycenter of point cloud distributions — distributions over 3D molecular structures or graph-structured data — is the natural notion of average shape in geometric deep learning, and the equivariant neural networks of Phase 2 must respect the barycenter structure to produce geometrically consistent outputs. In Phase 3, the denoising diffusion model can be interpreted as computing a continuous family of Wasserstein barycenters between the data distribution $\mu_{\text{data}}$ and the noise distribution $\mu_{\text{noise}}$ at each noise level $t$ — the intermediate noised distributions $\mu_t$ are approximately the barycenters of $\mu_{\text{data}}$ and $\mu_{\text{noise}}$ with weights $(1-t)$ and $t$. The flow matching training objective — minimizing the expected squared velocity norm along learned trajectories from noise to data — is precisely the Benamou-Brenier kinetic energy, and the optimal learned flow is the displacement interpolation from $\mu_{\text{noise}}$ to $\mu_{\text{data}}$, whose intermediate distributions are Wasserstein barycenters. The entire architecture of Phase 3's generative models is the computational implementation of the Wasserstein geometry built in Phase 1, with the barycenter as the distributional averaging operation that connects noise distributions to data distributions through geometrically honest intermediate states.
+
+The five hospital distributions on the echocardiogram wall — the Kathmandu urban distribution, the Pokhara highland distribution, the Butwal agricultural distribution, the Biratnagar Terai distribution, and the Dharan eastern hills distribution — find their geometric center in the unique probability measure $\mu^*$ minimizing $\sum_{i=1}^5\lambda_i W_2^2(\mu,\mu_i)$, computed by the multi-marginal Sinkhorn algorithm with geometric mean barycenter updates $a_j \propto \prod_i(K_iv_i)_j^{\lambda_i}$, converging to the national reference cardiac distribution that is the Fréchet mean of Nepal's demographic cardiac diversity in the Wasserstein metric.
+
+---
+---

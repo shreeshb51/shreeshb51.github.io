@@ -1,0 +1,421 @@
+# Topic 2 - SVD: The Geometry of Data Compression
+
+## Introduction
+
+The Spectral Theorem gave you the complete geometric description of symmetric matrices: orthogonal eigenvectors, real eigenvalues, a pure rescaling in the natural coordinate system. It is a beautiful and complete result — for symmetric matrices. But most matrices you will encounter in the roadmap are not square, and even square matrices arising from data are rarely symmetric. The data matrix $X \in \mathbb{R}^{n \times T}$ of sensor readings has $n$ sensors and $T$ time steps — it is $n$ by $T$, rectangular, not square at all. The Jacobian of a smooth map between manifolds of different dimensions is rectangular. The weight matrices of neural networks are rectangular. The transport plan matrix in the Sinkhorn algorithm is square but not symmetric. The spectral theorem does not apply to any of these.
+
+What you need is a decomposition that applies to every matrix — rectangular or square, symmetric or not — and that reveals the same kind of geometric structure that the spectral theorem reveals for symmetric matrices. You need to know: what are the preferred input directions, what are the preferred output directions, and how much does the matrix stretch each input direction as it maps it to the corresponding output direction? This is exactly what the Singular Value Decomposition provides.
+
+The SVD says: every matrix $A \in \mathbb{R}^{m \times n}$, regardless of shape or symmetry, can be written as $A = U\Sigma V^T$, where $U \in \mathbb{R}^{m \times m}$ is orthogonal with columns $u_1, \ldots, u_m$, $V \in \mathbb{R}^{n \times n}$ is orthogonal with columns $v_1, \ldots, v_n$, and $\Sigma \in \mathbb{R}^{m \times n}$ is a rectangular diagonal matrix with non-negative entries $\sigma_1 \geq \sigma_2 \geq \cdots \geq \sigma_{\min(m,n)} \geq 0$ on the diagonal.
+
+The geometric reading of this decomposition is the complete story of what $A$ does as a linear map from $\mathbb{R}^n$ to $\mathbb{R}^m$. The matrix $V^T$ rotates the input space $\mathbb{R}^n$ so that the input is expressed in the coordinate system of the right singular vectors $v_1, \ldots, v_n$ — the preferred input directions. The matrix $\Sigma$ stretches each right singular vector direction by the corresponding singular value $\sigma_i$ and maps it to the corresponding left singular vector direction — zero stretching if $\sigma_i = 0$, moderate stretching if $\sigma_i$ is moderate, large stretching if $\sigma_i$ is large. The matrix $U$ rotates the output to express it in the standard coordinate system of $\mathbb{R}^m$. The matrix $A$ is a composition of a rotation, a stretch-and-possibly-dimension-change, and another rotation — and nothing else. No shear, no mysterious coupling between directions beyond the stretching: the SVD reveals that every linear map is, in the right pair of coordinate systems, just a rescaling possibly accompanied by a dimension change.
+
+The roadmap names this topic with a precise description: the geometry of data compression. This name points directly to the most important practical consequence of the SVD — the Eckart-Young theorem, which says that the best rank-$k$ approximation to any matrix, in the sense of minimizing the Frobenius norm of the error, is obtained by keeping only the $k$ largest singular values and their associated left and right singular vectors. Throwing away the directions with small singular values loses little information about the matrix's action — because those directions contribute little to the matrix's overall effect — while dramatically reducing the number of numbers needed to represent the matrix. This is the mathematics of data compression, dimensionality reduction, and low-rank approximation.
+
+The topic has three subtopics that develop the SVD in logical order.
+
+The first subtopic is the **existence and structure of the SVD** — the precise statement that every matrix has an SVD, the geometric interpretation of left and right singular vectors and singular values, and the connection to the spectral theorem via the symmetric matrices $A^TA$ and $AA^T$ whose eigenvectors are the right and left singular vectors respectively.
+
+The second subtopic is the **Eckart-Young theorem** — the best low-rank approximation theorem, showing that truncating the SVD to $k$ terms gives the closest rank-$k$ matrix to $A$ in both the Frobenius norm and the spectral norm. This theorem is the mathematical foundation of PCA, latent semantic analysis, matrix completion, and the low-rank approximation methods used throughout machine learning.
+
+The third subtopic is the **pseudoinverse and least squares** — the Moore-Penrose pseudoinverse $A^+ = V\Sigma^+ U^T$, how it provides the minimum-norm least-squares solution to an overdetermined or underdetermined linear system, and why it is the correct generalization of matrix inversion to non-square and rank-deficient matrices. The pseudoinverse is the tool that makes linear regression, linear ODEs, and linear inverse problems well-posed even when the system matrix is not invertible.
+
+By the end of this topic, when you see any matrix in the roadmap — a data matrix, a Jacobian, a kernel matrix, a weight matrix — you will immediately see its SVD structure: a set of preferred input directions, a set of preferred output directions, a list of singular values measuring how strongly the matrix acts in each direction, and a low-rank approximation obtained by keeping only the directions with the largest singular values. The SVD is the most general and most powerful decomposition in linear algebra, and it is the tool that makes data compression, dimensionality reduction, and low-rank approximation not just possible but optimal.
+
+**ALL THREE SUBTOPICS ARE TREATED AS A SINGLE TOPIC FOR EASY COMPREHENSION.**
+
+---
+
+## Layer 1 (Story)
+
+You are the chief cartographer at the Survey Department of Nepal, and you have just received an extraordinary assignment. The department has been contracted to produce a compressed digital atlas of Nepal for distribution to schools across the country — not the full high-resolution atlas used by professional surveyors, but a lightweight version that captures the most important geographic features while fitting within the severe storage constraints of the schools' aging computers.
+
+The full atlas is stored as a large matrix: each row represents a horizontal scan line across Nepal from west to east, each column represents a fixed longitude, and each entry is the elevation at that location. The matrix has 10,000 rows and 8,000 columns — 80 million numbers, far too large to distribute efficiently. Your job is to compress this elevation matrix as aggressively as possible while preserving the features that matter most: the major mountain ranges, the broad river valleys, the Terai plains, the hilly middle region. The fine-grained details — individual ridgelines, local valleys, small settlements — can be sacrificed for the sake of compression.
+
+How do you do it?
+
+---
+
+**The naive approach and why it fails**
+
+Your junior cartographer proposes the obvious solution: simply reduce the resolution. Take every other row and every other column — halve the number of rows and columns simultaneously — and store the resulting 5,000 by 4,000 matrix. You have compressed the data by a factor of 4, and the stored matrix is a coarser version of the original.
+
+The problem is that this approach is unselective. It discards fine-grained information in all directions simultaneously — it cannot distinguish between the sweeping north-south elevation gradient from the Terai to the Himalayas (which is the most important geographic feature in Nepal and should be preserved) and the fine-grained east-west variation within a single mountain massif (which is far less important and can safely be discarded). The naive downsampling treats all directions of variation as equally important, which they are not.
+
+What you actually want is a compression scheme that identifies the most important directions of variation in the elevation data and preserves those while discarding the least important. Some directions account for enormous amounts of the total elevation variation across Nepal. Others account for tiny amounts. The right compression strategy is to keep the big directions and throw away the small ones.
+
+But what are the "directions of variation" in a matrix? And how do you find the most important ones? This is the question that the SVD answers.
+
+---
+
+**The SVD as a decomposition into geographic themes**
+
+Your senior cartographer — a mathematician who has worked at the department for thirty years — explains the SVD through a geographic analogy that immediately clarifies what the decomposition is doing.
+
+Imagine describing Nepal's elevation not as a matrix of raw numbers, but as a superposition of geographic themes. The first theme is the dominant north-south trend: the elevation rises dramatically and consistently from the Terai in the south to the Himalayas in the north, across the entire east-west extent of the country. This trend can be described by two vectors: a row pattern that captures how elevation varies from south to north at each horizontal scan line, and a column pattern that captures how the magnitude of this north-south trend varies as you move from west to east. The first theme is the outer product of these two vectors, weighted by the magnitude of the theme's contribution.
+
+The second theme is the east-west trend: Nepal is higher in the northwest (Karnali region, Dolpa) and lower in the southeast (Mechi zone), so the elevation has a systematic east-west gradient. This is a second pair of vectors — a row pattern and a column pattern — whose outer product captures this east-west tilting.
+
+The third theme might be the central uplift: the Kathmandu valley and surrounding hills form a distinct elevated plateau in the middle of the country, higher than the Terai but lower than the Himalayas, with a specific geographic pattern. A third pair of vectors captures this.
+
+And so on, with each successive theme capturing a progressively smaller and more localized feature of the elevation data.
+
+The crucial insight is that the full elevation matrix is exactly the sum of all these themes, each weighted by its importance:
+
+$$\text{Elevation} = \sigma_1 u_1 v_1^T + \sigma_2 u_2 v_2^T + \sigma_3 u_3 v_3^T + \cdots$$
+
+Each term $\sigma_k u_k v_k^T$ is a rank-1 matrix — the outer product of a left vector $u_k$ (the row pattern, describing how the theme varies north-south) and a right vector $v_k$ (the column pattern, describing how the theme varies east-west), weighted by the singular value $\sigma_k$ (the importance of the theme). The left vectors $u_k$ are orthogonal to each other — they are mutually independent geographic themes in the row direction. The right vectors $v_k$ are orthogonal to each other — mutually independent themes in the column direction. And the singular values $\sigma_1 \geq \sigma_2 \geq \cdots \geq 0$ are ordered from most important to least important.
+
+This decomposition is the Singular Value Decomposition. Written as a matrix equation: $A = U\Sigma V^T$, where the columns of $U$ are the left vectors $u_k$, the columns of $V$ are the right vectors $v_k$, and $\Sigma$ is the diagonal matrix of singular values $\sigma_k$.
+
+---
+
+**The compression strategy: keep the big themes, throw away the small ones**
+
+Armed with the SVD, the compression strategy is now obvious and optimal. The full elevation matrix is the sum of rank-1 themes, ordered by importance. The most important theme contributes a fraction $\sigma_1^2 / \sum_k \sigma_k^2$ of the total variation in the matrix. The second most important contributes $\sigma_2^2 / \sum_k \sigma_k^2$. And so on.
+
+To compress the matrix, keep only the first $k$ themes — the $k$ most important ones — and discard the rest:
+
+$$A_k = \sigma_1 u_1 v_1^T + \sigma_2 u_2 v_2^T + \cdots + \sigma_k u_k v_k^T$$
+
+This is the rank-$k$ approximation to the elevation matrix. Instead of storing $m \times n$ numbers, you store $k$ singular values, $k$ left vectors of length $m$, and $k$ right vectors of length $n$ — a total of $k(m + n + 1)$ numbers. For $k \ll \min(m,n)$, this is far fewer numbers than the original matrix, and the approximation quality depends entirely on how quickly the singular values decay. If the first few singular values are much larger than the rest — as is typically the case for structured geographic data — the approximation is excellent.
+
+Your senior cartographer demonstrates: the first singular vector captures the dominant north-south trend and already accounts for roughly 70% of the total elevation variation. The first three themes together account for perhaps 90%. The first ten themes might account for 99%. By keeping only 10 themes instead of the full 8,000 singular values, you achieve a 99% reduction in the number of stored numbers while preserving 99% of the elevation variation — an extraordinary compression that would be impossible with naive downsampling.
+
+---
+
+**The geometric picture: what the SVD says the matrix is doing**
+
+Now your senior cartographer steps back and explains what the SVD is saying geometrically about the elevation matrix as a linear map.
+
+The matrix $A: \mathbb{R}^{8000} \to \mathbb{R}^{10000}$ takes a column vector — a specification of the elevation at each of the 8,000 longitude positions — and produces a row vector — the corresponding elevation across all 10,000 scan lines. This is a linear map from an 8,000-dimensional space to a 10,000-dimensional space.
+
+The SVD says: this linear map has a very specific geometric structure. In the input space $\mathbb{R}^{8000}$, there is a preferred set of orthogonal directions — the right singular vectors $v_1, v_2, \ldots$ — that are the natural modes of east-west variation in the elevation data. In the output space $\mathbb{R}^{10000}$, there is a corresponding preferred set of orthogonal directions — the left singular vectors $u_1, u_2, \ldots$ — that are the natural modes of north-south variation. The matrix $A$ maps the $k$-th right singular vector to the $k$-th left singular vector, scaled by the $k$-th singular value: $Av_k = \sigma_k u_k$.
+
+This is the complete picture. The matrix does not mix the preferred directions — the $k$-th input direction maps exclusively to the $k$-th output direction. The only freedom the matrix has is in the scaling: it amplifies direction $k$ by the factor $\sigma_k$. The directions with large singular values are amplified strongly. The directions with small singular values are amplified weakly. The directions with zero singular values are annihilated — they map to the zero vector.
+
+The factorization $A = U\Sigma V^T$ is the explicit encoding of this picture: $V^T$ rotates the input into the preferred input coordinate system, $\Sigma$ performs the direction-specific scaling and possible dimension change, and $U$ rotates the output into the standard output coordinate system.
+
+---
+
+**The connection to the Spectral Theorem: symmetric brothers**
+
+Your senior cartographer now explains why the SVD is the right generalization of the spectral theorem to rectangular matrices, by showing the explicit connection.
+
+Consider the symmetric matrix $A^TA \in \mathbb{R}^{8000 \times 8000}$ — the product of the elevation matrix with its own transpose. This is always symmetric positive semidefinite: for any $v \in \mathbb{R}^{8000}$, $v^T(A^TA)v = \|Av\|_2^2 \geq 0$. The spectral theorem applies: $A^TA = V\Lambda V^T$ where $V$ is orthogonal and $\Lambda$ has non-negative diagonal entries $\lambda_1 \geq \lambda_2 \geq \cdots \geq 0$.
+
+The right singular vectors of $A$ are exactly the eigenvectors of $A^TA$, and the singular values of $A$ are the square roots of the eigenvalues of $A^TA$: $\sigma_k = \sqrt{\lambda_k}$. Similarly, the left singular vectors are the eigenvectors of $AA^T \in \mathbb{R}^{10000 \times 10000}$, with the same nonzero eigenvalues.
+
+The SVD is not a separate theorem — it is the spectral theorem applied to the symmetric matrices $A^TA$ and $AA^T$, with the square root taken to recover the singular values. The spectral theorem, in a sense, is the special case of the SVD where the matrix happens to be square and symmetric — the left and right singular vectors coincide (as eigenvectors), and the singular values are the absolute values of the eigenvalues.
+
+---
+
+**The break moment: the singular value spectrum reveals the data's structure**
+
+Here is the break moment. The naive assumption is that the singular values decay slowly and uniformly — that the elevation data requires many themes to capture accurately, and that compression is inherently lossy and inaccurate.
+
+This breaks dramatically in practice. Real geographic data — and more broadly, real data from almost any structured domain — has singular values that decay rapidly: the first few singular values are much larger than the rest, and the tail of small singular values can be discarded with negligible error. This rapid decay reflects the structured nature of the data: Nepal's elevation is not random noise. It is organized by the geological forces that built the Himalayas, the river systems that carved the valleys, and the climatic gradients that shape the vegetation. This structure concentrates the variation in a few dominant directions, producing a rapidly decaying singular value spectrum.
+
+The assumption that all directions are equally important — the assumption underlying naive compression and naive learning algorithms — breaks whenever the data has structure. And real data always has structure. This is the manifold hypothesis from Chapter 3, now expressed in the language of linear algebra: the data matrix has rapidly decaying singular values because the data lies on a low-dimensional manifold, and the SVD reveals that manifold's linear approximation.
+
+In machine learning, this rapid decay justifies low-rank approximations to weight matrices, attention matrices, and kernel matrices. It justifies PCA as a preprocessing step. It explains why neural networks with many parameters can be compressed to much smaller networks with minimal accuracy loss — the weight matrices have rapidly decaying singular values, and the large singular values capture the important computation while the small ones are numerical noise.
+
+---
+
+Hold four pictures simultaneously.
+
+The elevation matrix as a sum of geographic themes: north-south gradient, east-west tilt, central plateau, each captured by an outer product $\sigma_k u_k v_k^T$, with larger themes weighted more heavily — the SVD as a decomposition into interpretable components.
+
+The geometric picture of the linear map: preferred input directions (right singular vectors) mapping to preferred output directions (left singular vectors), each scaled by a singular value — the SVD as pure stretch in the right coordinate systems.
+
+The compression: keep the first $k$ themes, discard the rest, store $k(m+n+1)$ numbers instead of $mn$ — the Eckart-Young theorem as optimal compression.
+
+The connection to the spectral theorem: the right singular vectors are eigenvectors of $A^TA$, the left singular vectors are eigenvectors of $AA^T$, the singular values are the square roots of their eigenvalues — the SVD as the spectral theorem applied to the symmetric brothers of $A$.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the precise statement and proof of the SVD existence theorem, the geometric interpretation via the four fundamental subspaces, the Eckart-Young theorem for optimal low-rank approximation, the pseudoinverse and least squares, the relationship between SVD and spectral decomposition, and the connection to the roadmap through matrix approximation in machine learning.
+
+### The SVD — Precise Statement
+
+**Theorem (Singular Value Decomposition).** For any matrix $A \in \mathbb{R}^{m \times n}$ with $m \geq n$ (without loss of generality), there exist:
+
+- An orthogonal matrix $U \in \mathbb{R}^{m \times m}$ with columns $u_1, \ldots, u_m \in \mathbb{R}^m$
+- An orthogonal matrix $V \in \mathbb{R}^{n \times n}$ with columns $v_1, \ldots, v_n \in \mathbb{R}^n$
+- A rectangular diagonal matrix $\Sigma \in \mathbb{R}^{m \times n}$ with diagonal entries $\sigma_1 \geq \sigma_2 \geq \cdots \geq \sigma_n \geq 0$
+
+such that:
+
+$$A = U\Sigma V^T$$
+
+The diagonal entries $\sigma_i$ are the **singular values** of $A$. The columns $u_i$ of $U$ are the **left singular vectors**. The columns $v_i$ of $V$ are the **right singular vectors**. The number of nonzero singular values equals $\text{rank}(A)$.
+
+**Proof via spectral theorem.** The matrix $A^TA \in \mathbb{R}^{n \times n}$ is symmetric positive semidefinite: $v^T(A^TA)v = \|Av\|_2^2 \geq 0$. By the spectral theorem:
+
+$$A^TA = V\Lambda V^T, \quad \Lambda = \text{diag}(\lambda_1, \ldots, \lambda_n), \quad \lambda_1 \geq \cdots \geq \lambda_n \geq 0$$
+
+Define the singular values $\sigma_i = \sqrt{\lambda_i} \geq 0$ and let $r = \text{rank}(A)$, so $\sigma_1 \geq \cdots \geq \sigma_r > 0 = \sigma_{r+1} = \cdots = \sigma_n$.
+
+For $i = 1, \ldots, r$, define the left singular vectors:
+
+$$u_i = \frac{Av_i}{\sigma_i} \in \mathbb{R}^m$$
+
+**Verification:** $\langle u_i, u_j\rangle = \frac{1}{\sigma_i\sigma_j}\langle Av_i, Av_j\rangle = \frac{1}{\sigma_i\sigma_j} v_i^T A^T A v_j = \frac{1}{\sigma_i\sigma_j} v_i^T (\lambda_j v_j) = \frac{\lambda_j}{\sigma_i\sigma_j}\delta_{ij} = \delta_{ij}$.
+
+So $u_1, \ldots, u_r$ are orthonormal. Extend to an orthonormal basis $u_1, \ldots, u_m$ of $\mathbb{R}^m$ by adding any orthonormal complement of $\text{span}(u_1,\ldots,u_r)$. Set $U = [u_1|\cdots|u_m]$.
+
+**Verification of $A = U\Sigma V^T$:** For $i \leq r$: $(U\Sigma V^T)e_i^{(n)} = \sigma_i U e_i^{(m)} = \sigma_i u_i = Av_i = A V e_i^{(n)}$. For $i > r$: both sides give zero. Since the columns of $V$ span $\mathbb{R}^n$, $A = U\Sigma V^T$. $\square$
+
+---
+
+### The Compact SVD
+
+When $r = \text{rank}(A) < \min(m,n)$, it is often more efficient to use the **compact (thin) SVD**:
+
+$$A = U_r \Sigma_r V_r^T$$
+
+where $U_r \in \mathbb{R}^{m \times r}$, $\Sigma_r = \text{diag}(\sigma_1,\ldots,\sigma_r) \in \mathbb{R}^{r \times r}$ with all entries positive, and $V_r \in \mathbb{R}^{n \times r}$. The columns of $U_r$ and $V_r$ are semi-orthogonal: $U_r^T U_r = I_r$ and $V_r^T V_r = I_r$.
+
+The outer product expansion of the full SVD is:
+
+$$A = \sum_{i=1}^r \sigma_i u_i v_i^T = \sum_{i=1}^{\min(m,n)} \sigma_i u_i v_i^T$$
+
+Each term $\sigma_i u_i v_i^T$ is a rank-1 matrix. The full matrix is the sum of $r$ rank-1 matrices, weighted by the singular values.
+
+---
+
+### The Four Fundamental Subspaces
+
+The SVD reveals the four fundamental subspaces of $A$ simultaneously.
+
+**Column space** (range of $A$): $\mathcal{R}(A) = \text{span}(u_1, \ldots, u_r)$ — the first $r$ left singular vectors.
+
+**Left null space** (null space of $A^T$): $\mathcal{N}(A^T) = \text{span}(u_{r+1}, \ldots, u_m)$ — the last $m-r$ left singular vectors.
+
+**Row space** (range of $A^T$): $\mathcal{R}(A^T) = \text{span}(v_1, \ldots, v_r)$ — the first $r$ right singular vectors.
+
+**Null space** (null space of $A$): $\mathcal{N}(A) = \text{span}(v_{r+1}, \ldots, v_n)$ — the last $n-r$ right singular vectors.
+
+The SVD establishes the **fundamental theorem of linear algebra**: $\mathcal{R}(A^T) \perp \mathcal{N}(A)$ and $\mathcal{R}(A) \perp \mathcal{N}(A^T)$, with $\mathbb{R}^n = \mathcal{R}(A^T) \oplus \mathcal{N}(A)$ and $\mathbb{R}^m = \mathcal{R}(A) \oplus \mathcal{N}(A^T)$.
+
+For any $v \in \mathbb{R}^n$, decompose: $v = \sum_{i=1}^r c_i v_i + v_\perp$ where $v_\perp \in \mathcal{N}(A)$. Then:
+
+$$Av = \sum_{i=1}^r \sigma_i c_i u_i$$
+
+The null space component $v_\perp$ is annihilated by $A$, and the row space component is mapped isomorphically (up to scaling by $\sigma_i$) to the column space.
+
+---
+
+### Norms via Singular Values
+
+The singular values provide canonical formulas for the most important matrix norms.
+
+**Spectral norm** (operator norm, 2-norm):
+
+$$\|A\|_2 = \sigma_1 = \max_{\|v\|_2 = 1} \|Av\|_2$$
+
+The spectral norm is the largest singular value — the maximum stretching factor of $A$.
+
+**Frobenius norm**:
+
+$$\|A\|_F = \sqrt{\sum_{i,j} a_{ij}^2} = \sqrt{\sum_{i=1}^r \sigma_i^2} = \sqrt{\text{tr}(A^TA)}$$
+
+The Frobenius norm is the $\ell_2$ norm of the vector of singular values.
+
+**Nuclear norm** (trace norm):
+
+$$\|A\|_* = \sum_{i=1}^r \sigma_i$$
+
+The nuclear norm is the $\ell_1$ norm of the vector of singular values. It is the convex envelope of the rank function — the tightest convex lower bound on rank — and it is used as a convex surrogate for rank minimization in matrix completion problems.
+
+These three norms satisfy the inequality $\|A\|_2 \leq \|A\|_F \leq \sqrt{r}\|A\|_2$ for a rank-$r$ matrix.
+
+---
+
+### The Eckart-Young Theorem — Optimal Low-Rank Approximation
+
+**Theorem (Eckart-Young, 1936).** Let $A \in \mathbb{R}^{m \times n}$ with SVD $A = U\Sigma V^T$ and singular values $\sigma_1 \geq \cdots \geq \sigma_r > 0$. Define the rank-$k$ truncated SVD:
+
+$$A_k = \sum_{i=1}^k \sigma_i u_i v_i^T = U_k \Sigma_k V_k^T$$
+
+Then $A_k$ is the best rank-$k$ approximation to $A$ in both the Frobenius and spectral norms:
+
+$$\|A - A_k\|_F = \min_{\text{rank}(B) \leq k} \|A - B\|_F = \sqrt{\sum_{i=k+1}^r \sigma_i^2}$$
+
+$$\|A - A_k\|_2 = \min_{\text{rank}(B) \leq k} \|A - B\|_2 = \sigma_{k+1}$$
+
+**Proof (Frobenius norm).** First compute the error: $A - A_k = \sum_{i=k+1}^r \sigma_i u_i v_i^T$, so $\|A-A_k\|_F^2 = \sum_{i=k+1}^r \sigma_i^2$.
+
+Now suppose $B$ has rank $\leq k$. Then $\mathcal{N}(B)$ has dimension $\geq n-k$. The subspace $\text{span}(v_1,\ldots,v_{k+1})$ has dimension $k+1$. By dimension counting, there exists a nonzero $w \in \text{span}(v_1,\ldots,v_{k+1}) \cap \mathcal{N}(B)$ with $\|w\|_2 = 1$.
+
+Write $w = \sum_{i=1}^{k+1} c_i v_i$ with $\sum_i c_i^2 = 1$. Then:
+
+$$\|A - B\|_F^2 \geq \|(A-B)w\|_2^2 = \|Aw\|_2^2 = \left\|\sum_{i=1}^{k+1} \sigma_i c_i u_i\right\|_2^2 = \sum_{i=1}^{k+1} \sigma_i^2 c_i^2 \geq \sigma_{k+1}^2 \sum_{i=1}^{k+1} c_i^2 = \sigma_{k+1}^2$$
+
+Meanwhile $\|A-A_k\|_F^2 = \sum_{i=k+1}^r \sigma_i^2 \geq \sigma_{k+1}^2$, with the Frobenius error being at most $\sigma_{k+1}^2$ times the remaining rank. Since $A_k$ achieves $\sqrt{\sum_{i=k+1}^r \sigma_i^2}$ and any rank-$k$ matrix achieves at least $\sigma_{k+1}$, and $A_k$ achieves the minimum, the proof is complete. $\square$
+
+**Explained variance.** Define the fraction of variance explained by the rank-$k$ approximation:
+
+$$\text{EV}(k) = \frac{\sum_{i=1}^k \sigma_i^2}{\sum_{i=1}^r \sigma_i^2} = \frac{\|A_k\|_F^2}{\|A\|_F^2}$$
+
+This is the fraction of the total Frobenius norm squared captured by the first $k$ singular components. In PCA, this is the fraction of total variance explained by the first $k$ principal components.
+
+---
+
+### The Moore-Penrose Pseudoinverse
+
+For a matrix $A \in \mathbb{R}^{m \times n}$ with SVD $A = U\Sigma V^T$, the **Moore-Penrose pseudoinverse** is:
+
+$$A^+ = V\Sigma^+ U^T$$
+
+where $\Sigma^+ \in \mathbb{R}^{n \times m}$ is obtained from $\Sigma^T$ by replacing each nonzero diagonal entry $\sigma_i > 0$ with $1/\sigma_i$ and leaving zeros as zeros:
+
+$$\Sigma^+ = \text{diag}(\sigma_1^{-1}, \ldots, \sigma_r^{-1}, 0, \ldots, 0) \in \mathbb{R}^{n \times m}$$
+
+**Properties of the pseudoinverse** (Moore-Penrose conditions):
+
+$$AA^+A = A \qquad \text{(1)}$$
+$$A^+AA^+ = A^+ \qquad \text{(2)}$$
+$$(AA^+)^T = AA^+ \qquad \text{(3)}$$
+$$(A^+A)^T = A^+A \qquad \text{(4)}$$
+
+These four conditions uniquely characterize $A^+$ among all matrices. The pseudoinverse reduces to the ordinary inverse when $A$ is square and invertible: $A^+ = A^{-1}$.
+
+**Least squares via pseudoinverse.** For an overdetermined system $Ax = b$ with $m > n$ and $A$ full column rank ($r = n$), the least-squares solution minimizing $\|Ax - b\|_2^2$ is:
+
+$$x^* = A^+b = (A^TA)^{-1}A^Tb$$
+
+**Proof.** The normal equations $A^TAx = A^Tb$ give $x^* = (A^TA)^{-1}A^Tb$. Since $A$ has full column rank, $A^TA$ is positive definite and invertible. The compact SVD gives $A^TA = V_r\Sigma_r^2 V_r^T$, so $(A^TA)^{-1} = V_r\Sigma_r^{-2}V_r^T$, and $(A^TA)^{-1}A^T = V_r\Sigma_r^{-2}V_r^T V_r\Sigma_r U_r^T = V_r\Sigma_r^{-1}U_r^T = A^+$. $\square$
+
+**Underdetermined systems.** For an underdetermined system $Ax = b$ with $m < n$ and $A$ full row rank ($r = m$), there are infinitely many solutions. The minimum-norm solution — the one satisfying $Ax = b$ with the smallest $\|x\|_2$ — is:
+
+$$x^* = A^+b = A^T(AA^T)^{-1}b$$
+
+**General case.** For arbitrary $A$ and $b$, $A^+b$ gives the minimum-norm least-squares solution: among all $x$ minimizing $\|Ax - b\|_2$, it is the one with smallest $\|x\|_2$.
+
+---
+
+### Relationship Between SVD and Spectral Decomposition
+
+The SVD and spectral theorem are deeply connected through the symmetric matrices $A^TA$ and $AA^T$.
+
+$$A^TA = (U\Sigma V^T)^T(U\Sigma V^T) = V\Sigma^T U^T U \Sigma V^T = V\Sigma^T\Sigma V^T = V\text{diag}(\sigma_1^2,\ldots,\sigma_n^2)V^T$$
+
+$$AA^T = U\Sigma V^T V\Sigma^T U^T = U\Sigma\Sigma^T U^T = U\text{diag}(\sigma_1^2,\ldots,\sigma_m^2)U^T$$
+
+The right singular vectors $V$ are the eigenvectors of $A^TA$, the left singular vectors $U$ are the eigenvectors of $AA^T$, and the squared singular values $\sigma_i^2$ are the common nonzero eigenvalues of both.
+
+**Polar decomposition.** For a square matrix $A \in \mathbb{R}^{n \times n}$ with full rank, the SVD gives the **polar decomposition**:
+
+$$A = QS, \quad Q = UV^T \in O(n) \text{ (orthogonal)}, \quad S = V\Sigma V^T \succ 0 \text{ (positive definite)}$$
+
+The polar decomposition writes $A$ as the product of an orthogonal matrix (pure rotation/reflection) and a positive definite symmetric matrix (pure stretch). This is the matrix analogue of writing a complex number as $re^{i\theta}$ — modulus times phase. The polar decomposition is used in robotics and computer graphics for interpolating between rotations (the $Q$ factor) while ignoring deformation (the $S$ factor).
+
+---
+
+### Condition Number and Numerical Stability
+
+The **condition number** of a matrix $A$ with respect to the 2-norm is:
+
+$$\kappa(A) = \|A\|_2 \|A^{-1}\|_2 = \frac{\sigma_1}{\sigma_n}$$
+
+the ratio of the largest to smallest singular value. For the least-squares problem $Ax \approx b$, the relative error in the solution is bounded by:
+
+$$\frac{\|\Delta x\|_2}{\|x\|_2} \leq \kappa(A) \frac{\|\Delta b\|_2}{\|b\|_2}$$
+
+A large condition number — a large ratio of largest to smallest singular value — means the system is ill-conditioned: small perturbations in $b$ cause large perturbations in the solution. The condition number is the single most important indicator of numerical stability for linear systems, and it is a direct property of the singular value spectrum.
+
+**Regularization via truncated SVD.** When $A$ is ill-conditioned, the pseudoinverse $A^+b$ amplifies noise in $b$ through the large terms $\sigma_i^{-1}$ for small $\sigma_i$. The **truncated SVD pseudoinverse** addresses this by only inverting the large singular values:
+
+$$A_k^+b = V_k\Sigma_k^{-1}U_k^Tb = \sum_{i=1}^k \frac{1}{\sigma_i}(u_i^Tb)v_i$$
+
+This is the regularized least-squares solution that ignores the small singular value directions — directions where $A$ has little discriminating power and where inverting them would amplify noise. The Tikhonov regularization solution $(A^TA + \alpha I)^{-1}A^Tb = \sum_i \frac{\sigma_i}{\sigma_i^2+\alpha}(u_i^Tb)v_i$ smoothly interpolates between using and ignoring small singular value directions, controlled by the regularization parameter $\alpha > 0$.
+
+---
+
+### Matrix Completion and Nuclear Norm Minimization
+
+The nuclear norm $\|A\|_* = \sum_i \sigma_i$ is the convex surrogate for rank minimization, enabling tractable low-rank matrix recovery. The **matrix completion problem** — recovering a low-rank matrix from a subset of observed entries — is formulated as:
+
+$$\min_X \|X\|_* \quad \text{subject to} \quad X_{ij} = A_{ij} \; \forall (i,j) \in \Omega$$
+
+where $\Omega$ is the set of observed entries. Under appropriate conditions (incoherence of the singular vectors), this nuclear norm minimization exactly recovers the original low-rank matrix. This is the matrix analogue of compressed sensing — the Eckart-Young theorem says the solution has rapidly decaying singular values, and the nuclear norm penalizes large singular value sums, driving the solution toward low rank.
+
+---
+
+### SVD in Optimal Transport and Phase 1
+
+The Sinkhorn algorithm iteratively scales the rows and columns of the kernel matrix $K_{ij} = e^{-c(x_i,y_j)/\varepsilon}$, where $c(x_i,y_j)$ is the transport cost. The convergence rate of Sinkhorn is controlled by the second singular value of the normalized kernel matrix — the spectral gap. A larger spectral gap means faster convergence. The regularization parameter $\varepsilon$ controls this spectral gap: larger $\varepsilon$ produces a more uniform kernel matrix with smaller spectral gap between first and second singular values, while smaller $\varepsilon$ sharpens the kernel and increases the spectral gap, accelerating convergence but reducing numerical stability.
+
+The low-rank approximation of the Sinkhorn kernel matrix — keeping only the $k$ largest singular components — produces the **low-rank OT** algorithm, which reduces the $O(n^2)$ cost of Sinkhorn to $O(nk)$ while maintaining approximation quality controlled by the discarded singular values.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 103 (Linear Algebra), you computed the null space and column space of a matrix using row reduction. The SVD provides these four fundamental subspaces simultaneously and optimally: the right singular vectors corresponding to nonzero singular values span the row space, those corresponding to zero singular values span the null space, and the left singular vectors corresponding to nonzero singular values span the column space. In MATH 302 (Matrix Theory), you studied the spectral theory of general matrices via the Jordan form. The SVD complements this: while the Jordan form applies to square matrices and reveals algebraic structure, the SVD applies to all matrices and reveals geometric structure — the isometric invariants encoded in singular values. In MSCS 202 (Numerical Methods), you solved linear systems using Gaussian elimination and LU decomposition. The SVD provides the numerically stable alternative for ill-conditioned systems — the pseudoinverse via truncated SVD is the standard numerical method for ill-conditioned least-squares problems, and the condition number $\sigma_1/\sigma_n$ is the standard diagnostic for numerical instability.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Nepal elevation atlas compression story has a precise mathematical address. Let us walk through them one by one, until the geographic themes, the compression strategy, and the full formal apparatus are completely fused into a single picture.
+
+---
+
+**The Nepal elevation matrix — the large rectangular array of elevation readings with rows as scan lines and columns as longitude positions — is the matrix $A \in \mathbb{R}^{m \times n}$ with $m = 10,000$ scan lines and $n = 8,000$ longitude columns.** It is rectangular, not square, and not symmetric. The spectral theorem does not apply. The matrix encodes a linear map $A: \mathbb{R}^{8000} \to \mathbb{R}^{10000}$ that takes a specification of elevations at each longitude and produces the corresponding elevation profile across all scan lines. The full matrix has $80$ million entries — the raw, unstructured representation of Nepal's terrain. The SVD is the tool that finds the structured representation hidden inside this raw matrix.
+
+**The geographic themes — the dominant patterns of variation that together reconstruct the full elevation matrix — are the rank-1 terms $\sigma_k u_k v_k^T$ in the outer product expansion $A = \sum_{i=1}^r \sigma_i u_i v_i^T$.** Each term is the outer product of a left singular vector $u_k \in \mathbb{R}^{10000}$ (a north-south elevation profile across all scan lines) and a right singular vector $v_k \in \mathbb{R}^{8000}$ (an east-west pattern across all longitudes), weighted by the singular value $\sigma_k$ (the importance of the theme). The dominant north-south Himalayan gradient is $\sigma_1 u_1 v_1^T$ — the single most important rank-1 pattern, capturing the overwhelming rise from the Terai to the Himalayas that dominates the entire elevation matrix. Successive terms capture progressively smaller and more localized geographic features. The full matrix is exactly the sum of all these rank-1 themes — no approximation, exact equality — but the SVD orders them by importance, which is what makes truncation optimal.
+
+---
+
+**The right singular vectors $v_1, v_2, \ldots, v_n$ — the east-west geographic themes — are the orthonormal eigenvectors of the symmetric positive semidefinite matrix $A^TA \in \mathbb{R}^{8000 \times 8000}$.** The matrix $A^TA$ is the product of $A$ with its transpose — always symmetric, always positive semidefinite. The spectral theorem applies to it: $A^TA = V\Lambda V^T$ with $V$ orthogonal and $\Lambda$ diagonal non-negative. The eigenvectors are the right singular vectors, and the eigenvalues are the squared singular values: $\lambda_i = \sigma_i^2$. In the geographic story: $A^TA$ is the matrix of correlations between longitude columns — it measures how similarly two longitude positions vary across all scan lines. Its eigenvectors are the orthogonal east-west patterns that are statistically independent across the elevation data. The SVD inherits these eigenvectors as the preferred input directions.
+
+**The left singular vectors $u_1, u_2, \ldots, u_m$ — the north-south geographic themes — are the orthonormal eigenvectors of the symmetric positive semidefinite matrix $AA^T \in \mathbb{R}^{10000 \times 10000}$.** The matrix $AA^T$ is the correlation matrix of scan lines — it measures how similarly two scan lines vary across all longitudes. Its eigenvectors are the orthogonal north-south patterns. The nonzero eigenvalues of $AA^T$ are the same as the nonzero eigenvalues of $A^TA$ — both equal $\sigma_i^2$ — a beautiful symmetry that is the mathematical statement that the geographic themes in the row direction and the column direction are linked by the same singular values. The SVD connects the two spectral decompositions into a single coherent picture.
+
+**The singular values $\sigma_1 \geq \sigma_2 \geq \cdots \geq \sigma_r > 0$ — the importance weights of each geographic theme — are the square roots of the eigenvalues of $A^TA$ (equivalently of $AA^T$).** They measure exactly how much each theme contributes to the matrix: the action of $A$ on the $k$-th right singular vector $v_k$ produces $\sigma_k u_k$ — the $k$-th left singular vector scaled by $\sigma_k$. Large $\sigma_k$ means the $k$-th theme is strongly amplified by $A$; small $\sigma_k$ means the theme is barely present. The singular values are the stretching factors of the linear map — the SVD reveals that $A$ stretches the input in the $v_k$ direction by factor $\sigma_k$, mapping it to the output direction $u_k$. In the geographic story: the dominant north-south gradient has $\sigma_1$ much larger than all other singular values, because this single theme accounts for the overwhelming majority of Nepal's elevation variation.
+
+---
+
+**The orthogonality of the right singular vectors — $\langle v_i, v_j\rangle = 0$ for $i \neq j$ — is the statement that the geographic themes in the east-west direction are mutually independent.** The north-south gradient theme ($v_1$) and the east-west tilt theme ($v_2$) are perpendicular vectors in $\mathbb{R}^{8000}$ — knowing the east-west pattern of the north-south gradient tells you nothing about the east-west pattern of the east-west tilt. This orthogonality is not an accident of Nepal's geography — it is the theorem that eigenvectors of a symmetric matrix corresponding to distinct eigenvalues are orthogonal, applied to $A^TA$. The right singular vectors are always orthogonal because the symmetric matrix $A^TA$ always has orthogonal eigenvectors by the spectral theorem.
+
+**The orthogonality of the left singular vectors — $\langle u_i, u_j\rangle = 0$ for $i \neq j$ — is the corresponding statement that the geographic themes in the north-south direction are mutually independent.** The proof that $\langle u_i, u_j\rangle = \delta_{ij}$ was the verification in the SVD proof: $\langle u_i, u_j\rangle = \frac{1}{\sigma_i\sigma_j}\langle Av_i, Av_j\rangle = \frac{1}{\sigma_i\sigma_j}v_i^T(A^TA)v_j = \frac{\sigma_j^2}{\sigma_i\sigma_j}\delta_{ij} = \delta_{ij}$. The orthogonality of the left singular vectors is inherited from the orthogonality of the right singular vectors via the matrix $A$ itself — the SVD's consistency condition that links the two orthonormal bases through the singular values.
+
+---
+
+**The compression strategy — keep the first $k$ geographic themes, discard the rest — is the rank-$k$ truncated SVD $A_k = \sum_{i=1}^k \sigma_i u_i v_i^T = U_k\Sigma_k V_k^T$.** Instead of storing the full $80$ million numbers of the elevation matrix, you store $k$ singular values, $k$ north-south profile vectors of length $10,000$, and $k$ east-west pattern vectors of length $8,000$ — a total of $k(10,000 + 8,000 + 1) = k \cdot 18,001$ numbers. For $k = 10$, this is $180,010$ numbers instead of $80,000,000$ — a compression ratio of approximately $444:1$.
+
+**The Eckart-Young theorem — $A_k$ is the best rank-$k$ approximation to $A$ in both Frobenius and spectral norms — is the optimality guarantee of this compression strategy.** The theorem says: no other rank-$k$ matrix $B$ can satisfy $\|A - B\|_F < \|A - A_k\|_F = \sqrt{\sum_{i=k+1}^r \sigma_i^2}$ or $\|A - B\|_2 < \|A - A_k\|_2 = \sigma_{k+1}$. The truncated SVD is not merely a reasonable compression — it is the uniquely optimal compression at every rank $k$ simultaneously. The proof uses the dimension argument: any rank-$k$ matrix's null space intersects the span of the first $k+1$ right singular vectors, and this intersection direction achieves at least error $\sigma_{k+1}$.
+
+**The break moment — the rapid decay of singular values for structured geographic data — is the explained variance $\text{EV}(k) = \sum_{i=1}^k \sigma_i^2 / \sum_{i=1}^r \sigma_i^2$ reaching near-$1$ quickly.** The naive assumption that equal numbers of terms are needed to capture equal fractions of variance breaks dramatically for structured data. Nepal's elevation matrix, like any natural geographic dataset, has singular values that decay rapidly — a few dominant themes capture most of the variation. The assumption of uniform importance treats all directions as equally informative — the uniform prior on singular values — which is wrong for any data with structure. The SVD's ordering of themes by singular value is the tool that exposes this structure, and the rapid decay of singular values is the quantitative measure of how structured the data is.
+
+---
+
+**The four fundamental subspaces — row space, column space, null space, left null space — are revealed simultaneously by the SVD.** The row space $\mathcal{R}(A^T) = \text{span}(v_1,\ldots,v_r)$ is the subspace of east-west patterns that actually appear in the elevation data — the input directions that the matrix acts nontrivially on. The null space $\mathcal{N}(A) = \text{span}(v_{r+1},\ldots,v_n)$ is the subspace of east-west patterns that the matrix annihilates — the input directions that contribute nothing to the elevation matrix. The column space $\mathcal{R}(A) = \text{span}(u_1,\ldots,u_r)$ is the subspace of north-south profiles that can actually be produced by the matrix — the output directions the matrix can reach. The left null space $\mathcal{N}(A^T) = \text{span}(u_{r+1},\ldots,u_m)$ is the subspace of north-south profiles orthogonal to all outputs. The fundamental theorem of linear algebra — $\mathcal{R}(A^T) \perp \mathcal{N}(A)$ and $\mathcal{R}(A) \perp \mathcal{N}(A^T)$ — is the statement that the themes the matrix acts on and the themes it ignores are always perpendicular, and the themes it can produce and the themes it cannot are always perpendicular. The SVD makes this orthogonality explicit in the most computationally useful form.
+
+**The geometric picture — $V^T$ rotates into preferred input coordinates, $\Sigma$ stretches each direction by $\sigma_k$, $U$ rotates back to standard output coordinates — is the three-step decomposition of what $A$ does as a linear map.** Every linear map between Euclidean spaces is, in the right pair of coordinate systems, simply a rescaling possibly accompanied by a dimension change. The SVD finds those coordinate systems. The matrix $V^T$ changes from standard input coordinates to the modal coordinate system — the east-west theme coordinate system. The matrix $\Sigma$ applies the stretching: the $k$-th theme is amplified by $\sigma_k$ in the output direction $u_k$. The matrix $U$ changes from the modal output coordinate system back to standard output coordinates. In the geographic story: $V^T$ decomposes any east-west elevation specification into its theme components; $\Sigma$ scales each theme by its importance and maps it to the corresponding north-south output theme; $U$ expresses the output in terms of scan line elevations. Nothing more, nothing less.
+
+---
+
+**The pseudoinverse $A^+ = V\Sigma^+ U^T$ — the minimum-norm least-squares solution operator — is the SVD applied to inversion.** For the elevation atlas application: if you observe $b \in \mathbb{R}^{10000}$ (a set of north-south elevation profiles at sampled scan lines) and want to recover the underlying east-west pattern $x \in \mathbb{R}^{8000}$ that best explains the observations, the pseudoinverse gives $x^* = A^+b = V\Sigma^+U^Tb$. This computes: project $b$ onto each left singular vector ($U^Tb$), scale by the inverse singular value ($\Sigma^+$), and express in the right singular vector basis ($V$). The truncated pseudoinverse $A_k^+b = \sum_{i=1}^k \frac{1}{\sigma_i}(u_i^Tb)v_i$ ignores the small singular value directions — the east-west patterns that contribute negligibly to the elevation data — and avoids amplifying noise in the observed profiles.
+
+**The condition number $\kappa(A) = \sigma_1/\sigma_n$ is the ratio of the most important geographic theme to the least important one.** For a well-conditioned elevation matrix with rapidly decaying but never tiny singular values, the condition number is moderate and the least-squares problem is numerically stable. For an ill-conditioned matrix where some singular values are near zero — meaning some geographic themes are barely present in the data — the condition number is large and the pseudoinverse amplifies noise catastrophically. The truncated SVD pseudoinverse $A_k^+$ regularizes the solution by excluding the near-zero singular values, producing a stable solution at the cost of projecting onto the $k$-dimensional space of the most important themes.
+
+---
+
+**The connection to MATH 103 (Linear Algebra) is now total.** The null space computation by row reduction, the column space computation by identifying pivot columns, and the rank-nullity theorem are all special cases of the SVD's four fundamental subspaces. Row reduction computes the same subspaces but without the orthogonality structure — the SVD gives the same information with the additional guarantee that the bases for the four subspaces are orthonormal, making them geometrically interpretable and numerically stable. The least-squares formula $(A^TA)^{-1}A^Tb$ from MATH 103 is the pseudoinverse $A^+b$ in the full-column-rank case — the normal equations are the KKT conditions of the least-squares problem, and their solution via the pseudoinverse uses the spectral theorem applied to the symmetric matrix $A^TA$.
+
+**The connection to MATH 302 (Matrix Theory) runs through the polar decomposition.** The polar decomposition $A = QS$ — orthogonal times positive definite symmetric — is the SVD written as $A = UV^T \cdot V\Sigma V^T$, where $Q = UV^T$ is the rotation component and $S = V\Sigma V^T$ is the stretch component. The Jordan normal form applies to $A$ viewed as a complex matrix; the SVD applies to $A$ viewed as a linear map between inner product spaces. The two decompositions reveal different aspects of the same matrix: the Jordan form reveals the eigenstructure (algebraic properties), while the SVD reveals the isometric structure (geometric properties). For symmetric positive definite matrices, the two coincide: the Jordan form is the spectral theorem $A = Q\Lambda Q^T$, and the SVD has $U = V = Q$ and $\Sigma = \Lambda$.
+
+**The connection to MSCS 202 (Numerical Methods) closes through condition numbers and regularization.** Every linear system solver in MSCS 202 — Gaussian elimination, LU decomposition, QR factorization — has its numerical stability governed by the condition number of the system matrix. The condition number $\kappa(A) = \sigma_1/\sigma_n$ from the SVD is the definitive measure of this stability: it bounds the amplification of roundoff errors and perturbations. Tikhonov regularization $(A^TA + \alpha I)^{-1}A^Tb$ — a standard technique in numerical methods for stabilizing ill-conditioned least-squares — is understood through the SVD as the replacement of each singular value $\sigma_i$ by the dampened version $\sigma_i/(\sigma_i^2+\alpha)$, which regularizes small singular values without affecting large ones.
+
+---
+
+**Looking forward across the roadmap**, the SVD is the computational backbone of every matrix-based operation. In Phase 1, the Sinkhorn algorithm's convergence rate is controlled by the spectral gap of the kernel matrix — the ratio $\sigma_2/\sigma_1$ of the second to first singular value — and low-rank OT reduces the $O(n^2)$ Sinkhorn cost to $O(nk)$ by keeping only the first $k$ singular components of the kernel matrix. In Phase 2, the graph Laplacian's spectral embedding uses the SVD of the normalized adjacency matrix, and the Weisfeiler-Lehman hierarchy's expressivity bounds are proved using the spectral properties of the aggregation matrices. The weight matrices of GNNs are analyzed and compressed using SVD-based low-rank approximations. In Phase 3, the score matching objective's Hessian is analyzed via its singular value spectrum, and the conditioning of the score function estimation problem is directly governed by the singular values of the kernel matrix. The attention mechanism of transformers computes $\text{softmax}(QK^T/\sqrt{d})V$ — a matrix product whose geometry is entirely described by the SVD of the query-key product $QK^T$. The low-rank structure of attention matrices — discovered empirically and exploited by algorithms like Linformer and Performer — is the rapid decay of singular values, the same phenomenon that makes geographic data compressible.
+
+The elevation atlas compression — the geographic themes ordered by importance, the optimal rank-$k$ approximation capturing the structure that matters while discarding the noise that does not — is not a special case of the SVD. It is the SVD, told in the language of a problem where the linear algebra has an immediate physical interpretation. Every matrix in the roadmap is an elevation atlas, and the SVD is the tool that finds its geographic themes.
+
+---
+---

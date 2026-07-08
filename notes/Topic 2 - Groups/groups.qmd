@@ -1,0 +1,449 @@
+# Topic 2 - Groups: The Mathematical Language of Symmetry
+
+## Introduction
+
+Topic 1 established what it means for a neural network to respect a symmetry — invariance when the output should be unchanged, equivariance when the output should transform correspondingly. But the entire framework rested on a word that was used without full definition: group. The rotation group $SO(3)$, the permutation group $S_n$, the Euclidean group $E(3)$ — these were invoked as the symmetry groups of molecules and graphs, and the architecture of equivariant networks was said to be determined by these groups. But what precisely is a group, why is it the right mathematical object to encode symmetry, and what specific properties of $S_n$ and $SO(3)$ determine the architecture of the neural networks built to respect them?
+
+Topic 2 answers these questions completely, developing the group theory that is the mathematical foundation of everything in Phase 2.
+
+The central claim of the Erlangen Program — that geometry is determined by its symmetry group — rests on the observation that every meaningful geometric property is one that is preserved by the relevant symmetries. The length of a line segment is preserved by Euclidean motions — rotations and translations. The ratio of lengths is preserved by similarity transformations. The cross-ratio of four points is preserved by projective transformations. In each case, the set of transformations that preserve the relevant structure forms a group, and the geometry is the study of the properties invariant under that group. Klein's insight was that different geometries — Euclidean, affine, projective, hyperbolic — are not different subjects but different choices of symmetry group, and that understanding the group completely determines which properties are geometrically meaningful.
+
+The same insight applies to deep learning. Different data types — images, graphs, molecules, point clouds — live in different geometric spaces with different symmetry groups, and the architecturally correct neural network for each data type is determined by the representation theory of its symmetry group. Understanding the group completely — its elements, its subgroup structure, its irreducible representations — determines everything about the equivariant architecture.
+
+This topic has two components corresponding to the two groups named in the roadmap's syllabus.
+
+The first component is **the permutation group $S_n$** — the group of all bijections from $\{1,\ldots,n\}$ to itself, which is the symmetry group of graphs and sets. A graph on $n$ nodes has no canonical ordering of its nodes — the same graph can be represented by many different adjacency matrices, related to each other by permutations of the rows and columns. The permutation group $S_n$ encodes exactly this relabeling symmetry: two adjacency matrices represent the same graph if and only if one is obtained from the other by a simultaneous permutation of rows and columns by the same permutation $\sigma \in S_n$. A graph neural network that is equivariant to $S_n$ produces node features that permute with the nodes — if you relabel node $i$ as node $j$, the feature at position $j$ in the output is the same as the feature at position $i$ in the original output. A graph neural network that is invariant to $S_n$ produces a graph-level prediction — a single vector or scalar — that is the same regardless of how the nodes are labeled. The permutation group is finite — it has exactly $n!$ elements — discrete, and non-abelian for $n \geq 3$. Its representation theory, indexed by Young tableaux, determines the complete classification of equivariant linear maps between graph feature spaces.
+
+The second component is **the rotation group $SO(3)$** — the group of all orientation-preserving orthogonal transformations of $\mathbb{R}^3$, which is the symmetry group of three-dimensional geometric objects. A molecule's energy, force field, and chemical properties are all invariant or equivariant under $SO(3)$ — rotating a molecule in three-dimensional space does not change its physics. The rotation group is infinite, continuous, and non-abelian. It is a Lie group — a group that is simultaneously a smooth manifold, with the group operations being smooth maps. Its irreducible representations are the Wigner D-matrices of order $\ell = 0, 1, 2, \ldots$ — the spherical harmonic representations — and its representation theory determines the Clebsch-Gordan decomposition of tensor products, the equivariant nonlinearities, and the complete architecture of $SO(3)$-equivariant neural networks for molecular and structural data.
+
+Understanding these two groups in depth — their structure, their subgroups, their representation theory, and their relationship to each other and to the larger groups $E(3)$ and $SE(3)$ that include translations — is the algebraic prerequisite for every architectural decision in Chapter 2 (Graph Neural Networks) and Chapter 3 (Manifold Learning). The permutation group governs graph networks. The rotation group governs three-dimensional geometric networks. Together they cover the two most important classes of structured data in modern machine learning.
+
+By the end of this topic, the group will feel not like an abstract algebraic object studied for its own sake but like the most natural possible encoding of a physical symmetry — the precise mathematical structure that captures exactly the transformations that leave the relevant properties unchanged, no more and no less. The Erlangen Program's claim that geometry is group theory will feel not like a philosophical position but like an obvious fact, and the architectural principle that neural network design is representation theory will feel not like a bold conjecture but like the only sensible approach to structured data.
+
+---
+
+## Layer 1 (Story)
+
+You are a structural engineer at the Department of Civil Engineering in Pulchowk Campus, and your research group has been commissioned to solve two completely different safety certification problems. The first problem comes from the Nepal Electricity Authority: certify the structural integrity of Nepal's high-voltage transmission tower network — a graph of steel lattice towers connected by power lines spanning from the Kali Gandaki hydroelectric plant in Myagdi to the load centers in Kathmandu and the Terai. The second problem comes from the Department of Mines and Geology: certify the stability of crystal lattice structures in the minerals extracted from the Ganesh Himal mining region, where the three-dimensional arrangement of atoms determines whether a mineral will fracture under stress. Both problems require you to build neural networks that make predictions about structured geometric objects. Both networks must respect the symmetries of their respective objects. But the symmetries are completely different in character — one discrete and combinatorial, one continuous and geometric — and understanding the difference between them at a deep mathematical level is the key to building the right network for each problem.
+
+---
+
+**The transmission tower network: a graph with no canonical node ordering**
+
+The Nepal Electricity Authority hands you a dataset of transmission networks from different regions of the country — Koshi Zone, Gandaki Zone, Lumbini Zone, and so on — each represented as a graph. The nodes are the steel lattice towers. The edges are the power lines connecting them. Each node has features: the tower's load-bearing capacity, its age, its maintenance history. Each edge has features: the line's resistance, its length, its susceptibility to ice loading. Your task is to predict whether the network will remain connected under the failure of any single tower — a graph-level binary classification.
+
+You receive the data as adjacency matrices and feature matrices. Immediately you notice something troubling. The same physical network — the Gandaki transmission system — appears three times in the dataset, submitted by three different regional engineers. All three representations are correct. But they number the towers differently. Engineer A numbers the towers from north to south. Engineer B numbers them from the highest altitude to the lowest. Engineer C numbers them in the order they were originally constructed.
+
+The adjacency matrix for Engineer A's representation has a one in position $(i,j)$ wherever tower $i$ is connected to tower $j$ under A's numbering. Engineer B's adjacency matrix has the same ones, but in different positions, because B's numbering is different. To a naive neural network that reads the adjacency matrix as a flat vector, these three representations look like three completely different networks — three different inputs, which should logically produce three different predictions. But they are the same physical network, and the correct prediction is the same for all three.
+
+The transformation that relates Engineer A's representation to Engineer B's is a permutation. There exists a bijection $\sigma: \{1,\ldots,n\} \to \{1,\ldots,n\}$ — a reordering of the node labels — such that Engineer B's adjacency matrix is obtained from Engineer A's by simultaneously permuting the rows and columns by $\sigma$. The set of all such permutations is the permutation group $S_n$.
+
+---
+
+**The permutation group $S_n$: what it is and why it is a group**
+
+Consider the simplest non-trivial case: a network with three towers, labeled $1, 2, 3$ by Engineer A. Engineer B uses a different labeling. There are exactly six possible bijections from $\{1,2,3\}$ to itself:
+
+The identity — $1\to 1$, $2\to 2$, $3\to 3$. Everything stays as is.
+
+The transposition of $1$ and $2$ — $1\to 2$, $2\to 1$, $3\to 3$. Towers one and two swap labels.
+
+The transposition of $1$ and $3$ — $1\to 3$, $2\to 2$, $3\to 1$. Towers one and three swap.
+
+The transposition of $2$ and $3$ — $1\to 1$, $2\to 3$, $3\to 2$. Towers two and three swap.
+
+The cyclic rotation $1\to 2\to 3\to 1$ — tower $1$ gets label $2$, tower $2$ gets label $3$, tower $3$ gets label $1$.
+
+The reverse cyclic rotation $1\to 3\to 2\to 1$ — the other direction.
+
+These six permutations form the symmetric group $S_3$. They form a group because: composing any two permutations gives another permutation (closure); composition of bijections is associative (associativity); the identity permutation is the neutral element (identity); every bijection has an inverse bijection (inverses). The group has $3! = 6$ elements because there are $3! = 6$ ways to arrange three labels.
+
+For $n$ towers, the symmetric group $S_n$ has $n!$ elements — one for every possible reordering of the $n$ labels. For the Nepal Electricity Authority's dataset with hundreds of towers per network, $S_n$ is astronomically large — $100!$ is a number with 158 digits — but the structure of the group, not its size, is what determines the neural network architecture.
+
+The key algebraic fact: $S_n$ is non-abelian for $n \geq 3$. The order in which you apply two permutations matters. Swapping towers $1$ and $2$ first, then swapping towers $2$ and $3$, gives a different result than swapping $2$ and $3$ first, then $1$ and $2$. This non-commutativity is not a technical nuisance — it is a fundamental structural feature that determines the representation theory and therefore the equivariant architecture.
+
+---
+
+**What it means for a network to be $S_n$-equivariant**
+
+Your neural network for the transmission safety certification must satisfy two properties.
+
+For node-level features — the intermediate representations that your network computes for each tower — the network must be permutation-equivariant. If Engineer B relabels all the towers according to permutation $\sigma$, the feature computed for the tower now called $\sigma(i)$ should be the same as the feature that was previously computed for tower $i$. The features permute with the nodes. Formally: if $h_i$ is the feature of node $i$ under the original labeling, then under the permuted labeling, the feature of node $\sigma(i)$ is $h_i$. The feature map is equivariant to $S_n$.
+
+For the graph-level prediction — the final binary output saying whether the network is robust — the network must be permutation-invariant. The same physical network should receive the same prediction regardless of how the nodes are labeled. The prediction does not depend on which engineer numbered the towers. Formally: the graph-level output is the same for all $n!$ relabelings of the same graph.
+
+The universal architecture — equivariant intermediate layers, invariant final pooling — applies exactly. The intermediate node features are permuted by node relabeling (equivariant). The final prediction is obtained by summing or averaging over all node features (invariant pooling), which is invariant to the order of summation. The sum $\sum_i h_i$ is the same regardless of how you order the $h_i$ — summation is the canonical $S_n$-invariant operation.
+
+---
+
+**The crystal lattice problem: a point cloud with continuous rotational symmetry**
+
+The Department of Mines and Geology hands you a completely different kind of data. Each sample is a crystal structure — a three-dimensional arrangement of atoms in a unit cell, represented as a set of atomic positions $\{x_1,\ldots,x_N\} \subset \mathbb{R}^3$ with atom types $\{z_1,\ldots,z_N\}$. Your task is to predict whether the crystal will fracture under a given applied stress — a scalar binary prediction.
+
+The crystal structures arrive from different crystallographers who used different coordinate systems. One crystallographer orients the crystal with its longest axis along the $z$-direction. Another orients it along the $x$-direction. A third uses a rotated coordinate system aligned with the crystal's natural symmetry axes. All three represent the same physical crystal, and the fracture prediction should be the same for all three.
+
+The transformation that relates one crystallographer's representation to another's is a rotation. There exists a rotation matrix $R \in \mathbb{R}^{3\times 3}$ with $R^\top R = I$ and $\det R = 1$ such that one representation is obtained from the other by applying $R$ to all atomic coordinates simultaneously: $(x_1,\ldots,x_N) \mapsto (Rx_1,\ldots,Rx_N)$. The set of all such rotation matrices is the special orthogonal group $SO(3)$.
+
+---
+
+**The rotation group $SO(3)$: what it is and why it is fundamentally different from $S_n$**
+
+The rotation group $SO(3)$ is the set of all $3\times 3$ real matrices $R$ satisfying $R^\top R = I$ (orthogonality — preserving lengths and angles) and $\det R = +1$ (orientation-preserving — no reflections). It forms a group under matrix multiplication: the product of two rotation matrices is a rotation matrix, matrix multiplication is associative, the identity matrix is the neutral element, and the transpose $R^\top$ is the inverse of any rotation matrix.
+
+But $SO(3)$ is fundamentally different from $S_n$ in three ways that profoundly affect the neural network architecture.
+
+The first difference: $SO(3)$ is infinite and continuous. The rotation group has uncountably many elements — one for every possible orientation in three-dimensional space, parameterized by three continuous degrees of freedom (for instance, the three Euler angles, or the axis-angle representation, or the unit quaternion). The permutation group $S_n$ is finite — it has exactly $n!$ elements, enumerable in principle. You can sum over all elements of $S_n$ to build an invariant function. You cannot sum over all elements of $SO(3)$ — you must integrate using the Haar measure, the unique rotation-invariant probability measure on $SO(3)$.
+
+The second difference: $SO(3)$ is a Lie group — a group that is simultaneously a smooth manifold. You can differentiate functions on $SO(3)$ with respect to the group parameters. You can define tangent vectors at the identity — the Lie algebra $\mathfrak{so}(3)$, the space of skew-symmetric matrices — and use the exponential map to move from the Lie algebra to the Lie group: $R = e^{\hat\omega}$ for a skew-symmetric matrix $\hat\omega \in \mathfrak{so}(3)$. This smooth structure makes $SO(3)$ amenable to differential geometry and enables gradient-based optimization through $SO(3)$-valued parameters.
+
+The third difference: the representation theory of $SO(3)$ is richer and more structured than that of $S_n$. The irreducible representations of $SO(3)$ — the Wigner D-matrices $D^{(\ell)}$ of order $\ell = 0, 1, 2, \ldots$ — are indexed by non-negative integers and are infinite in number, with dimensions $2\ell+1$. They are connected to the spherical harmonics $Y_\ell^m$ — the natural basis functions on the sphere — by the fact that $D^{(\ell)}$ is the representation of $SO(3)$ on the space spanned by the spherical harmonics of order $\ell$. The permutation group's irreducible representations, indexed by Young tableaux, have a completely different combinatorial structure with no such continuous indexing.
+
+---
+
+**The Lie algebra: infinitesimal rotations and what they reveal**
+
+Your crystallographer colleague, who studied differential geometry, explains the Lie algebra to you over tea at the Nepal Academy of Science and Technology cafeteria.
+
+Every rotation in $SO(3)$ can be written as the matrix exponential of a skew-symmetric matrix: $R(\theta, \hat n) = e^{\theta(\hat n\times)} = I + \sin\theta(\hat n\times) + (1-\cos\theta)(\hat n\times)^2$, where $\hat n$ is the rotation axis and $\theta$ is the rotation angle. The Lie algebra $\mathfrak{so}(3)$ consists of all skew-symmetric $3\times 3$ matrices — matrices satisfying $\Omega^\top = -\Omega$. This three-dimensional vector space is spanned by the three generators:
+
+$$L_x = \begin{pmatrix}0&0&0\\0&0&-1\\0&1&0\end{pmatrix}, \quad L_y = \begin{pmatrix}0&0&1\\0&0&0\\-1&0&0\end{pmatrix}, \quad L_z = \begin{pmatrix}0&-1&0\\1&0&0\\0&0&0\end{pmatrix}$$
+
+corresponding to infinitesimal rotations around the $x$, $y$, and $z$ axes respectively. These generators satisfy the commutation relations $[L_x,L_y] = L_z$, $[L_y,L_z] = L_x$, $[L_z,L_x] = L_y$ — the defining relations of the Lie algebra $\mathfrak{so}(3)$, isomorphic to $\mathbb{R}^3$ with the cross product as the Lie bracket.
+
+For the crystal stability network, this means: a neural network equivariant to $SO(3)$ must have weight matrices that commute with all three generators $L_x$, $L_y$, $L_z$ simultaneously — they must commute with infinitesimal rotations around every axis. By Schur's lemma, this forces the weight matrices to be block-diagonal with respect to the Wigner D-matrix irrep decomposition — one block per spherical harmonic order $\ell$. The Lie algebra structure, not just the group structure, determines the architecture.
+
+---
+
+**The spherical harmonics: the natural basis for $SO(3)$-equivariant features**
+
+Your crystallographer colleague continues. The spherical harmonics $Y_\ell^m: S^2 \to \mathbb{C}$ for $\ell = 0,1,2,\ldots$ and $m = -\ell,\ldots,\ell$ are the natural basis functions on the unit sphere — the eigenfunctions of the Laplace-Beltrami operator on $S^2$, analogous to the Fourier basis functions on the circle. They transform under rotations exactly according to the Wigner D-matrices: if $\hat r \in S^2$ is a unit vector and $R \in SO(3)$ is a rotation, then:
+
+$$Y_\ell^m(R^{-1}\hat r) = \sum_{m'=-\ell}^{\ell} D^{(\ell)}_{m'm}(R) Y_\ell^{m'}(\hat r)$$
+
+The direction from one atom to another — the unit vector $\hat r_{ij} = (x_j - x_i)/\|x_j - x_i\|$ — is a point on the sphere. Computing the spherical harmonics of this direction gives a feature vector in $\mathbb{R}^{2\ell+1}$ that transforms equivariantly under $SO(3)$ according to the degree-$\ell$ Wigner D-matrix. This is the fundamental atomic feature construction of every $SO(3)$-equivariant molecular network: instead of using the raw Cartesian coordinates of atomic directions (which transform under $D^{(1)}$, the $\ell=1$ representation), use the full spherical harmonic expansion up to order $\ell_{\max}$ (which captures geometric information at all angular resolutions up to the chosen maximum order).
+
+The spherical harmonics for the crystal stability network are the crystallography analogue of the Fourier basis for signal processing: just as the Fourier transform decomposes a periodic signal into frequency components that transform simply under translation, the spherical harmonic transform decomposes a function on the sphere into components that transform simply under rotation. The equivariant neural network operates on spherical harmonic coefficients — the correct domain for $SO(3)$-equivariant computation.
+
+---
+
+**The relationship between $S_n$ and $SO(3)$: two symmetry groups, one framework**
+
+Your structural engineer colleague asks the natural question: these two problems seem completely different. One involves a discrete relabeling symmetry with $n!$ elements. The other involves a continuous geometric symmetry with uncountably many elements. How can they possibly be governed by the same mathematical framework?
+
+The answer is that both $S_n$ and $SO(3)$ are groups, and the theory of equivariant neural networks is a theory about groups in general. The specific properties of each group — finite versus infinite, discrete versus continuous, its particular irreducible representations — determine the specific architectural choices, but the framework is the same:
+
+Identify the symmetry group $G$ of the data. Decompose the feature spaces into irreducible representations of $G$. Use Schur's lemma to classify equivariant linear maps as block-diagonal in the irrep basis. Construct equivariant nonlinearities that respect the group action. Add an invariant pooling layer at the output. Compose the equivariant layers. Train on data.
+
+For the transmission network problem, $G = S_n$: the irreps are indexed by Young tableaux, the equivariant linear maps mix features within the same irrep type, the invariant pooling is the sum over nodes. For the crystal stability problem, $G = SO(3)$: the irreps are the Wigner D-matrices indexed by $\ell$, the equivariant linear maps mix channels within the same spherical harmonic order, the invariant pooling is the norm of equivariant features. Same framework, different groups, different architectures — both derived systematically from the group theory.
+
+---
+
+**The subgroup structure: when you need less symmetry than you think**
+
+Your geology colleague raises a subtle point about the crystal problem. Real crystals are not fully rotationally symmetric — they have crystallographic symmetry, which is a discrete subgroup of $SO(3)$ called a point group. A cubic crystal has the octahedral symmetry group $O_h$ — 48 discrete rotations and reflections. A hexagonal crystal has the hexagonal dihedral group $D_{6h}$. These are finite subgroups of $SO(3)$, not the full rotation group.
+
+For a neural network that predicts properties specific to a particular crystal system — properties that depend on the crystal's specific symmetry class — the relevant symmetry group is not $SO(3)$ but the smaller point group of the crystal. Building a network equivariant to the full $SO(3)$ is over-constrained for this task: it enforces a symmetry that the physical system does not have, discarding information about the crystal's orientation relative to the applied stress that is physically relevant for fracture prediction.
+
+The correct architecture uses the point group $G_{\text{crystal}} \subset SO(3)$ as the symmetry group. Its irreducible representations are the subductions of the $SO(3)$ irreps to the finite subgroup — the restriction of the Wigner D-matrices to the point group elements. The subgroup structure of $SO(3)$ — which finite groups can be embedded in $SO(3)$ as subgroups — is the complete classification of crystallographic point groups, and it determines the correct equivariant architecture for each crystal system.
+
+This is the Erlangen Program applied to crystallography: the crystal system is determined by its symmetry group, and the neural network architecture is determined by the same symmetry group.
+
+---
+
+**The break moment**
+
+Here is the naive assumption that breaks.
+
+You might think: $SO(3)$ is the right symmetry group for all three-dimensional geometric data, and $S_n$ is the right symmetry group for all graph data. These two groups cover all the structured data you will ever encounter in machine learning. Just learn these two groups and you are done.
+
+This breaks against two immediate counterexamples.
+
+The first counterexample is the Euclidean group $E(3) = SO(3) \ltimes \mathbb{R}^3$ — the group of all rotations and translations of three-dimensional space. For molecular property prediction, the energy is invariant not just under rotations but also under translations — shifting all atoms by a constant vector does not change the energy. The correct symmetry group is $E(3)$, not $SO(3)$. The additional translation symmetry has an important architectural consequence: the network cannot use absolute atomic positions as features, only relative positions — inter-atomic distances and direction vectors. A network equivariant to $SO(3)$ but not to translations will overfit to the specific positioning of molecules in space, generalizing poorly to molecules at different absolute positions.
+
+The second counterexample is the gauge group of a fiber bundle — the symmetry group of data defined on a manifold, where the feature at each point lives in a local frame that can be rotated independently at each point. For data on the surface of the Earth — atmospheric measurements, ocean currents, seismic signals — the feature at each geographic location is a vector (wind velocity, current direction, ground motion) defined relative to a local tangent frame. The local frame can be rotated at each point independently, and the relevant symmetry group is the gauge group of the tangent bundle — the group of all local rotations of tangent frames, one rotation per point, which is a much larger group than $SO(3)$. Building a neural network that respects gauge symmetry — the symmetry of local reference frame choices — requires gauge-equivariant convolutions that are fundamentally different from $SO(3)$-equivariant convolutions.
+
+The correct lesson is not that $SO(3)$ and $S_n$ are the only relevant groups, but that the symmetry group must be identified specifically for each data type and each task, and that the group can be a finite group, a Lie group, a product group, a subgroup, a semidirect product, or a gauge group — the general framework of equivariant networks handles all of these, but the architectural choices depend critically on getting the group right.
+
+---
+
+Hold five pictures simultaneously as you move to the mathematics.
+
+The transmission network with three different node numberings: the same physical graph represented by three different adjacency matrices, related by permutations in $S_n$ — the discrete, finite, combinatorial symmetry group of graphs.
+
+The crystal lattice in three different coordinate systems: the same atomic arrangement represented with three different sets of coordinates, related by rotations in $SO(3)$ — the continuous, infinite, geometric Lie group of three-dimensional space.
+
+The Lie algebra $\mathfrak{so}(3)$: the three generators $L_x, L_y, L_z$ of infinitesimal rotations, satisfying $[L_x,L_y]=L_z$, the tangent space at the identity of $SO(3)$, determining the commutation constraints on equivariant weight matrices.
+
+The spherical harmonics $Y_\ell^m$: the natural $SO(3)$-equivariant features for atomic directions, transforming under Wigner D-matrices of order $\ell$, the correct basis for $SO(3)$-equivariant computation on molecular geometry.
+
+The break moment: the Euclidean group $E(3) = SO(3)\ltimes\mathbb{R}^3$ for translationally-invariant molecular properties, and the gauge group of the tangent bundle for manifold-valued data — two examples showing that $SO(3)$ and $S_n$ are not the only relevant symmetry groups, and that identifying the correct group is the first and most critical architectural decision.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the precise algebraic structure of $S_n$ and its representation theory, the topology and Lie group structure of $SO(3)$, the irreducible representations of $SO(3)$ via Wigner D-matrices and spherical harmonics, the relationship between the Lie algebra $\mathfrak{so}(3)$ and equivariant constraints, the Clebsch-Gordan decomposition and its architectural consequences, and the extension to $E(3)$ and gauge groups.
+
+### The Permutation Group $S_n$ — Algebraic Structure
+
+**Definition.** The **symmetric group** $S_n$ is the group of all bijections $\sigma: \{1,\ldots,n\} \to \{1,\ldots,n\}$ under composition. $|S_n| = n!$.
+
+**Cycle notation.** Every $\sigma \in S_n$ decomposes uniquely (up to ordering) into disjoint cycles. The cycle $(i_1\, i_2\, \cdots\, i_k)$ maps $i_1 \mapsto i_2 \mapsto \cdots \mapsto i_k \mapsto i_1$. The **cycle type** of $\sigma$ is the partition $\lambda \vdash n$ recording the lengths of its cycles in non-increasing order.
+
+**Conjugacy classes.** Two permutations $\sigma, \tau \in S_n$ are conjugate ($\tau = \pi\sigma\pi^{-1}$ for some $\pi \in S_n$) if and only if they have the same cycle type. The conjugacy classes of $S_n$ are therefore indexed by partitions $\lambda \vdash n$.
+
+**Generating set.** $S_n$ is generated by the adjacent transpositions $\{(1\,2), (2\,3), \ldots, (n-1\,n)\}$ — a fact with direct relevance to message-passing GNNs, where information propagates along edges.
+
+**Non-abelianness.** For $n \geq 3$: $(1\,2)\circ(2\,3) = (1\,2\,3)$ but $(2\,3)\circ(1\,2) = (1\,3\,2)$. Non-abelian.
+
+**The standard matrix representation.** The **permutation representation** $\rho: S_n \to GL(\mathbb{R}^n)$ is:
+
+$$[\rho(\sigma)]_{ij} = \mathbf{1}[\sigma(j) = i]$$
+
+so $(\rho(\sigma)v)_i = v_{\sigma^{-1}(i)}$ — permuting the components of $v$ according to $\sigma$.
+
+---
+
+### Representation Theory of $S_n$
+
+**Theorem (Complete reducibility, Maschke).** Every representation of a finite group over $\mathbb{R}$ or $\mathbb{C}$ is completely reducible — it decomposes as a direct sum of irreducible representations.
+
+**Irreducible representations of $S_n$ — Young tableaux.** The irreps of $S_n$ over $\mathbb{C}$ are in bijection with partitions $\lambda \vdash n$ (Young diagrams). For $n=3$:
+
+- $\lambda = (3)$: trivial representation, dimension 1. $\rho(\sigma) = 1$ for all $\sigma$.
+- $\lambda = (2,1)$: standard representation, dimension 2.
+- $\lambda = (1,1,1)$: sign representation, dimension 1. $\rho(\sigma) = \text{sgn}(\sigma) \in \{\pm 1\}$.
+
+**The permutation representation decomposes as:**
+
+$$\mathbb{R}^n \cong V^{(n)} \oplus V^{(n-1,1)}$$
+
+the trivial representation (spanned by the all-ones vector $\mathbf{1}$) plus the standard representation (its orthogonal complement, spanned by vectors summing to zero).
+
+**Equivariant maps between permutation representations.** By Schur's lemma, the space of $S_n$-equivariant linear maps $L: \mathbb{R}^n \to \mathbb{R}^n$ (maps satisfying $L\rho(\sigma) = \rho(\sigma)L$ for all $\sigma \in S_n$) consists exactly of matrices of the form:
+
+$$L = \alpha I + \beta \mathbf{1}\mathbf{1}^\top, \quad \alpha, \beta \in \mathbb{R}$$
+
+**Proof.** The permutation representation decomposes as $\mathbb{R}^n = V^{(n)} \oplus V^{(n-1,1)}$ with $V^{(n)} = \text{span}(\mathbf{1})$ and $V^{(n-1,1)} = \mathbf{1}^\perp$. By Schur's lemma, $L$ acts as a scalar on each irrep: $L|_{V^{(n)}} = \beta'I$ and $L|_{V^{(n-1,1)}} = \alpha I$. The matrix $L = \alpha I + (\beta'-\alpha)\frac{\mathbf{1}\mathbf{1}^\top}{n}$ has this block structure. Setting $\beta = (\beta'-\alpha)/n$ gives the stated form. $\square$
+
+**Architectural consequence.** A linear layer equivariant to $S_n$ acting on node features $h \in \mathbb{R}^n$ (one scalar feature per node) has only two free parameters: $\alpha$ (self-weight) and $\beta$ (neighbor-aggregation weight). The most general equivariant linear map is:
+
+$$h_i \mapsto \alpha h_i + \beta \sum_j h_j$$
+
+This is exactly the **mean-field aggregation** of graph neural networks — the fundamental operation of graph convolution emerges from Schur's lemma applied to $S_n$.
+
+**Higher-order equivariant maps.** For $k$-order tensor features $T \in (\mathbb{R}^n)^{\otimes k}$, the space of $S_n$-equivariant linear maps $(\mathbb{R}^n)^{\otimes k} \to (\mathbb{R}^n)^{\otimes k}$ has dimension equal to the number of set partitions of $\{1,\ldots,2k\}$ — the **Bell number** $B_{2k}$. For $k=2$: $B_4 = 15$ parameters. This is the basis of the $k$-order invariant graph network theory (Maron et al. 2019).
+
+---
+
+### The Rotation Group $SO(3)$ — Topology and Lie Structure
+
+**Definition.** The **special orthogonal group** is:
+
+$$SO(3) = \{R \in \mathbb{R}^{3\times 3} : R^\top R = I, \, \det R = +1\}$$
+
+**Topology.** $SO(3)$ is a compact 3-dimensional smooth manifold. As a topological space, $SO(3) \cong \mathbb{RP}^3$ — the real projective space of dimension 3, which is the 3-sphere $S^3$ with antipodal points identified. This identification corresponds to the fact that every rotation is represented by two unit quaternions $\pm q \in S^3 \subset \mathbb{H}$.
+
+**Double cover.** The universal cover of $SO(3)$ is $SU(2) \cong S^3$ — the group of $2\times 2$ unitary matrices with determinant 1, equivalently the group of unit quaternions. The covering map $\pi: SU(2) \to SO(3)$ is 2-to-1: $\pi(q) = \pi(-q)$. This double cover is the reason spinors (half-integer spin representations) exist — they are representations of $SU(2)$ that do not descend to $SO(3)$.
+
+**Parameterizations:**
+
+**Axis-angle:** Every $R \in SO(3)\setminus\{I\}$ is uniquely (for $\theta \in (0,\pi)$) a rotation by angle $\theta$ around unit axis $\hat n$:
+
+$$R(\theta, \hat n) = I + \sin\theta\,[\hat n]_\times + (1-\cos\theta)[\hat n]_\times^2$$
+
+where $[\hat n]_\times$ is the skew-symmetric matrix corresponding to $\hat n$.
+
+**Euler angles:** $R = R_z(\alpha)R_y(\beta)R_z(\gamma)$ for $(\alpha,\beta,\gamma) \in [0,2\pi)\times[0,\pi]\times[0,2\pi)$ — problematic at $\beta=0,\pi$ (gimbal lock).
+
+**Unit quaternions:** $q = w + xi + yj + zk$ with $w^2+x^2+y^2+z^2=1$, acting on $\mathbb{R}^3$ by $v \mapsto qvq^{-1}$ (treating $v$ as a pure quaternion).
+
+---
+
+### The Lie Algebra $\mathfrak{so}(3)$
+
+**Definition.** The **Lie algebra** of $SO(3)$ is the tangent space at the identity:
+
+$$\mathfrak{so}(3) = T_I SO(3) = \{\Omega \in \mathbb{R}^{3\times 3} : \Omega^\top = -\Omega\}$$
+
+the space of $3\times 3$ skew-symmetric matrices, with Lie bracket $[\Omega_1, \Omega_2] = \Omega_1\Omega_2 - \Omega_2\Omega_1$.
+
+**Basis.** The standard basis of $\mathfrak{so}(3)$ consists of the three generators:
+
+$$L_x = \begin{pmatrix}0&0&0\\0&0&-1\\0&1&0\end{pmatrix}, \quad L_y = \begin{pmatrix}0&0&1\\0&0&0\\-1&0&0\end{pmatrix}, \quad L_z = \begin{pmatrix}0&-1&0\\1&0&0\\0&0&0\end{pmatrix}$$
+
+**Commutation relations:** $[L_x,L_y] = L_z$, $[L_y,L_z] = L_x$, $[L_z,L_x] = L_y$ — the structure constants of $\mathfrak{so}(3) \cong (\mathbb{R}^3, \times)$.
+
+**Exponential map.** The Lie group exponential $\exp: \mathfrak{so}(3) \to SO(3)$ is:
+
+$$\exp(\theta[\hat n]_\times) = I + \sin\theta\,[\hat n]_\times + (1-\cos\theta)[\hat n]_\times^2 = R(\theta,\hat n)$$
+
+the Rodrigues formula. Every element of $SO(3)$ is in the image of $\exp$ (surjectivity for compact connected Lie groups).
+
+**Equivariant constraint via Lie algebra.** A linear map $L: V \to W$ between $SO(3)$-representations is equivariant if and only if it commutes with the Lie algebra action:
+
+$$L \circ d\rho_V(\Omega) = d\rho_W(\Omega) \circ L \quad \forall \Omega \in \mathfrak{so}(3)$$
+
+where $d\rho_V: \mathfrak{so}(3) \to \mathfrak{gl}(V)$ is the derived representation (differential of $\rho_V$ at the identity). This converts the equivariance condition from a constraint over all of $SO(3)$ (uncountably many constraints) to a constraint over $\mathfrak{so}(3)$ (three constraints, one per basis element).
+
+---
+
+### Irreducible Representations of $SO(3)$ — Wigner D-Matrices
+
+**Theorem (Classification of $SO(3)$ irreps).** The irreducible unitary representations of $SO(3)$ are indexed by non-negative integers $\ell \in \{0,1,2,\ldots\}$. The degree-$\ell$ irrep acts on $V^{(\ell)} = \mathbb{R}^{2\ell+1}$ via the **Wigner D-matrix**:
+
+$$D^{(\ell)}: SO(3) \to GL(\mathbb{R}^{2\ell+1}), \quad D^{(\ell)}(R)_{mm'} = \langle \ell,m | \hat R | \ell,m'\rangle$$
+
+for $m,m' \in \{-\ell,\ldots,\ell\}$, where $|\ell,m\rangle$ are the angular momentum eigenstates.
+
+**Explicit formula for $\ell=1$:** $D^{(1)}(R) = R$ — the standard $3\times 3$ rotation matrix.
+
+**For general $\ell$, axis-angle parameterization:**
+
+$$D^{(\ell)}(R(\theta,\hat z))_{mm'} = e^{-im\theta}\delta_{mm'}$$
+
+(diagonal for rotations around $z$-axis), with off-diagonal entries for general axes given by Wigner's formula involving Jacobi polynomials.
+
+**Peter-Weyl theorem for $SO(3)$.** The matrix elements $D^{(\ell)}_{mm'}$ form a complete orthogonal basis for $L^2(SO(3))$:
+
+$$\int_{SO(3)} D^{(\ell)}_{mm'}(R) \overline{D^{(\ell')}_{nn'}(R)} \, dR = \frac{1}{2\ell+1}\delta_{\ell\ell'}\delta_{mn}\delta_{m'n'}$$
+
+Every square-integrable function on $SO(3)$ expands in terms of Wigner D-matrices — the non-commutative Fourier transform on $SO(3)$.
+
+---
+
+### Spherical Harmonics and $SO(3)$-Equivariant Features
+
+**Definition.** The **real spherical harmonics** $Y_\ell^m: S^2 \to \mathbb{R}$ for $\ell \geq 0$, $m \in \{-\ell,\ldots,\ell\}$ are the eigenfunctions of the Laplace-Beltrami operator $\Delta_{S^2}$ on the sphere:
+
+$$\Delta_{S^2} Y_\ell^m = -\ell(\ell+1) Y_\ell^m$$
+
+They form an orthonormal basis for $L^2(S^2)$: $\int_{S^2} Y_\ell^m(\hat r) Y_{\ell'}^{m'}(\hat r) \, d\hat r = \delta_{\ell\ell'}\delta_{mm'}$.
+
+**Transformation law.** Under rotation $R \in SO(3)$:
+
+$$Y_\ell^m(R^{-1}\hat r) = \sum_{m'=-\ell}^{\ell} D^{(\ell)}_{m'm}(R) Y_\ell^{m'}(\hat r)$$
+
+The spherical harmonics of order $\ell$ transform among themselves under $D^{(\ell)}$ — they span the degree-$\ell$ irrep of $SO(3)$.
+
+**Equivariant feature construction.** For atomic pair direction $\hat r_{ij} = (x_j-x_i)/\|x_j-x_i\|$, the **spherical harmonic feature vector** of order $\ell$ is:
+
+$$\mathbf{Y}^{(\ell)}(\hat r_{ij}) = (Y_\ell^{-\ell}(\hat r_{ij}), \ldots, Y_\ell^\ell(\hat r_{ij})) \in \mathbb{R}^{2\ell+1}$$
+
+This transforms under $R \in SO(3)$ as $\mathbf{Y}^{(\ell)}(R\hat r_{ij}) = D^{(\ell)}(R)\mathbf{Y}^{(\ell)}(\hat r_{ij})$ — it is a degree-$\ell$ equivariant feature. Combined with a radial basis function $\phi(\|x_j-x_i\|)$ (invariant under rotation), the full pairwise feature:
+
+$$f_{ij}^{(\ell)} = \phi(\|x_j-x_i\|) \cdot \mathbf{Y}^{(\ell)}(\hat r_{ij})$$
+
+is $SO(3)$-equivariant of order $\ell$ — the fundamental building block of equivariant molecular networks (SchNet, DimeNet, SEGNN, NequIP, MACE).
+
+---
+
+### The Clebsch-Gordan Decomposition
+
+**Theorem.** The tensor product of two irreps of $SO(3)$ decomposes as:
+
+$$V^{(\ell_1)} \otimes V^{(\ell_2)} \cong \bigoplus_{\ell=|\ell_1-\ell_2|}^{\ell_1+\ell_2} V^{(\ell)}$$
+
+The decomposition is effected by the **Clebsch-Gordan coefficients** $C^{(\ell,m)}_{\ell_1,m_1;\ell_2,m_2} \in \mathbb{R}$:
+
+$$|(\ell_1,m_1);(\ell_2,m_2)\rangle = \sum_{\ell=|\ell_1-\ell_2|}^{\ell_1+\ell_2}\sum_{m=-\ell}^{\ell} C^{(\ell,m)}_{\ell_1,m_1;\ell_2,m_2} |\ell,m\rangle$$
+
+**Equivariant tensor product layer.** Given input features $f^{(\ell_1)} \in \mathbb{R}^{2\ell_1+1}$ and $f^{(\ell_2)} \in \mathbb{R}^{2\ell_2+1}$, the equivariant tensor product produces output features of order $\ell$:
+
+$$(f^{(\ell_1)} \otimes_\ell f^{(\ell_2)})_m = \sum_{m_1,m_2} C^{(\ell,m)}_{\ell_1,m_1;\ell_2,m_2} f^{(\ell_1)}_{m_1} f^{(\ell_2)}_{m_2}$$
+
+**Equivariance proof.**
+
+$$(D^{(\ell_1)}(R)f^{(\ell_1)} \otimes_\ell D^{(\ell_2)}(R)f^{(\ell_2)})_m = \sum_{m_1,m_2}C^{(\ell,m)}_{\ell_1,m_1;\ell_2,m_2}\sum_{m_1',m_2'}D^{(\ell_1)}_{m_1m_1'}D^{(\ell_2)}_{m_2m_2'}f^{(\ell_1)}_{m_1'}f^{(\ell_2)}_{m_2'}$$
+
+$$= \sum_{m'} D^{(\ell)}_{mm'}(R) (f^{(\ell_1)}\otimes_\ell f^{(\ell_2)})_{m'}$$
+
+by the Clebsch-Gordan decomposition of $D^{(\ell_1)}\otimes D^{(\ell_2)}$. $\square$
+
+**Architectural consequence.** A single Clebsch-Gordan layer takes features of orders $\ell_1$ and $\ell_2$ and produces features of all orders $\ell \in [|\ell_1-\ell_2|, \ell_1+\ell_2]$. Starting from $\ell=1$ (vector) features at the input layer, after one CG layer you have $\ell \in \{0,1,2\}$ features; after two layers, $\ell \in \{0,1,2,3,4\}$; after $k$ layers, $\ell \in \{0,\ldots,2^k\}$ (in principle). In practice, $\ell_{\max}$ is truncated to $2$ or $3$ for computational efficiency.
+
+---
+
+### Extension to $E(3)$ and Gauge Groups
+
+**The Euclidean group.** $E(3) = SO(3) \ltimes \mathbb{R}^3$ is the semidirect product of rotations and translations, acting on $\mathbb{R}^3$ as $g\cdot x = Rx + t$ for $g = (R,t) \in SO(3)\times\mathbb{R}^3$. Group law: $(R_1,t_1)(R_2,t_2) = (R_1R_2, R_1t_2+t_1)$.
+
+**$E(3)$-invariant features.** Under the action of $E(3)$:
+- Inter-atomic distances $\|x_j-x_i\|$ are $E(3)$-invariant (both rotation and translation invariant)
+- Direction vectors $\hat r_{ij}$ are $SO(3)$-equivariant but not translation-invariant — they are invariant under translation because translations cancel in the difference $x_j-x_i$
+- Absolute positions $x_i$ are not $E(3)$-invariant
+
+The correct $E(3)$-equivariant network must use only relative features — differences $x_j-x_i$ and distances $\|x_j-x_i\|$ — as inputs. This is automatically satisfied by graph neural networks that aggregate over neighbors, since neighbor messages depend only on relative positions.
+
+**The gauge group.** For a manifold $\mathcal{M}$ with tangent bundle $T\mathcal{M}$, a **gauge transformation** at point $p \in \mathcal{M}$ is a rotation of the local tangent frame $T_p\mathcal{M}$. The gauge group is $\mathcal{G} = \{g: \mathcal{M} \to SO(d)\}$ — a function assigning a local rotation to each point of the manifold. A **gauge-equivariant** neural network on $\mathcal{M}$ produces outputs that transform consistently under all gauge transformations: if the local frame at each point is rotated by $g(p) \in SO(d)$, the output feature at $p$ rotates by $g(p)$ accordingly. The gauge group is infinite-dimensional — it is the group of all smooth maps from $\mathcal{M}$ to $SO(d)$ — and requires the theory of fiber bundles and connections for its full treatment, which is the content of Chapter 3 of Phase 2.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 402 (Modern Algebra), **Sylow's theorems** characterize the subgroup structure of finite groups — which subgroups of order $p^k$ exist for prime $p$. The subgroup structure of $S_n$ — its normal subgroups (the alternating group $A_n$ for $n\geq 5$ is the unique nontrivial normal subgroup), its Sylow subgroups, its composition series — determines which graph symmetries can be detected by equivariant networks and which are invisible. The simplicity of $A_n$ for $n\geq 5$ (no nontrivial normal subgroups) is the algebraic reason why the Weisfeiler-Lehman test cannot detect certain graph symmetries — the relevant group-theoretic obstruction is the simplicity of the alternating group, a theorem from MATH 402.
+
+In MATH 326 (Complex Variables), the **Fourier series** on the circle $S^1$ decomposes $L^2(S^1)$ into characters $e^{in\theta}$ of the rotation group $SO(2)$. The spherical harmonic expansion on $S^2$ is the $SO(3)$ analogue: the Peter-Weyl theorem decomposes $L^2(S^2)$ into irreps $Y_\ell^m$ of $SO(3)$, exactly as the Fourier series decomposes $L^2(S^1)$ into characters of $SO(2)$. The Laplace-Beltrami eigenvalue $-\ell(\ell+1)$ is the $SO(3)$ analogue of the Fourier frequency $n^2$ — both index the irreps of the relevant rotation group. The complex analysis of Laurent series and residue calculus underlies the derivation of the Wigner D-matrix formulas, which involve Jacobi polynomials arising as residues of generating function poles.
+
+In MATH 217 (ODEs and PDEs), the **spherical harmonic eigenfunctions** $Y_\ell^m$ arise as the angular part of the solution to Laplace's equation $\Delta u = 0$ in spherical coordinates: separating variables gives $u(r,\theta,\phi) = R(r)Y_\ell^m(\theta,\phi)$, where $Y_\ell^m$ satisfies $\Delta_{S^2}Y_\ell^m = -\ell(\ell+1)Y_\ell^m$. The Wigner D-matrices arise in the quantum mechanical treatment of angular momentum — they are the matrix elements of the rotation operator in the basis of angular momentum eigenstates $|\ell,m\rangle$, solutions to the angular momentum eigenvalue problem $L^2|\ell,m\rangle = \ell(\ell+1)|\ell,m\rangle$. Every spherical harmonic feature in an equivariant molecular network is a solution to the angular momentum eigenvalue equation from MATH 217, evaluated at the direction of an atomic bond.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Pulchowk Campus structural engineering story has a precise mathematical address. Let us walk through them one by one until the transmission network relabeling, the crystal lattice rotation, the Lie algebra generators, the Wigner D-matrices, the Clebsch-Gordan decomposition, and the Euclidean group extension are completely fused with the formalism.
+
+---
+
+**The three engineers' different numberings of the same transmission network — the same physical graph represented by three different adjacency matrices, related by bijections $\sigma: \{1,\ldots,n\} \to \{1,\ldots,n\}$ — are the elements of the symmetric group $S_n$, and the set of all possible relabelings is the group itself.** Engineer A's adjacency matrix $A$ and Engineer B's adjacency matrix $A'$ are related by $A'_{ij} = A_{\sigma^{-1}(i)\sigma^{-1}(j)}$ for the permutation $\sigma$ mapping A's numbering to B's — equivalently, $A' = P_\sigma A P_\sigma^\top$ where $P_\sigma$ is the permutation matrix with $(P_\sigma)_{ij} = \mathbf{1}[\sigma(j)=i]$. The set of all $n\times n$ permutation matrices forms a group under matrix multiplication, isomorphic to $S_n$ via the representation $\rho(\sigma) = P_\sigma$. This is the permutation representation $\rho: S_n \to GL(\mathbb{R}^n)$ — the fundamental representation that acts on node feature vectors by permuting their components. The group axioms are satisfied because composition of bijections is a bijection (closure), composition is associative, the identity bijection is the neutral element, and every bijection has an inverse bijection — the algebraic content of what it means for relabeling to be a symmetry.
+
+**The six permutations of the three-tower network — the identity, three transpositions, and two cyclic rotations forming $S_3$ with $|S_3| = 3! = 6$ — are the conjugacy classes indexed by cycle types: the identity (cycle type $(1,1,1)$), the three transpositions (cycle type $(2,1)$), and the two 3-cycles (cycle type $(3)$).** The conjugacy class structure of $S_3$ determines its irreducible representations by the fundamental theorem of finite group representation theory: the number of irreps equals the number of conjugacy classes, which is three for $S_3$ — corresponding to the three partitions of $3$: $(3)$, $(2,1)$, and $(1,1,1)$. The trivial representation ($\lambda=(3)$, dimension 1) assigns $\rho(\sigma)=1$ to all permutations — the representation of the scalar energy prediction, which is unchanged by any relabeling. The sign representation ($\lambda=(1,1,1)$, dimension 1) assigns $\rho(\sigma) = \text{sgn}(\sigma)$ — the representation that detects the parity of a permutation. The standard representation ($\lambda=(2,1)$, dimension 2) is the non-trivial irrep on $\mathbf{1}^\perp \subset \mathbb{R}^3$ — the representation that the Schur's lemma derivation identifies as the component of the permutation representation orthogonal to the all-ones vector.
+
+---
+
+**The two-parameter family of equivariant linear maps $L = \alpha I + \beta\mathbf{1}\mathbf{1}^\top$ — the complete classification of $S_n$-equivariant linear layers on scalar node features — is the direct consequence of Schur's lemma applied to the decomposition $\mathbb{R}^n \cong V^{(n)} \oplus V^{(n-1,1)}$.** The permutation representation decomposes into two irreps: the trivial representation on $V^{(n)} = \text{span}(\mathbf{1})$ and the standard representation on $V^{(n-1,1)} = \mathbf{1}^\perp$. Schur's lemma says any equivariant linear map acts as a scalar on each irrep independently: as $\beta'$ on $V^{(n)}$ and as $\alpha$ on $V^{(n-1,1)}$. The matrix with this action is $\alpha I + (\beta'-\alpha)\mathbf{1}\mathbf{1}^\top/n = \alpha I + \beta\mathbf{1}\mathbf{1}^\top$ for $\beta = (\beta'-\alpha)/n$. The operation $h_i \mapsto \alpha h_i + \beta\sum_j h_j$ is the most general equivariant linear aggregation on a complete graph — it self-weights by $\alpha$ and aggregates all neighbors by $\beta$. This is the mean-field GNN aggregation, derived not as a heuristic but as the unique equivariant linear operation consistent with $S_n$ symmetry. Every graph neural network that aggregates neighbor features with a fixed weight is implementing the unique Schur-classified equivariant linear map on $S_n$-symmetric node features.
+
+**The Bell number $B_{2k}$ parameterizing the space of $k$-order $S_n$-equivariant tensor maps — $B_4=15$ parameters for $k=2$ second-order tensor features — is the combinatorial count of set partitions of $\{1,\ldots,2k\}$, each corresponding to an independent equivariant linear operation on $k$-th order node feature tensors.** For $k=2$, the second-order feature tensor $T \in \mathbb{R}^{n\times n}$ (encoding pairwise node features, equivalently the adjacency matrix with edge features) is acted on by $S_n$ as $T_{ij} \mapsto T_{\sigma^{-1}(i)\sigma^{-1}(j)}$. The 15 equivariant linear maps on $T$ correspond to the 15 set partitions of $\{1,2,3,4\}$ (two input indices and two output indices), including operations like: copy $T_{ij}$ to output$(ij)$ (identity), set output$(ij)$ to $\sum_k T_{ik}$ (row sum), set output$(ij)$ to $\text{tr}(T)\cdot\mathbf{1}\mathbf{1}^\top$ (broadcast trace), and so on. This is the $k$-order equivariant graph network framework from MATH 402's group representation theory, where the dimension of the equivariant space counts the number of independent ways to contract and broadcast $k$-th order tensors consistently with $S_n$ symmetry.
+
+---
+
+**The three crystallographers' different coordinate systems for the same mineral — the same atomic arrangement represented with three different coordinate vectors, related by $3\times 3$ rotation matrices $R$ with $R^\top R = I$ and $\det R = +1$ — are the elements of $SO(3)$, and the group of all such rotations is the symmetry group of three-dimensional geometric data.** The group structure follows from matrix algebra: the product of two rotation matrices is a rotation matrix ($\det(R_1R_2) = \det R_1\det R_2 = 1$, $(R_1R_2)^\top(R_1R_2) = R_2^\top R_1^\top R_1 R_2 = R_2^\top R_2 = I$), matrix multiplication is associative, the identity matrix is the neutral element, and $R^{-1} = R^\top$ is the inverse. The fundamental difference from $S_n$ is that $SO(3)$ is a Lie group — a group that is simultaneously a smooth 3-dimensional manifold — making it amenable to differential calculus, gradient-based optimization, and the Lie algebra linearization that converts group-level equivariance constraints into Lie algebra-level commutation constraints.
+
+**The topology $SO(3) \cong \mathbb{RP}^3$ — the real projective 3-space, the 3-sphere $S^3$ with antipodal points identified — and the double cover $SU(2) \cong S^3 \twoheadrightarrow SO(3)$ are the topological facts that explain the existence of half-integer spin representations and the ambiguity of Euler angle parameterization near $\beta=0,\pi$.** The double cover means every rotation $R \in SO(3)$ corresponds to two unit quaternions $\pm q \in SU(2)$: the map $\pi(q) = \pi(-q)$ is 2-to-1. Representations of $SO(3)$ lift to representations of $SU(2)$ through this covering map, but only representations where $-I \in SU(2)$ acts trivially descend back to $SO(3)$ — these are the integer-$\ell$ representations (the Wigner D-matrices). The half-integer representations of $SU(2)$ (spinors, relevant for electron spin in quantum chemistry) do not descend to $SO(3)$ because $-I$ acts as $(-1)^{2s}I = -I$ on spin-$s$ representations for half-integer $s$. In MATH 402 terms: $SO(3) \cong SU(2)/\{I,-I\}$ is the quotient group of $SU(2)$ by its center $\{I,-I\}$, and representations of the quotient are exactly the representations of $SU(2)$ on which the kernel $\{I,-I\}$ acts trivially.
+
+---
+
+**The Lie algebra generators $L_x, L_y, L_z$ — the three basis skew-symmetric matrices spanning $\mathfrak{so}(3)$ — are the infinitesimal rotations around the three coordinate axes, and the commutation relations $[L_x,L_y]=L_z$, $[L_y,L_z]=L_x$, $[L_z,L_x]=L_y$ are the structure constants of the Lie algebra that determine the global group structure via the Baker-Campbell-Hausdorff formula.** The Rodrigues formula $\exp(\theta[\hat n]_\times) = I + \sin\theta[\hat n]_\times + (1-\cos\theta)[\hat n]_\times^2$ is the explicit exponential map from the Lie algebra to the Lie group — the surjection that makes every rotation reachable from the identity by a smooth path. For the crystal stability network, the equivariance constraint $L\rho(\sigma)=\rho(\sigma)L$ for all $\sigma \in SO(3)$ reduces to the Lie algebra constraint $L\circ d\rho(\Omega) = d\rho(\Omega)\circ L$ for all $\Omega \in \mathfrak{so}(3)$ — just three constraints (one per basis element of $\mathfrak{so}(3)$) instead of uncountably many group-level constraints. This Lie algebra linearization converts an infinite-dimensional equivariance requirement into a finite-dimensional commutation requirement, making the classification of equivariant linear maps computationally tractable for continuous Lie groups just as Schur's lemma makes it tractable for finite groups.
+
+**The commutation relations $[L_x,L_y]=L_z$ isomorphic to $(\mathbb{R}^3,\times)$ — the Lie algebra $\mathfrak{so}(3)$ isomorphic to $\mathbb{R}^3$ with the cross product — connect the Lie algebra structure to the physics of angular momentum and the chemistry of molecular orbital symmetry.** The cross product $\hat x\times\hat y = \hat z$ in $\mathbb{R}^3$ corresponds exactly to $[L_x,L_y]=L_z$ in $\mathfrak{so}(3)$ under the isomorphism $\hat x\leftrightarrow L_x$, $\hat y\leftrightarrow L_y$, $\hat z\leftrightarrow L_z$. This isomorphism is the reason why angular momentum in quantum mechanics — the observable corresponding to infinitesimal rotations — satisfies the same commutation relations $[J_x,J_y]=i\hbar J_z$: the quantum angular momentum operators are the derived representations $d\rho^{(\ell)}(L_x), d\rho^{(\ell)}(L_y), d\rho^{(\ell)}(L_z)$ of the Lie algebra generators on the degree-$\ell$ irrep. In MATH 217 terms: the spherical harmonic eigenfunctions $Y_\ell^m$ are the simultaneous eigenstates of the Laplace-Beltrami operator $\Delta_{S^2}$ (with eigenvalue $-\ell(\ell+1)$) and the $z$-component of angular momentum $L_z = -i\partial_\phi$ (with eigenvalue $m$) — the two operators that diagonalize the $SO(3)$ action on $L^2(S^2)$.
+
+---
+
+**The Wigner D-matrices $D^{(\ell)}: SO(3) \to GL(\mathbb{R}^{2\ell+1})$ — the irreducible representations of $SO(3)$ indexed by non-negative integer $\ell$ with dimension $2\ell+1$ — are the complete list of irreducible representations guaranteed by the Peter-Weyl theorem for compact groups, which is the infinite-dimensional generalization of Maschke's theorem for finite groups.** The Peter-Weyl orthogonality $\int_{SO(3)}D^{(\ell)}_{mm'}(R)\overline{D^{(\ell')}_{nn'}(R)}dR = \frac{1}{2\ell+1}\delta_{\ell\ell'}\delta_{mn}\delta_{m'n'}$ is the $SO(3)$ analogue of the character orthogonality relations for finite groups from MATH 402, with the Haar measure $dR$ playing the role of the normalized counting measure on a finite group. The formula $D^{(1)}(R)=R$ — the degree-1 Wigner D-matrix is the standard rotation matrix itself — is the identification of the $\ell=1$ irrep with the standard representation on $\mathbb{R}^3$, confirming that force vectors (which transform as $F\mapsto RF$ under rotation $R$) carry the $\ell=1$ representation. Energies carry the $\ell=0$ trivial representation ($D^{(0)}(R)=1$), quadrupole moments carry the $\ell=2$ representation ($D^{(2)}(R)$ acting on $\mathbb{R}^5$), and so on — every physical quantity in molecular simulation is labeled by its irrep order $\ell$.
+
+**The spherical harmonic feature $\mathbf{Y}^{(\ell)}(\hat r_{ij}) = (Y_\ell^{-\ell}(\hat r_{ij}),\ldots,Y_\ell^\ell(\hat r_{ij})) \in \mathbb{R}^{2\ell+1}$ for atomic pair direction $\hat r_{ij}$ — transforming as $\mathbf{Y}^{(\ell)}(R\hat r_{ij}) = D^{(\ell)}(R)\mathbf{Y}^{(\ell)}(\hat r_{ij})$ — is the equivariant feature map that converts geometric information about atomic directions into vectors living in the degree-$\ell$ irrep of $SO(3)$.** The transformation law follows directly from the spherical harmonic rotation identity $Y_\ell^m(R^{-1}\hat r) = \sum_{m'}D^{(\ell)}_{m'm}(R)Y_\ell^{m'}(\hat r)$, which is the defining property of the degree-$\ell$ irrep. The combined feature $f_{ij}^{(\ell)} = \phi(\|x_j-x_i\|)\cdot\mathbf{Y}^{(\ell)}(\hat r_{ij})$ is $SO(3)$-equivariant of order $\ell$ because the radial function $\phi(\|x_j-x_i\|)$ is $SO(3)$-invariant (distances are invariant under rotation) and the spherical harmonic part transforms under $D^{(\ell)}(R)$. This is the feature that every state-of-the-art equivariant molecular network — NequIP, MACE, Equiformer — uses as its atomic pair representation, derived directly from the irrep theory of $SO(3)$ rather than from engineering intuition.
+
+---
+
+**The Clebsch-Gordan decomposition $V^{(\ell_1)}\otimes V^{(\ell_2)} \cong \bigoplus_{\ell=|\ell_1-\ell_2|}^{\ell_1+\ell_2}V^{(\ell)}$ — the decomposition of the tensor product of two $SO(3)$ irreps into a direct sum of irreps — is the equivariant bilinear operation that produces new irrep-order features from pairs of existing ones, implemented by the Clebsch-Gordan coefficients $C^{(\ell,m)}_{\ell_1,m_1;\ell_2,m_2}$.** The equivariance proof uses the Clebsch-Gordan identity $D^{(\ell_1)}_{m_1m_1'}(R)D^{(\ell_2)}_{m_2m_2'}(R) = \sum_{\ell,m,m'}C^{(\ell,m)}_{\ell_1,m_1;\ell_2,m_2}D^{(\ell)}_{mm'}(R)C^{(\ell,m')}_{\ell_1,m_1';\ell_2,m_2'}$ — the tensor product of two D-matrices decomposes into a sum of D-matrices. In the crystal stability network: multiplying a scalar gate ($\ell=0$) by a vector feature ($\ell=1$) via Clebsch-Gordan gives a vector feature ($\ell=1$, since $|1-0|=1$ and $1+0=1$) — the gate modulates the vector magnitude while preserving direction. Multiplying two vector features ($\ell=1$ by $\ell=1$) gives $\ell\in\{0,1,2\}$ — the inner product ($\ell=0$), cross product ($\ell=1$), and outer product ($\ell=2$) are the three Clebsch-Gordan components, corresponding to the three ways to form a scalar, a vector, and a traceless symmetric tensor from two vectors. In MATH 302 terms: the Clebsch-Gordan decomposition is the simultaneous eigendecomposition of all three angular momentum operators $J_x,J_y,J_z$ acting on the tensor product space — the block-diagonalization of the tensor product representation by the spectral theorem applied to the maximal commuting set of angular momentum operators.
+
+---
+
+**The Euclidean group extension $E(3)=SO(3)\ltimes\mathbb{R}^3$ — the semidirect product of rotations and translations with group law $(R_1,t_1)(R_2,t_2)=(R_1R_2,R_1t_2+t_1)$ — is the break moment made precise: the correct symmetry group for molecular property prediction is not $SO(3)$ alone but the full Euclidean group that includes translations.** The semidirect product structure $\ltimes$ reflects the non-commutativity of rotation and translation: translating then rotating gives a different result than rotating then translating by the rotated vector. The architectural consequence is that $E(3)$-equivariant networks must use only relative features — $x_j-x_i$ and $\|x_j-x_i\|$ — as inputs, because absolute positions $x_i$ transform as $x_i\mapsto Rx_i+t$ under $E(3)$ and are therefore not $E(3)$-invariant. Graph neural networks that aggregate over neighbors automatically satisfy this constraint because all neighbor messages depend on the difference $x_j-x_i$, which transforms as $x_j-x_i\mapsto R(x_j-x_i)$ under $E(3)$ — translation cancels in the difference, leaving only the $SO(3)$ equivariance of the direction vector. A network that uses absolute positions $x_i$ as features violates $E(3)$-equivariance and will overfit to the specific choice of coordinate origin in the training set.
+
+**The gauge group $\mathcal{G}=\{g:\mathcal{M}\to SO(d)\}$ — the group of smooth maps from the manifold to the local rotation group, one local frame rotation per point — is the infinite-dimensional symmetry group of data defined on curved manifolds, requiring fiber bundle theory and connections for its complete treatment.** The gauge group is strictly larger than the global $SO(d)$: a global rotation applies the same $R\in SO(d)$ to every tangent frame simultaneously, while a gauge transformation applies a different rotation $g(p)\in SO(d)$ to each point $p\in\mathcal{M}$ independently. A gauge-equivariant neural network on the Earth's surface — for atmospheric or oceanographic data — must produce feature vectors at each geographic location that transform under the local rotation $g(p)$ when the local tangent frame at $p$ is rotated, independently of what happens at other points. This is the manifold learning and curvature content of Chapter 3 of Phase 2, where the gauge-equivariant convolution — the geodesic convolution and the parallel transport used to compare features at different points — is the correct generalization of the $SO(3)$-equivariant convolution to curved spaces where there is no global notion of alignment.
+
+---
+
+**The connection to MATH 402 (Modern Algebra) is complete and bilateral.** The symmetric group $S_n$ studied in MATH 402 — with its subgroups, conjugacy classes, cycle decompositions, and Young tableau representation theory — is precisely the symmetry group of graph neural networks, and every algebraic theorem about $S_n$ from MATH 402 has a direct architectural consequence. Maschke's theorem (complete reducibility of finite group representations) guarantees that the permutation representation of $S_n$ decomposes into irreps — the mathematical foundation of the Schur's lemma classification of equivariant layers. The simplicity of $A_n$ for $n\geq5$ (no nontrivial normal subgroups, proved in MATH 402) is the algebraic obstruction that prevents certain graph properties from being detected by message-passing GNNs — the Weisfeiler-Lehman hierarchy limitation of Chapter 2 has its root in the simplicity theorem of MATH 402. The first isomorphism theorem ($G/\ker\phi\cong\text{Im}\,\phi$ for a group homomorphism $\phi$) gives $SO(3)\cong SU(2)/\{I,-I\}$ — the rotation group as the quotient of its double cover by its center — connecting the abstract algebra of MATH 402 to the topology of the rotation group.
+
+**The connection to MATH 326 (Complex Variables) runs through the spherical harmonic expansion as the $SO(3)$ Fourier series.** The Fourier series on the circle $S^1=SO(2)$ decomposes $L^2(S^1)$ into characters $e^{in\theta}$ of $SO(2)$ — one-dimensional irreps indexed by integer $n$. The spherical harmonic expansion on $S^2$ decomposes $L^2(S^2)$ into irreps $Y_\ell^m$ of $SO(3)$ — $(2\ell+1)$-dimensional irreps indexed by non-negative integer $\ell$. The Peter-Weyl orthogonality relations are the $SO(3)$ analogue of the Fourier coefficient orthogonality $\int_0^{2\pi}e^{in\theta}\overline{e^{im\theta}}d\theta/(2\pi) = \delta_{nm}$ from MATH 326. The residue theorem from complex analysis underlies the derivation of the Clebsch-Gordan coefficients via the generating function for Legendre polynomials — the same contour integration techniques from MATH 326 compute the overlap integrals of spherical harmonics that give the Clebsch-Gordan table.
+
+---
+
+**Looking forward across the roadmap**, the two groups established in this topic — $S_n$ and $SO(3)$ — are the symmetry groups of the two subsequent chapters of Phase 2. Chapter 2 develops the graph neural network architecture that is $S_n$-equivariant — the message-passing framework derived from the Schur classification of equivariant maps on $S_n$ representations, with the Weisfeiler-Lehman analysis characterizing its expressive power through the representation theory of $S_n$. Chapter 3 develops the manifold convolution and Laplacian eigenmap that are equivariant to the isometry group of the manifold — which for a Riemannian manifold includes $SO(d)$ rotations of local frames plus the diffeomorphisms of the manifold itself, leading to gauge-equivariant convolutions. In Phase 3, the equivariant flow matching model for molecular generation uses an $SE(3)$-equivariant neural ODE — a vector field $v_t(x,\theta)$ that transforms equivariantly under the special Euclidean group $SE(3)=SO(3)\ltimes\mathbb{R}^3$ — to learn the displacement interpolation from noise to molecular structures in the $W_2$ Wasserstein space. The entire Phase 3 synthesis rests on the Phase 2 group theory: the symmetry group of the target data domain determines the equivariant architecture of the flow, and the correctness of the generative model is the correctness of its equivariance — derived from the Wigner D-matrix theory of this topic.
+
+The three engineers' adjacency matrices and the three crystallographers' coordinate systems — related by elements of $S_n$ and $SO(3)$ respectively — find their architectural resolution in equivariant neural networks whose layers are classified by Schur's lemma as $L=\alpha I+\beta\mathbf{1}\mathbf{1}^\top$ for graph features and as Wigner D-matrix block-diagonal maps for molecular features, whose nonlinearities are norm-gating and Clebsch-Gordan tensor products, and whose output poolings are node-sum aggregation and feature-norm invariantization — the complete group-theoretic architecture of Geometric Deep Learning, derived systematically from the representation theory of $S_n$ and $SO(3)$.
+
+---
+---

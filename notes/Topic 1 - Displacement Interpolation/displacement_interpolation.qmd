@@ -1,0 +1,406 @@
+# Topic 1 - Displacement Interpolation: The Geodesic Between Two Distributions
+
+## Introduction
+
+Every metric space has a notion of distance. Only some metric spaces have a notion of straight lines — paths between two points that are simultaneously the shortest possible path and the most geometrically natural one. In Euclidean space, the straight line between two points is obvious: the convex combination $(1-t)x + ty$ for $t \in [0,1]$. In Riemannian manifolds, the straight line generalizes to the geodesic — the curve of zero acceleration, the path a particle would follow if subjected to no force other than the constraint of staying on the manifold. In the Wasserstein space of probability distributions equipped with the $W_2$ metric, the geodesic is the displacement interpolation — and understanding it requires unlearning the naive notion of interpolation that Euclidean intuition suggests.
+
+The naive interpolation between two probability distributions $\mu$ and $\nu$ is the linear mixture $(1-t)\mu + t\nu$. This is the straight line in the vector space of signed measures — the Euclidean interpolation in the function space where distributions live as densities. It is computationally trivial, analytically clean, and geometrically wrong. Consider two Dirac masses: $\mu = \delta_0$ and $\nu = \delta_1$. The linear interpolation $(1-t)\delta_0 + t\delta_1$ is a two-point distribution for all $t \in (0,1)$, assigning mass $1-t$ to the origin and mass $t$ to the point $1$. The mass does not move — it splits, fades at the source, and brightens at the destination. At $t = 0.5$, the interpolation is $\frac{1}{2}\delta_0 + \frac{1}{2}\delta_1$ — two half-mass points, neither of which resembles either $\mu$ or $\nu$. No single grain of mass ever travels from $0$ to $1$. The interpolation is a ghostly superposition, not a movement.
+
+The displacement interpolation corrects this. The correct interpolation between $\delta_0$ and $\delta_1$ is $\delta_{(1-t)\cdot 0 + t\cdot 1} = \delta_t$ — a single unit mass that moves continuously from $0$ to $1$ as $t$ goes from $0$ to $1$. The mass does not split or fade. It travels. At $t = 0.5$, the interpolation is $\delta_{0.5}$ — a single unit mass at the midpoint. This is the displacement interpolation, and for these two Dirac masses, it is obviously the right answer. The generalization to arbitrary distributions is the subject of this topic.
+
+This topic has three components that together build the complete picture of displacement interpolation.
+
+The first component is **the construction via optimal coupling** — the precise definition of the displacement interpolation using the optimal coupling $\pi^*$ between $\mu$ and $\nu$. For any coupling $\pi \in \Pi(\mu,\nu)$, not necessarily optimal, the interpolated distribution at time $t$ is the pushforward of $\pi$ under the linear interpolation map $(x,y) \mapsto (1-t)x + ty$:
+
+$$\mu_t = ((1-t)\text{proj}_x + t\text{proj}_y)_\# \pi$$
+
+This is the distribution of the random variable $(1-t)X + tY$ where $(X,Y) \sim \pi$. For the optimal coupling $\pi^*$ — the coupling that minimizes $\int\|x-y\|^2 d\pi$ — this produces the displacement interpolation. For a suboptimal coupling, it produces a valid interpolation but not a geodesic. The optimality of the coupling is what makes the interpolation a shortest path rather than merely a path. The length of any path defined by a coupling $\pi$ is $\int\|x-y\| d\pi$, and this is minimized precisely when $\pi = \pi^*$ is the optimal coupling — the Wasserstein distance $W_2(\mu,\nu)$ is the length of the geodesic.
+
+The second component is **the Brenier map simplification for absolutely continuous sources** — the observation that when $\mu$ is absolutely continuous, the optimal coupling $\pi^*$ is the graph of the Brenier map $T^* = \nabla\phi$, and the displacement interpolation simplifies dramatically. The interpolated distribution at time $t$ is the pushforward of $\mu$ under the map $T_t = (1-t)\text{id} + tT^*$:
+
+$$\mu_t = (T_t)_\# \mu = ((1-t)\text{id} + t\nabla\phi)_\# \mu$$
+
+This is a one-parameter family of pushforward measures, each defined by a single deterministic map $T_t$ applied to the fixed source distribution $\mu$. The maps $T_t$ interpolate linearly between the identity (which keeps $\mu$ fixed) and the Brenier map $T^*$ (which moves $\mu$ to $\nu$). Crucially, for $t \in [0,1]$, the map $T_t$ is itself the gradient of a convex function — the function $(1-t)\frac{\|x\|^2}{2} + t\phi(x)$ is convex, and its gradient is $(1-t)x + t\nabla\phi(x) = T_t(x)$. This means every intermediate distribution $\mu_t$ is connected to $\mu$ by an optimal transport map — the geodesic passes through a sequence of distributions that are themselves optimally connected to each other. The path is not merely shortest between its endpoints. It is shortest between every pair of intermediate points.
+
+The third component is **the Riemannian structure of Wasserstein space and Otto's calculus** — the infinite-dimensional geometric framework that makes the displacement interpolation a geodesic in the rigorous Riemannian sense. Otto's calculus, developed by Felix Otto in 2001, interprets the Wasserstein space $(\mathcal{P}_2(\mathbb{R}^n), W_2)$ as an infinite-dimensional Riemannian manifold, with tangent vectors at a distribution $\mu$ identified with velocity fields $v: \mathbb{R}^n \to \mathbb{R}^n$ satisfying the continuity equation $\partial_t\mu + \nabla\cdot(\mu v) = 0$. The Riemannian metric at $\mu$ is $g_\mu(v,v) = \int\|v(x)\|^2 d\mu(x)$ — the $L^2(\mu)$ norm of the velocity field. Geodesics in this Riemannian structure are the displacement interpolations, and the geodesic equation is the pressureless Euler equation of fluid dynamics. The displacement interpolation between $\mu$ and $\nu$ is the path followed by an ideal fluid of particles, each moving in a straight line from its starting location to its destination, with the starting-to-destination assignment given by the optimal transport plan. The continuity equation $\partial_t\mu_t + \nabla\cdot(\mu_t v_t) = 0$ with $v_t(x) = T^*(T_t^{-1}(x)) - T_t^{-1}(x)$ is satisfied along the geodesic, confirming that the interpolation is the correct Riemannian object.
+
+By the end of this topic, the displacement interpolation will feel like the only geometrically honest way to interpolate between distributions. The linear mixture is interpolation in the wrong space — the flat function space — while the displacement interpolation is interpolation in the right space — the curved Wasserstein manifold. This distinction is not academic. In Phase 3, the rectified flow algorithm trains a neural network to follow straight-line paths in the Wasserstein sense — displacement interpolations from noise to data — and the entire theory of flow matching rests on the geometric correctness of this interpolation. The generative model that learns to move mass along geodesics rather than blur it along linear mixtures is the generative model that respects the geometry of the data space, and the displacement interpolation is the precise mathematical object that makes this respect possible.
+
+---
+
+## Layer 1 (Story)
+
+You are a cartographer working for the Survey Department of Nepal, and you have been handed an unusual assignment. Two colleagues have independently produced population density maps of Nepal — one from the census of 1990, one from the census of 2020. Both maps are correct. Both maps show the distribution of Nepal's population across its geographic space — the Terai plains, the hill districts, the mountain regions — as a continuous density, brighter where population is denser, darker where it is sparse.
+
+Your task is to produce a series of intermediate maps — a smooth animation showing how Nepal's population distribution evolved from 1990 to 2020. Not a historical reconstruction, not a simulation of actual migration — a geometric interpolation. A sequence of plausible intermediate states that connects the 1990 map to the 2020 map as smoothly and honestly as possible, capturing the genuine spatial reorganization of population that occurred over those thirty years.
+
+You have two colleagues working on this problem simultaneously, using completely different approaches. Watching them work, and watching their approaches fail and succeed, is the story of displacement interpolation.
+
+---
+
+**The first colleague: the pixel mixer**
+
+Your first colleague is a computer scientist. Her approach is immediate and natural. Take the 1990 density map as an image — a grid of pixel values, each representing population density at a geographic location. Take the 2020 density map as another image on the same grid. For each intermediate time $t \in [0,1]$, produce the weighted average: multiply the 1990 pixel values by $(1-t)$ and the 2020 pixel values by $t$, and add them together.
+
+At $t = 0$, you get the 1990 map exactly. At $t = 1$, you get the 2020 map exactly. At $t = 0.5$, you get the average of the two maps — each pixel set to the mean of its 1990 and 2020 values.
+
+She produces the animation and projects it on the wall. Everyone in the room immediately notices that something is wrong, though it takes a moment to articulate what.
+
+In 1990, Kathmandu valley was moderately populated. In 2020, it is extremely dense. In the intermediate frames, the valley brightens gradually — density increases at the Kathmandu pixels. Simultaneously, in 1990, certain Terai towns were moderately populated, and in 2020 they are denser still. They also brighten gradually.
+
+But here is what does not happen in the animation: you never see population moving. The Terai towns brighten and the hill districts dim as if by independent processes, with no visible connection between the two. In reality, much of Kathmandu's population growth came from people migrating from the hill districts — from Sindhupalchok, Dhading, Gorkha. In the pixel-mixer's animation, the hill districts dim and Kathmandu brightens, but there is no spatial continuity between the two events. They happen at the same pixel, independently. The animation looks like two photographic transparencies slowly cross-fading, not like a population moving through space.
+
+Even worse: in some intermediate frames, population appears simultaneously at both the source and the destination — the hill district still shows half its 1990 population while Kathmandu already shows half its 2020 population. The total population in the intermediate frame is not the actual population of Nepal at any intermediate time — it is an artifact of the averaging, a mathematical ghost that never existed.
+
+The pixel mixer has interpolated in the wrong space. She has drawn a straight line through the space of density functions — the flat, Euclidean vector space of real-valued functions on the map. That straight line is not the straight line through the space of population distributions. It is a shortcut through a space that has no geographic meaning.
+
+---
+
+**The second colleague: the migration planner**
+
+Your second colleague is a geographer. He thinks about the problem completely differently.
+
+Instead of asking what the intermediate density should be at each pixel, he asks: where did each person go? If you could label every person in the 1990 population and ask where their 2020 counterpart lives, you would have a transport map — a function that assigns to each 1990 location a 2020 destination. The intermediate distribution at time $t$ would then be straightforward: each person is at the location $(1-t) \times (\text{1990 location}) + t \times (\text{2020 location})$. At $t = 0$, everyone is at their 1990 location. At $t = 1$, everyone is at their 2020 location. At intermediate $t$, everyone is exactly $t$ fraction of the way along their individual trajectory from source to destination.
+
+This is displacement interpolation. Each grain of population mass travels along a straight line in geographic space from its starting location to its ending location, at constant speed, all grains moving simultaneously.
+
+The geographer draws this on the map. A person from Dhading moves toward Kathmandu. A person from Gorkha moves toward Pokhara. A person from the eastern hills moves toward the eastern Terai. The intermediate maps show genuine spatial movement — density flowing from the hills to the valleys, from the mountains to the Terai, in geographically coherent streams. The animation looks like what it is: a population reorganizing itself across a landscape.
+
+But the geographer immediately faces a harder question: which transport map should he use? Many different assignments of 1990 people to 2020 locations are consistent with the two density maps. A person from Dhading could go to Kathmandu, or to Birgunj, or to Biratnagar. The two maps do not uniquely determine where each person went — they only constrain the aggregate: the total number of people arriving at each 2020 location must match the 2020 density, and the total number of people leaving each 1990 location must match the 1990 density.
+
+---
+
+**The optimal assignment: the Brenier map as migration plan**
+
+This is the Monge problem in geographic disguise, and the answer from Chapter 1 applies directly. Among all valid migration plans — all transport maps that move the 1990 density to the 2020 density — use the one that minimizes the total migration cost, where cost is measured as population times squared distance traveled. This is the Brenier map $T^* = \nabla\phi$ for the quadratic cost — the unique optimal transport map that is the gradient of a convex potential $\phi$.
+
+The convex potential $\phi$ in the geography story is the migration value function — a scalar field over the 1990 population landscape whose gradient at each location tells you the optimal destination for the population at that location. The convexity of $\phi$ encodes the no-crossing principle: migration routes from the optimal plan never intersect. If a Dhading migrant is heading northeast to Kathmandu and a Sindhupalchok migrant is heading southwest to Chitwan, their routes cross, and swapping their destinations makes both journeys shorter. The optimal plan eliminates all such crossings.
+
+The geographer writes the intermediate distribution:
+
+$$\mu_t = (T_t)_\# \mu_{1990}, \quad T_t(x) = (1-t)x + t\nabla\phi(x)$$
+
+At each time $t$, the intermediate distribution is the pushforward of the 1990 density under the map $T_t$ — the map that moves each 1990 location $x$ exactly $t$ fraction of the way to its optimal 2020 destination $\nabla\phi(x)$. The intermediate map is not a pixel average. It is the 1990 population physically displaced by $t$ times its full migration distance.
+
+---
+
+**The no-crossing property and convexity of intermediate maps**
+
+Your consultant — the mathematician who has appeared in every chapter — now points out something remarkable about the intermediate maps $T_t$.
+
+The map $T_t(x) = (1-t)x + t\nabla\phi(x)$ is itself the gradient of a convex function. Specifically, it is the gradient of $(1-t)\frac{\|x\|^2}{2} + t\phi(x)$. You can verify this: the gradient of this function with respect to $x$ is $(1-t)x + t\nabla\phi(x) = T_t(x)$.
+
+Since $(1-t)\frac{\|x\|^2}{2} + t\phi(x)$ is a convex combination of the strictly convex function $\frac{\|x\|^2}{2}$ and the convex function $\phi(x)$, it is itself convex — strictly so for $t \in [0,1)$. This means $T_t$ is itself the gradient of a convex function — the Brenier map from $\mu_0 = \mu_{1990}$ to $\mu_t$.
+
+In geographic terms: at every intermediate time $t$, the map from the original 1990 population to the intermediate distribution is itself an optimal transport map. The migration plan at time $t$ is not just a fragment of the full migration — it is the complete optimal plan for the sub-journey from start to the $t$-fraction milestone. The path is not merely the shortest path between its endpoints. Every sub-path is the shortest path between its own endpoints. This is the geodesic property — and it is the precise mathematical content of why displacement interpolation is the straight line in Wasserstein space.
+
+---
+
+**The two pictures side by side: blurring versus flowing**
+
+Your cartographer's office now has two animations running side by side on the wall.
+
+The pixel mixer's animation: at $t = 0.5$, the hill districts show half their 1990 density and Kathmandu shows half its 2020 density simultaneously. The intermediate frame is a superposition — both distributions present at half-strength. Two populations occupying the same geographic space. No movement visible. Total population in the frame is the average of 1990 and 2020 totals — a number that never existed.
+
+The geographer's animation: at $t = 0.5$, each person is halfway along their optimal migration route. The hill districts show reduced density because their populations are in transit. The Kathmandu valley shows intermediate density because the migrants have not yet fully arrived. The total population in the frame is exactly the total population of Nepal — conserved at every moment, with no ghosts and no doubling.
+
+The difference is not visual polish. It is geometric honesty. The pixel mixer's interpolation is a straight line in the wrong space. The geographer's interpolation is a straight line in the right space — the Wasserstein space where the metric is defined by transportation cost, where straight lines are displacement interpolations, and where the geometry respects the physical constraint that population is a mass that moves through geographic space rather than a number that blurs across pixels.
+
+---
+
+**Otto's calculus: the Wasserstein space as a Riemannian manifold**
+
+Your consultant now reveals the full geometric picture.
+
+Think of the space of all possible population density maps of Nepal — all valid probability distributions over the geographic space — as a single geometric object. This space is infinite-dimensional: it is parameterized by a function (the density) rather than a finite list of coordinates. But it has a metric — the Wasserstein distance $W_2$ — and therefore a geometry.
+
+In this geometry, a tangent vector at a distribution $\mu$ is a velocity field $v: \mathbb{R}^2 \to \mathbb{R}^2$ — a vector assigned to each geographic location, describing the direction and speed at which the population at that location is moving. The continuity equation $\partial_t\mu_t + \nabla\cdot(\mu_t v_t) = 0$ is the conservation law that connects the velocity field to the changing density: the rate of change of density at each location equals the negative divergence of the population flux. This is the same continuity equation from fluid dynamics that you know from MATH 217 (ODEs and PDEs) — conservation of mass in a flowing fluid.
+
+The Riemannian metric on the Wasserstein space at a distribution $\mu$ is the $L^2(\mu)$-norm of the velocity field:
+
+$$g_\mu(v, v) = \int_{\mathbb{R}^2} \|v(x)\|^2 \, d\mu(x)$$
+
+The length of a path $\{\mu_t\}_{t\in[0,1]}$ in Wasserstein space is the integral of the speed:
+
+$$\text{Length}(\{\mu_t\}) = \int_0^1 \sqrt{g_{\mu_t}(v_t, v_t)} \, dt = \int_0^1 \left(\int \|v_t(x)\|^2 \, d\mu_t(x)\right)^{1/2} dt$$
+
+The geodesic — the shortest path — is the path that minimizes this length. And the minimizer is exactly the displacement interpolation: the path where every particle moves in a straight line at constant speed, with no acceleration, with the particle assignments given by the optimal transport plan.
+
+The velocity field along the geodesic is $v_t = (T^* - \text{id}) \circ T_t^{-1}$ — the vector field that points from each current location $T_t(x)$ toward its final destination $T^*(x)$, with constant velocity. This velocity field is itself the gradient of a convex function at each time — the gradient of the pressure field in the pressureless Euler equation of fluid dynamics. The geodesic equation in Wasserstein space is the pressureless Euler equation: particles move in straight lines because there is no pressure to deflect them.
+
+---
+
+**The break moment**
+
+Here is the naive assumption that breaks.
+
+You might think: the displacement interpolation always produces valid, well-behaved intermediate distributions. After all, it is a pushforward of a valid distribution under a smooth map — how could it fail to be well-behaved?
+
+It breaks when the intermediate map $T_t$ is not injective — when two different source locations map to the same intermediate location.
+
+For $t \in (0,1)$, the map $T_t(x) = (1-t)x + t\nabla\phi(x)$ is the gradient of $(1-t)\frac{\|x\|^2}{2} + t\phi(x)$. This function is strictly convex as long as the Hessian $(1-t)I + t\nabla^2\phi(x)$ is positive definite. When $\nabla^2\phi(x)$ has a negative eigenvalue at some point $x$ — when the Brenier potential is not uniformly convex — the Hessian of the intermediate potential can lose positive definiteness at some critical time $t_c < 1$, and at that moment the map $T_{t_c}$ has a zero Jacobian determinant. The map is no longer injective. Mass from different source locations collides at the same intermediate location. The intermediate density $\mu_{t_c}$ develops a singularity — an atom or a density that blows up — even though both $\mu$ and $\nu$ are smooth.
+
+In geographic terms: two different groups of migrants converge on the same location at the same intermediate time, producing a temporary spike in density that is an artifact of the straight-line trajectories, not a reflection of any genuine population event.
+
+This singularity formation is not a failure of the theory — it is a genuine geometric phenomenon. In the Riemannian geometry of Wasserstein space, it corresponds to the geodesic passing through a conjugate point — a point where nearby geodesics intersect, analogous to the focusing of light rays at a caustic. The displacement interpolation is still the geodesic, and it is still the correct geometric interpolation. The singularity is the Wasserstein-space analogue of a caustic in optics: geometrically precise, physically meaningful, and unavoidable when the transport map is not uniformly monotone.
+
+The practical fix for computational applications is entropic regularization — replacing the sharp Brenier map $T^*$ with the smoothed Sinkhorn coupling $P^*_\varepsilon$, which spreads each source location's mass across multiple destinations and prevents the sharp focusing that causes singularities. The entropic displacement interpolation never develops singularities because the smoothed coupling prevents mass from all converging to a single point.
+
+---
+
+Hold five pictures simultaneously as you move to the mathematics.
+
+The pixel mixer's animation: cross-fading density maps, straight line in the wrong function space, ghostly superposition of two populations that never moved — the linear interpolation $(1-t)\mu + t\nu$ in the flat vector space of measures.
+
+The geographer's animation: each grain of population traveling along its straight-line optimal migration route, arriving at its destination at $t = 1$, mass conserved at every intermediate time — the displacement interpolation $\mu_t = (T_t)_\#\mu$ with $T_t = (1-t)\text{id} + t\nabla\phi$.
+
+The geodesic property: every intermediate map $T_t$ is itself the gradient of a convex function and therefore the optimal transport map from $\mu$ to $\mu_t$ — the path is shortest not just between its endpoints but between every pair of intermediate points.
+
+Otto's Riemannian calculus: the Wasserstein space as an infinite-dimensional manifold, tangent vectors as velocity fields satisfying the continuity equation, the Riemannian metric as the $L^2(\mu)$-norm of velocities, geodesics as displacement interpolations satisfying the pressureless Euler equation.
+
+The break moment: singularity formation when $T_t$ loses injectivity at a conjugate point, the Wasserstein-space analogue of a caustic, resolved in computation by entropic regularization that prevents mass focusing.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the precise definition of displacement interpolation via optimal couplings, the Brenier map simplification for absolutely continuous measures, the constant-speed geodesic property and its proof, Otto's calculus and the Riemannian structure of Wasserstein space, the geodesic equation as the pressureless Euler equation, and the regularity theory including conjugate points and singularity formation.
+
+### Displacement Interpolation — Precise Definition
+
+Let $\mu, \nu \in \mathcal{P}_2(\mathbb{R}^n)$ and let $\pi \in \Pi(\mu,\nu)$ be any coupling. Define the **linear interpolation map** at time $t \in [0,1]$:
+
+$$\iota_t: \mathbb{R}^n \times \mathbb{R}^n \to \mathbb{R}^n, \qquad \iota_t(x,y) = (1-t)x + ty$$
+
+The **interpolated distribution** at time $t$ induced by $\pi$ is the pushforward:
+
+$$\mu_t^\pi = (\iota_t)_\# \pi \in \mathcal{P}_2(\mathbb{R}^n)$$
+
+This is the distribution of the random variable $(1-t)X + tY$ where $(X,Y) \sim \pi$. At $t=0$: $\mu_0^\pi = (\text{proj}_x)_\#\pi = \mu$. At $t=1$: $\mu_1^\pi = (\text{proj}_y)_\#\pi = \nu$.
+
+**Definition (Displacement Interpolation).** The **displacement interpolation** between $\mu$ and $\nu$ is the curve $\{\mu_t\}_{t\in[0,1]}$ induced by the **optimal coupling** $\pi^* \in \Pi(\mu,\nu)$:
+
+$$\mu_t = (\iota_t)_\# \pi^*$$
+
+where $\pi^*$ minimizes $\int\|x-y\|^2\,d\pi$ over $\Pi(\mu,\nu)$.
+
+**Why optimality matters.** For any coupling $\pi \in \Pi(\mu,\nu)$, the path $\{\mu_t^\pi\}$ connects $\mu$ to $\nu$. But only the optimal coupling $\pi^*$ produces a path of minimum length in the Wasserstein metric. Non-optimal couplings produce longer paths — they route mass inefficiently, creating detours in Wasserstein space.
+
+---
+
+### The Brenier Map Simplification
+
+**Theorem.** When $\mu \ll \lambda^n$ (absolutely continuous), the optimal coupling $\pi^* = (\text{id}, T^*)_\#\mu$ is supported on the graph of the Brenier map $T^* = \nabla\phi$. The displacement interpolation simplifies to:
+
+$$\mu_t = (T_t)_\#\mu, \qquad T_t(x) = (1-t)x + t\nabla\phi(x)$$
+
+**Proof.** Since $\pi^* = (\text{id},T^*)_\#\mu$ is concentrated on $\{(x,T^*(x))\}$, the interpolation map $\iota_t(x,y) = (1-t)x+ty$ restricted to this graph gives $\iota_t(x,T^*(x)) = (1-t)x + tT^*(x) = T_t(x)$. Therefore $\mu_t = (\iota_t)_\#\pi^* = (T_t)_\#\mu$. $\square$
+
+**Convexity of the intermediate potential.** Define:
+
+$$\phi_t(x) = (1-t)\frac{\|x\|^2}{2} + t\phi(x)$$
+
+Then $\nabla\phi_t(x) = (1-t)x + t\nabla\phi(x) = T_t(x)$. Since $\phi_t$ is a convex combination of $\frac{\|x\|^2}{2}$ (strictly convex) and $\phi$ (convex), it is strictly convex for $t \in [0,1)$. Therefore $T_t = \nabla\phi_t$ is itself the gradient of a convex function — a Brenier map — for every $t \in [0,1)$.
+
+**Corollary.** The map $T_t: \mathbb{R}^n \to \mathbb{R}^n$ is the optimal transport map from $\mu$ to $\mu_t$ for every $t \in [0,1)$. The geodesic $\{\mu_t\}$ is a sequence of distributions each optimally connected to $\mu$ — and by the group property of Brenier maps, optimally connected to each other.
+
+---
+
+### The Constant-Speed Geodesic Property
+
+**Definition (Wasserstein geodesic).** A curve $\{\mu_t\}_{t\in[0,1]}$ in $\mathcal{P}_2(\mathbb{R}^n)$ is a **constant-speed geodesic** if:
+
+$$W_2(\mu_s, \mu_t) = |t-s| \cdot W_2(\mu_0, \mu_1) \quad \forall s,t \in [0,1]$$
+
+The curve travels at constant speed equal to $W_2(\mu_0,\mu_1)$, and the Wasserstein distance between any two points on the curve equals the product of the speed and the elapsed time.
+
+**Theorem (Displacement interpolation is a constant-speed geodesic).** The displacement interpolation $\mu_t = (T_t)_\#\mu$ with $T_t = (1-t)\text{id} + t\nabla\phi$ is a constant-speed geodesic in $(\mathcal{P}_2(\mathbb{R}^n), W_2)$.
+
+**Proof.** For $0 \leq s < t \leq 1$, the optimal transport map from $\mu_s$ to $\mu_t$ is $(T_t \circ T_s^{-1})$ — the composition of the Brenier map from $\mu$ to $\mu_t$ with the inverse of the Brenier map from $\mu$ to $\mu_s$. This composition is:
+
+$$T_t \circ T_s^{-1}(z) = \left(1 - \frac{t-s}{1-s}\right)z + \frac{t-s}{1-s}T^*(T_s^{-1}(z))$$
+
+which is itself the gradient of a convex function (being a convex combination of the identity and a Brenier map). Therefore:
+
+$$W_2^2(\mu_s, \mu_t) = \int \|T_t(x) - T_s(x)\|^2\,d\mu(x) = \int \|(t-s)(T^*(x)-x)\|^2\,d\mu(x)$$
+
+$$= (t-s)^2 \int \|T^*(x) - x\|^2\,d\mu(x) = (t-s)^2 W_2^2(\mu_0,\mu_1)$$
+
+Taking square roots: $W_2(\mu_s,\mu_t) = (t-s)W_2(\mu_0,\mu_1)$. $\square$
+
+**Uniqueness.** When $\mu \ll \lambda^n$, the geodesic is unique. This follows from the uniqueness of the Brenier map (Theorem of Chapter 1, Topic 1) and the fact that every geodesic in $\mathcal{P}_2(\mathbb{R}^n)$ between two absolutely continuous measures must arise from an optimal transport map.
+
+---
+
+### The $W_2$ Distance Formula Along the Geodesic
+
+An important consequence of the geodesic property is the McCann interpolation formula. For $\mu_t = (T_t)_\#\mu$ with $T_t = (1-t)\text{id} + t\nabla\phi$:
+
+$$W_2^2(\mu_s, \mu_t) = (t-s)^2 W_2^2(\mu,\nu) = (t-s)^2 \int \|\nabla\phi(x) - x\|^2\,d\mu(x)$$
+
+Setting $s=0$:
+
+$$W_2^2(\mu, \mu_t) = t^2 W_2^2(\mu,\nu)$$
+
+The intermediate distributions are at fraction $t$ of the total Wasserstein distance from the source. The speed along the geodesic is constant and equal to $W_2(\mu,\nu)$.
+
+**Comparison with linear interpolation.** For the linear interpolation $\tilde\mu_t = (1-t)\mu + t\nu$:
+
+$$W_2(\mu, \tilde\mu_t) \leq t \cdot W_2(\mu,\nu) \quad \text{(triangle inequality)}$$
+
+but equality need not hold, and the path $\{\tilde\mu_t\}$ is generally not a geodesic. The linear interpolation takes a shortcut through the wrong geometry, producing a path that is shorter in the flat function space but longer — or simply different, and geometrically incorrect — in Wasserstein space.
+
+---
+
+### Otto's Calculus — The Riemannian Structure of Wasserstein Space
+
+Otto's calculus, developed by Felix Otto (2001), provides a formal Riemannian structure on $\mathcal{P}_2(\mathbb{R}^n)$ that makes the displacement interpolation the geodesic in a rigorous infinitesimal sense.
+
+**Tangent space.** The tangent space at $\mu \in \mathcal{P}_2(\mathbb{R}^n)$ is identified with the space of velocity fields:
+
+$$T_\mu\mathcal{P}_2 = \overline{\{\nabla\psi : \psi \in C_c^\infty(\mathbb{R}^n)\}}^{L^2(\mu)}$$
+
+the $L^2(\mu)$-closure of gradients of smooth compactly supported functions. Tangent vectors are gradient vector fields because the continuity equation $\partial_t\mu + \nabla\cdot(\mu v) = 0$ — which constrains how $\mu$ can evolve — has solutions with minimum $L^2(\mu)$-norm precisely when $v = \nabla\psi$ is a gradient field (by the Helmholtz decomposition: the curl-free component of $v$ has strictly smaller $L^2(\mu)$-norm than the full $v$ if $v$ has a rotational component).
+
+**The Otto metric.** For tangent vectors $v = \nabla\psi_1$ and $w = \nabla\psi_2$ at $\mu$:
+
+$$g_\mu(\nabla\psi_1, \nabla\psi_2) = \int_{\mathbb{R}^n} \langle\nabla\psi_1(x), \nabla\psi_2(x)\rangle\,d\mu(x)$$
+
+This is the $L^2(\mu)$ inner product of two gradient vector fields. The norm $\|v\|_{T_\mu} = \sqrt{g_\mu(v,v)} = \left(\int\|\nabla\psi\|^2\,d\mu\right)^{1/2}$ is the $L^2(\mu)$ norm of the velocity field.
+
+**Geodesic equation.** A curve $\{\mu_t\}$ with velocity field $\{v_t\}$ (satisfying $\partial_t\mu_t + \nabla\cdot(\mu_t v_t) = 0$) is a geodesic in the Otto metric if and only if:
+
+$$\frac{D v_t}{dt} = 0$$
+
+where $D/dt$ is the covariant derivative in the Otto metric. In Euclidean coordinates on $\mathbb{R}^n$, this geodesic equation is the **pressureless Euler equation**:
+
+$$\partial_t v_t + (v_t \cdot \nabla) v_t = 0$$
+
+coupled with the continuity equation $\partial_t\mu_t + \nabla\cdot(\mu_t v_t) = 0$.
+
+**The displacement interpolation satisfies the geodesic equation.** Along the geodesic $\mu_t = (T_t)_\#\mu$ with $T_t = (1-t)\text{id} + t\nabla\phi$, the velocity field is:
+
+$$v_t(T_t(x)) = \frac{d}{dt}T_t(x) = \nabla\phi(x) - x$$
+
+In Eulerian coordinates (as a function of the current position $z = T_t(x)$):
+
+$$v_t(z) = (\nabla\phi - \text{id})(T_t^{-1}(z))$$
+
+The material derivative $(\partial_t + v_t\cdot\nabla)v_t$ of this field is:
+
+$$\frac{d}{dt}v_t(T_t(x)) = \frac{d}{dt}(\nabla\phi(x) - x) = 0$$
+
+since $\nabla\phi(x) - x$ is independent of $t$. Therefore $v_t$ satisfies the pressureless Euler equation — the displacement interpolation is a geodesic in the Otto metric. $\square$
+
+---
+
+### The Continuity Equation and Benamou-Brenier Formula
+
+The **Benamou-Brenier formula** expresses $W_2^2(\mu,\nu)$ as a dynamic optimization:
+
+$$W_2^2(\mu,\nu) = \inf_{\{\mu_t,v_t\}} \int_0^1 \int_{\mathbb{R}^n} \|v_t(x)\|^2\,d\mu_t(x)\,dt$$
+
+where the infimum is over all pairs $(\mu_t, v_t)$ satisfying the continuity equation $\partial_t\mu_t + \nabla\cdot(\mu_t v_t) = 0$ with boundary conditions $\mu_0 = \mu$ and $\mu_1 = \nu$.
+
+This is the **fluid dynamic formulation of optimal transport**: the squared Wasserstein distance equals the minimum kinetic energy required to continuously deform $\mu$ into $\nu$, where kinetic energy at time $t$ is $\frac{1}{2}\int\|v_t\|^2\,d\mu_t$ — the $L^2(\mu_t)$-norm of the velocity field squared.
+
+**The minimizer.** The infimum is attained by the displacement interpolation $\mu_t = (T_t)_\#\mu$ with constant velocity field $v_t(T_t(x)) = \nabla\phi(x) - x$. The kinetic energy is constant along the geodesic:
+
+$$\int\|v_t\|^2\,d\mu_t = \int\|\nabla\phi(x)-x\|^2\,d\mu = W_2^2(\mu,\nu) \quad \forall t\in[0,1]$$
+
+The Benamou-Brenier formula is the bridge between the static optimal transport problem (minimizing coupling cost) and the dynamic problem (minimizing kinetic energy of a continuous deformation). Both have the same value $W_2^2(\mu,\nu)$, and both are solved by the displacement interpolation.
+
+---
+
+### Regularity and Singularity Formation
+
+**The Jacobian of $T_t$.** The intermediate map $T_t = \nabla\phi_t$ with $\phi_t = (1-t)\frac{\|x\|^2}{2} + t\phi$ has Jacobian:
+
+$$DT_t(x) = \nabla^2\phi_t(x) = (1-t)I + t\nabla^2\phi(x)$$
+
+The density of $\mu_t$ (when $\mu$ has density $f_0$) satisfies the change-of-variables formula:
+
+$$f_t(T_t(x)) = \frac{f_0(x)}{\det(DT_t(x))} = \frac{f_0(x)}{\det((1-t)I + t\nabla^2\phi(x))}$$
+
+**Singularity formation.** A singularity occurs when $\det(DT_t(x)) = 0$ at some point $x$ — when the Hessian $(1-t)I + t\nabla^2\phi(x)$ loses positive definiteness. Let $\lambda_{\min}(x)$ denote the smallest eigenvalue of $\nabla^2\phi(x)$. The Jacobian vanishes when:
+
+$$(1-t) + t\lambda_{\min}(x) = 0 \iff t_c(x) = \frac{1}{1-\lambda_{\min}(x)}$$
+
+A singularity forms at time $t_c(x)$ if $\lambda_{\min}(x) < 0$ (non-convex Brenier potential) and $t_c(x) \in (0,1)$ (the singularity occurs before the endpoint). When $\nabla^2\phi(x) \succ 0$ everywhere — when $\phi$ is uniformly convex — no singularity forms: all eigenvalues of $(1-t)I + t\nabla^2\phi(x)$ are positive for all $t\in[0,1]$.
+
+**Conjugate points.** The time $t_c = \min_x t_c(x)$ at which the first singularity forms is the **first conjugate time** along the geodesic — the Wasserstein-space analogue of the conjugate point on a Riemannian geodesic, where nearby geodesics focus and the exponential map loses injectivity. Beyond the conjugate time, the displacement interpolation continues to be the geodesic, but the density $f_t$ is no longer a smooth function — it develops atoms or blow-up concentrations at the caustic.
+
+**Regularity theorem.** If $\mu$ and $\nu$ both have densities bounded above and below on compact convex supports, then $\phi$ is $C^{1,\alpha}$ for some $\alpha > 0$ (Caffarelli's regularity theory), and singularities are generically absent on compact regions. The geodesic is smooth in this case.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 217 (ODEs and PDEs), the **continuity equation** $\partial_t\rho + \nabla\cdot(\rho v) = 0$ is the conservation law for a scalar density $\rho$ transported by a velocity field $v$. It governs the evolution of any conserved quantity — mass, charge, probability — under a flow. The displacement interpolation satisfies the continuity equation with the constant velocity field $v_t(z) = (\nabla\phi-\text{id})(T_t^{-1}(z))$, confirming that it is a genuine physical flow of mass through space, not a mathematical superposition. The pressureless Euler equation $\partial_t v + (v\cdot\nabla)v = 0$ — the geodesic equation in Wasserstein space — is the inviscid Burgers equation in one dimension, whose solutions are known to develop shocks in finite time. The singularity formation in the displacement interpolation is the Wasserstein-space manifestation of shock formation in the Burgers equation: the same mathematics, interpreted geometrically rather than analytically.
+
+In MATH 304 (Computational Operations Research), the **Benamou-Brenier formula** converts the static optimal transport problem (minimize $\int\|x-y\|^2\,d\pi$ over couplings $\pi$) into a dynamic control problem (minimize $\int_0^1\int\|v_t\|^2\,d\mu_t\,dt$ over flows). This is the continuous-time analogue of the network flow formulation of the transportation LP from MATH 304: instead of optimizing a single assignment of supply to demand, you optimize a time-continuous flow of mass through a network, with the kinetic energy playing the role of the transportation cost. The dynamic formulation enables numerical methods for computing $W_2$ that avoid the $O(n^2)$ cost matrix entirely, working instead with PDE solvers on the fluid dynamic formulation.
+
+In MATH 322 (Combinatorics) and COMP 323 (Graph Theory), the **displacement interpolation** on discrete spaces — finite metric spaces or graphs — is the discrete geodesic in the graph Wasserstein space. The intermediate distributions are probability vectors on the graph nodes, and the displacement interpolation moves probability mass along the graph's shortest paths. The geodesic equation on graphs is the discrete pressureless Euler equation, and the conjugate points correspond to nodes where multiple shortest paths from different sources meet — a graph-theoretic focus phenomenon analogous to the Riemannian caustic.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Survey Department cartography story has a precise mathematical address. Let us walk through them one by one until the pixel mixer, the geographer, the migration map, Otto's calculus, and the singularity formation are completely fused with the formalism.
+
+---
+
+**The two population density maps — the 1990 census map $\mu_{1990}$ and the 2020 census map $\mu_{2020}$ — are the two probability measures $\mu, \nu \in \mathcal{P}_2(\mathbb{R}^2)$, absolutely continuous with respect to Lebesgue measure on the geographic space $\mathbb{R}^2$, with densities $f_0 = d\mu/d\lambda^2$ and $f_1 = d\nu/d\lambda^2$ representing population density at each geographic location.** The absolute continuity of both maps — the fact that population is spread continuously across the landscape rather than concentrated at discrete towns — is the mathematical condition $\mu \ll \lambda^2$ and $\nu \ll \lambda^2$ that guarantees the Brenier theorem applies: the optimal transport map $T^* = \nabla\phi$ exists, is unique $\mu$-almost everywhere, and determines the displacement interpolation completely. The total mass condition $\mu(\mathbb{R}^2) = \nu(\mathbb{R}^2) = 1$ is the normalization that makes both maps probability distributions — the total population is conserved between census years, with emigration and immigration ignored in the geometric interpolation.
+
+**The pixel mixer's animation — taking the weighted average $(1-t)\mu + t\nu$ at each geographic pixel — is the linear interpolation in the flat vector space of signed measures, the straight line in the wrong space.** The interpolated distribution $(1-t)\mu + t\nu$ is a valid probability measure for every $t \in [0,1]$ — it is non-negative and integrates to one. But it is not a geodesic in Wasserstein space. Its length in the Wasserstein metric satisfies $\text{Length}(\{(1-t)\mu+t\nu\}_{t\in[0,1]}) \geq W_2(\mu,\nu)$, with strict inequality in general — the linear path is longer than the geodesic. At $t = 0.5$, the linear interpolation assigns density $\frac{1}{2}f_0(x) + \frac{1}{2}f_1(x)$ to each location $x$ — half the 1990 density plus half the 2020 density, simultaneously present at every location. The ghost population — the superposition of two populations at half-strength — is the mathematical consequence of interpolating in the function space $L^1(\lambda^2)$ rather than in the Wasserstein space $\mathcal{P}_2(\mathbb{R}^2)$. The two spaces have completely different notions of straight line, and the linear interpolation picks the straight line of the wrong one.
+
+---
+
+**The geographer's approach — assigning each 1990 person a 2020 destination and placing everyone $t$ fraction of the way along their trajectory at intermediate time $t$ — is the construction of the interpolated distribution $\mu_t = (\iota_t)_\#\pi^*$ where $\iota_t(x,y) = (1-t)x + ty$ is the linear interpolation map and $\pi^* \in \Pi(\mu,\nu)$ is the optimal coupling.** The random variable $(1-t)X + tY$ with $(X,Y) \sim \pi^*$ is the geographic location of a randomly chosen person at intermediate time $t$: $X$ is their 1990 location, $Y$ is their 2020 destination, and $(1-t)X + tY$ is the point exactly $t$ fraction of the way from $X$ to $Y$ along the straight-line migration path. The distribution of this random variable is $\mu_t = (\iota_t)_\#\pi^*$ — the pushforward of the optimal coupling under the linear interpolation map. The key word is optimal: using the optimal coupling $\pi^*$ rather than an arbitrary coupling $\pi \in \Pi(\mu,\nu)$ is what makes the path a geodesic rather than merely a valid path. A suboptimal coupling routes mass inefficiently, creating crossing migration routes that increase path length in Wasserstein space.
+
+**The total population conservation at every intermediate time — the fact that the geographer's animation never creates ghost population or double-counts — is the property that $\mu_t(\mathbb{R}^2) = 1$ for all $t \in [0,1]$, which follows immediately from $\mu_t = (\iota_t)_\#\pi^*$ being a pushforward of a probability measure.** The pushforward of a probability measure is always a probability measure: $\mu_t(\mathbb{R}^2) = \pi^*((\iota_t)^{-1}(\mathbb{R}^2)) = \pi^*(\mathbb{R}^2 \times \mathbb{R}^2) = 1$. The mass conservation is not a modelling assumption — it is a theorem about pushforward measures, the same push-forward formula from Chapter 1 of Phase 0 that you applied to define the Monge problem's push-forward constraint $T_\#\mu = \nu$. The pixel mixer's interpolation $(1-t)\mu + t\nu$ also integrates to one — mass conservation holds trivially for convex combinations of probability measures — but mass conservation alone does not guarantee geometric honesty. The displacement interpolation satisfies a stronger property: mass is conserved not just globally but continuously along spatial trajectories.
+
+---
+
+**The optimal migration plan — the Brenier map $T^* = \nabla\phi$ from the 1990 density to the 2020 density for the quadratic cost — is the transport map that minimizes total squared migration distance $\int\|x - T^*(x)\|^2\,d\mu(x)$ subject to $(T^*)_\#\mu = \nu$.** The convex potential $\phi: \mathbb{R}^2 \to \mathbb{R}$ is the migration value function — the scalar field whose gradient at each 1990 location specifies the optimal 2020 destination for the population at that location. The existence and uniqueness of $T^* = \nabla\phi$ follow from the Brenier theorem of Chapter 1, Topic 1: since $\mu \ll \lambda^2$, the unique optimal Monge map is the gradient of a convex function. The no-crossing property of the optimal migration routes — the fact that the routes of $T^*$ never intersect geographically — is the cyclical monotonicity of the Brenier map: for any finite collection of source-destination pairs $(x_i, T^*(x_i))$ in the optimal plan, $\sum_i\|x_i - T^*(x_i)\|^2 \leq \sum_i\|x_i - T^*(x_{\sigma(i)})\|^2$ for any permutation $\sigma$. In the migration story, this says swapping any two migrants' destinations always increases the total squared distance — the original assignment is globally efficient.
+
+**The intermediate displacement map $T_t(x) = (1-t)x + t\nabla\phi(x)$ — placing each 1990 person $x$ at the point $t$ fraction of the way to their optimal 2020 destination $\nabla\phi(x)$ — is the gradient of the intermediate convex potential $\phi_t(x) = (1-t)\frac{\|x\|^2}{2} + t\phi(x)$.** The verification is direct: $\nabla\phi_t(x) = (1-t)x + t\nabla\phi(x) = T_t(x)$. The convexity of $\phi_t$ for $t \in [0,1)$ follows from the convex combination structure: $\nabla^2\phi_t(x) = (1-t)I + t\nabla^2\phi(x)$, which is positive definite as long as the eigenvalues of $t\nabla^2\phi(x)$ are greater than $-(1-t)$ — guaranteed when $\phi$ is convex ($\nabla^2\phi \succeq 0$) and $t < 1$. The strict convexity of $\phi_t$ for $t \in [0,1)$ means $T_t = \nabla\phi_t$ is itself a Brenier map — the unique optimal transport map from $\mu$ to $\mu_t$. Every intermediate distribution $\mu_t$ is optimally connected not just to $\mu$ and $\nu$ but to every other $\mu_s$ along the geodesic. This is the geodesic property: the path is shortest between every pair of its points, not just between its endpoints.
+
+---
+
+**The constant-speed geodesic property — $W_2(\mu_s, \mu_t) = |t-s|W_2(\mu,\nu)$ for all $s,t \in [0,1]$ — is derived from the computation $W_2^2(\mu_s,\mu_t) = \int\|T_t(x) - T_s(x)\|^2\,d\mu(x) = (t-s)^2\int\|\nabla\phi(x)-x\|^2\,d\mu(x) = (t-s)^2W_2^2(\mu,\nu)$.** The key step is that $T_t(x) - T_s(x) = (t-s)(\nabla\phi(x) - x)$ — the displacement between two intermediate positions is exactly $(t-s)$ times the total migration displacement $\nabla\phi(x) - x$. This is the constant-velocity property: each person moves at constant speed $\|\nabla\phi(x) - x\|$ along their straight-line trajectory, arriving at their destination at $t=1$ having traveled at constant rate. The Wasserstein distance between intermediate distributions $\mu_s$ and $\mu_t$ equals the product of the elapsed time $|t-s|$ and the total Wasserstein distance $W_2(\mu,\nu)$ — the path is parameterized at constant speed, and therefore it is a constant-speed geodesic in the metric space $(\mathcal{P}_2(\mathbb{R}^2), W_2)$.
+
+**The uniqueness of the geodesic — the fact that the displacement interpolation is the only constant-speed geodesic between $\mu$ and $\nu$ when $\mu \ll \lambda^n$ — follows from the uniqueness of the Brenier map and the uniqueness of the optimal coupling.** Any constant-speed geodesic between $\mu$ and $\nu$ in $\mathcal{P}_2(\mathbb{R}^n)$ must be induced by an optimal coupling $\pi^*$ — a coupling that minimizes transport cost. When $\mu \ll \lambda^n$, the Brenier theorem guarantees the optimal coupling is unique and concentrated on the graph of $\nabla\phi$. Therefore the displacement interpolation is uniquely determined by the unique optimal coupling. Two different geodesics between $\mu$ and $\nu$ would require two different optimal couplings, which contradicts uniqueness. In the migration story: there is exactly one optimal migration plan, and it determines exactly one sequence of intermediate population distributions.
+
+---
+
+**Otto's tangent space at $\mu$ — the $L^2(\mu)$-closure of gradient vector fields $\nabla\psi$ — is the space of velocity fields that can instantaneously move population mass in a mass-conserving way, with the curl-free (gradient) component being the unique minimum-energy representative.** The Helmholtz decomposition of any vector field $v$ on $\mathbb{R}^n$ into a curl-free component $\nabla\psi$ and a divergence-free component $w$ (with $\nabla\cdot w = 0$) shows that the divergence-free component $w$ contributes to the continuity equation $\partial_t\mu + \nabla\cdot(\mu v) = 0$ — it moves mass — but has $\int\|w\|^2\,d\mu > 0$ additional kinetic energy compared to the gradient component $\nabla\psi$ that produces the same mass movement. The minimum-energy velocity field that achieves a given infinitesimal mass displacement is always a gradient field. This is why tangent vectors in Wasserstein space are gradient fields: they are the minimum-energy representatives of infinitesimal mass displacements, exactly as tangent vectors on a Riemannian manifold are the minimum-norm representatives of infinitesimal displacements on the manifold.
+
+**The Otto metric $g_\mu(\nabla\psi_1, \nabla\psi_2) = \int\langle\nabla\psi_1,\nabla\psi_2\rangle\,d\mu$ — the $L^2(\mu)$ inner product of two gradient velocity fields — is the kinetic energy inner product, measuring the cost of moving population mass simultaneously in the directions specified by $\nabla\psi_1$ and $\nabla\psi_2$.** The norm $\|\nabla\psi\|_{T_\mu} = (\int\|\nabla\psi\|^2\,d\mu)^{1/2}$ is the square root of the kinetic energy of the velocity field $\nabla\psi$ weighted by the current population distribution $\mu$. Moving a dense population at high speed is expensive — the $d\mu$ weighting penalizes high velocity in densely populated regions proportionally to their population. This is the Riemannian metric that makes $W_2$ the geodesic distance: the length of a path $\{\mu_t\}$ is $\int_0^1\|\nabla\psi_t\|_{T_{\mu_t}}\,dt$ — the total kinetic energy accumulated along the path — and this length is minimized by the displacement interpolation, which moves every particle at constant minimum velocity along a straight line.
+
+**The continuity equation $\partial_t\mu_t + \nabla\cdot(\mu_t v_t) = 0$ — the mass conservation law connecting the evolving population density to the migration velocity field — is the PDE from MATH 217 (ODEs and PDEs) that governs every physical flow of a conserved scalar quantity.** Along the geodesic $\mu_t = (T_t)_\#\mu$ with velocity field $v_t(T_t(x)) = \nabla\phi(x) - x$, the continuity equation holds by the pushforward density formula: $f_t(T_t(x))\det(DT_t(x)) = f_0(x)$, which differentiated with respect to $t$ gives exactly $\partial_t f_t + \nabla\cdot(f_t v_t) = 0$. In the geography story: the rate of change of population density at a location equals the negative divergence of the population flux — population accumulates where migrants are converging and depletes where migrants are departing. The continuity equation is the mathematical statement that no population is created or destroyed during the migration, only redistributed.
+
+**The pressureless Euler equation $\partial_t v_t + (v_t\cdot\nabla)v_t = 0$ — the geodesic equation in Wasserstein space — is the statement that the migration velocity of each person is constant along their trajectory: no acceleration, no pressure, no external force.** The material derivative $(\partial_t + v_t\cdot\nabla)v_t = 0$ means that the velocity of the fluid parcel currently at position $z$ does not change as time evolves — each migrant travels at constant velocity $\nabla\phi(x) - x$ from their 1990 location $x$ to their 2020 destination $\nabla\phi(x)$, without speeding up or slowing down. This is the pressureless condition: in a fluid with pressure, the pressure gradient $-\nabla p$ appears on the right-hand side of the Euler equation as an acceleration force. Setting $p = 0$ removes all forces and leaves pure inertial motion — straight-line travel at constant speed. The geodesic equation is Newton's first law in Wasserstein space: particles move in straight lines because nothing deflects them.
+
+---
+
+**The Benamou-Brenier formula $W_2^2(\mu,\nu) = \inf\int_0^1\int\|v_t\|^2\,d\mu_t\,dt$ — expressing the squared Wasserstein distance as the minimum kinetic energy of a continuous mass-conserving flow — is the bridge between the static optimal transport problem of Chapter 1 and the dynamic fluid-mechanics interpretation of Chapter 3.** The static problem minimizes $\int\|x-y\|^2\,d\pi$ over couplings $\pi$ — a single-time-step assignment cost. The dynamic problem minimizes $\int_0^1\int\|v_t\|^2\,d\mu_t\,dt$ over continuous flows — a cumulative kinetic energy. Both have the same optimal value $W_2^2(\mu,\nu)$, and both are minimized by the displacement interpolation with its constant velocity field. In MATH 304 terms: the static problem is the transportation LP (one assignment, minimize cost), and the dynamic problem is the network flow LP (continuous flow through time, minimize cumulative cost). Strong duality of LP makes these equivalent — the static and dynamic formulations are primal and dual to each other in the infinite-dimensional sense, unified by the Benamou-Brenier formula.
+
+---
+
+**The break moment — singularity formation when the Jacobian $\det(DT_t(x)) = \det((1-t)I + t\nabla^2\phi(x))$ vanishes at some conjugate time $t_c(x) = 1/(1-\lambda_{\min}(x))$ — is the Wasserstein-space manifestation of caustic formation in geometric optics and shock formation in the Burgers equation from MATH 217.** When $\lambda_{\min}(x) < 0$ — when the Brenier potential $\phi$ is not uniformly convex at $x$ — the intermediate Hessian $(1-t)I + t\nabla^2\phi(x)$ has a zero eigenvalue at $t_c(x) < 1$. At this moment, the map $T_{t_c}$ has zero Jacobian — it squashes a neighborhood of $x$ onto a lower-dimensional set. Mass from a two-dimensional region maps to a one-dimensional curve or a single point, creating an atom in the intermediate distribution $\mu_{t_c}$ — a concentration of population mass that is a genuine singularity of the density $f_{t_c}$. In the geography story: two groups of migrants converging on the same intermediate location at the same moment create a population spike that is a mathematical artifact of straight-line trajectories, not a physical event. The entropic regularization fix — replacing $T^*$ with the smoothed Sinkhorn coupling $P^*_\varepsilon$ — spreads each person's destination across multiple locations with Gibbs weights $e^{-\|x-y\|^2/\varepsilon}$, preventing the sharp focusing that causes singularity formation. The regularized displacement interpolation is everywhere smooth for $\varepsilon > 0$, developing singularities only in the limit $\varepsilon \to 0$ when the coupling sharpens to the deterministic Brenier map.
+
+---
+
+**The connection to MATH 217 (ODEs and PDEs) is complete and explicit.** The continuity equation $\partial_t\mu_t + \nabla\cdot(\mu_t v_t) = 0$ is the conservation law you studied for scalar transport — mass, charge, probability density — under a velocity field. The pressureless Euler equation $\partial_t v_t + (v_t\cdot\nabla)v_t = 0$ is the inviscid Burgers equation in one dimension, whose solutions you analyzed for shock formation via the method of characteristics. The displacement interpolation is the classical solution of the Burgers equation along characteristics — each characteristic is a migrant's straight-line trajectory $x + t(\nabla\phi(x)-x)$, and characteristics crossing corresponds to the conjugate-point singularity. The Monge-Ampère equation $\det(\nabla^2\phi_t) = f_0/f_t\circ T_t$ governing the intermediate density is the fully nonlinear PDE from Chapter 1 of Phase 1, now appearing as a transport equation along the geodesic. Every PDE tool from MATH 217 — method of characteristics, conservation laws, weak solutions, shock conditions — has a Wasserstein-space interpretation in the displacement interpolation.
+
+**The connection to MATH 304 (Computational Operations Research) closes through the Benamou-Brenier dynamic formulation.** The network flow LP from MATH 304 — minimizing flow cost over a time-extended network subject to flow conservation at each node — is the discrete-time, discrete-space version of the Benamou-Brenier variational problem. The continuous flow $(\mu_t, v_t)$ satisfying $\partial_t\mu_t + \nabla\cdot(\mu_t v_t) = 0$ is the infinite-dimensional generalization of a network flow: mass is conserved at every spatial location at every time, and the kinetic energy $\int\|v_t\|^2\,d\mu_t$ is the instantaneous flow cost. The LP duality between the static Kantorovich problem and the dynamic Benamou-Brenier problem is the continuous analogue of the LP duality between the transportation problem and the network flow problem in MATH 304.
+
+---
+
+**Looking forward across the roadmap**, the displacement interpolation is the geometric object that unifies Phase 1 with Phase 3. In Topic 2 of Chapter 3, the Wasserstein barycenter is the Fréchet mean in Wasserstein space — defined as the distribution that minimizes the sum of squared Wasserstein distances to a collection of input distributions, computed by iterating displacement interpolations across multiple marginals simultaneously. In Phase 3, the Neural ODE $dx/dt = f(x,t,\theta)$ is a parametric velocity field satisfying the continuity equation — a learned displacement interpolation from noise to data. The flow matching algorithm trains $f$ to match the velocity field $v_t = \nabla\phi - \text{id}$ of the optimal transport displacement interpolation, making the learned generative flow as straight as possible — minimizing the kinetic energy of the learned trajectory, converging to the Brenier map in the limit of infinite data and model capacity. The rectified flow algorithm of Phase 3 is exactly the flow matching algorithm applied to the displacement interpolation: it learns the straightest possible path from noise to data in the Wasserstein metric, and the straightness is precisely the geodesic property of the displacement interpolation proved in this topic.
+
+The two animations on the Survey Department wall — the pixel mixer's cross-fading ghost population and the geographer's mass-conserving migration flow — are the linear interpolation $(1-t)\mu+t\nu$ and the displacement interpolation $\mu_t = (T_t)_\#\mu$ with $T_t = (1-t)\text{id}+t\nabla\phi$. The difference between them is the difference between a straight line in the wrong space and a geodesic in the right space — a distinction that separates geometry-blind interpolation from geometry-aware transport, and that will reappear at the heart of every generative model in Phase 3.
+
+---
+---

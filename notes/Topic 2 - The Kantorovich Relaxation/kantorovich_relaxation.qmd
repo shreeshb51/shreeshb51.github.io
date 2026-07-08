@@ -1,0 +1,409 @@
+# Topic 2 - The Kantorovich Relaxation: Why We Need to Split Mass
+
+## Introduction
+
+The Monge problem gave you the cleanest possible formulation of Optimal Transport: find the deterministic map that moves mass from one distribution to another at minimum cost. It is the right formulation for many physical problems — grain really does go from one specific location to another, not split between multiple destinations simultaneously. And when it works — when the source is absolutely continuous and the cost is quadratic — the Brenier theorem gives a beautiful answer: the optimal map is the gradient of a convex potential.
+
+But the Monge problem has two fundamental weaknesses that limit its mathematical and computational usefulness.
+
+The first weakness is infeasibility. When the source distribution has atoms — discrete concentrations of mass at single points — no deterministic map can split that atom between multiple destinations, and the push-forward constraint $T_\#\mu = \nu$ may be unsatisfiable. The Monge problem is infeasible in precisely the situations where the source and target distributions are discrete, which is the most computationally important case. If $\mu$ and $\nu$ are both empirical distributions over finite sets of data points — the typical setting in machine learning — the Monge problem may have no solution at all.
+
+The second weakness is non-convexity. Even when a Monge map exists, the set of valid transport maps $\mathcal{T}(\mu,\nu)$ is not a convex set — the average of two valid transport maps is not generally a valid transport map. The optimization is therefore non-convex, the standard tools of convex analysis do not apply, and there is no general certificate of global optimality.
+
+The Kantorovich relaxation resolves both weaknesses simultaneously by making a single, principled modification to the problem: instead of requiring all the mass at each source location to go to a single destination, allow it to be split among multiple destinations. Each grain particle at location $x$ can now be distributed across a cloud of destinations, with the distribution over destinations described by a probability measure. The resulting object is not a transport map but a transport plan — a joint probability distribution $\pi$ over pairs $(x,y)$ that describes, for each source location $x$ and each target location $y$, the fraction of mass at $x$ that is sent to $y$.
+
+This single modification transforms the problem completely. The set of valid transport plans — the set of all joint distributions with prescribed marginals $\mu$ and $\nu$ — is a convex set. The objective $\int c(x,y)\,d\pi$ is a linear functional of the transport plan $\pi$. The Kantorovich problem is therefore a linear program over a convex set — the most tractable class of optimization problems in the entire roadmap. The tools of Chapter 2 of Phase 0 — convexity, duality, KKT conditions — all apply directly.
+
+The topic has three subtopics.
+
+The first subtopic is **the coupling formulation** — the precise definition of a transport plan $\pi \in \Pi(\mu,\nu)$ as a joint probability measure on $\mathcal{X} \times \mathcal{Y}$ with marginals $\mu$ and $\nu$, the interpretation of $\pi(A \times B) = $ fraction of mass transported from region $A$ to region $B$, and the geometric structure of the set $\Pi(\mu,\nu)$ of all couplings as a convex compact subset of $\mathcal{P}(\mathcal{X} \times \mathcal{Y})$. The coupling formulation is the probabilistic generalization of the transport map: deterministic maps correspond to couplings concentrated on a graph, while general couplings allow mass splitting.
+
+The second subtopic is **the Kantorovich problem as a linear program** — the formulation $\min_{\pi \in \Pi(\mu,\nu)}\int c\,d\pi$ as an infinite-dimensional linear program, the conditions under which the minimum is attained, and the relationship between the Kantorovich minimum and the Monge infimum. The key theorem is that the Kantorovich minimum always exists under mild conditions on $c$ — the compactness of $\Pi(\mu,\nu)$ in the weak topology guarantees existence by lower semicontinuity — while the Monge infimum may not be attained or may even be infinite.
+
+The third subtopic is **the relationship between couplings and transport maps** — when is the optimal Kantorovich coupling also a Monge map? The answer connects back to the Brenier theorem: for quadratic cost with absolutely continuous $\mu$, the optimal Kantorovich coupling is concentrated on the graph of the Brenier map, making it simultaneously the solution to the Kantorovich problem and the Monge problem. For general costs and general measures, the Kantorovich coupling strictly relaxes the Monge problem — the optimal coupling may genuinely split mass.
+
+By the end of this topic, you will understand why the Kantorovich relaxation is not merely a mathematical convenience but the correct and natural formulation of Optimal Transport. The coupling $\pi$ is not an approximation to the transport map — it is the more fundamental object, reducing to a transport map only under special conditions. Every subsequent development in Phase 1 — the Wasserstein distance, the Kantorovich dual, the Sinkhorn algorithm — is built on the coupling formulation, not the map formulation.
+
+**ALL THREE SUBTOPICS ARE TREATED AS A SINGLE TOPIC FOR EASY COMPREHENSION.**
+
+---
+
+## Layer 1 (Story)
+
+You are still the logistics director for the Nepal Food Corporation, but your senior consultant — the mathematician — has returned with a critique of your planning framework.
+
+She says: your Monge formulation is too rigid. You have been insisting that every tonne of grain at Kanchanpur must go to a single specific destination. But real logistics do not work this way. A single truck from Kanchanpur does not have to deliver its entire load to one district — it can split its cargo at a junction, drop 300 tonnes in Taplejung and continue with 200 tonnes to Panchthar. A warehouse can receive grain from multiple sources and redistribute it. A supply chain is not a collection of point-to-point arrows — it is a network of flows, and flows can split and merge.
+
+More fundamentally, she argues, the Monge formulation breaks down precisely when you need it most — when you are trying to compare two discrete distributions. Your real data is not a continuous density of grain spread across the Terai. It is a finite list of storage facilities, each with a specific tonnage. And when you try to apply the Monge formulation to match discrete storage locations to discrete deficit locations with different tonnages, there is often no valid assignment at all.
+
+She proposes a relaxation. Instead of asking "where does the grain from location $x$ go?" — a question that demands a single answer — ask "how is the grain from location $x$ distributed across destinations?" — a question that allows a probabilistic answer. Each grain particle can be routed to a distribution over destinations. The routing plan is no longer a function but a joint distribution — a probability measure over pairs (source location, destination location) that describes the full stochastic routing of every particle.
+
+This joint distribution is the coupling. And the Kantorovich problem is the search for the coupling that minimizes the expected transport cost.
+
+---
+
+**The coupling as a joint distribution**
+
+Your consultant draws a picture. On the horizontal axis she plots the source locations — the western surplus facilities. On the vertical axis she plots the target locations — the eastern deficit districts. In the interior of this two-dimensional rectangle, she draws a two-dimensional density — a joint distribution $\pi(x,y)$ that describes, for each pair (source $x$, destination $y$), the amount of grain flowing from $x$ to $y$.
+
+The joint distribution $\pi$ must satisfy two marginal conditions. If you sum $\pi(x,y)$ over all possible destinations $y$, you get the total grain sent from location $x$ — which must equal the surplus at $x$, the source distribution $\mu(x)$. Conversely, if you sum $\pi(x,y)$ over all possible sources $x$, you get the total grain arriving at location $y$ — which must equal the deficit at $y$, the target distribution $\nu(y)$.
+
+These two marginal conditions are the coupling constraints:
+
+$$\int_\mathcal{Y} \pi(x,y)\,dy = \mu(x) \quad \text{for all } x \quad \text{(send all the surplus)}$$
+$$\int_\mathcal{X} \pi(x,y)\,dx = \nu(y) \quad \text{for all } y \quad \text{(fill all the deficit)}$$
+
+A joint distribution $\pi$ satisfying both marginal constraints is called a **coupling** of $\mu$ and $\nu$, and the set of all couplings is written $\Pi(\mu,\nu)$. The Kantorovich problem is to find the coupling in $\Pi(\mu,\nu)$ that minimizes the expected transport cost $\int c(x,y)\,d\pi(x,y)$.
+
+---
+
+**Why the relaxation is natural**
+
+Your consultant explains why the coupling formulation is not just a mathematical convenience — it is the correct and complete description of any logistics plan.
+
+Consider any deterministic Monge map $T$ from $\mu$ to $\nu$. The map assigns to each source location $x$ a single destination $T(x)$. In the coupling language, this corresponds to a very special joint distribution: the probability mass at each pair $(x,y)$ is concentrated on the graph $\{(x,T(x)) : x \in \mathcal{X}\}$ — the joint distribution is zero everywhere except on the curve that traces the assignment $T$. This joint distribution is the **deterministic coupling** induced by $T$:
+
+$$\pi_T = (\text{id}, T)_\#\mu$$
+
+It is a coupling — its marginals are $\mu$ and $\nu$ by the push-forward property of $T$. And its transport cost is exactly the Monge cost: $\int c(x,y)\,d\pi_T = \int c(x,T(x))\,d\mu$.
+
+So every Monge map is a special case of a coupling: a coupling whose mass is concentrated on a graph. The coupling formulation strictly generalizes the Monge formulation — every Monge plan is a coupling plan, but not every coupling plan is a Monge plan. By allowing couplings that are not concentrated on graphs, the Kantorovich formulation includes all Monge plans and additionally allows plans where mass splits between multiple destinations.
+
+The Kantorovich minimum is therefore always at most the Monge infimum: you are optimizing over a strictly larger set, so the minimum can only decrease. The Kantorovich problem is a relaxation in the precise mathematical sense.
+
+---
+
+**The coupling set is convex**
+
+Your consultant now makes the observation that transforms the problem. The set $\Pi(\mu,\nu)$ of all couplings is convex: if $\pi_1$ and $\pi_2$ are both couplings — both satisfy the marginal constraints — then any convex combination $\lambda\pi_1 + (1-\lambda)\pi_2$ for $\lambda \in [0,1]$ is also a coupling.
+
+The proof is immediate: the marginal constraints are linear in $\pi$. If $\int_\mathcal{Y}\pi_1(x,y)\,dy = \mu(x)$ and $\int_\mathcal{Y}\pi_2(x,y)\,dy = \mu(x)$, then $\int_\mathcal{Y}(\lambda\pi_1 + (1-\lambda)\pi_2)(x,y)\,dy = \lambda\mu(x) + (1-\lambda)\mu(x) = \mu(x)$. The marginal constraints are linear equalities in $\pi$, so the feasible set is a convex set — the intersection of two halfspaces in the infinite-dimensional space of probability measures.
+
+The objective $\int c(x,y)\,d\pi(x,y)$ is also linear in $\pi$. The Kantorovich problem is therefore a linear program over a convex set — minimizing a linear objective over a convex feasible region. This is the most tractable possible optimization structure. Every tool from Chapter 2 of Phase 0 — strong duality, KKT conditions, the Legendre-Fenchel transform — applies.
+
+Contrast this with the Monge problem, where the feasible set $\mathcal{T}(\mu,\nu)$ of transport maps is not convex: the average of two valid transport maps is generally not a valid transport map. The Kantorovich relaxation convexifies the problem by expanding the feasible set from maps to couplings, and this convexification is what makes the problem mathematically tractable.
+
+---
+
+**The extreme points: deterministic couplings**
+
+Your consultant draws attention to the geometric structure of the coupling set $\Pi(\mu,\nu)$. It is a convex set, but some couplings are special — they cannot be written as convex combinations of other couplings. These are the extreme points of $\Pi(\mu,\nu)$.
+
+In the discrete case, where $\mu = \sum_i \mu_i \delta_{x_i}$ and $\nu = \sum_j \nu_j \delta_{y_j}$ are both discrete measures, the coupling $\pi$ is a matrix with entries $\pi_{ij} \geq 0$ satisfying $\sum_j \pi_{ij} = \mu_i$ (row sums equal source masses) and $\sum_i \pi_{ij} = \nu_j$ (column sums equal target masses). The extreme points of this polytope are the basic feasible solutions of the associated linear program — matrices with at most $m + n - 1$ nonzero entries, where $m$ and $n$ are the numbers of source and target locations.
+
+The extreme points of $\Pi(\mu,\nu)$ in the continuous case are the deterministic couplings induced by transport maps — exactly the couplings that are concentrated on graphs. By the fundamental theorem of linear programming, the minimum of a linear objective over a convex polytope is always achieved at an extreme point. This is the formal reason why the minimum of the Kantorovich problem is often achieved by a deterministic coupling — a Monge map — when one exists. The extreme point is the deterministic plan, and the linear objective prefers extreme points.
+
+---
+
+**The independent coupling and its cost**
+
+Before finding the optimal coupling, your consultant considers the worst possible coupling — the one with maximum expected cost. In the logistics story, this corresponds to routing grain from each source to each destination completely at random, with no attempt to match nearby sources to nearby destinations.
+
+The **independent coupling** is $\pi^{\text{ind}} = \mu \otimes \nu$ — the product measure that assigns to each pair $(x,y)$ the probability $\mu(x) \cdot \nu(y)$, treating source and destination as independent. Its marginals are $\mu$ and $\nu$ by construction. Its expected transport cost is:
+
+$$\int c(x,y)\,d(\mu\otimes\nu) = \int_\mathcal{X}\int_\mathcal{Y} c(x,y)\,d\nu(y)\,d\mu(x) = \mathbb{E}_{X\sim\mu,Y\sim\nu}[c(X,Y)]$$
+
+This is the expected cost when source and destination are chosen independently — the worst-case coupling that ignores all geographic information. Any coupling that exploits the geographic proximity of source and destination locations will have lower expected cost than the independent coupling. The Kantorovich problem searches for the coupling that minimizes this expected cost — the opposite extreme from the independent coupling.
+
+The gap between the optimal coupling's cost and the independent coupling's cost measures how much can be saved by intelligently routing grain rather than routing randomly. In practice, this gap is large: the optimal coupling routes nearby sources to nearby destinations, drastically reducing the average transport distance.
+
+---
+
+**The discrete coupling as a matrix and the transportation polytope**
+
+For the discrete case with $m$ sources and $n$ destinations, the coupling is a matrix $P \in \mathbb{R}^{m\times n}_+$ with row sums $\sum_j P_{ij} = \mu_i$ and column sums $\sum_i P_{ij} = \nu_j$. The Kantorovich problem becomes:
+
+$$\min_{P \in \mathbb{R}^{m\times n}_+} \sum_{i,j} c_{ij} P_{ij} \quad \text{subject to} \quad P\mathbf{1} = \mu, \quad P^T\mathbf{1} = \nu$$
+
+This is a linear program with $mn$ variables and $m+n$ equality constraints (one redundant). The feasible set is the **transportation polytope** — a well-studied polytope in the theory of linear programming, first analyzed by Hitchcock and Koopmans in the 1940s. The LP has a sparse optimal solution with at most $m+n-1$ nonzero entries (a basic feasible solution), which is the discrete analogue of the deterministic coupling.
+
+Your consultant points out that this LP is exactly the kind of problem you solved in MATH 304 — a balanced transportation problem. The Kantorovich problem is the continuous generalization of the balanced transportation LP, and every algorithm you learned for transportation LPs (the northwest corner method, Vogel's approximation, the simplex method for transportation) is a special case of algorithms for the discrete Kantorovich problem.
+
+---
+
+**The break moment: mass splitting can be strictly better**
+
+Here is the break moment. The naive assumption — reinforced by the Brenier theorem — is that the optimal coupling is always a deterministic map. After all, for the quadratic cost with absolutely continuous sources, the optimal coupling is the Brenier map, which is deterministic. Surely splitting mass is never optimal?
+
+This breaks for general cost functions and general source measures.
+
+Consider a simple example. Source $\mu = \delta_0$ — all mass at the origin. Target $\nu = \frac{1}{2}\delta_{-1} + \frac{1}{2}\delta_1$ — equal mass at $\pm 1$. Cost $c(x,y) = |x-y|$.
+
+The Monge problem is infeasible: any transport map $T$ satisfies $T(0) \in \{-1, 1\}$ (a single point), giving $T_\#\delta_0 = \delta_{T(0)} \neq \nu$. No deterministic map can split the atom at 0.
+
+The Kantorovich problem is feasible and has an obvious optimal coupling: $\pi^* = \frac{1}{2}\delta_{(0,-1)} + \frac{1}{2}\delta_{(0,1)}$ — send half the mass to $-1$ and half to $+1$. Its cost is $\frac{1}{2}|0-(-1)| + \frac{1}{2}|0-1| = 1$. There is no coupling with lower cost (since every unit of mass must travel at least distance 1 to reach either $\pm 1$). The optimal Kantorovich coupling genuinely splits mass — it cannot be represented as a deterministic map — and the Kantorovich minimum (value 1) is strictly less than the Monge infimum ($+\infty$, since the Monge problem is infeasible).
+
+This example shows that the Kantorovich relaxation is not merely a mathematical convenience for the absolutely continuous case. It is a genuine extension that handles discrete measures, solves cases where the Monge problem is infeasible, and sometimes achieves strictly lower cost by allowing mass splitting. The coupling is the fundamental object of Optimal Transport, not the map.
+
+---
+
+**The connection to the Wasserstein distance**
+
+Your consultant now reveals the most important consequence of the Kantorovich formulation. The minimum cost coupling defines a distance between distributions — the **Wasserstein distance**:
+
+$$W_p(\mu,\nu) = \left(\min_{\pi\in\Pi(\mu,\nu)}\int \|x-y\|^p\,d\pi(x,y)\right)^{1/p}$$
+
+This distance measures the minimum expected $p$-th power cost of transporting mass from $\mu$ to $\nu$ — the cheapest possible routing, allowing mass splitting. It is always finite when $\mu$ and $\nu$ have finite $p$-th moments, always symmetric ($W_p(\mu,\nu) = W_p(\nu,\mu)$ since $\Pi(\mu,\nu) = \Pi(\nu,\mu)$ by symmetry), and always satisfies the triangle inequality (by the gluing lemma — a technical tool that allows couplings to be composed).
+
+The Wasserstein distance is the fundamental geometric quantity of Phase 1. The entire theory of Optimal Transport is organized around it: the Kantorovich problem defines it, the Kantorovich dual characterizes it, the Sinkhorn algorithm computes it, and the displacement interpolation is its geodesic.
+
+---
+
+Hold three pictures simultaneously.
+
+The coupling matrix in the discrete case: a non-negative matrix with prescribed row sums $\mu_i$ and column sums $\nu_j$, a point in the transportation polytope, with the optimal coupling being a sparse basic feasible solution with at most $m+n-1$ nonzero entries.
+
+The coupling as a joint distribution: a two-dimensional density $\pi(x,y)$ over source-destination pairs, with marginals $\mu$ and $\nu$, with the Monge map corresponding to a distribution concentrated on a graph and the general coupling allowing mass to spread across destinations.
+
+The break moment example: $\mu = \delta_0$, $\nu = \frac{1}{2}\delta_{-1} + \frac{1}{2}\delta_1$, optimal coupling splits mass equally — the Monge problem is infeasible, the Kantorovich problem has a clean solution, and mass splitting is genuinely necessary and strictly optimal.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the precise definition of couplings and the coupling set, the Kantorovich problem and existence of optimal couplings, the discrete transportation polytope, the relationship between Monge maps and Kantorovich couplings, the gluing lemma and the triangle inequality for Wasserstein distances, and the connection to the Strassen theorem for stochastic dominance.
+
+### Couplings — Precise Definition
+
+Let $(\mathcal{X}, \mathcal{F}_\mathcal{X})$ and $(\mathcal{Y}, \mathcal{F}_\mathcal{Y})$ be measurable spaces and let $\mu \in \mathcal{P}(\mathcal{X})$ and $\nu \in \mathcal{P}(\mathcal{Y})$ be probability measures.
+
+A **coupling** of $\mu$ and $\nu$ is a probability measure $\pi \in \mathcal{P}(\mathcal{X} \times \mathcal{Y})$ on the product space whose marginals are $\mu$ and $\nu$:
+
+$$\pi(A \times \mathcal{Y}) = \mu(A) \quad \forall A \in \mathcal{F}_\mathcal{X}$$
+$$\pi(\mathcal{X} \times B) = \nu(B) \quad \forall B \in \mathcal{F}_\mathcal{Y}$$
+
+Equivalently, for any measurable functions $f \in L^1(\mu)$ and $g \in L^1(\nu)$:
+
+$$\int_{\mathcal{X}\times\mathcal{Y}} f(x)\,d\pi(x,y) = \int_\mathcal{X} f\,d\mu, \qquad \int_{\mathcal{X}\times\mathcal{Y}} g(y)\,d\pi(x,y) = \int_\mathcal{Y} g\,d\nu$$
+
+The **set of all couplings** is:
+
+$$\Pi(\mu,\nu) = \{\pi \in \mathcal{P}(\mathcal{X}\times\mathcal{Y}) : (\text{proj}_\mathcal{X})_\#\pi = \mu, \; (\text{proj}_\mathcal{Y})_\#\pi = \nu\}$$
+
+where $\text{proj}_\mathcal{X}: \mathcal{X}\times\mathcal{Y} \to \mathcal{X}$ and $\text{proj}_\mathcal{Y}: \mathcal{X}\times\mathcal{Y}\to\mathcal{Y}$ are the canonical projections.
+
+**Non-emptiness.** $\Pi(\mu,\nu) \neq \emptyset$ always: the **independent coupling** $\mu \otimes \nu$ — the product measure defined by $(\mu\otimes\nu)(A\times B) = \mu(A)\nu(B)$ — is always a valid coupling. Therefore the Kantorovich problem is always feasible.
+
+**Convexity.** $\Pi(\mu,\nu)$ is a convex set: for $\pi_1, \pi_2 \in \Pi(\mu,\nu)$ and $\lambda \in [0,1]$, the measure $\lambda\pi_1 + (1-\lambda)\pi_2$ satisfies both marginal constraints by linearity.
+
+**Compactness.** When $\mathcal{X}$ and $\mathcal{Y}$ are Polish spaces (complete separable metric spaces), $\Pi(\mu,\nu)$ is compact in the weak topology — the topology of weak convergence of probability measures. This follows from Prokhorov's theorem: $\Pi(\mu,\nu)$ is tight (since both $\mu$ and $\nu$ are tight as probability measures on Polish spaces) and closed (since marginal constraints are preserved under weak limits).
+
+---
+
+### The Kantorovich Problem
+
+Let $c: \mathcal{X}\times\mathcal{Y} \to [0,\infty]$ be a lower semicontinuous cost function. The **Kantorovich problem** is:
+
+$$\mathcal{K}(\mu,\nu) = \inf_{\pi\in\Pi(\mu,\nu)} \int_{\mathcal{X}\times\mathcal{Y}} c(x,y)\,d\pi(x,y)$$
+
+**Theorem (Existence of Optimal Couplings).** If $\mathcal{X}$ and $\mathcal{Y}$ are Polish spaces and $c$ is lower semicontinuous and bounded below, then the infimum is attained:
+
+$$\mathcal{K}(\mu,\nu) = \min_{\pi\in\Pi(\mu,\nu)}\int c\,d\pi$$
+
+**Proof.** The functional $\pi \mapsto \int c\,d\pi$ is lower semicontinuous in the weak topology (since $c$ is lower semicontinuous and non-negative, $\int c\,d\pi$ is the supremum of $\int c_n\,d\pi$ over continuous bounded functions $c_n \nearrow c$, and each $\pi\mapsto\int c_n\,d\pi$ is continuous). The minimum of a lower semicontinuous function over a compact set is attained. Since $\Pi(\mu,\nu)$ is compact (by Prokhorov) and $\pi\mapsto\int c\,d\pi$ is lower semicontinuous, the minimum is attained at some $\pi^* \in \Pi(\mu,\nu)$. $\square$
+
+An optimal coupling $\pi^*$ achieving the minimum is called an **optimal transport plan**.
+
+---
+
+### The Transportation Polytope — Discrete Case
+
+For discrete measures $\mu = \sum_{i=1}^m \mu_i\delta_{x_i}$ and $\nu = \sum_{j=1}^n \nu_j\delta_{y_j}$ with $\mu_i > 0$, $\nu_j > 0$, $\sum_i\mu_i = \sum_j\nu_j = 1$, a coupling is a matrix $P = (P_{ij}) \in \mathbb{R}^{m\times n}$ with:
+
+$$P_{ij} \geq 0, \quad \sum_j P_{ij} = \mu_i \; \forall i, \quad \sum_i P_{ij} = \nu_j \; \forall j$$
+
+The **transportation polytope** is:
+
+$$\mathcal{U}(\mu,\nu) = \{P \in \mathbb{R}^{m\times n}_+ : P\mathbf{1}_n = \mu, P^T\mathbf{1}_m = \nu\}$$
+
+This is a convex polytope with $mn$ variables and $m+n-1$ independent equality constraints (the $m+n$ constraints have one redundancy since $\sum_i\mu_i = \sum_j\nu_j = 1$).
+
+The Kantorovich problem in the discrete case is the **transportation LP**:
+
+$$\min_{P \in \mathcal{U}(\mu,\nu)} \langle C, P\rangle = \min_{P\geq 0, P\mathbf{1}=\mu, P^T\mathbf{1}=\nu} \sum_{i,j} c_{ij}P_{ij}$$
+
+where $C = (c_{ij})$ is the cost matrix and $\langle C,P\rangle = \text{tr}(C^TP) = \sum_{i,j}c_{ij}P_{ij}$ is the Frobenius inner product.
+
+**Vertices of the transportation polytope.** The extreme points of $\mathcal{U}(\mu,\nu)$ are the basic feasible solutions of the LP — matrices with at most $m+n-1$ nonzero entries. These correspond to spanning trees of the complete bipartite graph $K_{m,n}$ on the vertex sets $\{x_1,\ldots,x_m\}$ and $\{y_1,\ldots,y_n\}$.
+
+**Complexity.** The transportation LP can be solved in $O(\min(m,n)^{1/2}mn\log(mn))$ time using specialized interior point methods, or in $O(mn\min(m,n))$ using the network simplex method. Exact solution costs $O(n^3)$ for balanced problems with $m=n$.
+
+---
+
+### Monge Maps as Deterministic Couplings
+
+Every transport map $T: \mathcal{X}\to\mathcal{Y}$ with $T_\#\mu = \nu$ induces a coupling:
+
+$$\pi_T = (\text{id},T)_\#\mu \in \Pi(\mu,\nu)$$
+
+defined by $\pi_T(A\times B) = \mu(A\cap T^{-1}(B))$. This coupling is **concentrated on the graph of $T$**: $\pi_T(\{(x,y): y\neq T(x)\}) = 0$.
+
+The cost of the induced coupling equals the Monge cost:
+
+$$\int c(x,y)\,d\pi_T(x,y) = \int c(x,T(x))\,d\mu(x)$$
+
+**Theorem (Monge $\geq$ Kantorovich).** For any cost $c$:
+
+$$\inf_{T_\#\mu=\nu}\int c(x,T(x))\,d\mu \geq \min_{\pi\in\Pi(\mu,\nu)}\int c\,d\pi$$
+
+with equality when the optimal Kantorovich coupling $\pi^*$ is concentrated on a graph.
+
+**Characterization of deterministic couplings.** A coupling $\pi \in \Pi(\mu,\nu)$ is induced by a transport map if and only if it is **concentrated on a graph**: there exists a measurable map $T:\mathcal{X}\to\mathcal{Y}$ such that $\pi(\{(x,y):y\neq T(x)\}) = 0$.
+
+When $\mu\ll\lambda^n$, the Brenier theorem guarantees that the optimal Kantorovich coupling is concentrated on the graph of $T^* = \nabla\phi$ for quadratic cost — the Monge and Kantorovich problems coincide. For general measures or general costs, the optimal Kantorovich coupling may genuinely split mass.
+
+---
+
+### Cyclically Monotone Support
+
+The optimal transport plan $\pi^*$ for lower semicontinuous cost $c$ has a specific support structure.
+
+**Definition.** A set $\Gamma \subseteq \mathcal{X}\times\mathcal{Y}$ is **$c$-cyclically monotone** if for any finite collection $(x_1,y_1),\ldots,(x_k,y_k) \in \Gamma$ and any permutation $\sigma$:
+
+$$\sum_{i=1}^k c(x_i,y_i) \leq \sum_{i=1}^k c(x_i,y_{\sigma(i)})$$
+
+The optimal coupling does no better than the identity permutation on any finite subset of its support.
+
+**Theorem.** Any optimal coupling $\pi^*$ for a lower semicontinuous cost $c$ is supported on a $c$-cyclically monotone set.
+
+**Proof sketch.** If the support of $\pi^*$ were not $c$-cyclically monotone, there would exist a finite set of points where a cyclic permutation of destinations reduces the cost — contradicting the optimality of $\pi^*$ (by modifying $\pi^*$ to implement the permutation on the finite set). $\square$
+
+For $c(x,y) = \|x-y\|^2$: $c$-cyclical monotonicity reduces to ordinary cyclical monotonicity $\sum_i\langle x_i,T(x_i)\rangle \geq \sum_i\langle x_i,T(x_{\sigma(i)})\rangle$ — equivalent to the map being a gradient of a convex function, recovering the Brenier theorem.
+
+---
+
+### The Gluing Lemma and Triangle Inequality
+
+The **gluing lemma** is the technical tool that allows couplings to be composed, enabling the proof of the triangle inequality for Wasserstein distances.
+
+**Lemma (Gluing).** Let $\mu\in\mathcal{P}(\mathcal{X})$, $\nu\in\mathcal{P}(\mathcal{Y})$, $\rho\in\mathcal{P}(\mathcal{Z})$ be probability measures on Polish spaces. If $\pi_1\in\Pi(\mu,\nu)$ and $\pi_2\in\Pi(\nu,\rho)$, then there exists a probability measure $\tilde\pi\in\mathcal{P}(\mathcal{X}\times\mathcal{Y}\times\mathcal{Z})$ with marginals $(\text{proj}_{\mathcal{X}\times\mathcal{Y}})_\#\tilde\pi = \pi_1$ and $(\text{proj}_{\mathcal{Y}\times\mathcal{Z}})_\#\tilde\pi = \pi_2$.
+
+The glued measure $\tilde\pi$ is the **three-way coupling** that simultaneously realizes $\pi_1$ for the $(\mathcal{X},\mathcal{Y})$ pair and $\pi_2$ for the $(\mathcal{Y},\mathcal{Z})$ pair, with the common $\mathcal{Y}$ marginal being $\nu$.
+
+**Proof.** Use the disintegration theorem to write $\pi_1(dx,dy) = \mu(dx)K_1(x,dy)$ and $\pi_2(dy,dz) = \nu(dy)K_2(y,dz)$ as regular conditional distributions. Define $\tilde\pi(dx,dy,dz) = \mu(dx)K_1(x,dy)K_2(y,dz)$. Verify the marginals. $\square$
+
+**Theorem (Triangle Inequality for $W_p$).** For $\mu,\nu,\rho\in\mathcal{P}_p(\mathbb{R}^n)$:
+
+$$W_p(\mu,\rho) \leq W_p(\mu,\nu) + W_p(\nu,\rho)$$
+
+**Proof.** Let $\pi_1^*\in\Pi(\mu,\nu)$ and $\pi_2^*\in\Pi(\nu,\rho)$ be optimal couplings. By the gluing lemma, there exists $\tilde\pi\in\mathcal{P}(\mathbb{R}^n\times\mathbb{R}^n\times\mathbb{R}^n)$ with marginals $\pi_1^*$ and $\pi_2^*$. The projection $(\text{proj}_{\mathcal{X}},\text{proj}_\mathcal{Z})_\#\tilde\pi \in \Pi(\mu,\rho)$ is a (generally suboptimal) coupling of $\mu$ and $\rho$. By the triangle inequality for $\|\cdot\|_p$ and Jensen's inequality:
+
+$$W_p(\mu,\rho)^p \leq \int \|x-z\|^p\,d\tilde\pi \leq \left(\int\|x-y\|^p\,d\tilde\pi + \int\|y-z\|^p\,d\tilde\pi\right) \leq (W_p(\mu,\nu) + W_p(\nu,\rho))^p$$
+
+The last step uses Minkowski's inequality. $\square$
+
+---
+
+### The Wasserstein Distance — Formal Definition
+
+**Definition.** For $p \in [1,\infty)$ and $\mu,\nu \in \mathcal{P}_p(\mathbb{R}^n)$ (probability measures with finite $p$-th moment: $\int \|x\|^p\,d\mu < \infty$), the **$p$-Wasserstein distance** is:
+
+$$W_p(\mu,\nu) = \left(\min_{\pi\in\Pi(\mu,\nu)}\int_{\mathbb{R}^n\times\mathbb{R}^n}\|x-y\|^p\,d\pi(x,y)\right)^{1/p}$$
+
+**Theorem.** $W_p$ is a metric on $\mathcal{P}_p(\mathbb{R}^n)$:
+
+$$\text{(i) } W_p(\mu,\nu) \geq 0 \text{ with equality iff } \mu = \nu$$
+$$\text{(ii) } W_p(\mu,\nu) = W_p(\nu,\mu)$$
+$$\text{(iii) } W_p(\mu,\rho) \leq W_p(\mu,\nu) + W_p(\nu,\rho)$$
+
+**Proof of (i).** $W_p(\mu,\nu) \geq 0$ is clear. If $W_p(\mu,\nu) = 0$, the optimal coupling $\pi^*$ has $\int\|x-y\|^p\,d\pi^* = 0$, so $\pi^*$ is concentrated on $\{(x,y):x=y\}$ — the diagonal. This forces $\mu = (\text{proj}_\mathcal{X})_\#\pi^* = (\text{proj}_\mathcal{Y})_\#\pi^* = \nu$. $\square$
+
+**Metrization of weak convergence.** For $p \geq 1$, a sequence $(\mu_k)$ satisfies $W_p(\mu_k,\mu) \to 0$ if and only if $\mu_k \rightharpoonup \mu$ (weak convergence) and $\int\|x\|^p\,d\mu_k \to \int\|x\|^p\,d\mu$ (convergence of $p$-th moments). The Wasserstein distance metrizes weak convergence plus moment convergence — a strictly stronger topology than weak convergence alone.
+
+---
+
+### Relationship to Other Distances
+
+The Wasserstein distance is related to other common probability distances in precise ways.
+
+**Total variation.** For any $\mu,\nu$: $\text{TV}(\mu,\nu) = \min_{\pi\in\Pi(\mu,\nu)}\pi(\{(x,y):x\neq y\}) = 1 - \pi(\{(x,x):x\in\mathcal{X}\})$ — the total variation distance is the minimum probability of disagreement over all couplings. This is the **coupling characterization of total variation**, which gives $\text{TV}(\mu,\nu) = \inf_{\pi\in\Pi(\mu,\nu)}P_\pi[X\neq Y]$.
+
+**KL divergence.** The KL divergence $D_{KL}(\mu\|\nu)$ does not have a direct coupling characterization, but it bounds the Wasserstein distance through the **Talagrand inequality**: for $\nu = \mathcal{N}(0,I)$:
+
+$$W_2^2(\mu,\nu) \leq 2D_{KL}(\mu\|\nu)$$
+
+This inequality appears in the convergence analysis of Langevin dynamics and score-based generative models.
+
+**Comparison of metrics.** For probability measures on a bounded domain of diameter $D$:
+
+$$W_1(\mu,\nu) \leq W_2(\mu,\nu) \leq \cdots \leq W_p(\mu,\nu) \leq D$$
+$$\text{TV}(\mu,\nu) \leq \frac{1}{2}\sqrt{2D_{KL}(\mu\|\nu)} \quad \text{(Pinsker)}$$
+$$\text{TV}(\mu,\nu)^2 \leq \frac{1}{2D}W_1(\mu,\nu) \quad \text{(if domain has diameter }D\text{)}$$
+
+---
+
+### Strassen's Theorem — Couplings and Stochastic Orders
+
+The coupling formulation has a deep application to stochastic dominance.
+
+**Theorem (Strassen).** For $\mu,\nu\in\mathcal{P}(\mathbb{R})$, the following are equivalent:
+
+$$\text{(i) } \int f\,d\mu \leq \int f\,d\nu \text{ for all convex } f: \mathbb{R}\to\mathbb{R} \quad \text{(convex order: } \mu \leq_{cx} \nu\text{)}$$
+$$\text{(ii) There exists a coupling } \pi\in\Pi(\mu,\nu) \text{ such that } \mathbb{E}_\pi[Y|X] = X \quad \text{(martingale coupling)}$$
+
+The convex order $\mu \leq_{cx} \nu$ says $\nu$ is more spread out than $\mu$ (by Jensen's inequality). The martingale coupling condition says $Y$ is a martingale extension of $X$ — on average, $Y$ equals $X$. Strassen's theorem connects a functional analytic condition (convex order) to a probabilistic object (martingale coupling) through the coupling framework.
+
+The martingale optimal transport problem — minimize $\int c\,d\pi$ over martingale couplings satisfying $\mathbb{E}[Y|X]=X$ — is an active research area with applications to model-free option pricing, where the martingale constraint models the no-arbitrage condition in financial markets.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 304 (Computational Operations Research), the balanced transportation problem — $\min_{P\geq 0}\langle C,P\rangle$ subject to row and column sum constraints — is the discrete Kantorovich problem. The northwest corner method, Vogel's approximation, and the transportation simplex are algorithms for finding basic feasible solutions of $\mathcal{U}(\mu,\nu)$ — extreme points of the transportation polytope — which correspond to deterministic couplings with sparse support. The LP duality you computed in MATH 304 for transportation problems is the discrete case of the Kantorovich duality theorem of Topic 4, and the dual variables (shadow prices) are the discrete potential functions $\phi_i$ and $\psi_j$. In MATH 208 (Statistics and Probability), the joint distribution of a random vector $(X,Y)$ is a coupling of its marginals — every joint distribution you computed, every conditional expectation, every covariance computation was working with a coupling. The independent coupling $\mu\otimes\nu$ is the distribution of $(X,Y)$ when $X$ and $Y$ are independent. The optimal coupling is the joint distribution that minimizes the expected cost — a joint distribution with maximally strong dependence in the direction that reduces transport cost. In MATH 213 (Analysis I), weak convergence of probability measures — which the Wasserstein distance metrizes — is the convergence of $\int f\,d\mu_k \to \int f\,d\mu$ for all bounded continuous $f$, exactly the kind of functional convergence you studied in Analysis I applied to the space of probability measures.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Nepal Food Corporation coupling story has a precise mathematical address. Let us walk through them one by one, until the joint distribution of grain flows, the transportation polytope, the break moment example, and the full formal apparatus are completely fused into a single picture.
+
+---
+
+**The Nepal Food Corporation's relaxed logistics plan — describing not where each tonne goes but the full distribution of flows between every source-destination pair — is the coupling $\pi \in \Pi(\mu,\nu)$, the joint probability measure on $\mathcal{X}\times\mathcal{Y}$ with marginals $\mu$ and $\nu$.** The joint measure $\pi(A\times B)$ is the fraction of total grain flowing from source region $A$ to destination region $B$ simultaneously. It is not a function — it does not assign a single destination to each source. It is a two-dimensional density over pairs: for each source location $x$ and destination location $y$, the value $\pi(dx,dy)$ describes the infinitesimal amount of grain flowing from the infinitesimal source region around $x$ to the infinitesimal destination region around $y$. The coupling is the complete probabilistic description of the routing plan, encoding not just the average flow but the full joint distribution of source-destination pairs.
+
+**The two marginal constraints — send all the surplus and fill all the deficit — are the conditions $(\text{proj}_\mathcal{X})_\#\pi = \mu$ and $(\text{proj}_\mathcal{Y})_\#\pi = \nu$.** The first condition $\pi(A\times\mathcal{Y}) = \mu(A)$ says: the total grain flowing out of source region $A$ — summed over all possible destinations — equals the surplus at $A$ given by $\mu(A)$. No grain is left at the source. The second condition $\pi(\mathcal{X}\times B) = \nu(B)$ says: the total grain arriving at destination region $B$ — summed over all possible sources — equals the deficit at $B$ given by $\nu(B)$. No deficit goes unmet. Both constraints are linear in $\pi$ — they are linear equality constraints on the joint measure — which is precisely what makes the coupling set $\Pi(\mu,\nu)$ a convex set and the Kantorovich problem a linear program.
+
+**The independent coupling $\mu\otimes\nu$ — routing grain from each source to each destination completely at random with no geographic coordination — is the worst-case coupling, always in $\Pi(\mu,\nu)$ but maximally expensive.** The independent coupling assigns to each pair $(x,y)$ the product probability $\mu(x)\cdot\nu(y)$ — the grain at location $x$ is distributed across all destinations proportional to their deficit, regardless of distance. Its cost $\int c(x,y)\,d(\mu\otimes\nu) = \mathbb{E}_{X\sim\mu,Y\sim\nu}[c(X,Y)]$ is the expected cost when source and destination are chosen independently — the baseline that any intelligent routing plan improves upon. The independent coupling is always feasible (it always has the right marginals) but never optimal for any non-trivial cost function with geographic structure.
+
+---
+
+**The deterministic coupling induced by the Monge map $T$ — the joint measure $\pi_T = (\text{id},T)_\#\mu$ concentrated on the graph $\{(x,T(x))\}$ — is the special case of a coupling that corresponds to a transport map.** The graph $\{(x,T(x)):x\in\mathcal{X}\}$ is a curve in the product space $\mathcal{X}\times\mathcal{Y}$, and the coupling $\pi_T$ assigns all its mass to this curve — $\pi_T(\{(x,y):y\neq T(x)\}) = 0$. The coupling is a joint measure that, when you condition on the source location being $x$, always assigns the destination to be exactly $T(x)$ — no splitting, no randomness in the routing. Every Monge plan is a coupling concentrated on a graph. The Kantorovich set $\Pi(\mu,\nu)$ contains all such graph-concentrated measures and additionally all measures that spread mass across multiple destinations — the relaxation from Monge to Kantorovich is exactly the relaxation from graph-concentrated measures to general joint measures.
+
+**The convexity of $\Pi(\mu,\nu)$ — the proof that any convex combination of two valid couplings is a valid coupling — is the linearity of the marginal constraints making the feasible set an intersection of halfspaces.** If $\pi_1$ routes 70% of Kanchanpur's grain to Taplejung and 30% to Panchthar, and $\pi_2$ routes 40% to Taplejung and 60% to Panchthar, then $\frac{1}{2}\pi_1 + \frac{1}{2}\pi_2$ routes 55% to Taplejung and 45% to Panchthar — still a valid routing. The average of two valid logistics plans is a valid logistics plan. This is the linearity of the constraints: $\int_\mathcal{Y}(\lambda\pi_1+(1-\lambda)\pi_2)(x,\cdot)\,dy = \lambda\mu(x)+(1-\lambda)\mu(x) = \mu(x)$. Convexity of the feasible set follows immediately from linearity of the marginal conditions, and this is what makes the Kantorovich problem — minimize a linear objective over a convex set — a linear program.
+
+---
+
+**The transportation polytope in the discrete case — the set $\mathcal{U}(\mu,\nu) = \{P\in\mathbb{R}^{m\times n}_+: P\mathbf{1}=\mu, P^T\mathbf{1}=\nu\}$ of non-negative matrices with prescribed row and column sums — is the coupling set for discrete distributions.** Each entry $P_{ij}$ is the fraction of total grain flowing from source $i$ to destination $j$. The row sum constraint $\sum_j P_{ij} = \mu_i$ says all of source $i$'s surplus is shipped. The column sum constraint $\sum_i P_{ij} = \nu_j$ says all of destination $j$'s deficit is filled. The matrix $P$ is the discrete analogue of the joint density $\pi(x,y)$ — a non-negative table with prescribed marginals. The transportation polytope is the convex set whose vertices are the sparse basic feasible solutions with at most $m+n-1$ nonzero entries — the sparse routing plans where each source sends its grain to at most one destination and each destination receives from at most one source, corresponding to spanning trees of the bipartite routing graph.
+
+**The LP structure of the discrete Kantorovich problem — $\min_{P\in\mathcal{U}(\mu,\nu)}\langle C,P\rangle$ — is the balanced transportation LP from MATH 304, now recognized as the discrete instance of the Kantorovich problem.** The cost matrix $C_{ij} = c(x_i,y_j)$ encodes the transport cost per unit of grain flowing from source $i$ to destination $j$. The objective $\langle C,P\rangle = \sum_{i,j}C_{ij}P_{ij}$ is the total cost of the routing plan $P$. The LP has $mn$ variables and $m+n-1$ independent equality constraints. The dual LP — which will be derived precisely in Topic 4 — has $m+n$ variables (one per source, one per destination) with the interpretation of potential functions. The shadow prices you computed in MATH 304 for transportation LPs are the dual potential functions $\phi_i$ and $\psi_j$ of the Kantorovich dual, and the complementary slackness conditions of MATH 304 are the optimality conditions of the Kantorovich problem.
+
+---
+
+**The compactness of $\Pi(\mu,\nu)$ in the weak topology — the guarantee that the infimum is always attained — is Prokhorov's theorem applied to the coupling set.** The set $\Pi(\mu,\nu)$ is tight: for any $\varepsilon > 0$, there exists a compact set $K\subseteq\mathcal{X}\times\mathcal{Y}$ with $\pi(K^c) < \varepsilon$ for all $\pi\in\Pi(\mu,\nu)$, because $\mu$ and $\nu$ are individually tight (as probability measures on Polish spaces). Tightness plus closedness under weak limits (marginal constraints are preserved under weak convergence) gives compactness by Prokhorov's theorem. The Kantorovich functional $\pi\mapsto\int c\,d\pi$ is lower semicontinuous in the weak topology when $c$ is lower semicontinuous. A lower semicontinuous function on a compact set attains its minimum. Therefore the Kantorovich problem always has a solution — an optimal transport plan always exists — even when the Monge problem may have no solution or only an infimum that is not attained.
+
+**The cyclically monotone support of the optimal coupling — the condition that the support $\Gamma$ of $\pi^*$ satisfies $\sum_i c(x_i,y_i)\leq\sum_i c(x_i,y_{\sigma(i)})$ for all finite subsets and permutations — is the continuous generalization of the no-crossing principle.** In the grain logistics story: the optimal routing plan $\pi^*$ never has a finite set of source-destination pairs where rerouting the grain cyclically reduces cost. For $k=2$: the optimal plan never has two pairs $(x_1,y_1)$ and $(x_2,y_2)$ in its support where swapping destinations to $(x_1,y_2)$ and $(x_2,y_1)$ would be cheaper — the no-crossing principle of Topic 1. For $k\geq 3$: the optimal plan never has three or more pairs where any cyclic permutation of destinations reduces cost. The cyclical monotonicity of the support is the complete generalization of the no-crossing principle to all permutations, and it is equivalent to the support being concentrated on the subdifferential of a $c$-convex function — the generalization of the Brenier potential to arbitrary cost functions.
+
+---
+
+**The break moment example — $\mu=\delta_0$, $\nu=\frac{1}{2}\delta_{-1}+\frac{1}{2}\delta_1$, optimal coupling splits mass — is the formal demonstration that the Kantorovich relaxation is a strict relaxation, not merely a reformulation.** The Monge problem is infeasible: any map $T$ satisfies $T_\#\delta_0 = \delta_{T(0)}$, a point mass at a single point, which cannot equal $\nu = \frac{1}{2}\delta_{-1}+\frac{1}{2}\delta_1$. The Kantorovich problem is feasible with optimal coupling $\pi^* = \frac{1}{2}\delta_{(0,-1)}+\frac{1}{2}\delta_{(0,1)}$ — send half the mass at $0$ to $-1$ and half to $+1$. The cost is $\frac{1}{2}\cdot|0-(-1)|+\frac{1}{2}\cdot|0-1|=1$. This is the minimum possible cost since every unit of mass must travel at least distance 1 to reach either $\pm 1$. The Kantorovich coupling is not a graph-concentrated measure — it genuinely distributes the mass at $0$ between two destinations. Mass splitting is not only permitted — it is the unique optimal solution. The infeasibility of the Monge problem ($+\infty$ cost) versus the Kantorovich optimum (cost 1) quantifies exactly how much the relaxation gains.
+
+**The Wasserstein distance $W_p(\mu,\nu) = (\min_{\pi\in\Pi(\mu,\nu)}\int\|x-y\|^p\,d\pi)^{1/p}$ — the minimum cost coupling converted to a metric — is the fundamental geometric quantity that the coupling formulation defines.** The minimization over $\Pi(\mu,\nu)$ is the Kantorovich problem for the cost $c(x,y)=\|x-y\|^p$. The $p$-th root converts the cost (which scales as $p$-th power of distance) into a distance (which scales linearly). The three metric axioms — positivity, symmetry, triangle inequality — follow from: (i) the zero cost coupling being the diagonal measure $\pi=(\text{id},\text{id})_\#\mu$ only when $\mu=\nu$; (ii) the symmetry $\Pi(\mu,\nu)=\Pi(\nu,\mu)$ since swapping coordinates maps any coupling of $(\mu,\nu)$ to a coupling of $(\nu,\mu)$; (iii) the gluing lemma allowing couplings to be composed via the three-way measure, proving the triangle inequality.
+
+**The gluing lemma — the existence of a three-way coupling $\tilde\pi$ on $\mathcal{X}\times\mathcal{Y}\times\mathcal{Z}$ given marginal couplings $\pi_1\in\Pi(\mu,\nu)$ and $\pi_2\in\Pi(\nu,\rho)$ — is the grain logistics version of connecting two separate routing plans through a common intermediate hub.** If you have an optimal routing plan from western surplus to Kathmandu (coupling $\pi_1$ of $\mu$ and $\nu$) and an optimal routing plan from Kathmandu to eastern deficit (coupling $\pi_2$ of $\nu$ and $\rho$), the gluing lemma produces a joint plan for the full west-to-east routing ($\tilde\pi$ on $\mu$, $\nu$, $\rho$) that simultaneously realizes both sub-plans. The projection onto western-eastern pairs is a coupling of $\mu$ and $\rho$ — generally suboptimal but valid — and the triangle inequality follows because its cost is at most the sum of the two sub-plan costs.
+
+---
+
+**The connection to MATH 304 (Computational Operations Research) is now complete and bidirectional.** The balanced transportation LP that you solved using the northwest corner method and the transportation simplex is the discrete Kantorovich problem. The northwest corner solution is a basic feasible solution of the transportation polytope — a coupling with at most $m+n-1$ nonzero entries, corresponding to a partial Monge assignment that routes each source to at most one destination and each destination from at most one source. Vogel's approximation method selects the initial basic feasible solution by considering the cost differences between the cheapest and second-cheapest options — a greedy heuristic that approximates the optimal coupling. The transportation simplex pivots between basic feasible solutions — moves between vertices of the transportation polytope — improving the objective at each step, exactly as the general simplex method moves between vertices of a linear programming feasible set. Every algorithm you learned for transportation LPs in MATH 304 is a special case of an algorithm for the discrete Kantorovich problem.
+
+**The connection to MATH 208 (Statistics and Probability) closes through joint distributions and covariance.** The joint distribution of any pair of random variables $(X,Y)$ is a coupling of their marginals $\mu_X$ and $\mu_Y$. The independent coupling $\mu_X\otimes\mu_Y$ corresponds to independent $X$ and $Y$, with zero covariance. The optimal coupling for the quadratic cost minimizes $\mathbb{E}[\|X-Y\|^2] = \mathbb{E}[\|X\|^2] + \mathbb{E}[\|Y\|^2] - 2\mathbb{E}[\langle X,Y\rangle]$, which is equivalent to maximizing the cross-term $\mathbb{E}[\langle X,Y\rangle]$ — the coupling that maximizes the inner product between the two random variables. For one-dimensional Gaussians $\mu=\mathcal{N}(m_1,\sigma_1^2)$ and $\nu=\mathcal{N}(m_2,\sigma_2^2)$, the optimal coupling is the jointly Gaussian $(X,Y)$ with perfect positive correlation: $Y = m_2 + \frac{\sigma_2}{\sigma_1}(X-m_1)$, giving $W_2^2 = (m_1-m_2)^2 + (\sigma_1-\sigma_2)^2$ — the squared Euclidean distance between the mean-standard deviation pairs. Every joint distribution you computed in MATH 208 was a coupling, and the independence and covariance structure you analyzed was the structure of that coupling.
+
+**The connection to MATH 213 (Analysis I) runs through weak convergence and the metrization result.** The Wasserstein distance $W_p(\mu_k,\mu)\to 0$ if and only if $\mu_k\rightharpoonup\mu$ weakly (all bounded continuous test functions converge in expectation) plus convergence of $p$-th moments. The weak convergence part is the Analysis I notion of convergence for sequences of functions tested against bounded continuous functions — the distributional convergence you computed when finding limits of probability measures on $\mathbb{R}$. The moment convergence is the additional tightness condition that prevents mass from escaping to infinity — the quantitative control that makes Wasserstein convergence stronger than purely distributional convergence. Every convergence-in-distribution argument in MATH 208 was weak convergence of probability measures, and the Wasserstein distance strengthens this to include geometric information about how far apart the distributions are in the underlying metric space.
+
+---
+
+**Looking forward across the roadmap**, the coupling formulation is the foundation of everything that follows. In Topic 3, the Wasserstein distance is defined as the minimum cost coupling — the $p$-th root of the Kantorovich minimum — and its metric properties follow from the coupling set's structure. In Topic 4, the Kantorovich dual converts the primal coupling problem into a dual potential problem — the shadow prices of the marginal constraints become the potential functions, and the LP duality of the transportation problem becomes the Kantorovich duality theorem. In Phase 1's Chapter 2, the Sinkhorn algorithm minimizes the entropically regularized Kantorovich problem — adding a KL divergence penalty to the objective, converting the linear program into a smooth strongly convex problem whose unique solution is a coupling that is strictly interior to the transportation polytope. The Sinkhorn iterations are coordinate ascent on the dual of this regularized problem, alternately updating the row and column scaling factors of the coupling. In Phase 3, the JKO scheme minimizes a functional over the space of probability measures by finding the optimal coupling between the current distribution and the target distribution at each step — the coupling formulation is the tool that makes each JKO step a well-posed optimization problem.
+
+The grain logistics plan — the joint distribution $\pi(x,y)$ over source-destination pairs, satisfying the marginal constraints, minimizing the expected transport cost — is not an approximation to the Monge map. It is the more fundamental object. The Monge map is the special case where the coupling is concentrated on a graph. The coupling is the full probabilistic generalization that handles discrete measures, guarantees existence of optimal plans, convexifies the feasible set, and makes the duality theory of Topic 4 possible.
+
+---
+---

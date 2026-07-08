@@ -1,0 +1,362 @@
+# Topic 4 - Kantorovich Duality: The Dual Soul of Optimal Transport
+
+## Introduction
+
+You have now seen three faces of the same problem. The Monge problem asked for the optimal deterministic map — the single function that moves every grain of mass from source to destination at minimum cost. The Kantorovich relaxation replaced that function with a coupling — a joint distribution over source-destination pairs — and converted the non-convex Monge problem into a linear program over the convex set of all valid couplings. The Wasserstein distance emerged as the value of that linear program: the minimum total cost over all couplings.
+
+But the Kantorovich linear program is still a primal problem. It asks for the optimal coupling $\pi^*$ — the actual transportation plan, the full joint distribution over pairs $(x, y)$. In high dimensions and continuous spaces, this is an enormous object. A coupling over $\mathbb{R}^n \times \mathbb{R}^n$ is a measure on a $2n$-dimensional space. Computing it directly is expensive. Storing it is expensive. Even verifying that a given coupling is optimal is non-trivial.
+
+The Kantorovich dual turns this around completely. Instead of asking "what is the optimal way to move mass?" it asks a different question: "what is the optimal way to price the mass?" Instead of optimizing over transportation plans — objects living on the product space $\mathcal{X} \times \mathcal{Y}$ — the dual optimizes over pairs of potential functions $(\phi, \psi)$, each living on the original spaces $\mathcal{X}$ and $\mathcal{Y}$ separately. The dual problem is lower-dimensional, more interpretable, and in many ways more computationally tractable than the primal.
+
+The duality is exact — strong duality holds, the duality gap is zero — meaning the optimal value of the dual equals the optimal value of the primal. The Wasserstein distance can be computed either as the minimum cost of the optimal coupling, or as the maximum dual value of the optimal potential pair. These are two completely different representations of the same number, and the choice between them is a matter of computational and theoretical convenience.
+
+This topic has four components that build the complete picture of Kantorovich duality.
+
+The first is **the economic interpretation of the dual** — understanding what the potential functions $\phi$ and $\psi$ mean, why the dual constraint $\phi(x) + \psi(y) \leq c(x,y)$ is a no-arbitrage condition, and why maximizing $\int \phi \, d\mu + \int \psi \, d\nu$ is the correct dual objective. The dual has a clean economic reading as a competitive pricing problem, and this reading is the story through which the mathematics becomes inevitable.
+
+The second is **the $c$-transform** — the operation that, given one dual potential $\phi$, produces the best possible partner potential $\psi$ via $\psi(y) = \inf_x \{c(x,y) - \phi(x)\}$. The $c$-transform is the Optimal Transport generalization of the Legendre-Fenchel transform from Chapter 2 of Phase 0. For the quadratic cost $c(x,y) = \|x-y\|^2$, the $c$-transform reduces exactly to the Legendre-Fenchel conjugate. The $c$-transform is the operation that enforces the dual constraint tightly — it finds the sharpest possible bound on $\psi$ given $\phi$.
+
+The third is **the complementary slackness condition** — the KKT condition that characterizes the optimal coupling through its relationship with the optimal potentials. The optimal coupling $\pi^*$ concentrates precisely on the set where the dual constraint is tight: $\{(x,y) : \phi(x) + \psi(y) = c(x,y)\}$. This contact set is the geometric locus of optimal transport — the pairs $(x, y)$ that actually appear in the optimal plan are exactly those where the potentials exactly exhaust the cost. Mass is only transported along routes where the pricing is perfectly efficient.
+
+The fourth is **the Kantorovich-Rubinstein formula** — the special case of the duality for the $W_1$ distance and the cost $c(x,y) = d(x,y)$, where the dual simplifies to a supremum over Lipschitz-1 functions: $W_1(\mu,\nu) = \sup_{\text{Lip}(f) \leq 1} \int f \, d(\mu - \nu)$. This formula is the foundation of the Wasserstein GAN — the machine learning architecture that uses the Kantorovich-Rubinstein duality to estimate the $W_1$ distance between the real data distribution and the generator distribution by training a neural network to approximate the optimal Lipschitz potential. The theoretical basis of an entire class of generative models reduces to this one formula.
+
+By the end of this topic, duality in Optimal Transport will not feel like an abstract algebraic trick. It will feel like the only natural way to think about the problem — the primal asks how to move mass, the dual asks how to price it, and the fact that these two questions have the same answer is the content of strong duality. Every subsequent topic in Phase 1 — Sinkhorn, displacement interpolation, barycenters — uses Kantorovich duality either directly or through the $c$-transform structure it introduces. And in Phase 3, the connection between the dual potentials and the score function of a diffusion model will make the path from Kantorovich duality to state-of-the-art generative AI completely explicit.
+
+---
+
+## Layer 1 (Story)
+
+You are the owner of a grain trading company in Kathmandu, and you have just been handed a contract that will define your career. The Nepal Food Corporation — the same organization from the previous topic — has decided not to manage the grain transport itself this time. Instead, it has announced an open market. Any private logistics company can bid to move grain from the western surplus districts to the eastern deficit districts. The contract goes to whoever can move all the grain at the lowest total cost.
+
+But your company is not a logistics company. You do not own trucks. You do not manage routes. What you own is a pricing desk — a team of economists who are extraordinarily good at setting prices. And your senior economist walks into your office with an unexpected proposal: we do not need to solve the transportation problem directly. We can solve its mirror image instead, and get the exact same answer.
+
+---
+
+**The pricing desk's proposal**
+
+Your economist lays out the idea. Instead of asking "what is the cheapest way to move the grain?", ask a different question: "what is the right price to charge for grain at each location?"
+
+Specifically, imagine two price lists. The first is a list of prices $\phi(x)$ — one price for every western surplus location $x$. This is the price at which your company will buy grain from that location. The second is a list of prices $\psi(y)$ — one price for every eastern deficit location $y$. This is the price at which your company will sell grain to that location.
+
+Your company's profit on a single tonne of grain bought at location $x$ and sold at location $y$ is $\phi(x) + \psi(y)$ — the buying price plus the selling price, where by convention we treat buying as a positive receipt and the net profit as the sum. Actually, let us be more careful: $\phi(x)$ is what you pay the western farmer per tonne, and $\psi(y)$ is what you charge the eastern buyer per tonne. Your revenue from moving one tonne from $x$ to $y$ is $\phi(x) + \psi(y)$ minus the transportation cost $c(x,y)$. You make a profit on this route if and only if $\phi(x) + \psi(y) > c(x,y)$.
+
+---
+
+**The no-arbitrage constraint**
+
+Now here is the critical observation your economist makes. If your price list ever has a pair of locations $(x, y)$ where $\phi(x) + \psi(y) > c(x,y)$ — where the sum of your buying and selling prices exceeds the actual transportation cost — then any logistics company can make a profit by simply undercutting you. They buy grain at $x$ for slightly less than $\phi(x)$, transport it to $y$ for cost $c(x,y)$, and sell it at $y$ for slightly more than $\psi(y)$, pocketing the difference. Your pricing scheme is exploitable — there is an arbitrage opportunity.
+
+A price list that has no arbitrage opportunities must satisfy, for every possible pair of locations $(x, y)$:
+
+$$\phi(x) + \psi(y) \leq c(x,y)$$
+
+This is the no-arbitrage constraint. It says: the sum of what you pay at the source and what you charge at the destination can never exceed the actual cost of transportation between those two points. If it did, someone would exploit the gap.
+
+Your economist points out that this constraint must hold for every pair $(x, y)$ — not just the pairs that appear in your actual transport plan, but all possible pairs. The pricing must be globally consistent with the cost structure.
+
+---
+
+**The pricing company's objective**
+
+Your company's total revenue from buying all the grain in the west and selling it all in the east is:
+
+$$\int \phi(x) \, d\mu(x) + \int \psi(y) \, d\nu(y)$$
+
+The first term is the total amount you pay to western farmers — you buy $d\mu(x)$ tonnes at each location $x$ at price $\phi(x)$. The second term is the total amount you receive from eastern buyers — you sell $d\nu(y)$ tonnes at each location $y$ at price $\psi(y)$.
+
+Your company wants to maximize this total revenue, subject to the no-arbitrage constraint $\phi(x) + \psi(y) \leq c(x,y)$ for all $(x,y)$.
+
+This is the Kantorovich dual problem.
+
+---
+
+**Why maximizing revenue gives the Wasserstein distance**
+
+Your economist now makes the claim that will seem impossible until you see why it is true: the maximum revenue your pricing company can extract — the highest value of $\int \phi \, d\mu + \int \psi \, d\nu$ subject to the no-arbitrage constraint — is exactly equal to the minimum transportation cost of the optimal logistics company.
+
+Two completely different optimization problems. One minimizes over transportation plans. The other maximizes over price lists. They have the same optimal value.
+
+To see why this must be true, consider the relationship between any valid price list $(\phi, \psi)$ and any valid transportation plan $\pi$. The no-arbitrage constraint says $\phi(x) + \psi(y) \leq c(x,y)$ for all $(x,y)$. Integrate both sides against the coupling $\pi$:
+
+$$\int \phi(x) \, d\pi(x,y) + \int \psi(y) \, d\pi(x,y) \leq \int c(x,y) \, d\pi(x,y)$$
+
+The left side, using the marginal constraints $\pi_x = \mu$ and $\pi_y = \nu$, simplifies to $\int \phi \, d\mu + \int \psi \, d\nu$. The right side is the transportation cost of the plan $\pi$. So for any valid price list and any valid transportation plan:
+
+$$\text{(pricing company's revenue)} \leq \text{(logistics company's cost)}$$
+
+Any revenue the pricing company can extract is a lower bound on what the logistics company must spend. The pricing company cannot extract more than the transportation is genuinely worth. This is weak duality — the dual value never exceeds the primal value.
+
+Strong duality says the gap closes: there exist an optimal price list and an optimal transportation plan such that the revenue exactly equals the cost. This is not obvious — it is a theorem, proved using the minimax theorem and the compactness of the coupling set — but its economic interpretation is clean. At optimality, the pricing company has set prices so tightly that the logistics company can find no cheaper alternative: the price list exactly reflects the true cost of optimal transport.
+
+---
+
+**The break moment**
+
+Here is the naive assumption that breaks.
+
+You might think: the no-arbitrage constraint $\phi(x) + \psi(y) \leq c(x,y)$ must be tight everywhere in the optimal solution — that at optimality, the inequality becomes an equality for all $(x,y)$, not just the pairs in the transport plan. After all, if you are maximizing $\int \phi \, d\mu + \int \psi \, d\nu$, why would you ever leave slack in the constraint? Tighter prices mean higher revenue, so the optimal prices must saturate the constraint everywhere.
+
+This breaks immediately. Suppose you have three locations in the west — $x_1$, $x_2$, $x_3$ — and three locations in the east — $y_1$, $y_2$, $y_3$ — and the optimal transport plan sends $x_1$ to $y_1$, $x_2$ to $y_2$, and $x_3$ to $y_3$. The no-arbitrage constraint must be tight on the pairs $(x_1, y_1)$, $(x_2, y_2)$, $(x_3, y_3)$ that appear in the optimal plan. But the constraint on the off-diagonal pairs — $(x_1, y_2)$, $(x_1, y_3)$, $(x_2, y_1)$, and so on — need not be tight. In fact, if you tried to force the constraint to be tight everywhere simultaneously, you would be demanding that $\phi(x) + \psi(y) = c(x,y)$ for all nine pairs, which would over-determine the system and generally have no solution.
+
+The correct statement is the complementary slackness condition: the optimal coupling $\pi^*$ concentrates precisely on the pairs where the constraint is tight. Mass is only transported along routes where $\phi(x) + \psi(y) = c(x,y)$. On the off-diagonal pairs — the routes not used in the optimal plan — the constraint can be strictly slack: $\phi(x) + \psi(y) < c(x,y)$. The pricing is tight exactly where transport happens, and loose everywhere else. This is not a failure of optimality — it is the precise characterization of which routes are used.
+
+---
+
+**The $c$-transform: finding the best partner price**
+
+Suppose your pricing desk has already fixed the buying prices $\phi(x)$ for all western locations. What is the highest selling price $\psi(y)$ you can set at each eastern location $y$ without violating the no-arbitrage constraint for any source location $x$?
+
+The no-arbitrage constraint $\phi(x) + \psi(y) \leq c(x,y)$ must hold for all $x$. So the highest valid selling price at $y$ is:
+
+$$\psi(y) = \inf_x \{c(x,y) - \phi(x)\}$$
+
+This operation — given $\phi$, produce the tightest valid $\psi$ — is the $c$-transform of $\phi$. It is written $\psi = \phi^c$. The $c$-transform finds the best possible partner potential: given the buying prices, it sets the selling prices as high as possible without creating any arbitrage opportunity.
+
+For the quadratic cost $c(x,y) = \|x-y\|^2$, the $c$-transform becomes:
+
+$$\phi^c(y) = \inf_x\{\|x-y\|^2 - \phi(x)\}$$
+
+Expanding $\|x-y\|^2 = \|x\|^2 - 2\langle x,y\rangle + \|y\|^2$ and rearranging, this is:
+
+$$\phi^c(y) = \|y\|^2 + \inf_x\{-2\langle x,y\rangle + \|x\|^2 - \phi(x)\} = \|y\|^2 - \sup_x\{2\langle x,y\rangle - \|x\|^2 + \phi(x)\}$$
+
+which is precisely the Legendre-Fenchel conjugate of a modified version of $\phi$. The $c$-transform for the quadratic cost is the Legendre-Fenchel transform in disguise. The pricing operation your economist invented is the Optimal Transport generalization of the convex conjugate from Chapter 2 of Phase 0.
+
+---
+
+**The Kantorovich-Rubinstein formula: the $W_1$ case**
+
+For the $W_1$ distance — the cost $c(x,y) = d(x,y)$, the actual geographic distance — the dual simplifies dramatically. The no-arbitrage constraint $\phi(x) + \psi(y) \leq d(x,y)$ for all $x,y$ is equivalent, when $\psi = -\phi$ (and this is the optimal choice in the symmetric case $\mu$ and $\nu$ on the same space), to:
+
+$$\phi(x) - \phi(y) \leq d(x,y) \quad \text{for all } x, y$$
+
+This is exactly the Lipschitz-1 condition on $\phi$: the function $\phi$ cannot change faster than the distance between its arguments. The dual problem becomes:
+
+$$W_1(\mu,\nu) = \sup_{\text{Lip}(\phi) \leq 1} \int \phi \, d(\mu - \nu)$$
+
+This is the Kantorovich-Rubinstein formula. The $W_1$ distance between two distributions is the maximum difference in expected value of any Lipschitz-1 function. In the grain market: the $W_1$ distance is determined by the most discriminating price function — the function $\phi$ that extracts the maximum revenue difference between the two distributions while never varying faster than the geographic distance.
+
+This formula is the theoretical foundation of the Wasserstein GAN. The discriminator network in a Wasserstein GAN is trained to approximate the optimal Lipschitz-1 function $\phi^*$ — the function that maximally distinguishes the real data distribution from the generator distribution in the $W_1$ sense. The generator is trained to minimize this distance. The entire adversarial training loop of the Wasserstein GAN is the Kantorovich-Rubinstein formula made computational: the discriminator solves the dual, the generator updates the primal.
+
+---
+
+Hold four pictures simultaneously as you move to the mathematics.
+
+The pricing desk in Kathmandu: two price lists, one for western buying locations and one for eastern selling locations, subject to the no-arbitrage constraint that their sum never exceeds the transportation cost — this is the Kantorovich dual problem.
+
+The complementary slackness condition: the constraint is tight precisely on the routes that appear in the optimal transport plan, and slack on all unused routes — mass flows only where pricing is perfectly efficient.
+
+The $c$-transform: given one potential, find its sharpest valid partner by taking the infimum of cost minus potential — the Optimal Transport generalization of the Legendre-Fenchel conjugate.
+
+The Kantorovich-Rubinstein formula: the $W_1$ distance is a supremum over Lipschitz-1 functions, and this supremum is the discriminator objective of the Wasserstein GAN.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in five stages: the precise statement of the Kantorovich dual problem, the $c$-transform and $c$-concavity, the strong duality theorem and its proof strategy, the complementary slackness condition, and the Kantorovich-Rubinstein formula for $W_1$.
+
+### The Kantorovich Primal — Recap
+
+Let $\mu \in \mathcal{P}(\mathcal{X})$ and $\nu \in \mathcal{P}(\mathcal{Y})$ be Borel probability measures on Polish spaces, and let $c: \mathcal{X} \times \mathcal{Y} \to [0,\infty]$ be a lower semicontinuous cost function. The Kantorovich primal problem is:
+
+$$\mathcal{K}(\mu,\nu) = \inf_{\pi \in \Pi(\mu,\nu)} \int_{\mathcal{X}\times\mathcal{Y}} c(x,y) \, d\pi(x,y)$$
+
+where $\Pi(\mu,\nu) = \{\pi \in \mathcal{P}(\mathcal{X}\times\mathcal{Y}) : (\text{proj}_x)_\#\pi = \mu, \, (\text{proj}_y)_\#\pi = \nu\}$ is the set of couplings with marginals $\mu$ and $\nu$.
+
+---
+
+### The Kantorovich Dual Problem — Precise Statement
+
+Define the set of **dual feasible potentials**:
+
+$$\Phi_c = \{(\phi,\psi) \in L^1(\mu) \times L^1(\nu) : \phi(x) + \psi(y) \leq c(x,y) \text{ for } \mu\text{-a.e. } x, \nu\text{-a.e. } y\}$$
+
+The **Kantorovich dual problem** is:
+
+$$\mathcal{D}(\mu,\nu) = \sup_{(\phi,\psi) \in \Phi_c} \left\{ \int_\mathcal{X} \phi(x) \, d\mu(x) + \int_\mathcal{Y} \psi(y) \, d\nu(y) \right\}$$
+
+The dual variables $\phi: \mathcal{X} \to \mathbb{R}$ and $\psi: \mathcal{Y} \to \mathbb{R}$ are called **Kantorovich potentials**. The constraint $\phi(x) + \psi(y) \leq c(x,y)$ must hold for all pairs $(x,y)$ — not just the pairs in the support of the optimal coupling, but universally.
+
+**Weak duality** holds immediately: for any $(\phi,\psi) \in \Phi_c$ and any $\pi \in \Pi(\mu,\nu)$:
+
+$$\int \phi \, d\mu + \int \psi \, d\nu = \int [\phi(x) + \psi(y)] \, d\pi(x,y) \leq \int c(x,y) \, d\pi(x,y)$$
+
+where the equality uses the marginal constraints on $\pi$, and the inequality uses dual feasibility. Therefore $\mathcal{D}(\mu,\nu) \leq \mathcal{K}(\mu,\nu)$.
+
+---
+
+### The $c$-Transform and $c$-Concavity
+
+**Definition ($c$-transform).** For a function $\phi: \mathcal{X} \to \mathbb{R} \cup \{-\infty\}$, its **$c$-transform** is:
+
+$$\phi^c(y) = \inf_{x \in \mathcal{X}} \{c(x,y) - \phi(x)\}, \quad y \in \mathcal{Y}$$
+
+For a function $\psi: \mathcal{Y} \to \mathbb{R} \cup \{-\infty\}$, its **$\bar{c}$-transform** is:
+
+$$\psi^{\bar{c}}(x) = \inf_{y \in \mathcal{Y}} \{c(x,y) - \psi(y)\}, \quad x \in \mathcal{X}$$
+
+**Key properties:**
+
+1. $\phi^c$ is the largest function satisfying $\phi(x) + \phi^c(y) \leq c(x,y)$ for all $x,y$, given $\phi$.
+2. $(\phi^c)^{\bar{c}} \geq \phi$ always, with equality if and only if $\phi$ is $c$-concave.
+3. For any $(\phi,\psi) \in \Phi_c$: $\psi \leq \phi^c$ pointwise, so $\int \psi \, d\nu \leq \int \phi^c \, d\nu$.
+
+Property 3 means that in the dual supremum, we can always replace $\psi$ with $\phi^c$ without decreasing the objective. Therefore:
+
+$$\mathcal{D}(\mu,\nu) = \sup_{\phi \in L^1(\mu)} \left\{ \int_\mathcal{X} \phi \, d\mu + \int_\mathcal{Y} \phi^c \, d\nu \right\}$$
+
+The dual reduces to a single-function optimization over $\phi$ alone — once $\phi$ is fixed, the optimal partner is always $\psi = \phi^c$.
+
+**Definition ($c$-concavity).** A function $\phi: \mathcal{X} \to \mathbb{R} \cup \{-\infty\}$ is **$c$-concave** if $\phi = \psi^{\bar{c}}$ for some $\psi: \mathcal{Y} \to \mathbb{R} \cup \{-\infty\}$, equivalently if $(\phi^c)^{\bar{c}} = \phi$. The $c$-concave functions are precisely the functions that arise as optimal Kantorovich potentials.
+
+**The quadratic cost case.** For $c(x,y) = \|x-y\|_2^2 = \|x\|^2 - 2\langle x,y\rangle + \|y\|^2$, write $\tilde\phi(x) = \frac{1}{2}\|x\|^2 - \frac{1}{2}\phi(x)$. Then:
+
+$$\phi^c(y) = \inf_x\{\|x-y\|^2 - \phi(x)\} = \|y\|^2 - \sup_x\{2\langle x,y\rangle - \|x\|^2 + \phi(x)\} = \|y\|^2 - 2\tilde\phi^*(y)$$
+
+where $\tilde\phi^*(y) = \sup_x\{\langle x,y\rangle - \tilde\phi(x)\}$ is the **Legendre-Fenchel conjugate** of $\tilde\phi$ from Chapter 2 of Phase 0. The $c$-transform for quadratic cost is the Legendre-Fenchel transform applied to a modified potential. $c$-concavity for quadratic cost reduces to convexity of $\tilde\phi$ — the $c$-concave potentials for quadratic cost are precisely the functions of the form $\frac{1}{2}\|x\|^2 - \phi(x)$ with $\phi$ convex.
+
+---
+
+### The Strong Duality Theorem
+
+**Theorem (Kantorovich Duality).** Let $\mu \in \mathcal{P}(\mathcal{X})$, $\nu \in \mathcal{P}(\mathcal{Y})$, and $c: \mathcal{X}\times\mathcal{Y} \to [0,\infty]$ lower semicontinuous with $\mathcal{K}(\mu,\nu) < \infty$. Then:
+
+$$\inf_{\pi \in \Pi(\mu,\nu)} \int c \, d\pi = \sup_{(\phi,\psi) \in \Phi_c} \left\{\int \phi \, d\mu + \int \psi \, d\nu\right\}$$
+
+The infimum on the left is attained by an optimal coupling $\pi^*$. The supremum on the right is attained by a $c$-concave potential $\phi^*$ and its $c$-transform $\psi^* = (\phi^*)^c$.
+
+**Proof strategy.** The proof uses the minimax theorem (a consequence of the Hahn-Banach separation theorem from functional analysis). The Kantorovich problem can be written as:
+
+$$\mathcal{K}(\mu,\nu) = \inf_{\pi \geq 0} \sup_{(\phi,\psi)} \left\{ \int c \, d\pi + \int \phi \, d\mu + \int \psi \, d\nu - \int [\phi(x)+\psi(y)] \, d\pi \right\}$$
+
+where the supremum enforces the marginal constraints via Lagrange multipliers $\phi$ and $\psi$. The minimax theorem allows exchanging inf and sup when the feasible sets are convex and compact (using tightness of the coupling set in the weak topology), giving:
+
+$$\mathcal{K}(\mu,\nu) = \sup_{(\phi,\psi)} \inf_{\pi \geq 0} \left\{ \int [c(x,y) - \phi(x) - \psi(y)] \, d\pi + \int \phi \, d\mu + \int \psi \, d\nu \right\}$$
+
+The inner infimum over $\pi \geq 0$ equals $-\infty$ unless $c(x,y) - \phi(x) - \psi(y) \geq 0$ for all $(x,y)$ — the dual feasibility constraint. When feasibility holds, the inner infimum is $0$ (attained at $\pi = 0$), giving $\mathcal{D}(\mu,\nu)$. Therefore $\mathcal{K}(\mu,\nu) = \mathcal{D}(\mu,\nu)$. $\square$
+
+---
+
+### Complementary Slackness and the Contact Set
+
+**Theorem (Complementary Slackness).** Let $\pi^*$ be an optimal coupling and $(\phi^*, \psi^*)$ be optimal dual potentials. Then:
+
+$$\pi^*\text{-almost surely}: \quad \phi^*(x) + \psi^*(y) = c(x,y)$$
+
+The optimal coupling is supported on the **contact set**:
+
+$$\Gamma^* = \{(x,y) \in \mathcal{X}\times\mathcal{Y} : \phi^*(x) + \psi^*(y) = c(x,y)\}$$
+
+**Proof.** From weak duality:
+
+$$\int c \, d\pi^* \geq \int \phi^* \, d\mu + \int \psi^* \, d\nu = \int [\phi^*(x) + \psi^*(y)] \, d\pi^*$$
+
+By strong duality, the left side equals the right side. Therefore:
+
+$$\int [c(x,y) - \phi^*(x) - \psi^*(y)] \, d\pi^* = 0$$
+
+Since $c(x,y) - \phi^*(x) - \psi^*(y) \geq 0$ everywhere (dual feasibility) and the integral is zero, the integrand must be zero $\pi^*$-almost surely. $\square$
+
+**Geometric interpretation.** The contact set $\Gamma^*$ is $c$-cyclically monotone: for any finite collection $(x_1,y_1),\ldots,(x_k,y_k) \in \Gamma^*$ and any permutation $\sigma$:
+
+$$\sum_{i=1}^k c(x_i, y_i) \leq \sum_{i=1}^k c(x_i, y_{\sigma(i)})$$
+
+The optimal coupling cannot be improved by any cyclic permutation of destinations — this is the Optimal Transport analogue of cyclical monotonicity from Topic 1, now derived from duality rather than assumed.
+
+**Connection to the Brenier theorem.** For quadratic cost with $\mu \ll \lambda^n$, the contact set is $\Gamma^* = \{(x, \nabla\phi^*(x))\}$ — the graph of the Brenier map. The complementary slackness condition forces the optimal coupling to concentrate on this graph, which (by absolute continuity of $\mu$) is the graph of a function. This is the duality-based proof of the Brenier theorem sketched in Topic 1.
+
+---
+
+### The Kantorovich-Rubinstein Formula for $W_1$
+
+For the $1$-Wasserstein distance with cost $c(x,y) = d(x,y)$ (the metric on $\mathcal{X}$), the dual simplifies substantially.
+
+**Theorem (Kantorovich-Rubinstein).** For $\mu, \nu \in \mathcal{P}(\mathcal{X})$ with $\mathcal{X}$ a Polish metric space:
+
+$$W_1(\mu,\nu) = \sup \left\{ \int f \, d\mu - \int f \, d\nu : \text{Lip}(f) \leq 1 \right\} = \sup_{\text{Lip}(f)\leq 1} \int f \, d(\mu - \nu)$$
+
+where $\text{Lip}(f) = \sup_{x \neq y} |f(x)-f(y)|/d(x,y)$ is the Lipschitz constant of $f$.
+
+**Proof.** For $c(x,y) = d(x,y)$, the dual constraint $\phi(x) + \psi(y) \leq d(x,y)$ with the optimal choice $\psi = -\phi$ (valid when $\mathcal{X} = \mathcal{Y}$ and $c$ is symmetric) becomes:
+
+$$\phi(x) - \phi(y) \leq d(x,y) \quad \forall x,y$$
+
+This is exactly $\text{Lip}(\phi) \leq 1$. With $\psi = -\phi$, the dual objective becomes $\int \phi \, d\mu + \int (-\phi) \, d\nu = \int \phi \, d(\mu-\nu)$. Taking the supremum over all Lipschitz-1 functions $\phi$ gives the Kantorovich-Rubinstein formula. $\square$
+
+**The 1-Lipschitz constraint as $c$-concavity.** For $c(x,y) = d(x,y)$, a function is $c$-concave if and only if it is $1$-Lipschitz. The $c$-transform of $\phi$ is $\phi^c(y) = \inf_x\{d(x,y) - \phi(x)\}$, the largest $1$-Lipschitz function below $-\phi$ (shifted). The $c$-concave potentials for the $W_1$ problem are precisely the $1$-Lipschitz functions.
+
+**Wasserstein GAN connection.** In the Wasserstein GAN (Arjovsky et al., 2017), the discriminator $f_\theta: \mathcal{X} \to \mathbb{R}$ is a neural network trained to maximize $\mathbb{E}_{x \sim \mu}[f_\theta(x)] - \mathbb{E}_{x \sim \nu_\theta}[f_\theta(x)]$ subject to $\text{Lip}(f_\theta) \leq 1$, where $\mu$ is the real data distribution and $\nu_\theta$ is the generator distribution. By the Kantorovich-Rubinstein formula, this objective equals $W_1(\mu, \nu_\theta)$ when $f_\theta$ achieves the supremum. The Lipschitz constraint is enforced approximately via weight clipping or gradient penalty ($\|\nabla f_\theta\|_2 \leq 1$ almost everywhere). The generator minimizes $W_1(\mu,\nu_\theta)$ by gradient descent through the discriminator.
+
+---
+
+### The Dual Problem in Discrete Settings
+
+When $\mu = \sum_{i=1}^m a_i \delta_{x_i}$ and $\nu = \sum_{j=1}^n b_j \delta_{y_j}$ are discrete measures, the Kantorovich dual becomes a finite-dimensional linear program. The coupling $\pi$ is a matrix $P \in \mathbb{R}^{m \times n}_+$ with row sums $a$ and column sums $b$, and the dual variables $\phi \in \mathbb{R}^m$ and $\psi \in \mathbb{R}^n$ are finite-dimensional vectors. The dual problem is:
+
+$$\max_{\phi \in \mathbb{R}^m, \psi \in \mathbb{R}^n} \left\{ \sum_i a_i \phi_i + \sum_j b_j \psi_j : \phi_i + \psi_j \leq C_{ij} \; \forall i,j \right\}$$
+
+where $C \in \mathbb{R}^{m\times n}$ is the cost matrix with $C_{ij} = c(x_i, y_j)$. This is the LP dual of the discrete Kantorovich problem, with $mn$ dual constraints (one per entry of $C$) and $m+n$ dual variables. The complementary slackness condition says the optimal coupling $P^*$ satisfies $P^*_{ij} > 0 \Rightarrow \phi_i + \psi_j = C_{ij}$: mass is only transported on routes where the dual constraint is tight. This is the LP complementary slackness condition from Chapter 2 of Phase 0 (KKT conditions), specialized to the transportation LP.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 213 and MATH 325 (Analysis I and II), the Hahn-Banach theorem and its geometric form (the separation theorem for convex sets) are the foundational results. The minimax theorem used to prove strong duality is a consequence of Hahn-Banach: the primal and dual feasible sets are separated by the optimal hyperplane when the duality gap is zero. The entire proof of the Kantorovich duality theorem is functional analysis applied to infinite-dimensional linear programming, and the tools are the same ones developed in your analysis sequence.
+
+In MATH 304 (Computational Operations Research), the LP duality theorem says that for any linear program in standard form, the dual has the same optimal value as the primal when both are feasible (strong duality for LPs). The Kantorovich duality theorem is the infinite-dimensional generalization: the Kantorovich problem is an LP over the infinite-dimensional space of measures, and strong duality holds by the same minimax argument. The complementary slackness conditions from MATH 304 — primal constraint active whenever the dual variable is nonzero — are exactly the condition $\phi^*(x) + \psi^*(y) = c(x,y)$ on the support of $\pi^*$.
+
+In MATH 213 (Analysis I), the study of continuous linear functionals on function spaces is the foundation of the dual space. The Kantorovich potentials $\phi \in L^1(\mu)$ and $\psi \in L^1(\nu)$ are elements of the dual spaces of the function spaces appearing in the primal — the duality between $L^1$ and $L^\infty$, and between $C_b(\mathcal{X})$ and the space of Borel measures, is the functional analytic content of the Kantorovich duality theorem.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Kathmandu pricing desk story has a precise mathematical address. Let us walk through them one by one until the price lists, the no-arbitrage constraint, the $c$-transform, and the contact set are completely fused with the formalism.
+
+---
+
+**The pricing desk's two price lists — buying prices $\phi(x)$ for western surplus locations and selling prices $\psi(y)$ for eastern deficit locations — are the Kantorovich potentials $\phi \in L^1(\mu)$ and $\psi \in L^1(\nu)$.** The potential $\phi: \mathcal{X} \to \mathbb{R}$ is a measurable function on the source space, integrable against $\mu$. The potential $\psi: \mathcal{Y} \to \mathbb{R}$ is a measurable function on the target space, integrable against $\nu$. They are not transport plans — they carry no information about which specific grain goes where. They are pricing functions: scalar values assigned to locations, not to pairs of locations. This is the fundamental dimensional reduction of the dual: from objects on $\mathcal{X} \times \mathcal{Y}$ (couplings, living in a $2n$-dimensional product space) to objects on $\mathcal{X}$ and $\mathcal{Y}$ separately (potentials, living in $n$-dimensional spaces).
+
+**The no-arbitrage constraint — the sum of buying price and selling price must never exceed the actual transportation cost — is the dual feasibility constraint $\phi(x) + \psi(y) \leq c(x,y)$ for all $(x,y)$.** The constraint must hold universally, not just on the pairs that appear in the optimal transport plan. Any violation creates an exploitable gap: a logistics company could buy at $x$, transport to $y$, and sell at $y$ for a net profit of $\phi(x) + \psi(y) - c(x,y) > 0$. The dual feasibility set $\Phi_c = \{(\phi,\psi) : \phi(x) + \psi(y) \leq c(x,y) \; \forall x,y\}$ is the set of all non-exploitable price lists. Every element of $\Phi_c$ is an arbitrage-free pricing scheme, and the Kantorovich dual maximizes revenue over this entire set.
+
+**The pricing company's total revenue — the integral of buying prices against the surplus distribution plus the integral of selling prices against the deficit distribution — is the dual objective $\int \phi \, d\mu + \int \psi \, d\nu$.** The term $\int \phi \, d\mu$ is the total amount paid to western farmers: at each location $x$, you pay the price $\phi(x)$ for $d\mu(x)$ tonnes of grain. The term $\int \psi \, d\nu$ is the total amount received from eastern buyers: at each location $y$, you receive $\psi(y)$ for $d\nu(y)$ tonnes. The dual problem maximizes this revenue subject to the no-arbitrage constraint. The fact that revenue is an integral of $\phi$ against $\mu$ and $\psi$ against $\nu$ — not against the joint coupling $\pi$ — is precisely why the dual lives on $\mathcal{X}$ and $\mathcal{Y}$ separately rather than on $\mathcal{X} \times \mathcal{Y}$.
+
+---
+
+**The weak duality argument — any revenue the pricing company can extract is a lower bound on what the logistics company must spend — is the inequality $\mathcal{D}(\mu,\nu) \leq \mathcal{K}(\mu,\nu)$ derived by integrating the dual constraint against any coupling.** The proof in the story: integrate $\phi(x) + \psi(y) \leq c(x,y)$ against any valid coupling $\pi \in \Pi(\mu,\nu)$. The left side becomes $\int \phi \, d\mu + \int \psi \, d\nu$ using the marginal constraints $(\text{proj}_x)_\#\pi = \mu$ and $(\text{proj}_y)_\#\pi = \nu$. The right side is the transportation cost $\int c \, d\pi$. So every dual feasible pair $(\phi,\psi)$ gives a lower bound on every primal feasible coupling's cost, and therefore on the primal minimum. The weak duality inequality is the formal content of the story's observation that the pricing company cannot extract more than the transport is genuinely worth.
+
+**Strong duality — the revenue maximum equals the cost minimum, with zero gap — is the Kantorovich duality theorem $\mathcal{K}(\mu,\nu) = \mathcal{D}(\mu,\nu)$, proved by the minimax theorem via Hahn-Banach separation.** The minimax theorem exchanges the order of inf and sup over the joint saddle-point problem: $\inf_\pi \sup_{(\phi,\psi)} = \sup_{(\phi,\psi)} \inf_\pi$. The exchange is justified by the convexity and compactness of the coupling set $\Pi(\mu,\nu)$ in the weak topology — precisely the tightness and weak compactness results from measure theory. In the story: at optimality, the pricing company has set prices so tightly that the logistics company cannot find any transportation plan cheaper than the pricing company's revenue. The optimal price list is a certificate of optimality for the optimal transport plan. This is the Hahn-Banach separation theorem made economic: the optimal potentials are the separating hyperplane between the primal and dual feasible sets.
+
+---
+
+**The break moment — the naive assumption that the dual constraint must be tight everywhere at optimality, not just on the routes used — is the confusion between primal feasibility and complementary slackness.** The correct statement is the complementary slackness theorem: $\phi^*(x) + \psi^*(y) = c(x,y)$ holds $\pi^*$-almost surely, not everywhere. The proof is the story's argument made formal: from strong duality, $\int [c(x,y) - \phi^*(x) - \psi^*(y)] \, d\pi^* = 0$. Since the integrand is non-negative everywhere (dual feasibility) and integrates to zero, it must vanish $\pi^*$-almost surely. The constraint is tight precisely where $\pi^*$ puts mass — on the contact set $\Gamma^* = \{(x,y): \phi^*(x) + \psi^*(y) = c(x,y)\}$. On pairs $(x,y)$ not in the support of $\pi^*$, the constraint can be strictly slack. The pricing is efficient exactly on the routes that are actually used, and deliberately loose on the routes that are not. This is the LP complementary slackness condition from MATH 304, lifted to infinite dimensions.
+
+**The contact set $\Gamma^*$ — the set of source-destination pairs where the dual constraint is tight — is the support of the optimal coupling $\pi^*$, and it is $c$-cyclically monotone.** The $c$-cyclical monotonicity of $\Gamma^*$ is the Optimal Transport generalization of the no-crossing principle from Topic 1: for any finite collection of pairs $(x_1,y_1),\ldots,(x_k,y_k)$ in $\Gamma^*$ and any cyclic permutation $\sigma$, the inequality $\sum_i c(x_i,y_i) \leq \sum_i c(x_i, y_{\sigma(i)})$ holds. In the discrete setting from MATH 304: the optimal coupling matrix $P^*$ satisfies $P^*_{ij} > 0 \Rightarrow \phi_i^* + \psi_j^* = C_{ij}$ — mass is transported only on routes where the dual prices exactly exhaust the cost. This is LP complementary slackness, stated in the language of the transportation tableau.
+
+---
+
+**The $c$-transform $\phi^c(y) = \inf_x\{c(x,y) - \phi(x)\}$ — finding the highest valid selling price at each eastern location given the buying prices — is the Optimal Transport generalization of the Legendre-Fenchel conjugate from Chapter 2 of Phase 0.** The $c$-transform finds the tightest valid partner potential: given $\phi$, the highest $\psi(y)$ that does not violate $\phi(x) + \psi(y) \leq c(x,y)$ for any $x$ is exactly $\inf_x\{c(x,y) - \phi(x)\} = \phi^c(y)$. The Legendre-Fenchel conjugate $\phi^*(y) = \sup_x\{\langle x,y\rangle - \phi(x)\}$ is the $c$-transform for the linear cost $c(x,y) = -\langle x,y\rangle$, with the sign flipped. For the quadratic cost $c(x,y) = \|x-y\|^2$, writing $\tilde\phi(x) = \frac{1}{2}\|x\|^2 - \frac{1}{2}\phi(x)$, the $c$-transform becomes $\phi^c(y) = \|y\|^2 - 2\tilde\phi^*(y)$ where $\tilde\phi^*$ is the Legendre-Fenchel conjugate of $\tilde\phi$. The $c$-transform is the Legendre-Fenchel transform with the inner product cost replaced by a general transport cost — the entire Chapter 2 of Phase 0 structure, now generalized to arbitrary geometry.
+
+**The $c$-concavity of the optimal potential $\phi^*$ — the condition $(\phi^c)^{\bar{c}} = \phi^*$ — is the Optimal Transport analogue of the condition that a convex function equals its double conjugate $(\phi^*)^* = \phi$ from Chapter 2 of Phase 0.** A $c$-concave function is one that is its own double $c$-transform — it cannot be improved by taking the $c$-transform twice. For the quadratic cost, $c$-concavity of $\phi^*$ is equivalent to convexity of $\tilde\phi^* = \frac{1}{2}\|x\|^2 - \frac{1}{2}\phi^*(x)$ — precisely the condition that the Brenier potential is convex. The $c$-concave potentials for quadratic cost are exactly the functions that arise as Brenier potentials: the Legendre-Fenchel double conjugate identity from Phase 0 is the special case of $c$-concavity for linear cost.
+
+---
+
+**The Kantorovich-Rubinstein formula $W_1(\mu,\nu) = \sup_{\text{Lip}(f)\leq 1}\int f\,d(\mu-\nu)$ — the $W_1$ distance as a supremum over $1$-Lipschitz functions — is the $c$-transform duality for the metric cost $c(x,y) = d(x,y)$, with the dual constraint reducing to the Lipschitz condition.** The proof in the story: for $c(x,y) = d(x,y)$ and $\psi = -\phi$, the dual constraint $\phi(x) + \psi(y) \leq d(x,y)$ becomes $\phi(x) - \phi(y) \leq d(x,y)$ for all $x,y$ — which is exactly $\text{Lip}(\phi) \leq 1$. The dual objective becomes $\int \phi \, d\mu - \int \phi \, d\nu = \int \phi \, d(\mu-\nu)$. The $1$-Lipschitz functions are the $c$-concave potentials for the metric cost: the most discriminating price functions that respect the geographic distance structure. A Lipschitz-1 function cannot vary faster than distance — the pricing is constrained by geography, exactly as the no-arbitrage constraint limits the price spread by the transportation cost.
+
+**The Wasserstein GAN discriminator — a neural network trained to maximize $\mathbb{E}_{x\sim\mu}[f_\theta(x)] - \mathbb{E}_{x\sim\nu_\theta}[f_\theta(x)]$ subject to $\text{Lip}(f_\theta) \leq 1$ — is a computational approximation to the optimal Kantorovich potential $\phi^*$ for the $W_1$ distance.** The discriminator's objective is $\int f_\theta \, d(\mu - \nu_\theta)$, which by the Kantorovich-Rubinstein formula equals $W_1(\mu,\nu_\theta)$ when $f_\theta$ achieves the supremum. The Lipschitz constraint is enforced via gradient penalty: the condition $\|\nabla f_\theta\|_2 \leq 1$ almost everywhere is the continuous version of $\text{Lip}(f_\theta) \leq 1$. The generator minimizes $W_1(\mu,\nu_\theta)$ by updating $\theta$ to reduce the discriminator's maximum score. The entire GAN training loop is the Kantorovich dual problem solved by stochastic gradient ascent on the discriminator and stochastic gradient descent on the generator — a computational implementation of the minimax theorem that proved strong duality.
+
+---
+
+**The connection to MATH 304 (Computational Operations Research) is direct and complete.** The discrete Kantorovich dual — $\max \{\sum_i a_i\phi_i + \sum_j b_j\psi_j : \phi_i + \psi_j \leq C_{ij}\}$ — is the LP dual of the transportation problem you solved in MATH 304 using the simplex method. The dual variables $\phi_i$ and $\psi_j$ are the shadow prices of the supply and demand constraints. The complementary slackness conditions $P^*_{ij} > 0 \Rightarrow \phi_i + \psi_j = C_{ij}$ are the LP complementary slackness conditions. The strong duality theorem for the Kantorovich problem is the infinite-dimensional generalization of the LP strong duality theorem — the same theorem, in a larger space, proved by the same argument (minimax = Hahn-Banach = separation of convex sets).
+
+**The connection to MATH 213 and MATH 325 (Analysis I and II) runs through the Hahn-Banach theorem and weak convergence.** The minimax exchange $\inf_\pi \sup_{(\phi,\psi)} = \sup_{(\phi,\psi)} \inf_\pi$ requires the coupling set $\Pi(\mu,\nu)$ to be compact in a suitable topology. The topology is the weak topology on measures — the topology of convergence against bounded continuous test functions — and the compactness is Prokhorov's theorem, which you encountered in the measure theory component of Phase 0. The Kantorovich potentials $\phi \in L^1(\mu)$ are elements of the dual space of $L^\infty(\mu)$, and the duality between $L^1$ and $L^\infty$ is the functional analytic content of the dual problem. Every result in your analysis sequence about dual spaces, weak convergence, and the Hahn-Banach theorem is instantiated in the proof of the Kantorovich duality theorem.
+
+---
+
+**Looking forward across the roadmap**, the Kantorovich duality theorem is the theoretical engine of everything that follows. In Chapter 2, the Sinkhorn algorithm has a dual ascent interpretation: the Sinkhorn iterations are coordinate ascent steps on the dual objective $\int \phi \, d\mu + \int \phi^c \, d\nu$ over $c$-concave potentials. Each Sinkhorn iteration updates one potential while holding the other fixed, climbing the dual objective until convergence. In Chapter 3, the displacement interpolation is constructed using the optimal dual potentials — the geodesic between $\mu$ and $\nu$ in Wasserstein space passes through the contact set $\Gamma^*$ at every intermediate time. In Phase 3, the connection between the optimal Kantorovich potential and the score function of a diffusion model — both are gradients of log-density functions, both satisfy Hamilton-Jacobi equations — makes the Kantorovich dual the theoretical bridge between Optimal Transport and score-based generative modeling.
+
+The price lists on the Kathmandu pricing desk — the buying prices $\phi^*(x)$ in the west and the selling prices $\psi^*(y)$ in the east, tight exactly where grain flows and slack everywhere else — are the Kantorovich potentials $(\phi^*, \psi^*)$, the dual certificates that simultaneously prove the optimality of the transport plan and encode the entire geometry of the Wasserstein distance in two scalar functions.
+
+---
+---

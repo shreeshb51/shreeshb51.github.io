@@ -1,0 +1,335 @@
+# Topic 2 - The Sinkhorn-Knopp Theorem: Convergence by Alternating Normalization
+
+## Introduction
+
+Topic 1 gave you the regularized problem and its solution structure. The unique minimizer of the entropic Kantorovich problem must have the form $P^*_\varepsilon = \text{diag}(u) \cdot K \cdot \text{diag}(v)$, where $K_{ij} = e^{-C_{ij}/\varepsilon}$ is the Gibbs kernel and $u \in \mathbb{R}^m_+$, $v \in \mathbb{R}^n_+$ are positive scaling vectors determined by the marginal constraints. The structure of the solution is known. What is not yet known is how to find $u$ and $v$ efficiently.
+
+This is the computational question Topic 2 answers.
+
+The Sinkhorn-Knopp theorem says the answer is almost embarrassingly simple. To find the scaling vectors $u$ and $v$ that bring the Gibbs kernel's marginals into agreement with $a$ and $b$, you alternate between two operations: normalize the rows of $\text{diag}(u)K\text{diag}(v)$ to match $a$, then normalize the columns to match $b$. Repeat. That is the entire algorithm. No gradients. No line searches. No matrix factorizations. Just alternating row and column normalization of the Gibbs kernel, converging geometrically to the unique regularized optimal coupling.
+
+This topic has two bullet points from the roadmap's syllabus.
+
+The first is **the Sinkhorn-Knopp theorem itself** — the theorem that the alternating row-column normalization of a strictly positive matrix converges to the unique matrix with prescribed row and column sums that has the same zero pattern as the original. Applied to the Gibbs kernel $K$, which is strictly positive everywhere (since $e^{-C_{ij}/\varepsilon} > 0$ for all finite costs), the theorem guarantees that the Sinkhorn iterations converge to $P^*_\varepsilon$ regardless of the initialization of $u$ and $v$. The convergence is geometric — the error contracts by a constant factor at each iteration — and the contraction rate is controlled by the condition number of $K$, which in turn depends on $\varepsilon$ and the spread of the cost matrix $C$.
+
+The second is **the information-geometric interpretation** — understanding the Sinkhorn iterations not merely as a numerical algorithm but as alternating Bregman projections onto the row-constraint set and the column-constraint set in the KL divergence geometry. Each Sinkhorn iteration is a projection of the current coupling onto one of the two marginal hyperplanes, measured in KL divergence. The alternating projection framework — projecting onto two convex sets alternately until the intersection is reached — is a classical technique in convex optimization, and the Sinkhorn algorithm is its instantiation in the KL geometry. This interpretation connects the Sinkhorn algorithm to the broader family of expectation-maximization and coordinate ascent algorithms, and it is the geometric reason why convergence is guaranteed.
+
+By the end of this topic, the Sinkhorn algorithm will not feel like a trick. It will feel like the only natural algorithm for the regularized OT problem — the direct consequence of the Gibbs structure of the solution and the KL geometry of the regularization. The alternating normalization is alternating projection. The geometric convergence is the contraction property of KL projections. The scaling vectors $u$ and $v$ are the dual potentials in disguise.
+
+---
+
+## Layer 1 (Story)
+
+You are the postmaster general of Nepal's national courier network, and the sorting office from Topic 1 has just handed you a working regularized plan. You know the Gibbs kernel — the matrix of route preferences weighted by cost and temperature. You know the optimal coupling must have the form $\text{diag}(u) \cdot K \cdot \text{diag}(v)$. What you do not yet know is how to find the two scaling vectors $u$ and $v$ that make the marginals come out right.
+
+Your operations team hands you a deceptively simple proposal. They call it the ping-pong protocol.
+
+---
+
+**The ping-pong protocol**
+
+Here is how it works.
+
+Start with $v = \mathbf{1}$ — every destination district gets an initial scaling factor of one. No corrections applied yet. The current plan is just the raw Gibbs kernel $K$ itself, unscaled.
+
+Step 1: Look at the row sums of the current plan. Each row $i$ currently sums to $\sum_j K_{ij} v_j$. You need row $i$ to sum to $a_i$ — the actual supply at source district $x_i$. So update $u_i \leftarrow a_i / \sum_j K_{ij} v_j$. This corrects every row simultaneously. After this update, all row sums are exactly right.
+
+Step 2: Look at the column sums of the current plan. Each column $j$ currently sums to $\sum_i u_i K_{ij} v_j$. You need column $j$ to sum to $b_j$ — the actual demand at destination $y_j$. So update $v_j \leftarrow b_j / \sum_i u_i K_{ij}$. This corrects every column simultaneously. After this update, all column sums are exactly right.
+
+But now the row sums are wrong again — fixing the columns disturbed the rows. So go back to Step 1. Fix the rows. Then fix the columns. Ping. Pong. Repeat.
+
+Your operations team claims this will converge to the correct $u$ and $v$. You are skeptical. Every time you fix the rows, you break the columns. Every time you fix the columns, you break the rows. How can alternating between two corrections that each undo the other's work possibly converge to anything?
+
+---
+
+**Why the ping-pong converges: the geometry of two constraints**
+
+Your consultant draws a picture on the whiteboard.
+
+Imagine the space of all non-negative $m \times n$ matrices — all possible sorting plans. Inside this enormous space, there are two constraint sets. The first constraint set $\mathcal{R}$ consists of all matrices whose row sums equal $a$ — all plans that correctly dispatch every source district's supply. The second constraint set $\mathcal{C}$ consists of all matrices whose column sums equal $b$ — all plans that correctly deliver to every destination district's demand. The feasible set $\Pi(a,b)$ is the intersection $\mathcal{R} \cap \mathcal{C}$ — the plans that simultaneously satisfy both constraints.
+
+You want to find the unique point in $\mathcal{R} \cap \mathcal{C}$ that has the Gibbs product form $\text{diag}(u)K\text{diag}(v)$. Equivalently, you want to find the point in $\mathcal{R} \cap \mathcal{C}$ that is closest to the Gibbs kernel $K$ in KL divergence — because the regularized optimal coupling is precisely the KL projection of $K$ onto $\Pi(a,b)$.
+
+The Sinkhorn algorithm finds this point by alternating projections. The row-normalization step projects the current matrix onto $\mathcal{R}$ — it finds the matrix with the correct row sums that is closest to the current plan in KL divergence. The column-normalization step projects the result onto $\mathcal{C}$ — it finds the matrix with the correct column sums that is closest to the row-normalized plan in KL divergence. Alternate between projecting onto $\mathcal{R}$ and projecting onto $\mathcal{C}$, and the sequence of iterates converges to the unique point in $\mathcal{R} \cap \mathcal{C}$ closest to $K$ in KL divergence — which is exactly $P^*_\varepsilon$.
+
+This is not a coincidence or a clever trick. It is the Bregman alternating projection theorem — a classical result in convex optimization that says: if you alternate projections onto two closed convex sets in a Bregman divergence geometry, and the intersection is non-empty, the iterates converge to the unique point in the intersection closest to the starting point in that divergence. The KL divergence is a Bregman divergence. The row-constraint set $\mathcal{R}$ and the column-constraint set $\mathcal{C}$ are both closed convex sets. Their intersection $\Pi(a,b)$ is non-empty. All conditions are met. Convergence is guaranteed.
+
+The ping-pong works not because the two corrections magically agree with each other — they do not, at each step. It works because each projection strictly reduces the KL divergence to the target $P^*_\varepsilon$, and because the KL divergence is bounded below by zero, the sequence of reductions must converge.
+
+---
+
+**The Sinkhorn-Knopp theorem: convergence for strictly positive matrices**
+
+Your consultant now states the classical theorem that underlies the algorithm.
+
+The Sinkhorn-Knopp theorem — proved by Richard Sinkhorn and Paul Knopp in 1967, originally in the context of doubly stochastic matrices — says the following. Take any strictly positive matrix $K > 0$ — a matrix with no zero entries. Take any target row sums $a > 0$ and target column sums $b > 0$ with the same total mass $\sum_i a_i = \sum_j b_j$. Then there exist unique positive diagonal scaling matrices $D_1 = \text{diag}(u)$ and $D_2 = \text{diag}(v)$ such that $D_1 K D_2$ has row sums $a$ and column sums $b$. And the alternating row-column normalization converges to $D_1 K D_2$ from any starting point.
+
+The strict positivity of $K$ is essential. The Gibbs kernel $K_{ij} = e^{-C_{ij}/\varepsilon}$ is strictly positive for all finite costs $C_{ij}$ and all $\varepsilon > 0$ — the exponential function never reaches zero for finite arguments. This is one of the most important properties of the entropic regularization: it guarantees the Gibbs kernel has no zeros, which guarantees the Sinkhorn-Knopp theorem applies, which guarantees the algorithm converges. The exact Kantorovich solution, by contrast, is a sparse matrix with many zeros — the Sinkhorn-Knopp theorem does not apply to it, and indeed no simple alternating normalization can recover it.
+
+---
+
+**The convergence rate: how fast does the ping-pong settle?**
+
+Your operations team wants to know how many ping-pong iterations they need before the sorting plan is good enough to execute.
+
+Your consultant explains the convergence rate. The Sinkhorn iterations contract the error geometrically — at each full iteration (one row normalization plus one column normalization), the KL divergence to the target $P^*_\varepsilon$ is multiplied by a constant factor $\rho \in (0,1)$. After $t$ full iterations, the KL divergence is at most $\rho^t$ times the initial KL divergence. Geometric convergence means that each additional iteration buys you a constant number of additional correct digits in the solution — the error halves (or contracts by some fixed fraction) at every step.
+
+The contraction factor $\rho$ depends on the condition number of the Gibbs kernel $K$. Specifically, it depends on the ratio between the largest and smallest entries of $K$: $\kappa(K) = (\max_{ij} K_{ij}) / (\min_{ij} K_{ij}) = e^{(\max_{ij} C_{ij} - \min_{ij} C_{ij})/\varepsilon}$. When $\varepsilon$ is large, the kernel entries are nearly uniform, $\kappa(K) \approx 1$, and convergence is very fast. When $\varepsilon$ is small, the kernel entries span an enormous range, $\kappa(K)$ is exponentially large, and convergence is very slow — many iterations are needed to resolve the sharp concentration of the optimal coupling. This is the same trade-off as the $\varepsilon$ dial from Topic 1: large $\varepsilon$ means fast convergence but poor approximation; small $\varepsilon$ means slow convergence but close approximation to the true Wasserstein distance.
+
+---
+
+**The dual ascent interpretation: Sinkhorn climbs the dual objective**
+
+Your consultant reveals a second way to understand what the ping-pong is doing — not as alternating projections in the primal, but as coordinate ascent in the dual.
+
+Recall from Topic 4 of Chapter 1 that the Kantorovich dual maximizes $\int \phi \, d\mu + \int \psi \, d\nu$ over feasible potential pairs. The regularized dual — derived in Layer 2 of Topic 1 — maximizes a smooth version of this objective over the entropic potentials $f \in \mathbb{R}^m$ and $g \in \mathbb{R}^n$. The dual objective is smooth and concave in $(f, g)$ jointly.
+
+The row-normalization step of Sinkhorn — updating $u \leftarrow a / (Kv)$ component-wise — is equivalent to updating the row potentials $f_i \leftarrow \varepsilon \log a_i - \varepsilon \log \sum_j e^{(g_j - C_{ij})/\varepsilon}$. This is exactly the coordinate ascent step that maximizes the dual objective over $f$ while holding $g$ fixed. The column-normalization step — updating $v \leftarrow b / (K^\top u)$ — is the coordinate ascent step that maximizes over $g$ while holding $f$ fixed. The Sinkhorn algorithm is coordinate ascent on the smooth concave dual objective, alternating between the row potentials and the column potentials.
+
+This dual ascent interpretation is important for three reasons. First, it explains convergence from the dual side: coordinate ascent on a smooth strictly concave function converges to the unique maximum. Second, it gives you the optimal dual potentials $f^*$ and $g^*$ as a byproduct of the algorithm — and these are the gradients $\nabla_a \text{OT}_\varepsilon = f^*$ and $\nabla_b \text{OT}_\varepsilon = g^*$ that enable backpropagation through the Wasserstein loss. Third, it connects the Sinkhorn algorithm to the broader family of EM algorithms and belief propagation, where alternating coordinate updates on a dual or variational objective are the standard computational paradigm.
+
+---
+
+**The invariant structure: what the iterations preserve**
+
+There is one more thing your consultant points out, which will become important in the numerical stabilization of Topic 3.
+
+Throughout all the Sinkhorn iterations, the product structure $P = \text{diag}(u)K\text{diag}(v)$ is preserved exactly. At every iteration, the current plan is a diagonal scaling of the fixed Gibbs kernel $K$. The iterations never change $K$ — they only update $u$ and $v$. This means the entire state of the algorithm at any point is captured by just $m + n$ numbers — the current values of $u$ and $v$ — rather than the full $mn$ entries of $P$. In practice, you never store the coupling matrix $P$ explicitly during the iterations. You store only $u$, $v$, and $K$, and reconstruct $P = \text{diag}(u)K\text{diag}(v)$ at the end when you need it.
+
+This invariant also means that each Sinkhorn iteration costs $O(mn)$ operations — one matrix-vector product $Kv$ to update $u$, and one matrix-vector product $K^\top u$ to update $v$. For $m = n$, this is $O(n^2)$ per iteration. Combined with the geometric convergence, the total cost of running Sinkhorn to precision $\delta$ is $O(n^2 \log(1/\delta) / \log(1/\rho))$ — quadratic in $n$, compared to the cubic cost of the exact Kantorovich LP. This is the computational breakthrough of the chapter title: entropy reduces the cost from $O(n^3)$ to $O(n^2)$, and the Sinkhorn-Knopp theorem is the guarantee that the reduction works.
+
+---
+
+**The break moment**
+
+Here is the naive assumption that breaks.
+
+You might think: since the Sinkhorn iterations are guaranteed to converge, and since convergence is geometric, you can always just run more iterations to get arbitrarily close to the true regularized solution $P^*_\varepsilon$. The algorithm is foolproof — convergence is a theorem, so all you need is patience.
+
+This breaks in two distinct ways.
+
+The first way it breaks is numerical. For small $\varepsilon$, the Gibbs kernel entries $K_{ij} = e^{-C_{ij}/\varepsilon}$ span an enormous range. The matrix-vector product $Kv$ in the row-normalization step involves summing terms of wildly different magnitudes, many of which underflow to zero in floating-point arithmetic. The normalized vector $u = a / (Kv)$ then involves dividing by sums that contain many zeros, producing NaN or Inf. The algorithm does not converge to the wrong answer — it collapses to numerical garbage after a small number of iterations. More iterations do not help; they make the garbage propagate further. The geometric convergence theorem is a mathematical statement about exact arithmetic, not floating-point arithmetic. In finite precision, the algorithm breaks before convergence.
+
+The second way it breaks is subtler. Even in exact arithmetic, the convergence rate $\rho$ degrades as $\varepsilon \to 0$ — the number of iterations required to reach precision $\delta$ grows as $O(e^{\|C\|_\infty/\varepsilon})$, exponentially in $1/\varepsilon$. Running more iterations does not overcome this exponential blowup for very small $\varepsilon$. The geometric convergence guarantee is real, but the geometry is increasingly flat — each iteration makes only infinitesimal progress. Patience alone is not sufficient when the convergence rate itself degrades exponentially.
+
+Both failures have the same root cause: the exponential parameterization of the Gibbs kernel is numerically catastrophic for small $\varepsilon$. The fix — working in log-space using the log-sum-exp trick — is Topic 3, and it resolves both problems simultaneously by converting the multiplicative scaling iterations into additive log-domain updates that are stable in floating-point arithmetic and converge at the same rate regardless of the magnitude of the kernel entries.
+
+---
+
+Hold five pictures simultaneously as you move to the mathematics.
+
+The ping-pong protocol: alternating row and column normalization of the Gibbs kernel, two operations that each break what the other fixes, converging nonetheless because each step reduces the KL divergence to the target.
+
+The alternating projection geometry: the row-constraint set $\mathcal{R}$ and the column-constraint set $\mathcal{C}$ as two convex sets in matrix space, with the Sinkhorn iterations bouncing between KL projections onto each, converging to their intersection $\Pi(a,b)$.
+
+The dual ascent interpretation: each normalization step as a coordinate ascent update on the smooth concave dual objective, climbing toward the optimal entropic potentials $f^*$ and $g^*$.
+
+The invariant product structure: the state of the algorithm captured entirely by $u$ and $v$, with $K$ fixed throughout, giving $O(n^2)$ cost per iteration.
+
+The two failure modes for small $\varepsilon$: floating-point underflow breaking the algorithm in finite precision, and exponentially slow convergence breaking it in exact arithmetic — both resolved by the log-sum-exp stabilization of Topic 3.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the precise statement of the Sinkhorn iterations, the Sinkhorn-Knopp theorem and its proof, the Bregman alternating projection interpretation, the convergence rate analysis via Hilbert's projective metric, the dual ascent interpretation, and the differentiability of the Sinkhorn map.
+
+### The Sinkhorn Iterations — Precise Statement
+
+Given the Gibbs kernel $K \in \mathbb{R}^{m\times n}_{++}$ with $K_{ij} = e^{-C_{ij}/\varepsilon}$, target marginals $a \in \Sigma_m$ and $b \in \Sigma_n$, initialize $v^{(0)} = \mathbf{1}_n$. The **Sinkhorn iterations** are:
+
+$$u^{(\ell+1)} = \frac{a}{K v^{(\ell)}}, \qquad v^{(\ell+1)} = \frac{b}{K^\top u^{(\ell+1)}}$$
+
+where division is elementwise. The current coupling estimate at iteration $\ell$ is:
+
+$$P^{(\ell)} = \text{diag}(u^{(\ell)}) \cdot K \cdot \text{diag}(v^{(\ell)})$$
+
+The row sums of $P^{(\ell)}$ after the $u$-update are exactly $a$. The column sums after the $v$-update are exactly $b$. Each update satisfies one set of marginal constraints exactly while generally violating the other.
+
+**Equivalent formulation via potentials.** Setting $f^{(\ell)} = \varepsilon \log u^{(\ell)}$ and $g^{(\ell)} = \varepsilon \log v^{(\ell)}$, the iterations become:
+
+$$f_i^{(\ell+1)} = \varepsilon \log a_i - \varepsilon \log \sum_j e^{(g_j^{(\ell)} - C_{ij})/\varepsilon}, \qquad g_j^{(\ell+1)} = \varepsilon \log b_j - \varepsilon \log \sum_i e^{(f_i^{(\ell+1)} - C_{ij})/\varepsilon}$$
+
+These are the **log-domain Sinkhorn iterations** — numerically stable reformulations that avoid explicit computation of $K$ by working with log-sum-exp operations over the potentials. Topic 3 develops these in full.
+
+---
+
+### The Sinkhorn-Knopp Theorem
+
+**Theorem (Sinkhorn-Knopp, 1967).** Let $K \in \mathbb{R}^{m\times n}_{++}$ be a strictly positive matrix, and let $a \in \mathbb{R}^m_{++}$, $b \in \mathbb{R}^n_{++}$ be strictly positive vectors with $\sum_i a_i = \sum_j b_j$. Then:
+
+1. **Existence and uniqueness.** There exist unique vectors $u \in \mathbb{R}^m_{++}$ and $v \in \mathbb{R}^n_{++}$, unique up to the scaling $(u, v) \mapsto (\lambda u, v/\lambda)$ for $\lambda > 0$, such that $P^* = \text{diag}(u)K\text{diag}(v)$ satisfies $P^*\mathbf{1} = a$ and $(P^*)^\top\mathbf{1} = b$.
+
+2. **Convergence.** The Sinkhorn iterations converge: $P^{(\ell)} \to P^*$ as $\ell \to \infty$, and the convergence is geometric in the Hilbert projective metric.
+
+**Proof of existence and uniqueness** (via the regularized OT problem). The regularized Kantorovich problem $\min_{P \in \Pi(a,b)}\{\langle C,P\rangle + \varepsilon\,\text{KL}(P\|K)\}$ has a strictly convex objective over a compact non-empty feasible set, hence a unique minimizer $P^*_\varepsilon$. By the first-order optimality conditions derived in Topic 1, this minimizer satisfies $P^*_{ij} = u_i K_{ij} v_j$ for Lagrange multipliers $u_i = e^{f_i/\varepsilon}$ and $v_j = e^{g_j/\varepsilon}$. Existence of $u,v$ follows from existence of Lagrange multipliers. Uniqueness of $P^*$ follows from strict convexity; uniqueness of $u,v$ up to the scaling ambiguity follows from the strict positivity of $K$.
+
+**Proof of convergence** (via Bregman projections — see next section).
+
+---
+
+### Bregman Alternating Projections
+
+The KL divergence $\text{KL}(P\|Q) = \sum_{ij} P_{ij}\log(P_{ij}/Q_{ij}) - P_{ij} + Q_{ij}$ is a **Bregman divergence** generated by the convex function $\phi(P) = \sum_{ij} P_{ij}\log P_{ij}$. For Bregman divergences, the projection of a point $Q$ onto a convex set $\mathcal{C}$ is defined as:
+
+$$\text{proj}_{\mathcal{C}}^{\text{KL}}(Q) = \arg\min_{P \in \mathcal{C}} \text{KL}(P\|Q)$$
+
+**The two constraint sets.** Define:
+
+$$\mathcal{R} = \{P \in \mathbb{R}^{m\times n}_+ : P\mathbf{1} = a\}, \qquad \mathcal{C} = \{P \in \mathbb{R}^{m\times n}_+ : P^\top\mathbf{1} = b\}$$
+
+Both are closed convex sets. Their intersection is $\Pi(a,b)$.
+
+**The KL projections are the Sinkhorn updates.**
+
+**Lemma.** The KL projection of any $Q \in \mathbb{R}^{m\times n}_{++}$ onto $\mathcal{R}$ is:
+
+$$\text{proj}_{\mathcal{R}}^{\text{KL}}(Q)_{ij} = \frac{a_i}{\sum_k Q_{ik}} \cdot Q_{ij} = \frac{a_i}{(Q\mathbf{1})_i} Q_{ij}$$
+
+This is exactly the row-normalization step: $u_i \leftarrow a_i / (Kv)_i$ applied to $Q = \text{diag}(u)K\text{diag}(v)$.
+
+**Proof.** Minimize $\text{KL}(P\|Q)$ subject to $P\mathbf{1} = a$. The Lagrangian gives $\log P_{ij} = \log Q_{ij} + \lambda_i - 1$, so $P_{ij} = Q_{ij} e^{\lambda_i - 1}$. The row constraint $\sum_j P_{ij} = a_i$ gives $e^{\lambda_i - 1} = a_i / \sum_j Q_{ij}$, yielding the stated formula. $\square$
+
+Similarly, the KL projection onto $\mathcal{C}$ is the column-normalization step.
+
+**Theorem (Bregman alternating projections).** For a Bregman divergence generated by a strictly convex function, alternating projections onto two closed convex sets with non-empty intersection converge to the unique point in the intersection that minimizes the divergence from the starting point. Applied here: the Sinkhorn iterations are alternating KL projections onto $\mathcal{R}$ and $\mathcal{C}$, starting from $K$, converging to $P^*_\varepsilon = \text{proj}_{\Pi(a,b)}^{\text{KL}}(K)$. $\square$
+
+---
+
+### Convergence Rate via Hilbert's Projective Metric
+
+The geometric convergence rate of the Sinkhorn iterations is quantified using **Hilbert's projective metric** on $\mathbb{R}^n_{++}$:
+
+$$d_H(u, v) = \log \frac{\max_i(u_i/v_i)}{\min_i(u_i/v_i)}$$
+
+This metric is invariant under positive scaling — it measures the multiplicative spread between two positive vectors. Convergence in $d_H$ is equivalent to convergence in the scaling vectors $u$ and $v$ up to the normalization ambiguity.
+
+**Theorem (Geometric convergence).** Let $\eta(K)$ be the **Birkhoff contraction coefficient** of the Gibbs kernel:
+
+$$\eta(K) = \frac{1 - \sqrt{\kappa(K)^{-1}}}{1 + \sqrt{\kappa(K)^{-1}}} \in [0,1)$$
+
+where $\kappa(K) = \min_{i,j,k,l} \frac{K_{ij} K_{kl}}{K_{il} K_{kj}}$ is the **cross-ratio** of $K$ (a measure of how far $K$ is from a rank-one matrix). Then each Sinkhorn iteration contracts $d_H$ by factor $\eta(K)^2$:
+
+$$d_H(u^{(\ell+1)}, u^*) \leq \eta(K)^2 \cdot d_H(u^{(\ell)}, u^*)$$
+
+**Interpretation.** The cross-ratio $\kappa(K)$ is related to the condition number of $K$:
+
+$$\kappa(K) = e^{-(\max_{ij} C_{ij} - \min_{ij} C_{ij})/\varepsilon} \cdot \text{(combinatorial factor)}$$
+
+For the Gibbs kernel, $\kappa(K) \approx e^{-\Delta C/\varepsilon}$ where $\Delta C = \max_{ij} C_{ij} - \min_{ij} C_{ij}$ is the cost range. As $\varepsilon \to 0$: $\kappa(K) \to 0$, $\eta(K) \to 1$, convergence rate degrades to zero — exponentially many iterations needed. As $\varepsilon \to \infty$: $\kappa(K) \to 1$, $\eta(K) \to 0$, convergence is instantaneous — $K$ is nearly rank-one and the marginals are nearly decoupled.
+
+**Iteration complexity.** To achieve $\|P^{(\ell)} - P^*_\varepsilon\|_1 \leq \delta$, the number of Sinkhorn iterations required is:
+
+$$\ell = O\left(\frac{\log(1/\delta)}{-\log \eta(K)}\right) = O\left(\frac{\varepsilon \log(1/\delta)}{\Delta C}\right)$$
+
+For fixed $\varepsilon$ and $\Delta C$, this is $O(\log(1/\delta))$ iterations, each costing $O(n^2)$, giving total complexity $O(n^2 \log(1/\delta))$ — the quadratic breakthrough over the cubic exact OT.
+
+---
+
+### Dual Ascent Interpretation
+
+The regularized dual problem (from Topic 1, Layer 2) is:
+
+$$\max_{f \in \mathbb{R}^m, g \in \mathbb{R}^n} \mathcal{G}(f, g) = \langle f, a\rangle + \langle g, b\rangle - \varepsilon \sum_{ij} a_i b_j e^{(f_i + g_j - C_{ij})/\varepsilon} + \varepsilon$$
+
+The function $\mathcal{G}$ is **jointly concave** in $(f,g)$ — the second term is a sum of exponentials, which is convex, negated.
+
+**The Sinkhorn update as coordinate ascent.** Fix $g$ and maximize $\mathcal{G}$ over $f_i$ for each $i$ independently:
+
+$$\frac{\partial \mathcal{G}}{\partial f_i} = a_i - \varepsilon \cdot a_i \sum_j b_j e^{(f_i + g_j - C_{ij})/\varepsilon} \cdot \frac{1}{\varepsilon} = a_i\left(1 - \sum_j b_j e^{(f_i + g_j - C_{ij})/\varepsilon}\right) = 0$$
+
+Solving: $\sum_j b_j e^{(f_i + g_j - C_{ij})/\varepsilon} = 1$, giving:
+
+$$f_i^* = -\varepsilon \log \sum_j b_j e^{(g_j - C_{ij})/\varepsilon}$$
+
+This is exactly the row-update step in log-domain. Similarly, the column-update maximizes $\mathcal{G}$ over $g$ given $f$. The Sinkhorn algorithm is **block coordinate ascent** on the concave dual $\mathcal{G}$, with blocks $f$ and $g$ updated alternately. Since $\mathcal{G}$ is strictly concave in each block separately (the Hessian $\partial^2 \mathcal{G}/\partial f_i^2 = -a_i^2 \sum_j b_j e^{(f_i+g_j-C_{ij})/\varepsilon} < 0$), each coordinate update achieves the unique block maximum, and the overall sequence converges to the unique dual maximum $(f^*, g^*)$.
+
+**Gradient of $\text{OT}_\varepsilon$ via envelope theorem.** At convergence, the optimal dual variables satisfy:
+
+$$\nabla_a \text{OT}_\varepsilon(\mu,\nu) = f^*, \qquad \nabla_b \text{OT}_\varepsilon(\mu,\nu) = g^*$$
+
+This is the envelope theorem applied to the dual: the gradient of the optimal value with respect to the right-hand side of a constraint equals the optimal dual variable for that constraint. The Sinkhorn algorithm therefore computes $\nabla_a \text{OT}_\varepsilon$ and $\nabla_b \text{OT}_\varepsilon$ as a free byproduct — the potentials $f^*$ and $g^*$ are available after convergence without any additional computation.
+
+---
+
+### Differentiability of the Sinkhorn Map
+
+For applications in machine learning, we need not just the value $\text{OT}_\varepsilon$ but also its gradient with respect to the cost matrix $C$ — to backpropagate through a Wasserstein loss whose cost depends on learned features.
+
+**Theorem (Implicit differentiation of Sinkhorn).** The map $(a, b, C) \mapsto P^*_\varepsilon(a, b, C)$ is infinitely differentiable. The derivative of $P^*_\varepsilon$ with respect to $C_{kl}$ is:
+
+$$\frac{\partial P^*_{\varepsilon,ij}}{\partial C_{kl}} = -\frac{1}{\varepsilon} P^*_{\varepsilon,ij} \delta_{ik}\delta_{jl} + \frac{1}{\varepsilon} P^*_{\varepsilon,ij} \left(\frac{\partial f^*_i}{\partial C_{kl}} + \frac{\partial g^*_j}{\partial C_{kl}}\right)$$
+
+where the derivatives $\partial f^*/\partial C_{kl}$ and $\partial g^*/\partial C_{kl}$ are computed by implicitly differentiating the optimality conditions of the dual — a linear system in the dual Hessian of $\mathcal{G}$.
+
+**Practical backpropagation.** In automatic differentiation frameworks (JAX, PyTorch), the backward pass through the Sinkhorn iterations can be computed by:
+
+1. **Unrolled differentiation:** differentiate through the fixed number of Sinkhorn iterations as a computational graph. Cost: $O(\ell \cdot n^2)$ memory.
+2. **Implicit differentiation:** solve the linear system $\nabla^2_{(f,g)}\mathcal{G} \cdot \partial(f^*,g^*)/\partial C = -\partial^2\mathcal{G}/\partial(f,g)\partial C$ once at convergence. Cost: $O(n^2)$ memory, independent of $\ell$.
+
+The implicit differentiation approach — known as **Sinkhorn backprop** — is the production-grade method used in libraries such as POT (Python Optimal Transport) and GeomLoss.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 304 (Computational Operations Research), the **transportation simplex method** solves the exact Kantorovich LP by moving between basic feasible solutions — extreme points of $\Pi(a,b)$ — improving the objective at each step. The Sinkhorn algorithm solves the regularized problem by moving through the interior of $\Pi(a,b)$ — never touching an extreme point, always strictly feasible. The contrast is between a combinatorial algorithm (simplex: $O(n^3)$, sparse solutions) and a smooth iterative algorithm (Sinkhorn: $O(n^2)$ per iteration, dense solutions). The regularization converts the LP into a smooth program, and the Sinkhorn iterations are the natural smooth analogue of the transportation simplex.
+
+In MSCS 202 (Numerical Methods), the **power iteration** for computing the dominant eigenvector of a matrix is a classical $O(n^2)$-per-iteration algorithm with geometric convergence, controlled by the ratio of the two largest eigenvalues. The Sinkhorn iterations have the same structure: $O(n^2)$ per iteration, geometric convergence, rate controlled by the spectral gap of a related operator (the Hilbert contraction coefficient $\eta(K)$). The Perron-Frobenius theorem — which guarantees that strictly positive matrices have a unique dominant eigenvector with positive entries — is the linear algebra result underlying the Sinkhorn-Knopp theorem. The scaling $u \leftarrow a/(Kv)$, $v \leftarrow b/(K^\top u)$ is the two-sided power iteration for the positive matrix $K$.
+
+In MATH 208 (Statistics and Probability), the **EM algorithm** alternates between an E-step (computing the expected complete-data log-likelihood) and an M-step (maximizing over parameters), and is guaranteed to increase the marginal likelihood at every iteration. The Sinkhorn algorithm has the same structure: the E-step is the row normalization (projecting onto $\mathcal{R}$), the M-step is the column normalization (projecting onto $\mathcal{C}$), and the quantity that increases monotonically at every step is $-\text{KL}(P^*_\varepsilon \| P^{(\ell)})$ — the negative KL divergence to the target. Sinkhorn is the EM algorithm for the entropic OT problem, and the Bregman alternating projection theorem is the Sinkhorn analogue of the EM convergence theorem.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the ping-pong protocol story has a precise mathematical address. Let us walk through them one by one until the alternating normalization, the Bregman projection geometry, the dual ascent interpretation, and the convergence rate are completely fused with the formalism.
+
+---
+
+**The ping-pong protocol — alternating between fixing row sums and fixing column sums — is the Sinkhorn iterations $u^{(\ell+1)} = a / Kv^{(\ell)}$ and $v^{(\ell+1)} = b / K^\top u^{(\ell+1)}$, where division is elementwise.** The row-normalization update $u_i \leftarrow a_i / (Kv)_i$ rescales the $i$-th row of $\text{diag}(u)K\text{diag}(v)$ by the factor $a_i / \sum_j K_{ij}v_j$ — the ratio of the target row sum to the current row sum. After this update, row $i$ sums to exactly $a_i$. The column-normalization update $v_j \leftarrow b_j / (K^\top u)_j$ rescales the $j$-th column by the factor $b_j / \sum_i u_i K_{ij}$ — the ratio of the target column sum to the current column sum. After this update, column $j$ sums to exactly $b_j$, but the row sums are no longer exactly $a$ because the column rescaling has disturbed them. The ping-pong is the mathematical manifestation of this alternating exact-then-disturbed satisfaction of the two marginal constraints.
+
+**The invariant product structure — the fact that the current plan is always $\text{diag}(u)K\text{diag}(v)$ with $K$ fixed throughout — is the key computational economy of the Sinkhorn algorithm.** The Gibbs kernel $K_{ij} = e^{-C_{ij}/\varepsilon}$ is computed once at initialization and never modified. The entire state of the algorithm at any iteration is captured by the two vectors $u \in \mathbb{R}^m_{++}$ and $v \in \mathbb{R}^n_{++}$ — $m + n$ numbers rather than the $mn$ entries of $P$. Each iteration requires two matrix-vector products: $Kv$ of cost $O(mn)$ and $K^\top u$ of cost $O(mn)$. For $m = n$, this is $O(n^2)$ per iteration. The coupling matrix $P^{(\ell)} = \text{diag}(u^{(\ell)})K\text{diag}(v^{(\ell)})$ is reconstructed explicitly only at the end, when needed. This invariant is what makes the cubic-to-quadratic reduction real and not merely theoretical.
+
+---
+
+**The two constraint sets $\mathcal{R}$ and $\mathcal{C}$ — the sets of matrices with correct row sums and correct column sums respectively — are the closed convex sets whose intersection is the feasible set $\Pi(a,b)$.** The set $\mathcal{R} = \{P \geq 0 : P\mathbf{1} = a\}$ is a convex polytope face — the intersection of the non-negative orthant with $m$ linear equality constraints, one per row. The set $\mathcal{C} = \{P \geq 0 : P^\top\mathbf{1} = b\}$ is a convex polytope face — the intersection of the non-negative orthant with $n$ linear equality constraints, one per column. Both are closed and convex. Their intersection $\mathcal{R} \cap \mathcal{C} = \Pi(a,b)$ is non-empty because $\sum_i a_i = \sum_j b_j$ — mass is conserved. The whiteboard picture your consultant drew is the precise setup for the Bregman alternating projection theorem: two closed convex sets, non-empty intersection, alternating projections converging to the unique point in the intersection closest to the starting point in KL divergence.
+
+**The KL projection of a matrix $Q$ onto $\mathcal{R}$ — finding the matrix in $\mathcal{R}$ closest to $Q$ in KL divergence — is exactly the row-normalization step $P_{ij} \leftarrow Q_{ij} \cdot a_i / (Q\mathbf{1})_i$.** The proof is a one-line Lagrangian calculation from MATH 304: the KKT conditions for $\min_{P\mathbf{1}=a} \text{KL}(P\|Q)$ give $\log P_{ij} - \log Q_{ij} = \lambda_i - 1$ for each row $i$, so $P_{ij} = Q_{ij} e^{\lambda_i - 1}$, and the constraint $\sum_j P_{ij} = a_i$ fixes $e^{\lambda_i - 1} = a_i / \sum_j Q_{ij}$. The KL projection onto a row-constraint set is row-normalization. The KL projection onto a column-constraint set is column-normalization. The Sinkhorn iterations are alternating KL projections — not a heuristic, not a clever guess, but the unique sequence of steepest-descent steps in the KL geometry alternating between the two constraint sets.
+
+**The Bregman alternating projection theorem — the guarantee that alternating KL projections onto two closed convex sets with non-empty intersection converge to the KL projection of the starting point onto the intersection — is the convergence proof of the Sinkhorn algorithm.** The KL divergence is a Bregman divergence generated by the strictly convex function $\phi(P) = \sum_{ij} P_{ij}\log P_{ij}$. The theorem applies: starting from $K$, alternating between projecting onto $\mathcal{R}$ and $\mathcal{C}$, the iterates converge to $\text{proj}_{\Pi(a,b)}^{\text{KL}}(K) = P^*_\varepsilon$ — the unique regularized optimal coupling. The connection to MATH 213 (Analysis I) is direct: the Bregman alternating projection theorem is the metric space analogue of the alternating projection theorem for Hilbert spaces, with the KL divergence playing the role of the squared norm. Every convergence argument you made for alternating projections in Euclidean space has a direct KL-divergence counterpart here.
+
+---
+
+**The Sinkhorn-Knopp theorem — the existence, uniqueness, and convergence guarantee for strictly positive matrices — is the mathematical backbone that makes the ping-pong reliable.** Existence and uniqueness of $u$ and $v$ follow from the strict convexity of the regularized OT problem: the unique minimizer $P^*_\varepsilon$ exists, and the first-order conditions force it to have the form $\text{diag}(u)K\text{diag}(v)$, so $u$ and $v$ exist and are unique up to the scaling ambiguity $(u,v) \mapsto (\lambda u, v/\lambda)$. The strict positivity of $K$ — the property that $K_{ij} = e^{-C_{ij}/\varepsilon} > 0$ for all finite $C_{ij}$ — is what guarantees the Lagrange multipliers are finite and the scaling vectors are strictly positive. If $K$ had zeros — as the exact Kantorovich coupling does — the Lagrange multipliers could be infinite, the scaling vectors could degenerate, and the theorem would fail. Entropic regularization exists precisely to prevent this degeneracy.
+
+**The Birkhoff contraction coefficient $\eta(K)$ — the geometric convergence rate of the Sinkhorn iterations in Hilbert's projective metric — is controlled by the cross-ratio $\kappa(K) \approx e^{-\Delta C/\varepsilon}$ of the Gibbs kernel.** In the sorting office story: the cross-ratio measures how nearly rank-one the kernel $K$ is. A rank-one kernel $K_{ij} = \alpha_i \beta_j$ would mean the route preference completely factorizes — the preference for source $i$ is independent of destination $j$, and vice versa. For such a kernel, one iteration suffices: scale rows by $a/\alpha$ and columns by $b/\beta$ and you are done. The further $K$ is from rank-one — the more the route preferences interact — the more iterations are required. The cross-ratio $\kappa(K)$ measures this deviation from rank-one structure, and the contraction coefficient $\eta(K) = (1-\sqrt{\kappa})/(1+\sqrt{\kappa})$ translates it into a convergence rate. For small $\varepsilon$, the kernel entries span an enormous range — $K$ is very far from rank-one, $\kappa \to 0$, $\eta \to 1$ — and convergence is slow. For large $\varepsilon$, $K$ is nearly uniform — nearly rank-one — and convergence is fast.
+
+**The iteration complexity $O(n^2 \log(1/\delta))$ — the total cost of running Sinkhorn to precision $\delta$ — is the formal statement of the cubic-to-quadratic breakthrough.** The exact Kantorovich LP requires $O(n^3)$ operations via the transportation simplex, interior point methods, or the Hungarian algorithm for the assignment special case — all of which you encountered in MATH 304. The Sinkhorn algorithm requires $O(n^2)$ operations per iteration and $O(\varepsilon \log(1/\delta)/\Delta C)$ iterations, giving $O(n^2 \log(1/\delta))$ total for fixed $\varepsilon$ and $\Delta C$. The improvement is not a constant-factor speedup — it is a reduction in the polynomial degree of the complexity, from cubic to quadratic, which becomes decisive at machine learning scale where $n$ is in the thousands or millions.
+
+---
+
+**The dual ascent interpretation — the row-normalization step as coordinate ascent over $f$ and the column-normalization step as coordinate ascent over $g$ on the smooth concave dual objective $\mathcal{G}(f,g)$ — is the connection between the Sinkhorn algorithm and every coordinate ascent and EM algorithm you will encounter in machine learning.** The dual objective $\mathcal{G}(f,g) = \langle f,a\rangle + \langle g,b\rangle - \varepsilon\sum_{ij}a_ib_je^{(f_i+g_j-C_{ij})/\varepsilon} + \varepsilon$ is strictly concave in $f$ for fixed $g$ and strictly concave in $g$ for fixed $f$ — the Hessian in each block is negative definite. Setting $\partial\mathcal{G}/\partial f_i = 0$ gives $f_i^* = -\varepsilon\log\sum_j b_j e^{(g_j - C_{ij})/\varepsilon}$, exactly the log-domain row update. The Sinkhorn iterations are block coordinate ascent on $\mathcal{G}$, alternating between the $f$-block and the $g$-block. The EM algorithm connection from MATH 208 is precise: the E-step computes the expected sufficient statistics (row normalization, fixing the row potentials), and the M-step maximizes the complete-data likelihood (column normalization, fixing the column potentials). The monotone increase of the dual objective at every Sinkhorn step is the Sinkhorn analogue of the EM monotone likelihood increase.
+
+**The optimal dual potentials $f^*$ and $g^*$ — available as a free byproduct of the Sinkhorn iterations at convergence — are the gradients $\nabla_a\text{OT}_\varepsilon = f^*$ and $\nabla_b\text{OT}_\varepsilon = g^*$ needed for backpropagation through the Wasserstein loss.** This is the envelope theorem from MATH 304 applied to the parametric dual: the derivative of the optimal dual value with respect to the right-hand side of the $i$-th row constraint is the optimal dual variable $f^*_i$, and similarly for the column constraints. In a neural network training loop where the Wasserstein loss $\text{OT}_\varepsilon(\mu_\theta, \nu)$ depends on model parameters $\theta$ through the source distribution $\mu_\theta$, the gradient $\partial\text{OT}_\varepsilon/\partial\theta = f^* \cdot \partial a/\partial\theta$ — the chain rule through the potentials. No additional backward computation is required beyond the forward Sinkhorn pass that already computes $f^*$ and $g^*$.
+
+---
+
+**The first break moment — floating-point underflow for small $\varepsilon$ breaking the algorithm in finite precision — is the numerical ill-conditioning of the Gibbs kernel identified in MSCS 202.** The kernel entry $K_{ij} = e^{-C_{ij}/\varepsilon}$ for $C_{ij} = 100$ and $\varepsilon = 0.01$ is $e^{-10000} \approx 10^{-4343}$, far below the IEEE 754 double-precision underflow threshold of $\approx 10^{-308}$. The matrix-vector product $(Kv)_i = \sum_j K_{ij}v_j$ contains terms that are identically zero in floating point, making the row-normalization denominator incorrect. The condition number of $K$ is $e^{\Delta C/\varepsilon}$ — exponentially large — and the matrix is numerically rank-deficient. This is the same ill-conditioning you studied in MSCS 202 for linear systems with large condition numbers: the computed solution is dominated by floating-point error, not by the true mathematical solution.
+
+**The second break moment — exponentially slow convergence for small $\varepsilon$ even in exact arithmetic — is the degradation of the Birkhoff contraction coefficient $\eta(K) \to 1$ as $\varepsilon \to 0$.** The number of iterations to reach precision $\delta$ is $O(\varepsilon\log(1/\delta)/\Delta C)$, which goes to infinity as $\varepsilon \to 0$. For $\varepsilon = 10^{-3}$ and $\Delta C = 10$, you need $O(10^{-4}\log(1/\delta))$ iterations — not many. For $\varepsilon = 10^{-6}$, you need $O(10^{-7}\log(1/\delta))$ — still manageable. But for $\varepsilon \to 0$, the iteration count grows without bound. The geometric convergence guarantee is real but vacuous in the limit: each iteration reduces the error by a factor $\eta(K) \to 1$, meaning each iteration makes essentially no progress. The two failures — numerical and algorithmic — both originate from the exponential parameterization of $K$, and both are resolved by the log-domain reformulation of Topic 3.
+
+---
+
+**The connection to MATH 304 (Computational Operations Research) is threefold.** First, the transportation simplex method from MATH 304 solves the exact Kantorovich LP by pivoting between extreme points of $\Pi(a,b)$ — corners of the transportation polytope. The Sinkhorn algorithm solves the regularized problem by moving through the interior of $\Pi(a,b)$ — strictly feasible points. The regularization converts a combinatorial corner-finding problem into a smooth interior-point problem, and the Sinkhorn iterations are the smooth analogue of the simplex pivots. Second, the dual variables $f^*$ and $g^*$ of the regularized problem are the entropic analogues of the shadow prices of the supply and demand constraints in the transportation LP — the same economic interpretation from Topic 4's Kantorovich duality, now appearing as the potentials that certify Sinkhorn optimality. Third, the Perron-Frobenius theorem from linear algebra — which guarantees that strictly positive matrices have a unique dominant eigenvector — is the spectral foundation of the Sinkhorn-Knopp theorem, and the scaling iterations are the two-sided power iteration that computes this dominant structure.
+
+**The connection to MSCS 202 (Numerical Methods) runs through iterative linear solvers and condition number theory.** The Jacobi and Gauss-Seidel methods for solving $Ax = b$ alternate between updating each variable while holding the others fixed — exactly the structure of the Sinkhorn iterations. The convergence of Jacobi and Gauss-Seidel is controlled by the spectral radius of the iteration matrix, just as Sinkhorn convergence is controlled by the Birkhoff contraction coefficient. The log-sum-exp stabilization of Topic 3 is the Sinkhorn analogue of the diagonal scaling and pivoting strategies in MSCS 202 — numerical preprocessing that reduces the effective condition number of the problem without changing its mathematical solution.
+
+---
+
+**Looking forward across the roadmap**, the Sinkhorn-Knopp theorem is the computational engine that makes everything in Phase 1 and beyond practical. In Topic 3, the log-domain reformulation stabilizes the Sinkhorn iterations for small $\varepsilon$, completing the computational toolkit for entropic OT. In Chapter 3, the Wasserstein barycenters — the Fréchet means of multiple distributions — are computed by iterating the Sinkhorn algorithm across multiple marginals simultaneously, a direct generalization of the two-marginal case. In Phase 3, the connection between Sinkhorn and the forward-backward algorithm for diffusion models makes the Sinkhorn iterations the computational primitive underlying score-based generative modeling: the score function update is the continuous-time limit of the Sinkhorn row-normalization step, and the diffusion reverse process is the continuous-time limit of the alternating projection convergence.
+
+The ping-pong protocol — alternating row and column normalizations of the fixed Gibbs kernel, updating only $u$ and $v$ while $K$ stands unchanged, converging geometrically to the unique regularized optimal coupling — is the Sinkhorn algorithm: $u \leftarrow a/Kv$, $v \leftarrow b/K^\top u$, repeat until $\|P^{(\ell)}\mathbf{1} - a\|_1 + \|(P^{(\ell)})^\top\mathbf{1} - b\|_1 < \delta$.
+
+---
+---

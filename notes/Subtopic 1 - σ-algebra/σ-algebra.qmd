@@ -1,0 +1,166 @@
+# Subtopic 1 - σ-algebra
+
+## Layer 1 (Story)
+
+It is a Sunday morning and you are the head of a polling organization hired to survey voting intentions across Kathmandu valley. Your job is to assign probabilities to events — not to individual voters, but to groups of voters. "What is the probability that a randomly selected voter from Lalitpur prefers candidate A?" "What is the probability that a voter from either Bhaktapur or Kirtipur prefers candidate B?" These are the kinds of questions your clients are paying you to answer.
+
+Now, Kathmandu valley has a finite population, so in principle you could assign a probability to every conceivable subset of voters — every possible group, every possible combination of individuals. With a finite population, this causes no problems. You simply count heads and divide by the total. Every subset has a well-defined probability, and life is simple.
+
+But now imagine your survey is not over a finite population of voters. It is over a continuous random variable — say, the exact income of a randomly selected resident of Kathmandu, which can be any positive real number. Suddenly you are not assigning probabilities to finite groups of people. You are assigning probabilities to subsets of the real line — to intervals, to unions of intervals, to wildly complicated collections of real numbers. And here, something goes badly wrong.
+
+---
+
+It turns out — and this is one of the most unsettling results in all of mathematics — that if you naively try to assign a coherent notion of size to every possible subset of the real line, you will inevitably produce a contradiction. There exist subsets of $[0, 1]$ — called Vitali sets, constructed using the Axiom of Choice — that are so pathologically irregular that no consistent notion of size can be assigned to them. If you insist on measuring them, you are forced to conclude that the interval $[0, 1]$ can be decomposed into countably many pieces whose sizes sum to something other than $1$. The arithmetic of probability breaks down completely.
+
+This is the crisis. You cannot measure everything. Some subsets of a continuous space must simply be declared unmeasurable — outside the system, off the map — and probability can only be assigned to the well-behaved subsets that remain.
+
+But now a new problem appears. If you cannot measure everything, you need a precise rule for deciding which subsets are allowed and which are not. And that rule cannot be arbitrary — it must be self-consistent. If you are allowed to ask "what is the probability that income falls in the interval $[50000, 100000]$?", you must also be allowed to ask "what is the probability that income does not fall in that interval?" — the complement. And if you are allowed to ask about two separate income brackets individually, you must also be allowed to ask about their union. The allowed subsets must be closed under the operations you actually need to do probability.
+
+This is exactly what a **$\sigma$-algebra** is. It is the precise, self-consistent specification of which subsets of your space are allowed to have a probability assigned to them.
+
+---
+
+Let us build the intuition carefully. Return to the polling organization. You have a space of all possible outcomes — call it the set of all possible incomes, which is just the positive real line. Now you start listing the events you want to be able to talk about. "Income is between 50,000 and 100,000 rupees." "Income is above 200,000 rupees." "Income is either below 30,000 or above 500,000 rupees." Each of these is a subset of the real line, and each represents a question you want to assign a probability to.
+
+Now think about what consistency requires. If you can ask about the event "income is between 50,000 and 100,000," you must be able to ask about its complement — "income is not between 50,000 and 100,000" — because the complement is just as meaningful a question. If you can ask about two events separately, you must be able to ask about their union — "either this event happens or that one does." And crucially, if you have a whole countable sequence of events — "income is between $\frac{1}{n}$ and $1$ for each $n = 1, 2, 3, \ldots$" — you must be able to ask about their union as well, because probability theory deals constantly with limits of sequences of events.
+
+These three requirements — closure under complementation, closure under countable unions, and containing the whole space — are the three axioms of a $\sigma$-algebra. They are not arbitrary bureaucratic rules. They are the minimal logical requirements for a collection of events to support a coherent probability system.
+
+---
+
+Here is the break moment. The naive assumption is that you should simply take all subsets — why not allow everything and avoid the headache of deciding what is allowed? This is called the power set, and it is the collection of all possible subsets of your space. Surely using all subsets is the most generous and flexible choice?
+
+It breaks immediately when you try to define a measure on it. As soon as you demand that your notion of size is countably additive — that the size of a countable union of disjoint sets equals the sum of their individual sizes, which is the most basic requirement of any sensible notion of probability — you can prove that the power set of $[0,1]$ cannot be consistently measured. The Vitali set construction shows you a collection of disjoint, congruent subsets of $[0,1]$ whose union is all of $[0,1]$, but which, under any translation-invariant measure, would have to sum to both $0$ and $1$ simultaneously. The power set is too large. Generosity here is not a virtue — it is a catastrophe.
+
+The $\sigma$-algebra is the disciplined alternative. It is the largest collection of subsets you can work with while still maintaining consistency. It throws out the pathological sets — the ones that would cause contradictions — and keeps everything that probability theory actually needs.
+
+---
+
+Now there is one more layer to the story that makes the $\sigma$-algebra even richer in meaning. A $\sigma$-algebra does not just specify which events are measurable — it encodes **information**. Consider a simpler example. Suppose your random variable is a single coin flip, and the outcome space is $\{H, T\}$. Before the flip, you know nothing, so the only events you can meaningfully assign probabilities to are the trivial ones: the whole space $\{H, T\}$ with probability 1, and the empty set with probability 0. This is the smallest possible $\sigma$-algebra — called the trivial $\sigma$-algebra — and it represents total ignorance.
+
+After the flip, you know everything. Now you can assign probabilities to every subset: $\{H\}$, $\{T\}$, $\{H, T\}$, and $\emptyset$. This is the largest possible $\sigma$-algebra on this space — called the power set $\sigma$-algebra — and it represents total knowledge.
+
+In between these extremes, a $\sigma$-algebra represents partial information. The $\sigma$-algebra you work with at any given moment tells you exactly what you are allowed to know — which questions you are allowed to ask — about the random variable. This information-theoretic interpretation of $\sigma$-algebras is not a metaphor. It is the formal basis of conditional expectation, filtrations, and the mathematics of learning over time, all of which will appear in Phase 3 when you study stochastic processes and diffusion models.
+
+---
+
+Hold this picture in your mind: a polling organization that must decide, before it begins assigning probabilities, which questions it is logically allowed to ask. The allowed questions must be closed under negation, closed under countable combination, and must include the trivial certainty that something happens. That discipline — that precise specification of the allowed questions — is a $\sigma$-algebra. The space of incomes is your outcome space. The allowed income brackets are your measurable sets. And the rule that governs which brackets are allowed is the $\sigma$-algebra itself.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in three stages: first the axiomatic definition of a $\sigma$-algebra, then the canonical examples that give it texture, and finally the concept of a measurable space and the information-theoretic structure that the story introduced at the end of Layer 1.
+
+### The Definition
+
+Let $\Omega$ be a non-empty set — the **sample space**, the universe of all possible outcomes. A **$\sigma$-algebra** (also called a $\sigma$-field) on $\Omega$ is a collection $\mathcal{F}$ of subsets of $\Omega$ satisfying exactly three axioms:
+
+$$\text{(i) } \Omega \in \mathcal{F} \quad \text{(the whole space is included)}$$
+
+$$\text{(ii) } A \in \mathcal{F} \implies A^c \in \mathcal{F} \quad \text{(closed under complementation)}$$
+
+$$\text{(iii) } A_1, A_2, A_3, \ldots \in \mathcal{F} \implies \bigcup_{n=1}^{\infty} A_n \in \mathcal{F} \quad \text{(closed under countable unions)}$$
+
+These three axioms are the complete and minimal definition. Nothing else is assumed. Notice that axiom (i) together with axiom (ii) immediately implies $\emptyset \in \mathcal{F}$, since $\emptyset = \Omega^c$. And axiom (ii) combined with axiom (iii) implies closure under countable intersections as well, since by De Morgan's law:
+
+$$\bigcap_{n=1}^{\infty} A_n = \left( \bigcup_{n=1}^{\infty} A_n^c \right)^c$$
+
+So if each $A_n \in \mathcal{F}$, then each $A_n^c \in \mathcal{F}$ by axiom (ii), their union is in $\mathcal{F}$ by axiom (iii), and the complement of that union is in $\mathcal{F}$ again by axiom (ii). The three axioms do more work than they initially appear to.
+
+The pair $(\Omega, \mathcal{F})$ is called a **measurable space**. The sets $A \in \mathcal{F}$ are called **measurable sets** — these are the allowed subsets, the questions the polling organization is permitted to ask. Subsets of $\Omega$ that do not belong to $\mathcal{F}$ are called non-measurable, and probability theory simply refuses to assign them a value.
+
+---
+
+### The Canonical Examples
+
+It is worth working through three concrete examples, arranged from smallest to largest, because they illuminate the full range of what a $\sigma$-algebra can be.
+
+The **trivial $\sigma$-algebra** on any space $\Omega$ is $\mathcal{F} = \{\emptyset, \Omega\}$. You can verify it satisfies all three axioms immediately: $\Omega \in \mathcal{F}$, the complement of $\Omega$ is $\emptyset \in \mathcal{F}$ and vice versa, and the only unions you can form from $\emptyset$ and $\Omega$ stay within $\{\emptyset, \Omega\}$. This $\sigma$-algebra encodes total ignorance — the only events you can speak about are "nothing happens" and "something happens." It is the polling organization that refuses to distinguish between any income brackets at all.
+
+The **power set $\sigma$-algebra** $\mathcal{F} = 2^\Omega$ — the collection of all subsets of $\Omega$ — is the largest possible $\sigma$-algebra on $\Omega$. It satisfies all three axioms trivially, since any operation on subsets of $\Omega$ produces a subset of $\Omega$. When $\Omega$ is finite or countably infinite, this causes no problems and is often the natural choice. When $\Omega$ is uncountable — such as $\Omega = \mathbb{R}$ — this is where the Vitali set catastrophe strikes, and you cannot define a translation-invariant measure on all of $2^\mathbb{R}$ without contradiction. The power set is too large for continuous spaces.
+
+A **generated $\sigma$-algebra** is the most important example in practice. Given any collection $\mathcal{G}$ of subsets of $\Omega$ — not necessarily a $\sigma$-algebra itself — the $\sigma$-algebra **generated** by $\mathcal{G}$, written $\sigma(\mathcal{G})$, is defined as the smallest $\sigma$-algebra on $\Omega$ that contains every set in $\mathcal{G}$:
+
+$$\sigma(\mathcal{G}) = \bigcap \{ \mathcal{F} : \mathcal{F} \text{ is a } \sigma\text{-algebra on } \Omega \text{ and } \mathcal{G} \subseteq \mathcal{F} \}$$
+
+This intersection is taken over all $\sigma$-algebras containing $\mathcal{G}$, and the result is itself a $\sigma$-algebra — the tightest one that still contains everything in $\mathcal{G}$. The generating collection $\mathcal{G}$ is the seed: you specify the events you care about, and $\sigma(\mathcal{G})$ is the minimal self-consistent universe of events built around that seed. This construction is how the Borel $\sigma$-algebra — the subject of the next subtopic — is defined.
+
+---
+
+### Measurable Functions
+
+Once you have a measurable space $(\Omega, \mathcal{F})$, you need to know which functions defined on $\Omega$ are compatible with the $\sigma$-algebra. A function $f: \Omega \to \mathbb{R}$ is called **$\mathcal{F}$-measurable** if the preimage of every measurable subset of $\mathbb{R}$ is a measurable subset of $\Omega$. More precisely, if $\mathcal{B}$ denotes the $\sigma$-algebra on $\mathbb{R}$ (the Borel $\sigma$-algebra, coming in the next subtopic), then:
+
+$$f \text{ is measurable} \iff \forall B \in \mathcal{B}, \quad f^{-1}(B) = \{\omega \in \Omega : f(\omega) \in B\} \in \mathcal{F}$$
+
+This condition says that $f$ does not produce information beyond what $\mathcal{F}$ allows. If you ask "which outcomes lead to $f$ landing in the set $B$?", the answer must be a set that your $\sigma$-algebra permits you to measure. Measurability is the compatibility condition between a function and the information structure of its domain.
+
+This matters because random variables are precisely measurable functions. A **random variable** $X: \Omega \to \mathbb{R}$ is a measurable function from a probability space to the real line. The measurability condition is what makes it legitimate to ask "what is the probability that $X \in B$?" — because the event $\{X \in B\} = X^{-1}(B)$ must belong to $\mathcal{F}$ before you can assign it a probability. Without measurability, that question has no answer.
+
+---
+
+### The Information-Theoretic Structure
+
+The story introduced the idea that a $\sigma$-algebra encodes information, and this deserves its full formal treatment because it will reappear in Phase 3.
+
+Suppose $\Omega = \{1, 2, 3, 4\}$ represents four possible outcomes. Consider the $\sigma$-algebra generated by the partition $\{\{1,2\}, \{3,4\}\}$:
+
+$$\mathcal{F} = \{\emptyset, \{1,2\}, \{3,4\}, \{1,2,3,4\}\}$$
+
+This $\sigma$-algebra tells you exactly one piece of information: whether the outcome fell in the first group or the second. It cannot distinguish between outcomes $1$ and $2$, nor between $3$ and $4$. An observer equipped with only this $\sigma$-algebra knows which group the outcome belongs to, but nothing more. Now consider the finer $\sigma$-algebra $2^\Omega$ — the full power set. An observer with this $\sigma$-algebra knows the exact outcome. The refinement of a $\sigma$-algebra corresponds to an increase in information.
+
+This observation leads to one of the most important concepts in stochastic processes: a **filtration**. A filtration is an increasing sequence of $\sigma$-algebras $\mathcal{F}_0 \subseteq \mathcal{F}_1 \subseteq \mathcal{F}_2 \subseteq \cdots$ on the same space $\Omega$, where each $\mathcal{F}_t$ represents the information available at time $t$. As $t$ increases, the $\sigma$-algebra grows — more events become distinguishable, more questions become answerable. A diffusion process in Phase 3 is modeled as a stochastic process adapted to a filtration: at each time step, the process can only depend on the information available up to that moment, which is encoded in $\mathcal{F}_t$.
+
+The formal connection is: a stochastic process $(X_t)_{t \geq 0}$ is **adapted** to a filtration $(\mathcal{F}_t)_{t \geq 0}$ if $X_t$ is $\mathcal{F}_t$-measurable for each $t$. This means the value of $X_t$ is determined by — and does not exceed — the information available at time $t$.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 208 (Statistics and Probability), you worked with events and probabilities in what felt like an intuitive, informal framework — the event that a random variable falls in some interval, the complement of an event, the union of two events. Every one of those operations was implicitly assuming a $\sigma$-algebra underneath. The events you combined with complement and union were implicitly assumed to be measurable sets. The axioms of probability you used — $P(\Omega) = 1$, $P(A^c) = 1 - P(A)$, and countable additivity for disjoint events — are literally the defining properties of a probability measure on a $\sigma$-algebra, which we will formalize in the next subtopic. What you did in MATH 208 was the correct intuition; what you are building now is the rigorous foundation that makes that intuition provably consistent.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the polling organization story has a precise mathematical address. Let us walk through them one by one, building the correspondence until the story and the formalism are completely fused.
+
+---
+
+**The population of Kathmandu valley — every possible outcome of your random experiment — is the sample space $\Omega$.** It is the universe of everything that could conceivably happen. In the income example, $\Omega$ is the positive real line, because income can in principle be any positive real number. In the coin flip example, $\Omega = \{H, T\}$. The sample space is always the first thing you name, because every subsequent structure — the $\sigma$-algebra, the measure, the probability — is built on top of it.
+
+**The collection of income brackets that the polling organization is allowed to assign probabilities to is the $\sigma$-algebra $\mathcal{F}$.** Not all subsets of $\Omega$ — just the allowed ones. The $\sigma$-algebra is the formal answer to the question "which questions are we permitted to ask?" It is a collection of subsets of $\Omega$, carefully chosen so that every operation you need to do probability — complementation, countable union, countable intersection — stays within the collection. The pair $(\Omega, \mathcal{F})$ is the measurable space: the outcome universe together with its list of permitted events.
+
+**The three consistency requirements of the polling organization are the three axioms of a $\sigma$-algebra, mapped one-for-one.** The requirement that the trivial certainty "something happens" is always a permitted event is axiom (i): $\Omega \in \mathcal{F}$. The requirement that if you can ask about an income bracket you must also be able to ask about its negation is axiom (ii): $A \in \mathcal{F} \implies A^c \in \mathcal{F}$. The requirement that if you can ask about each of a countable sequence of brackets you must be able to ask about their union is axiom (iii): $\bigcup_{n=1}^\infty A_n \in \mathcal{F}$. The axioms are not imposed from outside — they are the logical minimum that any coherent probability system demands.
+
+---
+
+**The trivial $\sigma$-algebra $\{\emptyset, \Omega\}$ is the polling organization that refuses to distinguish between any income levels at all.** It can only answer two questions: "did something happen?" (always yes, probability 1) and "did nothing happen?" (always no, probability 0). It represents total ignorance — the mathematical formalization of knowing nothing beyond the fact that the experiment takes place. Every $\sigma$-algebra contains this as its absolute minimum content.
+
+**The power set $2^\Omega$ is the polling organization that tries to ask every conceivable question simultaneously.** On a finite space like $\{H, T\}$, this works perfectly — there are only four subsets, and all are well-behaved. But on the real line, the power set is catastrophically large. The Vitali set construction — which is the formal break moment — shows that within $[0,1]$ there exist subsets so pathological that any attempt to assign them a consistent size forces the conclusion that $[0,1]$ has total size both 0 and 1 at the same time. The break is not a quirk. It is a theorem, provable from the Axiom of Choice, and it is the mathematical reason that probability on continuous spaces cannot be defined on all subsets. Generosity collapses into contradiction.
+
+**The seed collection $\mathcal{G}$ — the specific income brackets you first decide to care about — and the generated $\sigma$-algebra $\sigma(\mathcal{G})$ built from them is the story of how a polling organization constructs its full list of permitted questions from a starting set of natural ones.** You begin by saying "I want to be able to talk about the interval $[50000, 100000]$." That forces you to also talk about its complement. Which forces you to talk about unions of complements. Which forces you to take countable unions of those. By the time you have closed the collection under all required operations, you have $\sigma(\mathcal{G})$ — the minimal self-consistent universe of events built from your seed. The Borel $\sigma$-algebra, which is the subject of the next subtopic, is exactly this construction applied to the open intervals of the real line.
+
+---
+
+**The individual voters whose incomes are being measured are random variables $X: \Omega \to \mathbb{R}$, and their measurability is the condition that the questions they generate do not exceed the information the $\sigma$-algebra permits.** When you ask "what is the probability that voter $X$'s income falls in the bracket $B$?", you are forming the event $\{X \in B\} = X^{-1}(B)$. For this question to be answerable, that event must belong to $\mathcal{F}$. Measurability of $X$ is precisely the guarantee that every question you ask about $X$ is a permitted question — that $X$ does not smuggle in information beyond what your $\sigma$-algebra allows. This is why random variables are defined as measurable functions, not just arbitrary functions. The measurability condition is the compatibility license between the function and the information structure.
+
+---
+
+**The three levels of the coin flip — before the flip, after the flip, and the partial knowledge in between — are the trivial $\sigma$-algebra, the power set $\sigma$-algebra, and an intermediate $\sigma$-algebra respectively.** Before the flip, $\mathcal{F}_0 = \{\emptyset, \Omega\}$ — you can ask nothing meaningful. After the flip, $\mathcal{F}_1 = 2^\Omega$ — you can ask everything. The intermediate case, where you know which group the outcome fell into but not the exact outcome, corresponds to a $\sigma$-algebra generated by a coarser partition — one that merges some outcomes together. The refinement from coarser to finer $\sigma$-algebras is the passage from less to more information, and this passage over time is a filtration $\mathcal{F}_0 \subseteq \mathcal{F}_1 \subseteq \mathcal{F}_2 \subseteq \cdots$.
+
+**The diffusion models of Phase 3 are stochastic processes adapted to filtrations — and you now have the vocabulary to understand what that means.** At each time step $t$, the process $X_t$ is $\mathcal{F}_t$-measurable: it can only depend on the information available up to time $t$, which is encoded in the $\sigma$-algebra $\mathcal{F}_t$. The noise injection and denoising steps of a diffusion model are not arbitrary — they are carefully constructed to be adapted to the filtration, meaning they never use future information to make present decisions. The $\sigma$-algebra is the information firewall that enforces this.
+
+---
+
+**The connection to MATH 208 (Statistics and Probability) is now fully explicit.** Every time you wrote $P(A \cup B) = P(A) + P(B)$ for disjoint events $A$ and $B$, you were using countable additivity — the defining property of a measure on a $\sigma$-algebra, which we formalize in the next subtopic. Every time you took the complement of an event, you were using axiom (ii). Every time you formed the intersection of two events using De Morgan's law, you were using the fact that $\sigma$-algebras are closed under countable intersections, which follows from axioms (ii) and (iii) together. The probability theory you learned in MATH 208 was always secretly operating inside a $\sigma$-algebra. What you have now is the explicit scaffolding that was hidden underneath it.
+
+---
+
+**Looking forward across the entire roadmap**, the $\sigma$-algebra plays a role so foundational that it is invisible in most applied work — but it is always there. In Phase 1, when you study the Wasserstein distance between probability distributions, both distributions must be defined on the same measurable space $(\Omega, \mathcal{F})$ — the same $\sigma$-algebra — for the comparison to make sense. In Phase 2, when graph neural networks operate on spaces of graphs, the notion of a measurable function on a graph space requires a $\sigma$-algebra on that space. In Phase 3, when score matching learns the gradient of the log-density $\nabla \log p(x)$, the density $p(x)$ itself only exists as a well-defined object because the underlying space has a $\sigma$-algebra and a measure — the Radon-Nikodym theorem, coming in a later subtopic, is what turns the abstract measure into a concrete density function.
+
+Every probability statement in the roadmap — every integral, every expectation, every likelihood ratio — is implicitly a statement about a measurable set in a $\sigma$-algebra. The polling organization's discipline, its careful refusal to ask questions that would cause contradictions, is the invisible foundation on which all of modern probability theory stands.
+
+---
+---

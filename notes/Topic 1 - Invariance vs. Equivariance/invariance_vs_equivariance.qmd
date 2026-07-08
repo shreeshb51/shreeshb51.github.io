@@ -1,0 +1,351 @@
+# Topic 1 - Invariance vs. Equivariance: The Two Ways to Respect Symmetry
+
+## Introduction
+
+Before you can build a neural network that respects the geometry of its data, you need to be precise about what respecting geometry means. The word symmetry is used casually in everyday language — a face is symmetric, a snowflake is symmetric, a melody is symmetric — but in mathematics, symmetry has a precise meaning that is richer and more useful than the everyday intuition. A symmetry of an object is a transformation that leaves the object unchanged in some specified sense. The set of all such transformations forms a group. And respecting a symmetry, for a neural network, means one of exactly two things: either the network's output is completely unchanged by the symmetry transformation, or the network's output transforms in a corresponding way. These two cases have names — invariance and equivariance — and distinguishing them carefully is the foundation of everything in Phase 2.
+
+This topic has three components that build the complete picture.
+
+The first component is **the precise definitions of invariance and equivariance** and the mathematical relationship between them. A function $f: \mathcal{X} \to \mathcal{Y}$ is invariant to a group action if $f(g \cdot x) = f(x)$ for all inputs $x$ and all group elements $g$. The output is a fixed point under the group action on $\mathcal{Y}$ — it does not transform at all. A function $f$ is equivariant if $f(g \cdot x) = g \cdot f(x)$ — the output transforms in the same way as the input, under a corresponding group action on $\mathcal{Y}$. Invariance is a special case of equivariance where the group action on $\mathcal{Y}$ is trivial — every group element acts as the identity on the output space. This relationship between invariance and equivariance is not just definitional tidiness: it means that invariant functions can be built from equivariant ones by composing with a final pooling operation that collapses the group orbit. Equivariant layers preserve geometric information; invariant readout layers discard the geometric degrees of freedom that are irrelevant to the final prediction.
+
+The second component is **the physical motivation and the consequences of getting it wrong** — understanding why invariance and equivariance are not merely mathematical elegance but physical necessity, and what happens to a neural network that violates these constraints. A molecular energy predictor that is not rotation-invariant will assign different energies to the same molecule in different orientations — physically impossible, since energy is a scalar that does not depend on the choice of coordinate system. A force field predictor that is not rotation-equivariant will predict forces that do not rotate with the molecule — also physically impossible, since forces are vectors that transform under rotations. Networks that violate these constraints must learn the symmetry from data instead of having it built in architecturally, requiring exponentially more training data to cover the orbit of each training example under the symmetry group. For $SO(3)$, whose orbit of a single molecular configuration under all rotations is a three-dimensional manifold, this data requirement is infinite — you cannot enumerate all rotations. Architectural equivariance is not an optimization. It is a physical requirement for generalization.
+
+The third component is **the layer-by-layer design principle** — how to construct deep neural networks by composing equivariant layers, with the understanding that compositions of equivariant maps are equivariant, and that invariance can be achieved at the output layer by a symmetry-invariant pooling operation. This compositionality is the architectural principle that makes Geometric Deep Learning modular: once you have a library of equivariant building blocks — equivariant linear maps, equivariant nonlinearities, equivariant aggregation operations — you can compose them freely, and the composition is automatically equivariant. The challenge is not the composition but the construction of the individual building blocks, which requires understanding the representation theory of the relevant group — how the group acts on the spaces of features at each layer. This representation-theoretic perspective is the deep reason why groups, introduced in Topic 2, are necessary rather than just convenient.
+
+By the end of this topic, the distinction between invariance and equivariance will feel as natural as the distinction between a scalar and a vector — and for precisely the same reason. Scalars are invariant under rotations. Vectors are equivariant under rotations. The entire zoo of physical quantities — scalars, vectors, tensors, pseudovectors, spinors — is classified by how they transform under the rotation group, which is precisely the classification by their equivariance properties. Every physical quantity is characterized by its transformation law, and every neural network layer that computes physical quantities must respect those transformation laws. Invariance and equivariance are not architectural choices. They are physical facts, and neural network architecture is the engineering task of building computation that respects those facts.
+
+---
+
+## Layer 1 (Story)
+
+You are a crystallographer at Tribhuvan University's Department of Physics, and your research group has just been handed two computational problems that, on the surface, seem completely unrelated. The first problem comes from the chemistry department: build a neural network that predicts the binding energy of a drug molecule to a target protein. The second problem comes from the structural biology department: build a neural network that predicts the three-dimensional force vectors acting on every atom in a protein, given the protein's current conformation. You will spend the next several weeks trying to build these networks, failing in instructive ways, and eventually understanding why the two problems demand fundamentally different kinds of architectural respect for the geometry of molecular space.
+
+---
+
+**The crystallographer's first attempt: ignoring geometry entirely**
+
+Your first attempt at the energy prediction network is the obvious one. Represent each molecule as a fixed-length feature vector — concatenate the atomic coordinates, the atom types, and the bond connectivity into a single long vector — and feed it to a standard multilayer perceptron. Train on a dataset of ten thousand molecules with known binding energies. Evaluate on a held-out test set.
+
+The network trains. The loss decreases. The test error is terrible.
+
+You debug the network for a week before your senior colleague — a computational chemist who has been watching with increasing impatience — walks over and asks a single question: does your training set contain the same molecule in multiple orientations?
+
+You check. It does not. Every molecule in the training set appears in exactly one orientation — the orientation in which it was deposited in the crystal structure database. The test set, however, contains molecules whose orientations were determined independently, by different experimenters using different coordinate systems. The same molecule appears in the training set oriented with its long axis along the x-direction and in the test set oriented with its long axis along the z-direction. To your network, these look like completely different molecules, because they have completely different coordinate vectors. The network has learned nothing about molecular energy — it has memorized the energies of specific coordinate configurations, which generalize to nothing.
+
+The physical fact your network violated: the binding energy of a molecule is a scalar. It does not depend on how you orient the molecule in space. Rotating the molecule by any angle, in any direction, does not change its energy. Translating it to a different position in space does not change its energy. The energy is invariant under the group of rotations and translations — the Euclidean group $E(3)$.
+
+Your network violated this invariance because it was never told about it. The network had no way of knowing that rotating the input coordinate vector corresponds to rotating the molecule — it just saw numbers change. To fix this, you need to either provide the network with an astronomically large training set covering all possible orientations of every molecule — which is impossible — or build the rotation invariance into the network's architecture, so that it is satisfied exactly regardless of input orientation. The second option is the architectural approach of Geometric Deep Learning.
+
+---
+
+**The force prediction problem: why invariance is not enough**
+
+Buoyed by understanding the energy problem, you turn to the force prediction network with what seems like a clear strategy. Make the network rotation-invariant. Problem solved.
+
+Your colleague stops you immediately. The force prediction problem is different in a critical way.
+
+Consider a single atom in a protein. The force on that atom is a three-dimensional vector — it points in a specific direction in space, with a specific magnitude. If you rotate the entire protein by ninety degrees around the z-axis, the force on every atom also rotates by ninety degrees around the z-axis. The force vectors are not invariant under rotation — they change. A force that pointed north now points east. The magnitude is preserved, but the direction changes, in exactly the same way the protein's coordinates changed.
+
+If you build a rotation-invariant force predictor — a network that produces the same output regardless of the protein's orientation — the network will predict forces that do not rotate with the protein. After rotating the protein ninety degrees, the network will still output the original (pre-rotation) force vectors, which now point in the wrong directions relative to the rotated protein. The predicted forces are physically inconsistent with the rotated configuration.
+
+The correct property for the force predictor is not invariance but equivariance. When you rotate the input by a rotation $R \in SO(3)$, the output forces should rotate by the same rotation $R$. The output transforms in the same way as the input — it is equivariant under rotation. In symbols: if $f$ is the force predictor and $\rho$ is the action of rotation on coordinate vectors, then $f(\rho(R) \cdot \text{input}) = \rho(R) \cdot f(\text{input})$ for all rotations $R$.
+
+The energy predictor needs invariance — the output is a scalar that does not change under rotation. The force predictor needs equivariance — the output is a vector that rotates with the input. Two networks, two different relationships to the same symmetry group.
+
+---
+
+**The orbit problem: what invariance and equivariance are protecting you from**
+
+Your colleague now draws a picture that crystallizes the entire problem.
+
+Consider the space of all possible molecular configurations — all possible assignments of three-dimensional coordinates to the atoms of a molecule with fixed bond connectivity. This is a high-dimensional Euclidean space — if the molecule has $N$ atoms, the configuration space is $\mathbb{R}^{3N}$.
+
+Now consider the rotation group $SO(3)$ acting on this configuration space: for each rotation $R \in SO(3)$, the action maps each configuration $(x_1, \ldots, x_N) \in \mathbb{R}^{3N}$ to the rotated configuration $(Rx_1, \ldots, Rx_N)$. The orbit of a single configuration under this group action is the set of all rotations of that configuration — a three-dimensional manifold inside $\mathbb{R}^{3N}$, parameterized by the three degrees of freedom of $SO(3)$.
+
+For the energy prediction problem: all configurations on the same orbit have exactly the same energy. The energy function is constant on orbits. This means the energy function is really a function on the orbit space $\mathbb{R}^{3N} / SO(3)$ — the space of orbits — not on the full configuration space $\mathbb{R}^{3N}$. An invariant network works directly in orbit space. A non-invariant network works in the full configuration space, and must learn separately that all configurations on the same orbit have the same energy — an infinite amount of information that can never be fully covered by a finite training set.
+
+For the force prediction problem: as you move along an orbit — rotating the molecule continuously — the force vectors rotate continuously in the corresponding way. The force is a section of the tangent bundle of the orbit — it points in a direction that rotates with the orbit. An equivariant network tracks this rotation correctly. A non-equivariant network does not, producing forces that are inconsistent with the molecular geometry.
+
+The orbit picture is the geometric heart of invariance and equivariance. Invariant functions are functions on orbit space. Equivariant functions are functions that respect the fiber structure of the orbit — they move consistently as you move along the orbit. Understanding this picture makes the definitions feel inevitable rather than arbitrary.
+
+---
+
+**Building invariance from equivariance: the pooling trick**
+
+Your colleague now reveals a crucial structural fact: invariance is not a separate architectural design from equivariance. Invariant networks are built from equivariant networks by adding a final pooling layer that collapses the group orbit.
+
+Here is the construction. Suppose you have a neural network $\Phi$ that is equivariant to the group $G$ — for all $g \in G$, $\Phi(g\cdot x) = g\cdot\Phi(x)$. Now compose $\Phi$ with a function $\rho$ that is invariant to the group action on the output space — a function that averages, sums, or takes the norm over the group orbit. The composition $\rho \circ \Phi$ is invariant:
+
+$$(\rho \circ \Phi)(g\cdot x) = \rho(\Phi(g\cdot x)) = \rho(g\cdot\Phi(x)) = \rho(\Phi(x))$$
+
+The equivariant layers carry the geometric information through the network. The invariant pooling at the end discards the geometric degrees of freedom — the orientation, position, or labeling — that are irrelevant to the final scalar prediction.
+
+In the molecular energy predictor: the early layers of the network should be equivariant to rotations and translations — they compute geometric features of the molecule that rotate and translate with it. The final layer should be an invariant pooling — a sum over atoms, a norm of a vector, an inner product that is rotation-invariant — that collapses the geometric information into a single scalar energy value.
+
+This layered structure — equivariant body, invariant head — is the universal architecture of Geometric Deep Learning for scalar prediction tasks. It is not a heuristic or a design convention. It is the only mathematically correct structure for a network that must produce a rotation-invariant scalar from rotation-covariant features.
+
+---
+
+**The compositionality principle: equivariant layers compose**
+
+Your colleague makes one more observation that will shape every architectural decision in Phase 2.
+
+If $f_1: \mathcal{X} \to \mathcal{Y}$ and $f_2: \mathcal{Y} \to \mathcal{Z}$ are both equivariant to the same group $G$ — with the group acting on $\mathcal{X}$, $\mathcal{Y}$, and $\mathcal{Z}$ appropriately — then their composition $f_2 \circ f_1: \mathcal{X} \to \mathcal{Z}$ is also equivariant:
+
+$$(f_2 \circ f_1)(g\cdot x) = f_2(f_1(g\cdot x)) = f_2(g\cdot f_1(x)) = g\cdot f_2(f_1(x)) = g\cdot(f_2\circ f_1)(x)$$
+
+Equivariance composes. This is the architectural principle that makes Geometric Deep Learning modular. You do not need to design a single monolithic equivariant network — you can assemble a deep network from equivariant building blocks, and the composition is automatically equivariant. The challenge reduces to designing individual equivariant operations — equivariant linear maps, equivariant nonlinearities, equivariant aggregation operations — and the deep network is the free composition of these building blocks.
+
+The nonlinearity is the subtlest building block. Standard nonlinearities like ReLU are applied elementwise to scalar features. For vector-valued features that must transform equivariantly under rotation, you cannot apply ReLU elementwise — doing so would not be equivariant, because ReLU does not commute with rotation. The equivariant nonlinearity must be applied to the norm of the vector (a rotation-invariant scalar), leaving the direction unchanged. This norm-and-scale approach — apply the nonlinearity to the magnitude, multiply the direction by the result — is the standard equivariant nonlinearity for vector features, and it generalizes to higher-order tensor features through the representation theory of $SO(3)$.
+
+---
+
+**The break moment**
+
+Here is the naive assumption that breaks.
+
+You might think: equivariance is strictly more powerful than invariance. An equivariant network preserves all geometric information — orientations, directions, relative positions — while an invariant network discards it. Therefore, for any task, an equivariant network is at least as good as an invariant network, and often better. Always build equivariant networks; add the invariant pooling only at the very end.
+
+This breaks for tasks where the output should be invariant at an intermediate layer, not just the final layer.
+
+Consider predicting whether two molecules will bind to each other — a binary classification task. The relevant geometric information is the relative geometry of the two molecules — their relative orientation and the distances between their atoms. The absolute orientation of the pair in space is irrelevant. If you build a fully equivariant network that carries absolute orientation information all the way to the final layer, you are carrying irrelevant information through the entire network — information that must ultimately be discarded by the final invariant pooling, but which occupies capacity in every intermediate layer.
+
+The correct architecture is not globally equivariant — it is equivariant to the relative rotations of the two molecules separately, and invariant to the global rotation of the pair. This is a more refined symmetry requirement that cannot be expressed as either pure invariance or pure equivariance — it requires the group-theoretic concept of a quotient symmetry, where you are equivariant to a subgroup and invariant to the quotient.
+
+More concretely: the naive assumption breaks when the symmetry group of the task is different from the symmetry group of the input. The input molecular pair has $SO(3)$ symmetry for global rotations. The task — binding prediction — has a larger symmetry group that includes independent rotations of each molecule. Building a network equivariant only to global $SO(3)$ rotations misses the larger symmetry, and building a network invariant to global $SO(3)$ rotations discards useful relative orientation information. The correct architecture must match the symmetry group of the task, which may be a subgroup, a quotient group, or a product group of the input symmetry — a subtlety that only becomes visible when you think carefully about which symmetries are relevant to which quantities.
+
+---
+
+Hold five pictures simultaneously as you move to the mathematics.
+
+The energy predictor failure: a network that assigns different energies to the same molecule in different orientations, violating the physical fact that energy is a rotation-invariant scalar — the consequence of missing invariance.
+
+The force predictor requirement: output force vectors that rotate with the input molecule, satisfying $f(R\cdot x) = R\cdot f(x)$ for all $R \in SO(3)$ — the definition of equivariance for vector-valued outputs.
+
+The orbit picture: the group action partitioning the configuration space into orbits, invariant functions being constant on orbits, equivariant functions tracking the fiber structure of the orbit bundle — the geometric content of both definitions.
+
+The layered architecture: equivariant body composed of equivariant building blocks, invariant head collapsing the group orbit — the universal structure of geometric deep learning for scalar prediction.
+
+The break moment: the symmetry group of the task differing from the symmetry group of the input, requiring quotient symmetries and product group symmetries that go beyond pure invariance or pure equivariance — the subtlety that motivates the full group-theoretic framework of Topic 2.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the precise definitions of group actions, invariance, and equivariance; the representation theory of groups and its role in characterizing equivariant maps; the classification of equivariant linear maps by Schur's lemma; the construction of equivariant nonlinearities; the invariant pooling operation and the equivariant-invariant decomposition theorem; and the universality and expressiveness of equivariant networks.
+
+### Group Actions — Precise Definitions
+
+**Definition (Group).** A **group** is a set $G$ with a binary operation $\cdot: G \times G \to G$ satisfying:
+1. **Closure:** $g \cdot h \in G$ for all $g, h \in G$.
+2. **Associativity:** $(g \cdot h) \cdot k = g \cdot (h \cdot k)$ for all $g, h, k \in G$.
+3. **Identity:** $\exists e \in G$ such that $e \cdot g = g \cdot e = g$ for all $g \in G$.
+4. **Inverses:** $\forall g \in G$, $\exists g^{-1} \in G$ such that $g \cdot g^{-1} = g^{-1} \cdot g = e$.
+
+**Definition (Group Action).** A **left group action** of $G$ on a set $\mathcal{X}$ is a map $\cdot: G \times \mathcal{X} \to \mathcal{X}$ satisfying:
+1. **Identity:** $e \cdot x = x$ for all $x \in \mathcal{X}$.
+2. **Compatibility:** $(g \cdot h) \cdot x = g \cdot (h \cdot x)$ for all $g, h \in G$, $x \in \mathcal{X}$.
+
+The set $\mathcal{X}$ is called a **$G$-set**. The **orbit** of $x \in \mathcal{X}$ under $G$ is:
+
+$$\mathcal{O}_x = \{g \cdot x : g \in G\} \subseteq \mathcal{X}$$
+
+The **stabilizer** of $x$ is $G_x = \{g \in G : g \cdot x = x\}$ — the subgroup of $G$ that fixes $x$. The **orbit-stabilizer theorem** states $|\mathcal{O}_x| = |G| / |G_x|$ for finite groups.
+
+**The orbit space** $\mathcal{X}/G = \{\mathcal{O}_x : x \in \mathcal{X}\}$ is the set of all orbits — the quotient of $\mathcal{X}$ by the equivalence relation $x \sim y \iff \exists g: g\cdot x = y$.
+
+---
+
+### Invariance and Equivariance — Precise Definitions
+
+**Definition (Invariant function).** A function $f: \mathcal{X} \to \mathcal{Y}$ is **$G$-invariant** if $G$ acts on $\mathcal{X}$ and trivially on $\mathcal{Y}$ (every $g$ acts as the identity on $\mathcal{Y}$), and:
+
+$$f(g \cdot x) = f(x) \qquad \forall g \in G, \; x \in \mathcal{X}$$
+
+Equivalently, $f$ is constant on orbits: $f$ factors through the quotient map $\pi: \mathcal{X} \to \mathcal{X}/G$ as $f = \tilde{f} \circ \pi$ for some $\tilde{f}: \mathcal{X}/G \to \mathcal{Y}$.
+
+**Definition (Equivariant function).** Let $G$ act on $\mathcal{X}$ via $\rho_{\mathcal{X}}: G \to \text{Aut}(\mathcal{X})$ and on $\mathcal{Y}$ via $\rho_{\mathcal{Y}}: G \to \text{Aut}(\mathcal{Y})$. A function $f: \mathcal{X} \to \mathcal{Y}$ is **$(G, \rho_{\mathcal{X}}, \rho_{\mathcal{Y}})$-equivariant** if:
+
+$$f(\rho_{\mathcal{X}}(g) \cdot x) = \rho_{\mathcal{Y}}(g) \cdot f(x) \qquad \forall g \in G, \; x \in \mathcal{X}$$
+
+When $\rho_{\mathcal{X}}$ and $\rho_{\mathcal{Y}}$ are clear from context, we simply say $f$ is **$G$-equivariant**.
+
+**Invariance as special equivariance.** When $\rho_{\mathcal{Y}}(g) = \text{id}_{\mathcal{Y}}$ for all $g$ (the trivial representation), equivariance reduces to invariance. Invariance is the special case of equivariance where the output space carries the trivial representation.
+
+**Compositionality.** If $f_1: \mathcal{X} \to \mathcal{Y}$ is $(G,\rho_\mathcal{X},\rho_\mathcal{Y})$-equivariant and $f_2: \mathcal{Y} \to \mathcal{Z}$ is $(G,\rho_\mathcal{Y},\rho_\mathcal{Z})$-equivariant, then $f_2 \circ f_1$ is $(G,\rho_\mathcal{X},\rho_\mathcal{Z})$-equivariant.
+
+**Proof.** $(f_2 \circ f_1)(\rho_\mathcal{X}(g)x) = f_2(f_1(\rho_\mathcal{X}(g)x)) = f_2(\rho_\mathcal{Y}(g)f_1(x)) = \rho_\mathcal{Z}(g)f_2(f_1(x)) = \rho_\mathcal{Z}(g)(f_2\circ f_1)(x)$. $\square$
+
+---
+
+### Group Representations
+
+**Definition (Linear Representation).** A **linear representation** of $G$ on a vector space $V$ over field $\mathbb{F}$ is a group homomorphism:
+
+$$\rho: G \to GL(V)$$
+
+where $GL(V)$ is the group of invertible linear maps on $V$. For each $g \in G$, $\rho(g): V \to V$ is an invertible linear map satisfying $\rho(g)\rho(h) = \rho(gh)$ and $\rho(e) = \text{id}_V$.
+
+**The dimension** of the representation is $\dim V$.
+
+**Key representations for Geometric Deep Learning:**
+
+**Trivial representation:** $\rho(g) = 1$ for all $g$ — scalars, used for invariant quantities like energy.
+
+**Standard representation of $SO(3)$:** $\rho(R) = R$ for $R \in SO(3) \subset \mathbb{R}^{3\times 3}$ — vectors in $\mathbb{R}^3$, used for positions, velocities, forces.
+
+**Irreducible representations (irreps) of $SO(3)$:** The irreps of $SO(3)$ are the **Wigner D-matrices** $D^{(\ell)}: SO(3) \to GL(\mathbb{R}^{2\ell+1})$ for $\ell = 0, 1, 2, \ldots$ — the **spherical harmonic order $\ell$** representations. Dimension: $2\ell+1$.
+- $\ell = 0$: trivial (scalars)
+- $\ell = 1$: standard (3D vectors)
+- $\ell = 2$: traceless symmetric tensors (5-dimensional)
+- $\ell \geq 3$: higher-order tensors
+
+**Peter-Weyl theorem (for compact groups).** Every unitary representation of a compact group $G$ decomposes as a direct sum of irreducible representations:
+
+$$\rho \cong \bigoplus_{\alpha} m_\alpha \rho^\alpha$$
+
+where the sum is over irreps $\rho^\alpha$ of $G$ and $m_\alpha \geq 0$ are multiplicities. For $SO(3)$, this means every feature vector in an equivariant network decomposes into components transforming under the Wigner D-matrices of various orders $\ell$.
+
+**Standard representation of $S_n$:** The permutation action on $\mathbb{R}^n$ gives $\rho(\sigma)v = (v_{\sigma^{-1}(1)},\ldots,v_{\sigma^{-1}(n)})$ — permuting the coordinates. The irreps of $S_n$ are indexed by Young tableaux.
+
+---
+
+### Schur's Lemma and Equivariant Linear Maps
+
+**Theorem (Schur's Lemma).** Let $\rho_1: G \to GL(V_1)$ and $\rho_2: G \to GL(V_2)$ be irreducible representations of $G$, and let $L: V_1 \to V_2$ be a linear map satisfying $L\rho_1(g) = \rho_2(g)L$ for all $g \in G$ (an **intertwining operator** or **equivariant linear map**). Then:
+
+1. If $\rho_1 \not\cong \rho_2$ (non-isomorphic irreps): $L = 0$.
+2. If $\rho_1 \cong \rho_2$ (isomorphic irreps, over $\mathbb{C}$): $L = \lambda I$ for some scalar $\lambda \in \mathbb{C}$.
+
+**Corollary (Classification of equivariant linear maps).** The space of equivariant linear maps $\text{Hom}_G(V,W)$ between two $G$-representations $V = \bigoplus_\alpha m_\alpha V^\alpha$ and $W = \bigoplus_\alpha n_\alpha V^\alpha$ is:
+
+$$\text{Hom}_G(V,W) \cong \bigoplus_\alpha \mathbb{R}^{n_\alpha \times m_\alpha}$$
+
+The equivariant linear maps between $V$ and $W$ are exactly the maps that act as arbitrary $n_\alpha \times m_\alpha$ matrices on the multiplicity spaces of each irrep $V^\alpha$, independently for each irrep type $\alpha$, and are zero between different irrep types.
+
+**Implication for neural networks.** An equivariant linear layer between feature spaces $V$ and $W$ — both decomposed into irreps of $G$ — is parameterized by one matrix per irrep type, of size equal to the output multiplicity times the input multiplicity. This is a dramatic reduction from the $(\dim W) \times (\dim V)$ parameters of a general linear layer: Schur's lemma says that equivariant linear maps are block-diagonal with respect to the irrep decomposition.
+
+---
+
+### Equivariant Nonlinearities
+
+Standard nonlinearities $\sigma: \mathbb{R} \to \mathbb{R}$ (ReLU, sigmoid, tanh) applied elementwise are equivariant to the trivial group but not to non-trivial group actions on vector spaces.
+
+**The problem.** For a vector $v \in \mathbb{R}^3$ transforming under $SO(3)$ as $v \mapsto Rv$, the elementwise ReLU $\sigma(v) = (\max(v_1,0), \max(v_2,0), \max(v_3,0))$ does not satisfy $\sigma(Rv) = R\sigma(v)$ in general — rotation does not commute with elementwise nonlinearity.
+
+**Norm nonlinearity (for vector features).** For a vector $v \in \mathbb{R}^3$:
+
+$$\sigma_{\text{equivariant}}(v) = \sigma(\|v\|) \cdot \frac{v}{\|v\|}$$
+
+This applies the scalar nonlinearity to the norm (a rotation-invariant quantity) and multiplies the unit direction vector (which rotates equivariantly) by the result. Equivariance holds: $\sigma_{\text{equivariant}}(Rv) = \sigma(\|Rv\|)\frac{Rv}{\|Rv\|} = \sigma(\|v\|)R\frac{v}{\|v\|} = R\sigma_{\text{equivariant}}(v)$.
+
+**Gate nonlinearity (for higher-order tensor features).** For a feature $f^{(\ell)} \in \mathbb{R}^{2\ell+1}$ transforming under the degree-$\ell$ irrep of $SO(3)$, and a scalar gate $s \in \mathbb{R}$ computed from invariant features:
+
+$$\sigma_{\text{gate}}(f^{(\ell)}, s) = \sigma(s) \cdot f^{(\ell)}$$
+
+The gate multiplies the equivariant feature by a scalar function of invariant inputs — equivariance is preserved because scalar multiplication commutes with the linear group action.
+
+**Tensor product nonlinearity (Clebsch-Gordan).** The tensor product of two $SO(3)$ representations decomposes via Clebsch-Gordan coefficients:
+
+$$V^{(\ell_1)} \otimes V^{(\ell_2)} \cong \bigoplus_{\ell=|\ell_1-\ell_2|}^{\ell_1+\ell_2} V^{(\ell)}$$
+
+This gives an equivariant bilinear operation: given features $f^{(\ell_1)}$ and $f^{(\ell_2)}$, produce features of all orders $\ell \in [|\ell_1-\ell_2|, \ell_1+\ell_2]$ by the Clebsch-Gordan decomposition. This is the equivariant analogue of elementwise multiplication — the fundamental nonlinear building block of equivariant networks for $SO(3)$, used in tensor field networks, SE(3)-transformers, and equivariant graph neural networks.
+
+---
+
+### Invariant Pooling and the Equivariant-Invariant Decomposition
+
+**Definition (Invariant pooling).** For a $G$-equivariant feature map $\Phi: \mathcal{X} \to V$, an **invariant pooling** is any $G$-invariant function $\rho: V \to \mathbb{R}^d$. Common choices:
+
+**Sum/mean pooling:** $\rho(v) = \sum_{i} v_i$ (for $G = S_n$ acting by permutation — sum over nodes of a graph).
+
+**Norm pooling:** $\rho(v) = \|v\|_2$ (for $G = SO(3)$ acting on vectors — rotation-invariant scalar).
+
+**Inner product pooling:** $\rho(v,w) = \langle v, w\rangle$ (rotation-invariant for the standard representation).
+
+**General invariant:** By the Reynolds operator, for compact $G$:
+
+$$\rho(v) = \int_G \rho_0(g \cdot v) \, dg$$
+
+where $dg$ is the Haar measure on $G$ and $\rho_0$ is any function — averaging over the group orbit gives an invariant function.
+
+**Theorem (Equivariant-invariant decomposition).** Any $G$-invariant function $f: \mathcal{X} \to \mathbb{R}$ can be written as $f = \rho \circ \Phi$ where $\Phi: \mathcal{X} \to V$ is $G$-equivariant and $\rho: V \to \mathbb{R}$ is $G$-invariant, provided $\Phi$ is sufficiently expressive (complete invariant).
+
+**Proof sketch.** Take $\Phi$ to be the complete invariant map — the map that sends $x$ to its orbit $\mathcal{O}_x$ in $\mathcal{X}/G$. Then $f$ factors through $\Phi$ by the invariance of $f$. For finite groups, explicit complete invariants can be constructed via the Reynolds operator. For $SO(3)$, complete invariants are constructed using all-order spherical harmonic features. $\square$
+
+---
+
+### Universality of Equivariant Networks
+
+**Definition (Universal equivariant approximator).** A family of equivariant functions $\mathcal{F}$ is **universally equivariant** if for any continuous $G$-equivariant function $f: \mathcal{X} \to \mathcal{Y}$ and any $\varepsilon > 0$, there exists $\hat{f} \in \mathcal{F}$ with $\sup_x \|f(x) - \hat{f}(x)\| < \varepsilon$.
+
+**Theorem (Universal approximation for equivariant networks).** Equivariant networks with sufficient depth and width, using Clebsch-Gordan tensor product nonlinearities and all irrep orders up to $\ell_{\max}$, are universal approximators for continuous $SO(3)$-equivariant functions on compact domains, in the limit $\ell_{\max} \to \infty$.
+
+**The $\ell_{\max}$ truncation.** In practice, $\ell_{\max} \in \{1,2,3\}$ is used — only low-order tensor features are computed. This truncates the representation theory to a finite-dimensional subspace, introducing approximation error but dramatically reducing computational cost (feature dimension grows as $(2\ell_{\max}+1)^2$).
+
+**Theorem (Universality for invariant networks, Maron et al. 2019).** For the permutation group $S_n$ acting on graphs, the space of all $S_n$-invariant functions on graphs can be universally approximated by $k$-order equivariant graph networks, where $k$ is the maximum tensor order used. For $k=2$ (standard GNNs), the approximation is limited by the Weisfeiler-Lehman hierarchy — a precise characterization of expressiveness developed in Chapter 2 of Phase 2.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 402 (Modern Algebra), **groups, homomorphisms, and representations** are the central objects. A group representation $\rho: G \to GL(V)$ is a group homomorphism — a structure-preserving map from the abstract group to the group of invertible linear transformations on a vector space. The representation theory of finite groups — Maschke's theorem (every representation of a finite group over $\mathbb{C}$ is completely reducible), the character theory, the orthogonality relations — is the algebraic content of the Schur's lemma classification of equivariant linear maps. Geometric Deep Learning is applied representation theory: neural network layers are equivariant linear maps, classified by Schur's lemma, with nonlinearities constructed from Clebsch-Gordan decompositions, and the entire architecture determined by the representation theory of the symmetry group.
+
+In MATH 302 (Matrix Theory), the **spectral theorem** guarantees that symmetric matrices are diagonalizable with orthogonal eigenvectors. The Wigner D-matrices $D^{(\ell)}(R)$ representing $SO(3)$ rotations on the space of degree-$\ell$ spherical harmonics are unitary matrices — they are orthogonal transformations of the $(2\ell+1)$-dimensional space. The Clebsch-Gordan decomposition of tensor products of irreps is the representation-theoretic analogue of the eigendecomposition of a product of symmetric matrices — both decompose a product structure into irreducible components. The Peter-Weyl theorem — that every unitary representation of a compact group decomposes into irreps — is the infinite-dimensional generalization of the spectral theorem, replacing eigenvalues with irrep labels.
+
+In COMP 316 (Theory of Computation) and COMP 314 (Algorithm and Complexity), the **expressiveness** of computational models is characterized by what functions they can compute. The Weisfeiler-Lehman hierarchy characterizes the expressiveness of GNNs in exactly the same way — the $k$-WL test determines which graph properties can be detected by $k$-order equivariant networks. The universality theorem for equivariant networks is the analogue of the universal approximation theorem for standard networks: just as sufficiently wide networks can approximate any continuous function, sufficiently deep equivariant networks with all irrep orders can approximate any continuous equivariant function. The architectural constraint of equivariance reduces the hypothesis space, and the universality theorem says this reduction does not sacrifice expressiveness — equivariant networks are just as powerful as unconstrained networks, given sufficient capacity, while being exponentially more data-efficient.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Tribhuvan University crystallography story has a precise mathematical address. Let us walk through them one by one until the energy predictor failure, the force predictor requirement, the orbit picture, Schur's lemma, and the Clebsch-Gordan nonlinearity are completely fused with the formalism.
+
+---
+
+**The molecular energy predictor that assigns different energies to the same molecule in different orientations — the network that fails catastrophically on test molecules whose orientations differ from training orientations — is a function $f: \mathbb{R}^{3N} \to \mathbb{R}$ that is not $SO(3)$-invariant: $f(R\cdot x) \neq f(x)$ for some rotation $R \in SO(3)$ and configuration $x \in \mathbb{R}^{3N}$.** The configuration space $\mathbb{R}^{3N}$ is the space of all possible assignments of three-dimensional coordinates to $N$ atoms. The rotation group $SO(3)$ acts on this space by simultaneously rotating all atomic coordinates: $R \cdot (x_1,\ldots,x_N) = (Rx_1,\ldots,Rx_N)$. The physical energy is a function on the orbit space $\mathbb{R}^{3N}/SO(3)$ — it is constant on every orbit, assigning the same value to all rotations of the same molecular configuration. A non-invariant network assigns different values to configurations on the same orbit, making predictions that contradict the basic physics of rotation invariance. The training failure is the statistical manifestation: the training set covers one point per orbit (one orientation per molecule), but the test set samples different points on the same orbits. The network has learned to distinguish points that should be indistinguishable.
+
+**The orbit space $\mathbb{R}^{3N}/SO(3)$ — the space of equivalence classes of molecular configurations under rotation — is the correct domain for the energy function, and an invariant network is a function that factors through the quotient map $\pi: \mathbb{R}^{3N} \to \mathbb{R}^{3N}/SO(3)$ as $f = \tilde{f} \circ \pi$.** The quotient map $\pi$ sends each configuration to its orbit — the set of all rotations of that configuration. The invariant energy function $\tilde{f}$ assigns a value to each orbit, not to each configuration. A neural network that computes $f = \tilde{f}\circ\pi$ first computes a complete invariant $\pi(x)$ — a representation of the orbit that contains all geometrically relevant information about the molecule and no information about its orientation — and then applies a standard neural network $\tilde{f}$ to this invariant representation. The orbit-stabilizer theorem $|\mathcal{O}_x| = |G|/|G_x|$ quantifies the redundancy eliminated by working in orbit space: for $SO(3)$ acting on generic molecular configurations, the stabilizer is trivial ($|G_x| = 1$), so each orbit has the same size as $SO(3)$ — a three-dimensional manifold. Every training example implicitly represents an entire three-dimensional manifold of equivalent configurations, and an invariant network exploits this equivalence to generalize across the entire orbit from a single training point.
+
+---
+
+**The force prediction requirement — output force vectors that rotate with the input molecule, satisfying $f(R\cdot x) = R\cdot f(x)$ for all $R \in SO(3)$ — is the definition of $(SO(3), \rho_{\mathcal{X}}, \rho_{\mathcal{Y}})$-equivariance where $\rho_{\mathcal{X}}(R)(x_1,\ldots,x_N) = (Rx_1,\ldots,Rx_N)$ is the diagonal rotation action on the configuration space and $\rho_{\mathcal{Y}}(R)(F_1,\ldots,F_N) = (RF_1,\ldots,RF_N)$ is the diagonal rotation action on the force vector space.** The force output $f(x) = (F_1,\ldots,F_N) \in \mathbb{R}^{3N}$ is a collection of three-dimensional vectors, one per atom, each transforming under the standard representation $\rho(R) = R$ of $SO(3)$ on $\mathbb{R}^3$. The equivariance condition $f(Rx) = Rf(x)$ — where $R$ acts simultaneously on all atomic coordinates and all force vectors — is the precise mathematical statement that the forces rotate with the molecule. A non-equivariant force predictor violates Newton's second law applied in rotated frames: if the energy is invariant, the forces — being the negative gradient of the energy — must be equivariant, because the gradient of an invariant scalar function is an equivariant vector field. The relationship $F_i = -\nabla_{x_i} E(x_1,\ldots,x_N)$ combined with the invariance of $E$ automatically gives equivariance of $F$ — the force predictor's equivariance is not an additional constraint but a consequence of the energy predictor's invariance, connected through the gradient operation.
+
+**The distinction between the energy predictor (invariant, scalar output, trivial representation on output space) and the force predictor (equivariant, vector output, standard representation on output space) is the distinction between the trivial representation $\rho^{(0)}(R) = 1$ and the degree-$\ell=1$ irrep $\rho^{(1)}(R) = R$ of $SO(3)$.** Energy is a scalar — it transforms under the $\ell=0$ trivial representation, where every rotation acts as the identity. Forces are vectors — they transform under the $\ell=1$ standard representation, where each rotation $R \in SO(3)$ acts as the $3\times 3$ rotation matrix. The Peter-Weyl decomposition of $SO(3)$ representations identifies these as the two lowest irreducible representations in the hierarchy $\ell = 0, 1, 2, 3, \ldots$ — scalars, vectors, traceless symmetric tensors, and higher-order tensors. Every physical quantity in a molecular simulation transforms under one of these irreps: energies under $\ell=0$, forces and dipole moments under $\ell=1$, quadrupole moments and stress tensors under $\ell=2$. The irrep label $\ell$ is the precise mathematical characterization of what kind of geometric object a physical quantity is, and building a network that computes that quantity correctly requires using features transforming under the same irrep.
+
+---
+
+**Schur's lemma — an equivariant linear map between two non-isomorphic irreps must be zero; between two isomorphic irreps must be a scalar multiple of the identity — is the algebraic theorem that classifies all equivariant linear layers in a geometric neural network.** In the crystallography story: the equivariant linear layers of the force predictor must map features transforming under $SO(3)$ irreps to other features transforming under $SO(3)$ irreps, and Schur's lemma says that only features of the same irrep order $\ell$ can be linearly mixed — you cannot linearly map a scalar feature ($\ell=0$) to a vector feature ($\ell=1$) equivariantly, because the trivial representation and the standard representation are non-isomorphic. The consequence for neural network architecture is the block-diagonal structure of equivariant linear layers: the weight matrix between feature spaces $V = \bigoplus_\ell m_\ell V^{(\ell)}$ and $W = \bigoplus_\ell n_\ell V^{(\ell)}$ is block-diagonal with one $n_\ell \times m_\ell$ weight matrix per irrep order $\ell$, and zero blocks between different orders. The total number of free parameters is $\sum_\ell n_\ell m_\ell$ — much smaller than the $(\sum_\ell n_\ell(2\ell+1)) \times (\sum_\ell m_\ell(2\ell+1))$ parameters of a general linear map. Schur's lemma is the architectural constraint that makes equivariant networks more parameter-efficient than generic networks — it eliminates all parameters that would violate equivariance, leaving only the degrees of freedom consistent with the symmetry.
+
+**The classification of equivariant linear maps $\text{Hom}_G(V,W) \cong \bigoplus_\alpha \mathbb{R}^{n_\alpha\times m_\alpha}$ — one weight matrix per irrep type, acting on the multiplicity space — is the precise statement that equivariant linear layers in geometric networks are parameterized by multiplicity-space weight matrices, not full feature-space weight matrices.** In the force predictor: if the input features consist of $m_0$ scalar channels and $m_1$ vector channels (multiplicities $m_0$ and $m_1$ in the $\ell=0$ and $\ell=1$ irreps), and the output features consist of $n_0$ scalar channels and $n_1$ vector channels, the equivariant linear layer is parameterized by a $n_0\times m_0$ matrix (mixing scalar channels) and a $n_1\times m_1$ matrix (mixing vector channels) — two small matrices rather than one large $(n_0 + 3n_1)\times(m_0 + 3m_1)$ matrix. The $3\times 3$ Wigner D-matrix $D^{(1)}(R) = R$ acts on each vector channel identically — the equivariant linear layer cannot mix the $x$, $y$, $z$ components of different vector channels in a way that depends on the rotation, only in a way that is rotation-independent (the multiplicity-space mixing). This is Schur's lemma made concrete: the equivariant linear map acts on the multiplicity indices (which channels to mix) but not on the irrep indices (which spatial components to mix within each channel).
+
+---
+
+**The norm nonlinearity $\sigma_{\text{equivariant}}(v) = \sigma(\|v\|)\cdot v/\|v\|$ — applying the scalar nonlinearity to the norm and preserving the direction — is the equivariant nonlinearity for vector features, derived from the requirement that $\sigma_{\text{equivariant}}(Rv) = R\sigma_{\text{equivariant}}(v)$ for all $R \in SO(3)$.** The verification is direct: $\sigma_{\text{equivariant}}(Rv) = \sigma(\|Rv\|)(Rv/\|Rv\|) = \sigma(\|v\|)(Rv/\|v\|) = R(\sigma(\|v\|)v/\|v\|) = R\sigma_{\text{equivariant}}(v)$, using the fact that $\|Rv\| = \|v\|$ (rotations preserve norms) and that $R$ commutes with scalar multiplication. The elementwise ReLU fails equivariance because it applies a nonlinearity to the individual Cartesian components $v_x, v_y, v_z$, which are not individually rotation-invariant — rotating by 45 degrees mixes $v_x$ and $v_y$, so $\text{ReLU}(v_x)$ before rotation is not the same as $\text{ReLU}$ of the rotated $v_x$ component. The norm nonlinearity avoids this by separating the rotation-invariant magnitude (which can be processed by any scalar nonlinearity) from the rotation-equivariant direction (which must be left untouched). In the crystallography story: the norm nonlinearity is the operation that allows the force predictor to introduce nonlinearity — essential for expressiveness — without violating the physical constraint that forces rotate with the molecule.
+
+**The Clebsch-Gordan tensor product nonlinearity — decomposing the tensor product $V^{(\ell_1)}\otimes V^{(\ell_2)} \cong \bigoplus_{\ell=|\ell_1-\ell_2|}^{\ell_1+\ell_2} V^{(\ell)}$ into irreps via Clebsch-Gordan coefficients $C^{(\ell,m)}_{\ell_1,m_1,\ell_2,m_2}$ — is the equivariant bilinear operation that mixes features of different irrep orders while preserving $SO(3)$ equivariance.** In the force predictor: multiplying a scalar feature ($\ell=0$) by a vector feature ($\ell=1$) via the Clebsch-Gordan decomposition produces a vector feature ($\ell=1$) — the scalar modulates the magnitude of the vector. Multiplying two vector features ($\ell=1$ by $\ell=1$) produces scalar, vector, and traceless-symmetric-tensor features ($\ell=0,1,2$) — the cross product (antisymmetric $\ell=1$ component), inner product (symmetric $\ell=0$ component), and outer product (symmetric traceless $\ell=2$ component) are the three Clebsch-Gordan components. In MATH 302 terms: the Clebsch-Gordan coefficients are the change-of-basis matrix that block-diagonalizes the tensor product representation — they are the eigendecomposition of the tensor product action, exactly as the spectral theorem diagonalizes a symmetric matrix. The Clebsch-Gordan nonlinearity is the mechanism by which equivariant networks can increase the maximum irrep order of their features — from $\ell=1$ vector inputs to $\ell=2$ tensor features to $\ell=3$ octupole features — by taking tensor products, building up expressive power order by order while maintaining exact $SO(3)$ equivariance at every step.
+
+---
+
+**The layered architecture — equivariant body composed of equivariant linear layers (Schur-classified) and equivariant nonlinearities (norm or Clebsch-Gordan), followed by invariant pooling head — is the universal structure derived from the compositionality of equivariant maps and the equivariant-invariant decomposition theorem.** The compositionality proof $(f_2\circ f_1)(\rho_\mathcal{X}(g)x) = \rho_\mathcal{Z}(g)(f_2\circ f_1)(x)$ is a two-line calculation using the equivariance of $f_1$ and $f_2$ separately. The equivariant-invariant decomposition theorem guarantees that any invariant function factors as $f = \rho\circ\Phi$ with $\Phi$ equivariant and $\rho$ invariant — so no expressiveness is lost by using the equivariant-body-invariant-head architecture. In the energy predictor: the equivariant body computes a vector of rotation-equivariant atomic features — local geometric descriptors that rotate with the molecule, capturing the local chemical environment of each atom in a rotation-covariant way. The invariant pooling head computes the sum of norms of these atomic features — a rotation-invariant scalar — and passes it to a standard MLP for the final energy prediction. The equivariant body does the geometric work; the invariant head does the chemical work. Separation of concerns, enforced by group theory.
+
+**The invariant pooling operations — sum over atoms ($G=S_n$), norm of vector ($G=SO(3)$), inner product of two equivariant features — are the $G$-invariant functions $\rho: V \to \mathbb{R}^d$ that collapse the group orbit, computed via the Reynolds operator $\bar\rho(v) = \int_G\rho_0(g\cdot v)\,dg$ for the Haar measure on compact $G$.** For $SO(3)$: the Haar measure is the uniform measure on the sphere, and the Reynolds operator averages any function over all rotations of the input. The norm $\|v\|$ is the fixed point of the Reynolds operator applied to the squared components: $\int_{SO(3)}\|Rv\|^2\,dR = \|v\|^2$ trivially since rotations preserve norms. The inner product $\langle v,w\rangle$ is the fixed point of the Reynolds operator applied to the product of components: $\int_{SO(3)}\langle Rv,Rw\rangle\,dR = \langle v,w\rangle$ since $\langle Rv,Rw\rangle = \langle v,R^\top Rw\rangle = \langle v,w\rangle$. Both norms and inner products are therefore rotation-invariant — they are the Reynolds-operator-fixed functions on the space of vector features, and they are the correct invariant readout operations for the equivariant body's vector-valued outputs.
+
+---
+
+**The break moment — the symmetry group of the task differing from the symmetry group of the input, requiring quotient symmetries and product group symmetries — is the manifestation of the fact that equivariance is a property of the input-output relationship, not just the input domain.** The molecular binding prediction task has input symmetry $SO(3)_{\text{global}}$ (global rotation of the pair) but task symmetry $SO(3)_{\text{mol1}} \times SO(3)_{\text{mol2}}$ (independent rotations of each molecule), because binding depends only on the relative geometry of the two molecules, not on their absolute orientations. The group $SO(3)_{\text{mol1}} \times SO(3)_{\text{mol2}}$ is strictly larger than $SO(3)_{\text{global}}$ — invariance to independent rotations is a stronger condition than invariance to global rotations. A network equivariant only to $SO(3)_{\text{global}}$ is insufficiently invariant: it carries absolute orientation information that is irrelevant to binding. A network invariant to the full $SO(3)_{\text{mol1}} \times SO(3)_{\text{mol2}}$ symmetry discards all absolute orientation information and works only with relative geometric features — inter-molecular distances, angles, and dihedral angles — which are the physically relevant quantities. In MATH 402 terms: the relevant symmetry group is the larger product group, and the correct equivariant architecture must be designed for this group, not for the smaller global rotation group. Identifying the correct symmetry group for a given task is the first and most important step in geometric neural network design — Schur's lemma, the Clebsch-Gordan decomposition, and the invariant pooling are all subsequent, conditional on having correctly identified the group.
+
+---
+
+**The connection to MATH 402 (Modern Algebra) is total and explicit.** The group axioms — closure, associativity, identity, inverses — that you proved for abstract groups in MATH 402 are satisfied by $SO(3)$ (matrix multiplication is associative, $R^\top$ is the inverse of $R \in SO(3)$, $I$ is the identity) and $S_n$ (composition of permutations is associative, the inverse permutation exists, the identity permutation exists). Group homomorphisms from MATH 402 — structure-preserving maps $\phi: G \to H$ with $\phi(gh) = \phi(g)\phi(h)$ — are exactly the group representations $\rho: G \to GL(V)$ used in geometric deep learning: a representation is a homomorphism from the abstract symmetry group to the group of invertible linear transformations on the feature space. Normal subgroups, quotient groups, and the first isomorphism theorem from MATH 402 govern the structure of the symmetry breaking in the break moment: the global rotation group $SO(3)_{\text{global}}$ is the diagonal subgroup of $SO(3)_{\text{mol1}}\times SO(3)_{\text{mol2}}$, and the relative rotation group is the quotient — the coset space of independent rotations modulo global rotations, which parameterizes the relative orientations of the two molecules.
+
+**The connection to MATH 302 (Matrix Theory) runs through the spectral theorem, orthogonal matrices, and matrix decompositions.** The Wigner D-matrices $D^{(\ell)}(R)$ are unitary matrices — $D^{(\ell)}(R)^\dagger D^{(\ell)}(R) = I$ — because $SO(3)$ is a compact group and all its irreps are unitary. The unitarity follows from the spectral theorem: every normal matrix (satisfying $AA^\dagger = A^\dagger A$) is unitarily diagonalizable, and the Wigner D-matrices are normal because the group action preserves the inner product on the irrep space. The Clebsch-Gordan coefficients are the entries of the unitary change-of-basis matrix that block-diagonalizes the tensor product representation $D^{(\ell_1)}\otimes D^{(\ell_2)}$ — they are computed from the eigendecomposition of the tensor product action, using the same spectral machinery that diagonalizes symmetric matrices in MATH 302. The SVD from MATH 302 appears in the weight matrices of equivariant linear layers: the multiplicity-space weight matrix $W_\ell \in \mathbb{R}^{n_\ell\times m_\ell}$ can be decomposed via SVD as $W_\ell = U_\ell\Sigma_\ell V_\ell^\top$, with the singular values $\Sigma_\ell$ controlling the expressiveness of the $\ell$-th irrep channel.
+
+---
+
+**Looking forward across the roadmap**, the invariance-equivariance framework established in this topic is the theoretical foundation for everything in Phase 2 and the architectural constraint that governs Phase 3. In Topic 2 of Chapter 1, the permutation group $S_n$ and rotation group $SO(3)$ are analyzed in detail as the two central symmetry groups of Geometric Deep Learning, with their representation theories worked out explicitly. In Chapter 2, the message-passing GNN is the architecture that is equivariant to permutations of graph nodes — each message-passing step is an $S_n$-equivariant operation, and the Weisfeiler-Lehman analysis characterizes exactly which $S_n$-invariant graph properties it can compute. In Chapter 3, the manifold convolution is the operation equivariant to the isometry group of the manifold — the group of distance-preserving diffeomorphisms — making it the correct convolutional operation for data on curved surfaces. In Phase 3, the equivariant neural ODE $dx/dt = f(x,t,\theta)$ — the learned vector field of a flow matching model — must be $SO(3)$-equivariant when generating molecular structures, so that the generated molecule's geometry is independent of the arbitrary choice of coordinate system. The entire architecture of Phase 3's equivariant generative models is the Phase 1 optimal transport engine parameterized by the Phase 2 equivariant architectures — the synthesis of the roadmap made concrete.
+
+The two networks on the Tribhuvan University crystallographer's desk — the energy predictor requiring $f(Rx) = f(x)$ and the force predictor requiring $f(Rx) = Rf(x)$ — are the invariant function factoring through the orbit space $\mathbb{R}^{3N}/SO(3)$ and the equivariant section of the tangent bundle of the orbit, built from Schur-classified linear layers and Clebsch-Gordan nonlinearities, composed into an equivariant body topped with an invariant pooling head — the complete mathematical architecture of geometric deep learning for molecular property prediction.
+
+---
+---

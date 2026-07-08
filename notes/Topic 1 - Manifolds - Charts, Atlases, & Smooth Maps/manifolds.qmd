@@ -1,0 +1,333 @@
+# Topic 1 - Manifolds
+
+## Introduction
+
+You have spent all of Chapter 1 and Chapter 2 working in $\mathbb{R}^n$ — flat, infinite, featureless Euclidean space. Every point has global coordinates. Every vector has a fixed meaning regardless of where you are. Every straight line stays straight forever. The geometry is the same everywhere, at every scale, in every direction. This flatness is not a feature of the world — it is an idealization that makes mathematics easier to set up and harder to apply correctly.
+
+The spaces that actually matter for the roadmap are not flat. The rotation group $SO(3)$ — the space of all ways to orient a rigid body in three dimensions — is a three-dimensional curved manifold that wraps around on itself, with no global coordinate system that does not distort the geometry somewhere. The space of all normalized probability distributions over $\mathbb{R}^n$ — the simplex, or its infinite-dimensional analogue — is a curved surface whose natural geometry is given by the Fisher information metric, not the Euclidean metric. The configuration space of a protein backbone — the space of all physically realizable backbone geometries — is a product of circles and tori, with periodicity and curvature built in. In every case, the space is locally flat — zoom in far enough and any small patch looks like a piece of $\mathbb{R}^n$ — but globally curved, with topology and geometry that cannot be captured by any single flat coordinate system.
+
+A manifold is the precise mathematical object that formalizes this idea: a space that is locally Euclidean but globally curved. The definition is built from three concepts — charts, atlases, and smooth maps — each one adding a layer of structure that makes the local-Euclidean intuition precise and computationally workable.
+
+A **chart** is a local coordinate system — a map from a patch of the manifold to a patch of $\mathbb{R}^n$ that lets you do calculus locally. Think of the individual pages of a road atlas of Nepal: each page covers a local region of the country with a flat grid, useful for navigating within that region, but incapable of representing the whole country consistently without distortion. The chart is the single page — the local flat representation. It assigns coordinates to every point in its patch, and these coordinates let you write down functions, compute derivatives, and apply all the tools of flat-space calculus within that patch.
+
+An **atlas** is the complete collection of charts covering the entire manifold — every page of the road atlas together, covering the whole country. Since the manifold is globally curved, no single chart can cover it without distortion or singularities. The atlas assembles many charts, each covering a local patch, with the crucial requirement that wherever two charts overlap — wherever two pages of the road atlas cover the same region — the transition between them is smooth. The overlap maps — called transition functions or change of coordinates maps — must be smooth invertible functions from $\mathbb{R}^n$ to $\mathbb{R}^n$. This smoothness requirement is what makes the atlas coherent: you can move from one chart to another without any discontinuity or loss of differentiability, so calculus done in one chart is compatible with calculus done in another.
+
+**Smooth maps** between manifolds are the functions that respect the smooth structure — functions that, when expressed in any pair of charts, are smooth in the ordinary calculus sense. A smooth map from one manifold to another is the curved-space generalization of a smooth function from $\mathbb{R}^n$ to $\mathbb{R}^m$. The push-forward of a measure under a smooth map — which you studied in Topic 5 of Chapter 1 — is the push-forward of a measure under a smooth map between manifolds, and it requires the map to be smooth in exactly this chart-compatible sense. Every generative model in Phase 3 that operates on a manifold is a smooth map between manifolds — or an approximation to one — and the smooth map structure is what ensures that the push-forward density formula and the change of variables theorem apply.
+
+This topic has three subtopics corresponding to the three concepts.
+
+The first subtopic is **Charts** — the local coordinate systems that make calculus possible on a manifold. The key idea is that a chart is not the manifold itself but a window onto it, and the window can only be used locally. Different charts give different coordinate representations of the same point, and the same function can look very different in different charts.
+
+The second subtopic is **Atlases** — the global assembly of charts with smooth transition functions. The key idea is that the atlas is the complete specification of the manifold's smooth structure — two atlases on the same topological space can give it different smooth structures, making it a different manifold in the differential-geometric sense.
+
+The third subtopic is **Smooth Maps** — the morphisms of the category of smooth manifolds, the functions that are compatible with the smooth structure. The key ideas are diffeomorphisms — smooth maps with smooth inverses, the curved-space generalization of linear isomorphisms — and immersions and embeddings — smooth maps that preserve the local structure of the domain manifold inside the target.
+
+By the end of this topic, when someone says "the data lies on a manifold," you will not hear a vague metaphor about low-dimensional structure hidden in high-dimensional space. You will see the precise mathematical claim: there exists a manifold $M$ of dimension $d < n$, equipped with an atlas of charts and smooth transition functions, such that the data distribution is supported on $M$ as a subset of $\mathbb{R}^n$, and every function computed on the data is a smooth map from $M$ to the output space. The manifold hypothesis — one of the foundational assumptions of modern machine learning — is a precise mathematical statement, and the tools of this topic are what make it precise.
+
+**ALL THREE SUBTOPICS ARE TREATED AS A SINGLE SUBTOPIC FOR EASY COMPREHENSION.**
+
+---
+
+# Subtopic - Charts, Atlases, and Smooth Maps
+
+## Layer 1 (Story)
+
+You are a cartographer working for the Survey Department of Nepal, and you have been given the most ambitious assignment in the department's history: produce a complete, mathematically rigorous map of the entire Himalayan region — not just Nepal, but the full arc from the Karakoram in the northwest to the eastern Himalayas in Arunachal Pradesh. The region spans thousands of kilometres, rises from river valleys at 300 metres to Everest at 8,849 metres, curves with the surface of the Earth, and contains topological features — passes, ridges, cirques, glaciers — that no single flat sheet of paper can represent faithfully across its full extent.
+
+You know from the outset that the task is fundamentally impossible with a single map. The Earth's surface is curved — it is a sphere, approximately — and a sphere cannot be flattened onto a plane without distortion. Every flat map of a large region distorts something: either areas, or angles, or distances, or all three simultaneously. The Mercator projection preserves angles but wildly distorts areas near the poles. The equal-area projections preserve areas but distort shapes. No single flat representation is faithful to all geometric properties of the curved surface simultaneously. This is not a limitation of technology or skill — it is a mathematical theorem, a consequence of the intrinsic curvature of the sphere.
+
+Your solution, developed over months of fieldwork and calculation, is to abandon the goal of a single faithful flat map and instead produce a collection of local maps — each one covering a manageable patch of the Himalayan arc, each one accurate within its patch, and each one connected to its neighbors by precise rules for translating between overlapping regions. Taken together, these local maps constitute a complete and rigorous representation of the curved surface.
+
+This collection of local maps, with its translation rules and its completeness, is an **atlas**. Each individual local map is a **chart**. And the functions that process geographic data consistently across the entire atlas — computing distances, finding shortest paths, modeling climate — are the **smooth maps** on the manifold.
+
+---
+
+Let us build the story in layers, introducing each concept through the cartographic work.
+
+**The Survey Region and the Manifold**
+
+The Himalayan surface — the two-dimensional curved terrain that your department is mapping — is the manifold $M$. It is a two-dimensional object: at every point, you can move in two independent directions — east-west and north-south, roughly — and these two directions span the local tangent plane to the surface. But it is not flat: the surface curves, rises, falls, wraps around peaks and descends into valleys. No single global coordinate system — no single choice of latitude and longitude, or easting and northing — faithfully represents the surface's geometry across its full extent without distortion.
+
+The manifold $M$ is not defined by any particular coordinate system. It exists independently of how you choose to represent it. The coordinates are the tool you use to do calculations on $M$, not the thing itself. This distinction — between the manifold as an intrinsic geometric object and the coordinate systems used to represent it — is the first and most important idea of differential geometry.
+
+**Charts — The Local Maps**
+
+Your survey team divides the Himalayan arc into overlapping patches — the Everest region, the Annapurna region, the Kangchenjunga region, and so on. For each patch, the team conducts a local survey and produces a flat map: a precise assignment of two-dimensional coordinates $(u, v)$ — easting and northing in the local coordinate system — to every point in the patch. This assignment is the **chart**.
+
+Formally, a chart is a pair $(U, \phi)$ where $U$ is an open patch of the manifold $M$ — the region covered by the local map — and $\phi: U \to \mathbb{R}^2$ is a function that assigns flat coordinates to every point in $U$. The function $\phi$ must be a bijection onto its image — every point in $U$ gets a unique coordinate pair, and every coordinate pair in the image corresponds to a unique point in $U$. It must also be continuous in both directions — small movements on the terrain correspond to small movements in the coordinate plane, and vice versa. The chart $\phi$ is the map-making operation: it flattens the local patch $U$ onto a piece of paper, assigning coordinates to every point.
+
+For a small enough patch — say, the area immediately around Everest Base Camp — the local flat map is accurate for all practical purposes. The curvature of the Earth is negligible at this scale, and the flat coordinate system faithfully represents distances, angles, and areas within the patch. But the patch cannot be extended indefinitely: push it far enough and the curvature accumulates, distortions appear, and the flat representation fails. Every chart is only valid locally — it is accurate within its patch and nowhere else.
+
+**The Atlas — The Complete Collection**
+
+No single chart covers the entire Himalayan arc. Your department needs many charts — overlapping local maps covering the full region, each accurate within its patch. The complete collection of charts $\{(U_\alpha, \phi_\alpha)\}$, where the patches $\{U_\alpha\}$ together cover every point of the manifold, is the **atlas**.
+
+But the atlas is not merely a collection of independent maps. The maps must be consistent with each other wherever they overlap. Suppose the Everest chart and the Cho Oyu chart both cover a shared border region — the high plateau between the two massifs. A trekker's position in this overlap region has two coordinate representations: one from the Everest chart, one from the Cho Oyu chart. The relationship between these two coordinate representations — the rule for converting from one chart's coordinates to the other's — is the **transition function** or **change of coordinates map**.
+
+For the atlas to be coherent — for calculations done in one chart to be compatible with calculations done in another — the transition functions must be smooth. If the Everest chart assigns coordinates $(u_1, v_1)$ to a point $p$ in the overlap, and the Cho Oyu chart assigns coordinates $(u_2, v_2)$ to the same point, the transition function $\tau_{12}$ satisfies $(u_2, v_2) = \tau_{12}(u_1, v_1)$. Smoothness of $\tau_{12}$ means: small movements in the Everest coordinates correspond to small, predictable movements in the Cho Oyu coordinates, with no jumps, kinks, or discontinuities. The transition function is smooth and invertible — it is a diffeomorphism from an open subset of $\mathbb{R}^2$ to another open subset of $\mathbb{R}^2$.
+
+This smoothness requirement is what elevates a mere collection of local maps into a smooth manifold. Without it, you could have a perfectly good topological space — points with neighborhoods that look like $\mathbb{R}^n$ — but no consistent notion of differentiability. The smooth atlas is what makes calculus possible: it lets you take derivatives of functions on the manifold by working in any chart, with the guarantee that the answer does not depend on which chart you chose.
+
+---
+
+**The Break Moment: The Sphere Cannot Be Covered by a Single Chart**
+
+Here is the break moment. The naive assumption is that for any manifold — any curved surface — you can find a single chart covering the entire thing. After all, for a small enough patch any surface looks flat, and if you just make your chart large enough, surely you can cover everything?
+
+This breaks for the simplest possible manifold: the sphere $S^2$. Consider the unit sphere — the surface of a globe. Can you assign continuous, bijective flat coordinates to every point on the sphere simultaneously?
+
+No. The proof is topological: the sphere is compact — bounded and closed — but $\mathbb{R}^2$ is not compact. A continuous bijection from a compact space to a non-compact space cannot have a continuous inverse, so it cannot be a valid chart. More intuitively: imagine trying to flatten an orange peel into a flat sheet without tearing or overlapping. It is impossible — the curvature of the sphere prevents it. Any attempt to flatten the entire sphere onto a plane must either tear the surface (creating a discontinuity) or overlap some regions (failing bijectivity) or distort the boundary infinitely (failing the continuity of the inverse).
+
+The standard resolution uses two charts: the stereographic projection from the north pole covers the entire sphere except the north pole itself, and the stereographic projection from the south pole covers the entire sphere except the south pole. Together, these two charts cover every point of the sphere, with a smooth transition function in their overlap region — the sphere minus both poles. Two charts suffice for the sphere. The torus $T^2$ requires at least four charts. The projective plane requires at least two charts. Every curved manifold requires at least as many charts as its topology demands — and the minimum number of charts needed is a topological invariant, a property of the manifold's global shape that no local description can see.
+
+This break moment crystallizes the central lesson: a manifold is fundamentally a multi-chart object. The requirement of a global coordinate system is too strong — the world simply does not have one. The atlas of overlapping local charts, with smooth transition functions, is the correct and minimal structure for doing calculus on curved spaces.
+
+---
+
+**Smooth Maps — Functions Between Manifolds**
+
+Your survey department does not just make maps — it uses them. Climatologists model temperature and precipitation as functions on the Himalayan surface. Geologists model rock stress and fault orientation as vector fields on the surface. Trekking agencies compute shortest paths between points. All of these are mathematical functions defined on the manifold, and for them to be well-defined and computable, they must be compatible with the atlas — they must be smooth in the chart sense.
+
+A function $f: M \to \mathbb{R}$ — say, the temperature field over the Himalayas — is **smooth** if, in every chart $(U, \phi)$, the composition $f \circ \phi^{-1}: \phi(U) \to \mathbb{R}$ is a smooth function in the ordinary calculus sense. The composition $f \circ \phi^{-1}$ is the temperature field expressed in the local coordinates of the chart — it takes flat coordinates $(u,v)$ and returns the temperature at the corresponding point. Smoothness of this composition, in every chart, is what it means for the temperature field to be smooth on the manifold. The definition is chart-independent: if $f \circ \phi^{-1}$ is smooth in one chart and the transition functions are smooth, then $f \circ \psi^{-1}$ is automatically smooth in every other chart $\psi$ overlapping with $\phi$.
+
+More generally, a **smooth map** $F: M \to N$ between two manifolds is a function that, when expressed in any pair of charts $(U, \phi)$ on $M$ and $(V, \psi)$ on $N$, gives a smooth function $\psi \circ F \circ \phi^{-1}: \phi(U \cap F^{-1}(V)) \to \mathbb{R}^m$ from an open subset of $\mathbb{R}^n$ to $\mathbb{R}^m$. This is the chart-by-chart smoothness condition — the function is smooth in the manifold sense if and only if it is smooth in the flat-space sense when expressed in any valid pair of charts.
+
+The most important smooth maps for the roadmap are **diffeomorphisms** — smooth maps with smooth inverses. A diffeomorphism $F: M \to N$ is a bijection that is smooth in both directions. Diffeomorphisms are the isomorphisms of smooth manifolds — two manifolds related by a diffeomorphism are geometrically identical, differing only in the names of their points. The push-forward of a measure under a diffeomorphism — the foundational operation of every generative model — requires the map to be a diffeomorphism, because the change of variables formula for the push-forward density involves the Jacobian of the map, which only exists and is invertible when the map is a diffeomorphism.
+
+---
+
+**The Manifold Hypothesis in Machine Learning**
+
+Your survey department's situation is the exact situation of every machine learning model working with high-dimensional data. The raw data — images, molecules, protein backbones, audio waveforms — lives in a very high-dimensional space: an image with $256 \times 256$ pixels lives in $\mathbb{R}^{65536}$. But the data does not fill this space uniformly. Images of natural scenes occupy a tiny, curved, low-dimensional submanifold of pixel space — the manifold of natural images. Protein backbone geometries occupy a curved submanifold of atomic coordinate space — the manifold of physically realizable backbones. Spoken language occupies a curved submanifold of audio waveform space.
+
+The **manifold hypothesis** is the claim that real-world data lies on or near a low-dimensional smooth manifold embedded in the high-dimensional ambient space. If this hypothesis is correct — and empirical evidence strongly supports it for natural images, speech, and biomolecular data — then the correct mathematical framework for working with this data is differential geometry, not flat Euclidean geometry. Distances should be measured along the manifold, not through the ambient space. Gradients should point along the manifold, not in the ambient space direction. Shortest paths should follow the manifold's geodesics, not Euclidean straight lines that cut through the off-manifold void.
+
+The manifold hypothesis is why Phase 3 of the roadmap requires Riemannian flow matching on manifolds rather than flat-space flow matching. A diffusion model that operates in flat Euclidean space generates samples that spread through the full ambient space, wasting probability mass on off-manifold regions that contain no real data. A diffusion model that operates on the data manifold — respecting its curvature, its topology, its geodesic distances — concentrates probability mass exactly where the data lives and generates samples that are guaranteed to be on the manifold. The chart, atlas, and smooth map structure of this topic is the foundation that makes manifold-respecting generative models possible.
+
+---
+
+Hold three pictures simultaneously. The cartographer's atlas of the Himalayan arc: many overlapping local maps, each accurate within its patch, connected by smooth transition functions, together covering the entire curved terrain without any single map claiming to be globally faithful. The sphere that breaks the single-chart assumption: a closed curved surface that provably cannot be covered by any single coordinate system, requiring at least two charts, demonstrating that global coordinates are a luxury of flat spaces. And the machine learning data manifold: a low-dimensional curved surface hidden inside a high-dimensional ambient space, whose correct geometry requires the full apparatus of charts, atlases, and smooth maps to describe, and whose generative models require operations that respect that geometry rather than the ambient Euclidean structure.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: topological manifolds as the base structure, smooth atlases and the smooth manifold definition, smooth functions and maps between manifolds, diffeomorphisms and their properties, submanifolds and embeddings, and finally the tangent map induced by a smooth map — the construction that connects this topic to the next subtopic on tangent bundles.
+
+### Topological Manifolds
+
+Before introducing smoothness, we need the base topological structure.
+
+A **topological manifold of dimension $n$** is a topological space $M$ satisfying three conditions:
+
+$$\text{(i) } M \text{ is Hausdorff: any two distinct points have disjoint open neighborhoods}$$
+$$\text{(ii) } M \text{ is second countable: } M \text{ has a countable basis for its topology}$$
+$$\text{(iii) } M \text{ is locally Euclidean of dimension } n\text{: every point } p \in M \text{ has an open neighborhood homeomorphic to an open subset of } \mathbb{R}^n$$
+
+The Hausdorff condition prevents pathological identifications of distinct points. Second countability ensures the manifold is not too large — it rules out long line constructions and ensures partitions of unity exist. Local Euclidean-ness is the core condition: the manifold looks like $\mathbb{R}^n$ near every point.
+
+The integer $n$ is the **dimension** of $M$, written $\dim M = n$. It is a topological invariant — a property of the space that does not depend on any coordinate system and cannot be changed by any homeomorphism.
+
+---
+
+### Charts and Atlases
+
+A **chart** on a topological manifold $M$ is a pair $(U, \phi)$ where:
+
+- $U \subseteq M$ is an open set — the **coordinate domain** or **chart domain**
+- $\phi: U \to \hat{U} \subseteq \mathbb{R}^n$ is a homeomorphism from $U$ to an open subset $\hat{U} = \phi(U)$ of $\mathbb{R}^n$ — the **coordinate map**
+
+The coordinates of a point $p \in U$ are the components of $\phi(p) = (x^1(p), x^2(p), \ldots, x^n(p)) \in \mathbb{R}^n$. The functions $x^i: U \to \mathbb{R}$ defined by $x^i(p) = (\phi(p))^i$ are the **coordinate functions**.
+
+Two charts $(U, \phi)$ and $(V, \psi)$ are **smoothly compatible** if either $U \cap V = \emptyset$ or the **transition map**:
+
+$$\psi \circ \phi^{-1}: \phi(U \cap V) \to \psi(U \cap V)$$
+
+is a diffeomorphism — a smooth bijection with smooth inverse — between open subsets of $\mathbb{R}^n$. The transition map converts from the coordinates of the first chart to the coordinates of the second chart in the overlap region.
+
+A **smooth atlas** on $M$ is a collection $\mathcal{A} = \{(U_\alpha, \phi_\alpha)\}_{\alpha \in \Lambda}$ of charts satisfying:
+
+$$\text{(i) The charts cover } M\text{: } \bigcup_{\alpha \in \Lambda} U_\alpha = M$$
+$$\text{(ii) Any two charts in } \mathcal{A} \text{ are smoothly compatible}$$
+
+A smooth atlas $\mathcal{A}$ is **maximal** if it contains every chart that is smoothly compatible with all charts in $\mathcal{A}$. Every smooth atlas is contained in a unique maximal smooth atlas — obtained by adding all compatible charts — and two atlases define the same smooth structure if and only if their union is still a smooth atlas.
+
+A **smooth manifold** is a pair $(M, \mathcal{A})$ where $M$ is a topological manifold and $\mathcal{A}$ is a maximal smooth atlas on $M$. In practice, one specifies a smooth manifold by giving any smooth atlas — the maximal atlas is understood to be its completion.
+
+---
+
+### Canonical Examples
+
+**Euclidean space.** $\mathbb{R}^n$ is a smooth manifold with the single global chart $(\mathbb{R}^n, \text{id})$. No transition maps are needed.
+
+**The $n$-sphere.** $S^n = \{x \in \mathbb{R}^{n+1} : \|x\|_2 = 1\}$ is a smooth $n$-manifold. The standard atlas uses two stereographic projections:
+
+$$\phi_N: S^n \setminus \{N\} \to \mathbb{R}^n, \quad \phi_N(x^1,\ldots,x^{n+1}) = \frac{(x^1,\ldots,x^n)}{1-x^{n+1}}$$
+$$\phi_S: S^n \setminus \{S\} \to \mathbb{R}^n, \quad \phi_S(x^1,\ldots,x^{n+1}) = \frac{(x^1,\ldots,x^n)}{1+x^{n+1}}$$
+
+where $N = (0,\ldots,0,1)$ and $S = (0,\ldots,0,-1)$. The transition map $\phi_S \circ \phi_N^{-1}: \mathbb{R}^n \setminus \{0\} \to \mathbb{R}^n \setminus \{0\}$ is $u \mapsto u/\|u\|^2$ — the inversion map — which is smooth on $\mathbb{R}^n \setminus \{0\}$.
+
+**The $n$-torus.** $T^n = S^1 \times \cdots \times S^1$ ($n$ factors) is a smooth $n$-manifold. It is the configuration space of $n$ independent angles — the natural domain of periodic functions.
+
+**The special orthogonal group.** $SO(n) = \{A \in \mathbb{R}^{n\times n} : A^TA = I, \det A = 1\}$ is a smooth manifold of dimension $n(n-1)/2$. For $n=3$: $SO(3)$ is a 3-manifold — the configuration space of all orientations of a rigid body in three dimensions. It is diffeomorphic to the real projective space $\mathbb{RP}^3$.
+
+**The space of positive definite matrices.** $\mathbb{S}^n_{++} = \{A \in \mathbb{R}^{n\times n} : A = A^T, A \succ 0\}$ is a smooth manifold of dimension $n(n+1)/2$ — the space of covariance matrices of $n$-dimensional Gaussian distributions.
+
+**The probability simplex.** $\Delta^{n-1} = \{p \in \mathbb{R}^n : p_i > 0, \sum_i p_i = 1\}$ is a smooth $(n-1)$-manifold — the interior of the standard simplex, the space of strictly positive probability distributions over $n$ outcomes.
+
+---
+
+### Smooth Functions and Maps
+
+Let $M$ and $N$ be smooth manifolds of dimensions $m$ and $n$ respectively.
+
+A function $f: M \to \mathbb{R}$ is **smooth** (written $f \in C^\infty(M)$) if for every chart $(U, \phi)$ of $M$, the composition:
+
+$$f \circ \phi^{-1}: \phi(U) \to \mathbb{R}$$
+
+is smooth in the ordinary sense — infinitely differentiable as a function from an open subset of $\mathbb{R}^m$ to $\mathbb{R}$.
+
+The definition is chart-independent: if $f \circ \phi^{-1}$ is smooth in one chart, the smoothness of transition maps guarantees $f \circ \psi^{-1}$ is smooth in every overlapping chart $\psi$.
+
+A map $F: M \to N$ between smooth manifolds is **smooth** if for every chart $(U, \phi)$ on $M$ and every chart $(V, \psi)$ on $N$ with $F(U) \cap V \neq \emptyset$, the **coordinate representation**:
+
+$$\hat{F} = \psi \circ F \circ \phi^{-1}: \phi(U \cap F^{-1}(V)) \to \psi(V) \subseteq \mathbb{R}^n$$
+
+is smooth as a map between open subsets of Euclidean spaces. The coordinate representation $\hat{F}$ is the local expression of $F$ — it is what the map looks like in flat coordinates, and all local computations with $F$ are performed through $\hat{F}$.
+
+The collection of all smooth maps from $M$ to $N$ is written $C^\infty(M, N)$.
+
+---
+
+### Diffeomorphisms
+
+A smooth map $F: M \to N$ is a **diffeomorphism** if it is bijective and its inverse $F^{-1}: N \to M$ is also smooth. Two smooth manifolds are **diffeomorphic** if there exists a diffeomorphism between them — they are geometrically identical as smooth manifolds, differing only in the labeling of points.
+
+Diffeomorphisms are the isomorphisms of the category of smooth manifolds — the structure-preserving bijections. If $F: M \to N$ is a diffeomorphism and $(V, \psi)$ is a chart on $N$, then $(F^{-1}(V), \psi \circ F)$ is a chart on $M$. Diffeomorphisms transport the entire smooth structure.
+
+The **diffeomorphism group** of $M$ is $\text{Diff}(M) = \{F: M \to M : F \text{ is a diffeomorphism}\}$ — the group of all self-diffeomorphisms of $M$ under composition. For the manifolds of generative AI, the learned transformation $T_\theta$ is a diffeomorphism from the data manifold to itself (or to a noise manifold), and the diffeomorphism group is the space of all such transformations over which the model optimizes.
+
+**Rank of a smooth map.** For a smooth map $F: M \to N$ with coordinate representation $\hat{F}$, the **rank** of $F$ at $p \in M$ is the rank of the Jacobian matrix $D\hat{F}(\phi(p))$ — the number of linearly independent columns of the Jacobian. The rank is well-defined — it does not depend on the choice of charts — because changing charts multiplies the Jacobian by invertible matrices on both sides.
+
+---
+
+### Submanifolds and Embeddings
+
+A subset $S \subseteq M$ is a **smooth submanifold of dimension $k$** if for every $p \in S$, there exists a chart $(U, \phi)$ of $M$ with $p \in U$ such that:
+
+$$\phi(U \cap S) = \phi(U) \cap (\mathbb{R}^k \times \{0\})$$
+
+In the chart, $S$ looks like the first $k$ coordinates — a flat $k$-dimensional slice of the $n$-dimensional coordinate domain. The chart $(U \cap S, \tilde{\phi})$ where $\tilde{\phi}(p) = (\phi(p)^1, \ldots, \phi(p)^k)$ is a chart on $S$, making $S$ itself a smooth $k$-manifold.
+
+A smooth map $F: M \to N$ is an **immersion** if its rank equals $\dim M$ at every point — the Jacobian has full column rank everywhere. An immersion is locally injective but not necessarily globally injective.
+
+A smooth map $F: M \to N$ is an **embedding** if it is an injective immersion that is also a topological embedding — a homeomorphism onto its image. An embedding identifies $M$ with a submanifold $F(M) \subseteq N$.
+
+**Whitney Embedding Theorem.** Every smooth $n$-manifold can be smoothly embedded in $\mathbb{R}^{2n}$. This theorem guarantees that abstract manifolds — defined intrinsically by atlases — can always be realized as submanifolds of some Euclidean space. The data manifold hypothesis is the claim that the relevant embedding dimension is much smaller than the ambient data dimension — that data living in $\mathbb{R}^{65536}$ lies on a manifold of dimension much smaller than 65536.
+
+---
+
+### Partitions of Unity
+
+A powerful technical tool enabled by second countability and Hausdorffness is the **partition of unity** — a collection of smooth functions $\{\rho_\alpha\}_{\alpha \in \Lambda}$ on $M$ satisfying:
+
+$$\text{(i) } 0 \leq \rho_\alpha(p) \leq 1 \quad \forall p \in M, \forall \alpha$$
+$$\text{(ii) The support of } \rho_\alpha \text{ is contained in } U_\alpha$$
+$$\text{(iii) } \sum_\alpha \rho_\alpha(p) = 1 \quad \forall p \in M \text{ (locally finite sum)}$$
+
+**Theorem.** For any smooth atlas $\{(U_\alpha, \phi_\alpha)\}$ of a smooth manifold $M$, there exists a partition of unity subordinate to the atlas.
+
+Partitions of unity allow global constructions to be assembled from local chart-based constructions. For example, a Riemannian metric — defined locally in each chart as a matrix-valued function — can be assembled into a globally smooth Riemannian metric by averaging local metrics using a partition of unity. The existence of partitions of unity is the technical foundation that makes the global theory work from local pieces.
+
+---
+
+### The Tangent Map
+
+Every smooth map $F: M \to N$ induces a **tangent map** (or **pushforward**) $dF_p: T_pM \to T_{F(p)}N$ between tangent spaces at each point $p \in M$. We will define tangent spaces precisely in the next subtopic, but we can state the tangent map's properties now:
+
+In local coordinates — with $\phi$ a chart near $p$ on $M$ and $\psi$ a chart near $F(p)$ on $N$ — the tangent map is represented by the **Jacobian matrix** of the coordinate representation $\hat{F} = \psi \circ F \circ \phi^{-1}$:
+
+$$dF_p \leftrightarrow D\hat{F}(\phi(p)) = \begin{pmatrix} \frac{\partial \hat{F}^1}{\partial x^1} & \cdots & \frac{\partial \hat{F}^1}{\partial x^m} \\ \vdots & \ddots & \vdots \\ \frac{\partial \hat{F}^n}{\partial x^1} & \cdots & \frac{\partial \hat{F}^n}{\partial x^m} \end{pmatrix}_{\phi(p)}$$
+
+The tangent map is the linear map that best approximates $F$ near $p$ — the curved-space generalization of the derivative. It satisfies the chain rule: if $G: N \to P$ is another smooth map, then $d(G \circ F)_p = dG_{F(p)} \circ dF_p$.
+
+For a diffeomorphism $F$, the tangent map $dF_p$ is a linear isomorphism at every point — the Jacobian is invertible everywhere. This is the curved-space content of the inverse function theorem: a smooth bijection with everywhere-invertible Jacobian is a local diffeomorphism.
+
+The **rank theorem** states: if $F: M \to N$ has constant rank $k$ near $p$, then there exist charts around $p$ and $F(p)$ in which $F$ has the canonical form $(x^1,\ldots,x^m) \mapsto (x^1,\ldots,x^k, 0,\ldots,0)$ — $F$ looks like a linear projection in appropriate coordinates. This is the fundamental local structure theorem for smooth maps.
+
+---
+
+### Smooth Manifolds in Probability and Machine Learning
+
+The spaces of probability distributions that appear throughout the roadmap are smooth manifolds, and their manifold structure is essential for the geometric operations of Phases 1 through 3.
+
+**The statistical manifold.** The set of all probability densities of the form $p_\theta(x) = p(x|\theta)$ parameterized by $\theta \in \Theta \subseteq \mathbb{R}^d$ is a $d$-dimensional smooth manifold — the **statistical manifold** of the parametric family. Charts are provided by the parameterization $\theta \mapsto p_\theta$, and transition maps between different parameterizations are smooth because the density functions are smooth in the parameters.
+
+**The Wasserstein manifold.** The space $\mathcal{P}_2(\mathbb{R}^n)$ of probability measures with finite second moment, equipped with the Wasserstein-2 metric, has the formal structure of an infinite-dimensional Riemannian manifold — the **Wasserstein manifold**. Its charts are provided by push-forward maps, and its geodesics are the displacement interpolations of Phase 1. This manifold structure is the geometric foundation of the JKO scheme and Riemannian flow matching in Phase 3.
+
+**Neural network function space.** The set of functions representable by a fixed neural network architecture — with a fixed number of layers and neurons — parameterized by weight matrices $\theta$ is a smooth manifold (generically, away from degenerate weight configurations). The smooth map from parameter space $\Theta$ to function space is the architecture's forward pass, and its tangent map at each $\theta$ is the Jacobian of the network with respect to weights — the object computed by backpropagation.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 201 (Advanced Calculus), you worked with smooth functions from $\mathbb{R}^n$ to $\mathbb{R}^m$ and computed their Jacobian matrices. The Jacobian is now recognized as the coordinate representation of the tangent map $dF_p$ — the local linear approximation to a smooth map between manifolds. In MATH 103 (Linear Algebra), you worked with linear maps between vector spaces — these are the tangent maps of smooth maps between manifolds, evaluated at a single point and expressed in coordinates. In MATH 213 (Analysis I), you proved the implicit function theorem and the inverse function theorem for smooth maps between Euclidean spaces — these theorems generalize directly to smooth maps between manifolds, providing the local canonical forms (rank theorem) that classify smooth maps up to diffeomorphism. In MSCS 202 (Numerical Methods), the coordinate representations of smooth maps — the functions $\hat{F} = \psi \circ F \circ \phi^{-1}$ expressed in charts — are the objects that numerical algorithms actually compute. Every numerical integration, differentiation, or optimization on a manifold is performed in a chart, and the atlas structure is what ensures the results are chart-independent.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Himalayan cartography story has a precise mathematical address. Let us walk through them one by one, until the survey department, the overlapping local maps, the transition rules, and the full formal apparatus are completely fused into a single picture.
+
+---
+
+**The Himalayan surface itself — the curved two-dimensional terrain that the survey department is mapping — is the smooth manifold $M$.** It is a two-dimensional object: at every point, two independent directions of motion exist, spanning the local tangent plane to the surface. But it is not flat: the surface curves, rises into peaks, descends into valleys, and wraps around massifs in ways that no single flat coordinate system can faithfully represent. The manifold $M$ exists independently of any coordinate system — it is the terrain itself, not any particular map of it. The Hausdorff condition is satisfied because any two distinct points in the Himalayas have non-overlapping neighborhoods — you can always find a small enough region around each that they do not intersect. Second countability is satisfied because the terrain can be covered by countably many bounded patches. Local Euclidean-ness is satisfied because any sufficiently small patch of the terrain looks flat — the curvature of the Earth is negligible at the scale of a Base Camp survey.
+
+**The individual local survey maps — each covering a manageable patch of the terrain with a flat coordinate grid — are the charts $(U_\alpha, \phi_\alpha)$.** The open set $U_\alpha \subseteq M$ is the patch of terrain covered by the local survey — an open region of the manifold. The coordinate map $\phi_\alpha: U_\alpha \to \hat{U}_\alpha \subseteq \mathbb{R}^2$ assigns flat easting-northing coordinates to every point in the patch. The map $\phi_\alpha$ is a homeomorphism: it is continuous in both directions — small movements on the terrain correspond to small movements in the coordinate plane, and vice versa. The image $\hat{U}_\alpha = \phi_\alpha(U_\alpha)$ is an open subset of $\mathbb{R}^2$ — the sheet of paper on which the local map is drawn. The coordinate functions $x^1(p) = (\phi_\alpha(p))^1$ and $x^2(p) = (\phi_\alpha(p))^2$ are the easting and northing of the point $p$ in the local survey coordinate system.
+
+**The complete collection of overlapping local maps covering the entire Himalayan arc — with consistent rules for converting between overlapping maps — is the smooth atlas $\mathcal{A} = \{(U_\alpha, \phi_\alpha)\}_{\alpha \in \Lambda}$.** The coverage condition $\bigcup_\alpha U_\alpha = M$ says every point of the terrain belongs to at least one local map — no region is left unsurveyed. The smooth compatibility condition says every pair of overlapping maps has a smooth transition function. The atlas is the complete specification of the terrain's smooth structure — it tells you not just which regions are covered, but how to move between coordinate systems wherever coverage overlaps.
+
+---
+
+**The conversion rule between two overlapping local maps — the formula for translating easting-northing coordinates from the Everest chart to the Cho Oyu chart in their shared border region — is the transition map $\psi \circ \phi^{-1}: \phi(U \cap V) \to \psi(U \cap V)$.** The transition map takes a point's coordinates in the first chart $\phi$ and produces its coordinates in the second chart $\psi$. The composition $\psi \circ \phi^{-1}$ first uses $\phi^{-1}$ to convert flat coordinates back to the terrain point, then uses $\psi$ to convert that terrain point to the second chart's flat coordinates. This is the round trip: chart 1 coordinates $\to$ terrain point $\to$ chart 2 coordinates. The smoothness of the transition map — the requirement that $\psi \circ \phi^{-1}$ is a diffeomorphism between open subsets of $\mathbb{R}^2$ — is the consistency requirement: small movements in the Everest chart correspond to small, predictable movements in the Cho Oyu chart, with no jumps or kinks. If the transition map were not smooth, a surveyor crossing from one chart's territory to another's would see discontinuous jumps in coordinates — an incoherent atlas that cannot support consistent calculus.
+
+**The break moment — the sphere cannot be covered by a single chart — is the formal proof that the atlas structure is necessary, not merely convenient.** The unit sphere $S^2$ is compact — it is bounded and closed as a subset of $\mathbb{R}^3$. Any open subset of $\mathbb{R}^2$ is non-compact — it is either unbounded or not closed. A homeomorphism between a compact space and a non-compact space cannot exist — compactness is a topological invariant preserved by homeomorphisms. Therefore no single chart can cover $S^2$. The atlas of two stereographic projections — from the north pole and from the south pole — is the minimal atlas for $S^2$. The transition map between them is the inversion $u \mapsto u/\|u\|^2$ — smooth and invertible on $\mathbb{R}^2 \setminus \{0\}$, which is the image of the overlap region $S^2 \setminus \{N, S\}$ under either projection. The cartographer's intuition — that no single flat page can faithfully map the entire curved surface — is the topological theorem about compactness.
+
+---
+
+**The temperature field over the Himalayas — a function assigning a temperature value to every terrain point — is a smooth function $f: M \to \mathbb{R}$.** Its smoothness means: in every local survey chart $(U_\alpha, \phi_\alpha)$, the composition $f \circ \phi_\alpha^{-1}: \hat{U}_\alpha \to \mathbb{R}$ — the temperature field expressed in local easting-northing coordinates — is smooth in the ordinary calculus sense. The definition is chart-independent: if $f \circ \phi_\alpha^{-1}$ is smooth in one chart and the transition maps are smooth, then $f \circ \phi_\beta^{-1}$ is automatically smooth in every overlapping chart. The smoothness of the transition maps propagates the smoothness of $f$ from any one chart to all others. This chart-independence is the key: the temperature field is a physical property of the terrain, not of any particular coordinate system, and its smoothness should not depend on which coordinate system you use to describe it.
+
+**The coordinate representation $\hat{F} = \psi \circ F \circ \phi^{-1}$ of a smooth map between manifolds — the local flat-space expression of a curved-space function — is how all actual computations with smooth maps are performed.** In the cartography story: the geological stress field on the Himalayan surface is a smooth map $F: M \to \mathbb{R}^2$ assigning a two-dimensional stress vector to each terrain point. To compute the stress at a specific location, the geologist expresses $F$ in local chart coordinates — composing with $\phi^{-1}$ to go from flat coordinates to the terrain point, applying $F$ to get the stress vector, and composing with $\psi$ to express the output in flat coordinates. The resulting function $\hat{F}: \hat{U} \to \hat{V}$ is a smooth map between open subsets of Euclidean spaces — an object that can be differentiated, integrated, and numerically evaluated using all the tools of flat-space calculus. The chart is the window through which flat-space tools see the curved-space map.
+
+**Diffeomorphisms — smooth maps with smooth inverses — are the structure-preserving isomorphisms of smooth manifolds.** In the cartography story: a reparameterization of the terrain — replacing easting-northing coordinates with a different local coordinate system, say polar coordinates centered at a summit — is a diffeomorphism from one chart domain to another. Two manifolds related by a diffeomorphism are geometrically indistinguishable as smooth manifolds. In the generative modeling context: the learned transformation $T_\theta$ in a normalizing flow is a diffeomorphism from the data manifold to the noise manifold — a smooth bijection with smooth inverse whose Jacobian is everywhere invertible. The push-forward density formula $p_{T_\theta\#\mu}(y) = p_\mu(T_\theta^{-1}(y)) \cdot |\det J_{T_\theta^{-1}}(y)|$ requires $T_\theta$ to be a diffeomorphism: the Jacobian $J_{T_\theta^{-1}}$ exists and is invertible everywhere precisely because $T_\theta$ is a diffeomorphism. The smooth map structure of this topic is the prerequisite for the push-forward density computation of Chapter 1.
+
+---
+
+**The Whitney Embedding Theorem — every smooth $n$-manifold embeds in $\mathbb{R}^{2n}$ — is the mathematical guarantee that the manifold hypothesis is self-consistent.** The manifold hypothesis claims that data in $\mathbb{R}^D$ lies on a $d$-dimensional manifold with $d \ll D$. The Whitney theorem says this is always geometrically possible — there always exists an embedding of any abstract $d$-manifold into $\mathbb{R}^{2d}$. The data manifold is not a hypothetical object that might not exist as a submanifold of Euclidean space — it always does exist, for any abstract smooth manifold, in a sufficiently high-dimensional Euclidean space. The theorem does not say the embedding dimension is optimal — real data manifolds are often embeddable in much lower dimensions than $2d$ — but it guarantees existence. The cartographic analogy: any curved terrain can always be faithfully embedded in three-dimensional space as a surface, even if it cannot be faithfully flattened onto a two-dimensional plane.
+
+**Partitions of unity — collections of smooth bump functions summing to 1 subordinate to the atlas — are the tool that assembles global geometric structures from local chart-based constructions.** In the cartography story: the survey department wants to define a single, globally consistent elevation function over the entire Himalayan arc, by assembling the locally measured elevation data from each chart. Each chart provides a smooth elevation function over its patch. Partitions of unity provide a smooth weighting scheme that blends the local elevation measurements from overlapping charts into a globally smooth elevation function — without jumps or inconsistencies at chart boundaries. In the roadmap, partitions of unity are used to assemble the Riemannian metric from local inner product definitions — the next topic's central object — and to construct smooth cutoff functions needed for integration on manifolds.
+
+---
+
+**The tangent map $dF_p: T_pM \to T_{F(p)}N$ — the linear approximation to a smooth map $F$ at a point $p$ — is represented in coordinates by the Jacobian matrix of the coordinate representation.** In the cartography story: a smooth path $\gamma: (-\epsilon, \epsilon) \to M$ on the terrain — a trekker's route through the mountains — has a velocity vector $\gamma'(0) \in T_{\gamma(0)}M$ at every moment. A smooth map $F: M \to N$ — say, the projection of the three-dimensional terrain surface onto a two-dimensional satellite image — pushes this velocity forward: the image path $F \circ \gamma$ has velocity $dF_{\gamma(0)}(\gamma'(0)) \in T_{F(\gamma(0))}N$. The tangent map $dF_p$ is the linear map that converts velocities on $M$ at $p$ to velocities on $N$ at $F(p)$. In coordinates, it is the Jacobian $D\hat{F}(\phi(p))$ — the matrix of partial derivatives of the coordinate representation. The chain rule $d(G \circ F)_p = dG_{F(p)} \circ dF_p$ is the chain rule for Jacobian matrices: the Jacobian of a composition is the product of the Jacobians. This is the same chain rule from MATH 201, now understood as a statement about tangent maps between manifolds.
+
+---
+
+**The statistical manifold — the set of parameterized probability densities $\{p_\theta : \theta \in \Theta\}$ — is the smooth manifold that underlies all of information geometry and much of Phase 3.** Each density $p_\theta$ is a point on the statistical manifold. The parameterization $\theta \mapsto p_\theta$ is a smooth map from the parameter space $\Theta \subseteq \mathbb{R}^d$ — a flat manifold — to the statistical manifold — a curved manifold in the infinite-dimensional space of probability densities. Charts on the statistical manifold are provided by the parameterization: the chart domain is a neighborhood of $p_{\theta_0}$ in the statistical manifold, and the chart map assigns coordinates $\theta$ to the density $p_\theta$. Transition maps between different parameterizations — say, mean-variance parameterization and natural parameterization of the Gaussian — are smooth because the densities are smooth functions of the parameters. The Fisher information matrix $I(\theta) = \mathbb{E}_{p_\theta}[\nabla_\theta \log p_\theta \cdot \nabla_\theta \log p_\theta^T]$ is the Riemannian metric on the statistical manifold — the curved-space inner product that the next topic will formalize. The statistical manifold is not a flat space — its curvature, measured by the Fisher information metric, is the geometric reason why gradient descent on the log-likelihood does not always converge efficiently, and why natural gradient methods — which account for the manifold's curvature — converge faster.
+
+**The Wasserstein manifold — the space of probability measures with finite second moment, equipped with the Wasserstein-2 metric — is the infinite-dimensional manifold on which all of Phase 1 and much of Phase 3 operate.** A point on the Wasserstein manifold is a probability measure $\mu \in \mathcal{P}_2(\mathbb{R}^n)$. Charts near a measure $\mu_0$ are provided by push-forward maps: for a diffeomorphism $T$ close to the identity, the measure $T_\#\mu_0$ is a nearby point on the manifold, and the chart coordinates of $T_\#\mu_0$ near $\mu_0$ are provided by the displacement field $T - \text{id}$. The transition maps between different chart neighborhoods are smooth because push-forwards compose smoothly: if $T_1\#\mu_0 = T_2\#\mu_0$ for two different diffeomorphisms, the transition between their coordinate representations is the smooth map $T_2 \circ T_1^{-1}$. The Wasserstein geodesics of Phase 1 — the displacement interpolations — are the geodesics of this infinite-dimensional Riemannian manifold, and the JKO scheme of Phase 3 is gradient descent on this manifold.
+
+---
+
+**The connection to MATH 201 (Advanced Calculus) is now total.** Every smooth function you differentiated in MATH 201 was a function from an open subset of $\mathbb{R}^n$ to $\mathbb{R}^m$ — the coordinate representation $\hat{F} = \psi \circ F \circ \phi^{-1}$ of a smooth map between manifolds, expressed in the trivial atlas of Euclidean space. Every Jacobian matrix you computed was the coordinate representation of a tangent map $dF_p$. Every application of the chain rule was the composition rule for tangent maps: $d(G \circ F)_p = dG_{F(p)} \circ dF_p$ expressed in the coordinates of the trivial Euclidean atlas. The implicit function theorem and inverse function theorem of MATH 201 are the local structure theorems for smooth maps — they characterize when a smooth map is locally a diffeomorphism (invertible Jacobian) or locally a projection (constant-rank Jacobian). What you have now is the recognition that all of MATH 201's calculus was always calculus on the simplest possible manifold — $\mathbb{R}^n$ with its single global chart — and that the manifold theory extends every one of those results to the curved spaces where the roadmap actually operates.
+
+**The connection to MATH 213 (Analysis I) runs through the topological foundations.** The open sets, continuity, and convergence you studied in MATH 213 are the topological structure underlying the manifold definition. The Hausdorff condition is the separation axiom that you used in Analysis I to prove the uniqueness of limits. Second countability is what makes the Bolzano-Weierstrass theorem work — it guarantees that bounded sequences have convergent subsequences, which in the manifold context is what makes compact manifolds well-behaved. The local Euclidean condition is the precise statement of what it means to do calculus locally — the bridge between the topological structure of the manifold and the flat-space calculus of MATH 201.
+
+---
+
+**Looking forward across the roadmap**, the manifold structure is the foundation that every subsequent topic builds on. In this chapter, the tangent bundle — the next topic — is defined as a smooth manifold in its own right: it is the disjoint union of all tangent spaces $\coprod_{p \in M} T_pM$, equipped with a smooth atlas derived from the atlas of $M$. The Riemannian metric is a smooth map from $M$ to the space of positive definite inner products on tangent spaces — a smooth section of a tensor bundle, whose smoothness is defined in exactly the chart-by-chart sense of this topic. Geodesics are smooth curves on the manifold satisfying the geodesic ODE, and their existence and uniqueness follow from the ODE theory on smooth manifolds. In Phase 1, the Wasserstein manifold's charts and smooth maps are the precise objects underlying displacement interpolation and the JKO scheme. In Phase 2, the equivariance conditions of graph neural networks are conditions on smooth maps between manifolds — the symmetry group acts by diffeomorphisms on the data manifold, and equivariant networks are smooth maps that intertwine these diffeomorphisms. In Phase 3, Riemannian flow matching learns a smooth map between the noise manifold and the data manifold — a diffeomorphism in the normalizing flow case, a stochastic smooth map in the diffusion case — and the correctness of the push-forward density formula relies on the smooth map structure of this topic.
+
+The survey department's atlas of the Himalayan arc — many overlapping local maps, each accurate within its patch, connected by smooth transition functions, together constituting a complete and rigorous description of the curved terrain — is not a metaphor for the smooth manifold. It is the smooth manifold, told in the language of a job that requires exactly the mathematical structure the definition formalizes.
+
+---
+---

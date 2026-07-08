@@ -1,0 +1,497 @@
+# Chapter 3 - Riemannian Flow Matching
+
+## Introduction
+
+Chapter 2 built the complete algorithmic toolkit of continuous generative modeling on Euclidean space. Neural ODEs established the continuous-depth normalizing flow framework, trained by the adjoint method and evaluated by the instantaneous change of variables formula. Score matching learned the score function of the forward OU process, enabling reverse-time SDE and probability flow ODE sampling. Rectified flows learned velocity fields by regression on straight-line interpolations, with the reflow procedure converging to the optimal transport plan between noise and data. All three frameworks operated in the same ambient space: $\mathbb{R}^d$, flat, with the standard Euclidean metric, Gaussian base distributions, and straight-line interpolations as the natural paths.
+
+The real world does not produce data in $\mathbb{R}^d$.
+
+A protein backbone is a sequence of amino acids whose physical configuration is determined by the dihedral angles $\phi$ and $\psi$ at each peptide bond, each taking values in $[0, 2\pi)$. The configuration space is the flat torus $\mathbb{T}^{2n}$ — a product of $2n$ circles — not $\mathbb{R}^{2n}$. The flat torus has periodic boundary conditions: an angle of $0$ and an angle of $2\pi$ are the same configuration, and the shortest path between angles near $0$ and near $2\pi$ wraps around the circle rather than traveling through the interior. A Gaussian distribution on $\mathbb{R}^{2n}$ placed on this space would assign probability to configurations that violate the periodicity — it would treat angles of $0.1$ and $6.1$ as distant when they are in fact nearly identical. Straight-line interpolation from noise to data would cross the periodic boundary unnaturally.
+
+A molecular orientation is an element of the rotation group $SO(3)$ — a curved three-dimensional manifold whose geometry is that of the real projective space $\mathbb{RP}^3$. The geodesic between two orientations is not a straight line in any flat space: it is the shortest rotation connecting them, parameterized by the axis and angle of that rotation. A Gaussian distribution on $\mathbb{R}^3$ projected onto $SO(3)$ would not produce a uniform distribution of orientations — it would concentrate near certain canonical orientations depending on the projection convention. Flow matching with Euclidean straight-line interpolations would produce trajectories that leave $SO(3)$, requiring projection back onto the manifold at each step and introducing errors that compound over the integration.
+
+A molecular conformation lives on a product space of $SO(3)$ (overall orientation), $\mathbb{R}^3$ (position), and $\mathbb{T}^{2n}$ (backbone dihedral angles) — a curved, mixed manifold that is neither flat nor homogeneous. Weather on the Earth's surface is a field of physical quantities defined on $S^2$ — the two-sphere — with its own Riemannian geometry. The set of valid covariance matrices forms the cone of positive definite symmetric matrices — a curved manifold with a specific Riemannian structure known as the Bures-Wasserstein geometry. In each of these settings, the Euclidean flow matching framework of Chapter 2 fails not because it is computationally insufficient but because it is geometrically dishonest: it ignores the manifold structure of the data space, producing flows that stray off the manifold, use incorrect notions of distance and interpolation, and cannot respect the symmetries that define the data domain.
+
+Riemannian Flow Matching is the extension of flow matching to arbitrary Riemannian manifolds. It replaces Euclidean straight lines with geodesics, Gaussian distributions with heat kernel distributions defined through the Laplace-Beltrami operator, and Euclidean score functions with Riemannian score functions involving the Riemannian gradient. The result is a generative modeling framework that is geometrically faithful: it operates entirely on the manifold, respects the manifold's metric structure, and produces probability flows that never leave the data domain.
+
+Chapter 3 is the synthesis point of the entire roadmap. Every mathematical thread developed across all four phases converges here simultaneously.
+
+From Phase 0: the Riemannian metric $g$, the exponential map $\exp_x$, the logarithmic map $\log_x$, geodesics, and the parallel transport equation are the geometric primitives that Riemannian flow matching builds on. Every computation — interpolation, distance, noise injection, velocity field evaluation — uses these objects.
+
+From Phase 1: the Wasserstein geometry of probability distributions on manifolds generalizes the flat-space Wasserstein distance using the geodesic distance $d_\mathcal{M}$ in place of the Euclidean distance. The optimal transport plan on a manifold is the coupling that minimizes $\mathbb{E}[d_\mathcal{M}(X_0,X_1)^2]$ — the squared geodesic distance — and the corresponding Brenier map is the gradient of a $c$-convex function with respect to the Riemannian metric.
+
+From Phase 2: the Laplace-Beltrami operator $\Delta_\mathcal{M}$, its eigenfunctions (manifold harmonics), and the heat kernel $k_t(x,y) = e^{t\Delta_\mathcal{M}}(x,y)$ are the tools that define the forward process and the base distribution on the manifold. The spectral theory of $\Delta_\mathcal{M}$ from Chapter 3 of Phase 2 — Laplacian eigenmaps, geodesic convolution, DiffusionNet — is the mathematical machinery that makes the heat kernel computable and the Riemannian score function approximable from data.
+
+From Phase 3's Chapters 1 and 2: the JKO scheme, the Fokker-Planck equation, the score function, and the conditional flow matching framework all generalize to Riemannian manifolds. The Fokker-Planck equation on a manifold uses the Laplace-Beltrami operator $\Delta_\mathcal{M}$ in place of the Euclidean Laplacian $\Delta$. The score function on a manifold is the Riemannian gradient $\text{grad}_\mathcal{M}\log\rho_t$ — the gradient with respect to the Riemannian metric $g$. The conditional flow matching objective uses geodesic interpolation $\gamma_t(x_0,x_1)$ in place of linear interpolation $(1-t)x_0+tx_1$.
+
+Chapter 3 develops Riemannian flow matching across two topics corresponding to the two aspects of the roadmap's final bullet point.
+
+The first topic is **Generating Data on Manifolds: the Geometric Forward Process**. Before you can run flow matching on a manifold, you need a forward process — a way to take a data point $x_1\in\mathcal{M}$ and produce a noisy version $x_t\in\mathcal{M}$ at noise level $t$. On $\mathbb{R}^d$, the forward process is the OU SDE, which adds Gaussian noise isotropically in all directions. On a Riemannian manifold $\mathcal{M}$, the natural analogue is Brownian motion on the manifold — the stochastic process whose infinitesimal generator is the Laplace-Beltrami operator $\Delta_\mathcal{M}$. The distribution of Brownian motion on $\mathcal{M}$ started at $x_1$ after time $t$ is the heat kernel $k_t(x|x_1)$ — the fundamental solution of the heat equation $\partial_t k_t = \Delta_\mathcal{M}k_t$ on the manifold. The heat kernel is the manifold analogue of the Gaussian transition density of the OU process: it defines the correct isotropic noise distribution on the manifold, concentrated near $x_1$ for small $t$ and spreading across the manifold as $t$ increases. For compact manifolds without boundary — spheres, tori, rotation groups — the heat kernel converges to the uniform distribution as $t\to\infty$, making the uniform distribution the natural base distribution for Riemannian flow matching, playing the role that $\mathcal{N}(0,I)$ plays in Euclidean flow matching.
+
+The second topic is **Flow Matching on Manifolds: Geodesic Interpolation and Riemannian Score Functions**. With the forward process defined through the heat kernel, the flow matching framework generalizes to manifolds by replacing every Euclidean operation with its Riemannian analogue. The linear interpolation $(1-t)x_0+tx_1$ becomes the geodesic interpolation $\gamma_t(x_0,x_1) = \exp_{x_0}(t\log_{x_0}(x_1))$ — the point at fraction $t$ along the geodesic from $x_0$ to $x_1$. The constant velocity $x_1-x_0$ becomes the initial geodesic velocity $\log_{x_0}(x_1)\in T_{x_0}\mathcal{M}$ — the tangent vector pointing from $x_0$ toward $x_1$ whose magnitude equals the geodesic distance. The score function $\nabla\log\rho_t$ becomes the Riemannian gradient $\text{grad}_\mathcal{M}\log\rho_t$ — computed using the inverse metric tensor $g^{-1}$. The ODE $\dot x_t = f_\theta(x_t,t)$ becomes the manifold ODE $\dot x_t = f_\theta(x_t,t)\in T_{x_t}\mathcal{M}$ — a vector field on the manifold whose solutions are curves on $\mathcal{M}$. The probability flow ODE produces curves that stay on the manifold by construction, requiring no projection step, no constraint enforcement, and no geometric dishonesty.
+
+The applications that Riemannian flow matching enables are exactly the open problems identified in the Phase 4 research section of the roadmap.
+
+Protein backbone generation: the dihedral angle space $\mathbb{T}^{2n}$ is a flat torus, and Riemannian flow matching on the torus with geodesic interpolation (wrapping around the periodic boundary) produces geometrically valid protein backbone configurations that respect the Ramachandran plot constraints without post-processing.
+
+Molecular orientation generation: $SO(3)$ flow matching generates orientations by flowing on the rotation group's curved geometry, using the bi-invariant metric of $SO(3)$ and the Haar measure as the base distribution. FrameDiff, FoldFlow, and SE(3) flow matching — the state-of-the-art protein structure generation models — are all special cases of Riemannian flow matching on $SE(3) = SO(3)\ltimes\mathbb{R}^3$.
+
+Drug molecule graph generation: generating valid molecular graphs requires flow matching on the space of graphs with the symmetry group $S_n$ (from Phase 2's Chapter 2) combined with $SE(3)$ geometry for the three-dimensional coordinates — a product manifold combining discrete graph topology with continuous Riemannian geometry.
+
+The connections to your curriculum reach their maximum integration in Chapter 3, because Riemannian flow matching genuinely requires every mathematical tool from every phase simultaneously.
+
+Your MATH 217 course on ODEs and PDEs: the heat equation $\partial_t k_t = \Delta_\mathcal{M}k_t$ on the manifold is the PDE that defines the forward process, solved by the heat kernel $k_t(x|x_1)$ whose short-time asymptotics involve the geodesic distance $d_\mathcal{M}(x,x_1)^2/(4t)$ in the exponent — the Varadhan formula. The geodesic ODE $\ddot\gamma^k + \Gamma^k_{ij}\dot\gamma^i\dot\gamma^j = 0$ defines the interpolation paths. The manifold Fokker-Planck equation $\partial_t\rho_t = \Delta_\mathcal{M}\rho_t - \nabla_\mathcal{M}\cdot(\rho_t v_t)$ governs the probability flow.
+
+Your MATH 325 course on Analysis II: the $L^2(\mathcal{M},\text{vol}_g)$ Hilbert space, the completeness of the Laplace-Beltrami eigenfunctions, and the spectral expansion $k_t(x,y) = \sum_k e^{-\lambda_k t}\phi_k(x)\phi_k(y)$ of the heat kernel in terms of the manifold harmonics from Phase 2's Chapter 3 are the functional analytic foundations of the Riemannian forward process.
+
+Your MATH 302 course on Matrix Theory: the metric tensor $g_{ij}$ as a positive definite symmetric matrix at each point, the inverse metric $g^{ij}$ used in the Riemannian gradient $\text{grad}_\mathcal{M}f = g^{-1}\nabla f$, and the Christoffel symbols $\Gamma^k_{ij} = \frac{1}{2}g^{kl}(\partial_i g_{jl}+\partial_j g_{il}-\partial_l g_{ij})$ as the matrix-valued connection coefficients are all from MATH 302.
+
+By the end of Chapter 3, the full synthesis will be complete. The Wasserstein geometry of Phase 1 will have become the Riemannian Wasserstein geometry of distribution spaces over curved manifolds. The equivariant architectures of Phase 2 will have become the velocity fields that parameterize the Riemannian probability flows. The score matching and flow matching algorithms of Phase 3's Chapter 2 will have become their Riemannian analogues, operating on manifolds through the exponential and logarithmic maps. And the heat kernel — the object that connects the Laplace-Beltrami spectral theory of Phase 2's Chapter 3 to the Fokker-Planck dynamics of Phase 3's Chapter 1 — will have become the natural forward process that defines the noise distribution on every manifold. The car is not merely driving. It is navigating curved terrain.
+
+---
+
+## Layer 1 (Story)
+
+It is 2024. The Pashupatinath Temple Trust in Kathmandu has commissioned a computational study of Nepal's ancient pilgrimage network — the system of sacred routes connecting the major Hindu and Buddhist pilgrimage sites across the Himalayan landscape. The network includes routes from the Terai plains up to the high Himalayan shrines: from Janakpur to the Muktinath temple in Mustang, from Lumbini to the Swayambhunath stupa in Kathmandu, from Kathmandu to the Gosaikunda lakes in the Langtang range, and from the lowland temples up to the high Himalayan sacred peaks.
+
+Your computational team has been asked to build a generative model of pilgrimage route orientations — specifically, the orientations of pilgrims as they navigate the mountain terrain. At each moment of the journey, a pilgrim's orientation is a full three-dimensional rotation: which direction they face, which way is up for them relative to the terrain slope, and which direction they are inclined to move next. This orientation is an element of the rotation group $SO(3)$ — a curved three-dimensional manifold. You need to generate realistic synthetic pilgrim orientations from historical GPS and inertial measurement data, for use in terrain navigation algorithms and emergency response planning.
+
+The previous team tried to generate pilgrim orientations using a standard diffusion model operating in $\mathbb{R}^3$ — treating the three Euler angles as flat coordinates and running the OU forward process in this Euclidean space. The results were geometrically wrong in a specific, consequential way. Orientations near the boundary of the Euler angle parameterization — orientations where the pitch angle approaches $\pm 90$ degrees — produced artifacts. The diffusion model would sometimes generate orientations that are invalid rotations: rotation matrices with determinant $-1$ instead of $+1$, or orthogonal matrices with the wrong handedness. These invalid orientations, when fed into the navigation algorithm, caused it to recommend that pilgrims walk through cliff faces and across vertical rock walls. The flat Euclidean model had generated geometrically impossible motion instructions because it operated in the wrong space.
+
+Your team's task is to build a generative model that operates directly on $SO(3)$ — generating valid rotation matrices at every step of the flow, never leaving the manifold, never producing geometrically invalid orientations.
+
+---
+
+**The problem with Euler angles: why flat coordinates on curved spaces lie.**
+
+Your team's differential geometer, Pratima, explains the problem at the first team meeting. The rotation group $SO(3)$ is a curved three-dimensional manifold — it cannot be faithfully represented by any flat coordinate system without introducing distortions or singularities. Euler angles are one such flat representation: they parameterize each rotation by three angles $(\alpha, \beta, \gamma)$ taking values in a rectangular box. This seems natural — three numbers for a three-dimensional space — but the Euler angle parameterization has a fatal flaw called gimbal lock: when the pitch angle $\beta$ approaches $\pm 90$ degrees, the other two angles $\alpha$ and $\gamma$ become degenerate, corresponding to the same physical rotation. The coordinate system develops a singularity — a coordinate chart that collapses at certain orientations, just as the Mercator projection develops a singularity at the poles.
+
+Running the OU diffusion process in Euler angle coordinates treats the rotation group as if it were a flat rectangular box. The noise added in Euler angle space does not correspond to isotropic noise on the actual curved manifold — it is distorted by the coordinate singularities. Orientations near the singularity accumulate errors and the generated samples stray outside the valid range of $SO(3)$. The previous team's cliff-face navigation errors were not a software bug — they were the inevitable consequence of applying a flat-space algorithm to a curved manifold.
+
+The correct approach is to work intrinsically on $SO(3)$ — to define the forward process, the interpolation, and the velocity field using only the manifold's own geometric structure, without any reference to a flat coordinate system. This is Riemannian flow matching on $SO(3)$.
+
+---
+
+**The Riemannian metric on $SO(3)$: measuring distances between orientations.**
+
+Pratima draws the key picture. The rotation group $SO(3)$ has a natural notion of distance between two orientations $R_1$ and $R_2$: the angle $\theta$ of the rotation $R_1^{-1}R_2$ that rotates one orientation into the other. If $R_1^{-1}R_2 = \exp(\hat\omega)$ for a skew-symmetric matrix $\hat\omega$ with $\|\hat\omega\| = \theta$, then the geodesic distance is $d_{SO(3)}(R_1,R_2) = \theta$ — the minimal rotation angle needed to bring $R_1$ into alignment with $R_2$.
+
+This distance is intrinsic — it depends only on the group structure of $SO(3)$, not on any embedding in a larger flat space. Two orientations that differ by a small rotation are close; two orientations that differ by a large rotation are far. The distance is invariant under the group's left and right actions: rotating both orientations by the same global rotation does not change their relative distance.
+
+The Riemannian metric $g$ on $SO(3)$ — the inner product on the tangent space at each point — is the bi-invariant metric derived from this distance. At the identity $I_{3\times 3}$, the tangent space is $\mathfrak{so}(3)$ — the space of skew-symmetric matrices — and the metric is $g_I(\Omega_1,\Omega_2) = \frac{1}{2}\text{tr}(\Omega_1^\top\Omega_2)$. At any other rotation $R$, the metric is defined by left-translating: $g_R(X,Y) = g_I(R^{-1}X,R^{-1}Y)$ for tangent vectors $X,Y\in T_R SO(3)$. The factor $1/2$ is conventional and ensures that the geodesic distance formula comes out cleanly.
+
+---
+
+**The exponential and logarithmic maps: moving on $SO(3)$.**
+
+Your navigation algorithm engineer, Bikash, needs to implement the geodesic interpolation for the flow matching training procedure. Pratima explains the two key maps.
+
+The exponential map $\exp_R: T_R SO(3)\to SO(3)$ takes a tangent vector at $R$ — an infinitesimal rotation direction — and follows the geodesic in that direction for unit time, producing a new rotation. At the identity: $\exp_I(\hat\omega) = I + \sin\theta\hat n_\times + (1-\cos\theta)\hat n_\times^2$ — the Rodrigues rotation formula, where $\hat n = \hat\omega/\theta$ is the rotation axis and $\theta = \|\hat\omega\|$ is the rotation angle. This is the matrix exponential $e^{\hat\omega}$ of the skew-symmetric matrix $\hat\omega$. At a general rotation $R$: $\exp_R(X) = R\cdot\exp_I(R^{-1}X)$ — translate to the identity, apply the matrix exponential, translate back.
+
+The logarithmic map $\log_R: SO(3)\to T_R SO(3)$ is the inverse: given two rotations $R_0$ and $R_1$, it returns the tangent vector at $R_0$ pointing toward $R_1$ along the shortest geodesic. $\log_{R_0}(R_1) = R_0\cdot\log_I(R_0^{-1}R_1)$, where $\log_I(Q) = \frac{\theta}{2\sin\theta}(Q-Q^\top)$ for rotation $Q$ with angle $\theta = \arccos((\text{tr}(Q)-1)/2)$.
+
+With these two maps, geodesic interpolation on $SO(3)$ is straightforward. The geodesic from $R_0$ to $R_1$ at time $t\in[0,1]$ is:
+
+$$R_t = \exp_{R_0}(t\cdot\log_{R_0}(R_1)) = R_0\cdot\exp_I(t\cdot\log_I(R_0^{-1}R_1))$$
+
+This is the spherical linear interpolation — SLERP — familiar from computer graphics and robotics, now derived as the geodesic interpolation on $SO(3)$ using the Riemannian exponential and logarithmic maps. The velocity along this geodesic is constant in the tangent space sense: the initial velocity $\log_{R_0}(R_1)\in T_{R_0}SO(3)$ is parallel-transported along the geodesic unchanged.
+
+---
+
+**The heat kernel on $SO(3)$: the correct noise distribution on a curved manifold.**
+
+Bikash asks the natural question: what plays the role of the Gaussian distribution on $SO(3)$? On $\mathbb{R}^d$, the OU forward process adds Gaussian noise — $X_t = \alpha_t X_0 + \sigma_t\epsilon$ with $\epsilon\sim\mathcal{N}(0,I)$ — producing a distribution that is Gaussian and concentrated near $X_0$ for small $t$. On $SO(3)$, the natural analogue of Gaussian noise is Brownian motion on the manifold — the stochastic process that moves isotropically on the curved surface, spreading outward from any starting point according to the manifold's own geometry.
+
+The distribution of Brownian motion on $SO(3)$ started at $R_1$ after time $t$ is the heat kernel $k_t(R|R_1)$ — the fundamental solution of the heat equation on $SO(3)$:
+
+$$\frac{\partial}{\partial t}k_t(R|R_1) = \Delta_{SO(3)}k_t(R|R_1)$$
+
+where $\Delta_{SO(3)}$ is the Laplace-Beltrami operator on $SO(3)$ — the same operator whose eigenfunctions are the Wigner D-matrices from Phase 2's Chapter 1 group theory. The heat kernel has the spectral expansion:
+
+$$k_t(R|R_1) = \sum_{\ell=0}^\infty (2\ell+1)e^{-\ell(\ell+1)t}\chi_\ell(R_1^{-1}R)$$
+
+where $\chi_\ell(Q) = \text{tr}(D^{(\ell)}(Q))$ is the character of the degree-$\ell$ Wigner D-matrix representation — the sum of diagonal elements of the rotation matrix in the $\ell$-th irreducible representation.
+
+For small $t$: the heat kernel concentrates near $R_1$ like a Gaussian in the geodesic distance: $k_t(R|R_1)\approx(4\pi t)^{-3/2}e^{-d_{SO(3)}(R,R_1)^2/4t}$ — the Varadhan short-time asymptotic. For large $t$: the exponential factors $e^{-\ell(\ell+1)t}$ suppress all $\ell>0$ terms, and $k_t\to k_0 = \text{Haar measure}$ — the uniform distribution on $SO(3)$. The heat kernel provides the interpolation between data ($t=0$, concentrated at $R_1$) and uniform noise ($t\to\infty$, spread over all orientations) that is needed for the forward process of a generative model.
+
+---
+
+**The pilgrimage route analogy: why the heat kernel is the right noise.**
+
+Pratima draws the analogy. Imagine a pilgrim standing at an orientation $R_1$ on the terrain — facing northeast, inclined slightly uphill, body tilted to account for a crosswind. Now imagine they take a random walk of orientation changes: small random rotations applied one after another, each rotation uniformly distributed over small angles in all directions. This is Brownian motion on $SO(3)$ — the pilgrim's orientation drifts randomly over time, spreading outward from $R_1$ according to the manifold's geometry.
+
+For small $t$, the probability of finding the pilgrim at orientation $R$ is high near $R_1$ and falls off with the geodesic distance $d_{SO(3)}(R,R_1)$ — concentrated, approximately Gaussian in the rotation angle. For large $t$, the pilgrim has been walking randomly long enough that their orientation could be anything — the distribution spreads to approach the uniform distribution over all possible orientations (the Haar measure on $SO(3)$).
+
+This Brownian motion on $SO(3)$ is the correct forward process for Riemannian flow matching on the rotation group. It is the analogue of the OU process on $\mathbb{R}^d$: starting from data ($R_1$, a specific pilgrim orientation), it adds noise intrinsically on the manifold until the distribution approaches uniform (the base distribution). The reverse process — Riemannian flow matching — learns to undo this noise, generating realistic pilgrim orientations from random ones.
+
+---
+
+**The flow matching training procedure on $SO(3)$.**
+
+With the forward process defined through the heat kernel, the conditional flow matching training procedure on $SO(3)$ proceeds exactly as in the Euclidean case, with every Euclidean operation replaced by its Riemannian analogue.
+
+For each training pair $(R_0, R_1)$ — a noise sample $R_0\sim\text{Haar}(SO(3))$ and a data sample $R_1\sim p_{\text{data}}$:
+
+The geodesic interpolation at time $t$: $R_t = \exp_{R_0}(t\cdot\log_{R_0}(R_1))$.
+
+The conditional velocity at $R_t$: $u_t(R_t|R_0,R_1) = \log_{R_0}(R_1)\in T_{R_0}SO(3)$, parallel-transported to $T_{R_t}SO(3)$ — the initial geodesic velocity, parallel-transported to the current tangent space.
+
+The training objective: $\mathcal{L}(\theta) = \mathbb{E}_{R_0,R_1,t}[\|f_\theta(R_t,t) - P_{\gamma,t}(\log_{R_0}(R_1))\|_{g_{R_t}}^2]$, where $P_{\gamma,t}$ is parallel transport along the geodesic $\gamma$ from $R_0$ to $R_t$ and $\|\cdot\|_{g_{R_t}}$ is the Riemannian norm in $T_{R_t}SO(3)$.
+
+The generation procedure: sample $R_0\sim\text{Haar}(SO(3))$ and integrate the manifold ODE $\dot R_t = f_\theta(R_t,t)\in T_{R_t}SO(3)$ on $SO(3)$ using a Riemannian ODE solver — a solver that uses the exponential map to keep each step on the manifold.
+
+At every step, the generated rotation $R_t$ is a valid element of $SO(3)$ — a proper rotation matrix with determinant $+1$ and $R^\top R = I$. The Riemannian flow matching framework guarantees this by construction, because the ODE solver uses the exponential map rather than Euclidean updates, staying on the manifold at every integration step.
+
+---
+
+**The break moment: why parallel transport is necessary.**
+
+Bikash implements the basic version of Riemannian flow matching on $SO(3)$ without parallel transport. At each training step, he computes the geodesic interpolation $R_t = \exp_{R_0}(t\cdot\log_{R_0}(R_1))$ and uses the initial geodesic velocity $v = \log_{R_0}(R_1)\in T_{R_0}SO(3)$ as the velocity target at $R_t$. He trains the network $f_\theta(R_t,t)\in T_{R_t}SO(3)$ to predict this velocity.
+
+The issue appears during evaluation. The trained network produces a velocity in $T_{R_t}SO(3)$ — the tangent space at the current point $R_t$. But the training target $v = \log_{R_0}(R_1)$ lives in $T_{R_0}SO(3)$ — the tangent space at the starting point $R_0$. These two tangent spaces are different vector spaces, related by parallel transport along the geodesic from $R_0$ to $R_t$. On a curved manifold, tangent spaces at different points are not canonically identified — there is no natural way to compare a vector at $R_0$ with a vector at $R_t$ without choosing a path between them and parallel-transporting along it.
+
+By training the network to predict $v\in T_{R_0}SO(3)$ at the point $R_t$ — comparing objects that live in different tangent spaces — Bikash has committed the same error as the previous team's Euler angle model: ignoring the manifold's curvature. The network learns to minimize the naive squared error $\|f_\theta(R_t,t) - v\|^2$ where $f_\theta(R_t,t)\in T_{R_t}SO(3)$ and $v\in T_{R_0}SO(3)$, but this difference is not geometrically meaningful — it compares vectors from two different tangent spaces as if they were in the same flat space.
+
+The correct training target at $R_t$ is not $v = \log_{R_0}(R_1)$ but $P_{\gamma,t}(v)$ — the parallel transport of $v$ along the geodesic $\gamma$ from $R_0$ to $R_t$. Parallel transport moves the tangent vector from $T_{R_0}SO(3)$ to $T_{R_t}SO(3)$ along the geodesic, preserving its length and direction relative to the manifold's geometry. Only after parallel transport do the velocity target and the network output live in the same tangent space, making their comparison geometrically meaningful.
+
+The break moment is precise: on a flat manifold (Euclidean space), parallel transport is trivial — tangent vectors at different points are canonically identified by translation, and parallel transport does nothing. On a curved manifold like $SO(3)$, parallel transport is nontrivial — it rotates the tangent vector as it moves along the geodesic, accumulating a rotation proportional to the geodesic curvature. Ignoring parallel transport on a curved manifold introduces systematic errors in the velocity target that corrupt the training signal and produce a learned velocity field that does not correctly generate the data distribution.
+
+---
+
+**The connection to everything: why this problem synthesizes the entire roadmap.**
+
+Pratima, Bikash, and the full team gather for the final synthesis meeting. They trace the mathematical dependencies of the $SO(3)$ flow matching model.
+
+The exponential and logarithmic maps — from Phase 0's differential geometry syllabus. The Riemannian metric and geodesic equation — from Phase 0. The bi-invariant metric on $SO(3)$ as a Lie group — from Phase 0's tangent bundle and Phase 2's group theory.
+
+The Wasserstein distance on $SO(3)$ using geodesic cost $d_{SO(3)}^2$ — from Phase 1's Wasserstein geometry. The optimal transport plan on $SO(3)$ — the Brenier map for the geodesic squared cost — from Phase 1's Kantorovich duality, now applied to a curved manifold.
+
+The Laplace-Beltrami operator $\Delta_{SO(3)}$ — from Phase 2's Chapter 3 spectral theory. The Wigner D-matrices as its eigenfunctions — from Phase 2's Chapter 1 group theory. The heat kernel spectral expansion $k_t = \sum_\ell(2\ell+1)e^{-\ell(\ell+1)t}\chi_\ell$ — from the product of Phase 2's spectral theory and Phase 3's Fokker-Planck dynamics. The equivariant neural network parameterizing the velocity field — from Phase 2's Chapter 1 equivariant architecture.
+
+The JKO scheme for the gradient flow of entropy on $\mathcal{P}_2(SO(3))$ — from Phase 3's Chapter 1. The Fokker-Planck equation on $SO(3)$ with the Laplace-Beltrami diffusion term — from Phase 3's Chapter 1. The conditional flow matching objective with geodesic interpolation and parallel-transported velocity targets — from Phase 3's Chapter 2 flow matching framework, now generalized to the manifold.
+
+The entire roadmap, from Phase 0's differential geometry to Phase 3's flow matching, is necessary for this one model. Remove any thread and the model breaks: without the exponential map you cannot interpolate; without the heat kernel you cannot define noise; without the Wigner D-matrices you cannot compute the heat kernel; without the equivariant architecture you cannot parameterize the velocity field; without the parallel transport you cannot define the training target; without the Wasserstein geometry you cannot analyze the convergence.
+
+This is why the roadmap was built the way it was. Phase 0 through Phase 3 were not four separate subjects. They were one subject, seen from four angles, assembled here into a single coherent framework for generating data on the curved geometric spaces where the real world's most important scientific problems live.
+
+---
+
+**Three pictures to carry into the mathematics.**
+
+The first picture: the rotation group $SO(3)$ as a curved three-dimensional manifold — not a flat box of Euler angles but a smooth curved space with its own metric, geodesics, and tangent spaces. A pilgrim's orientation is a point on this manifold. Moving in orientation space follows geodesics, not straight Euclidean lines. Distance is measured by rotation angle, not by Euclidean norm.
+
+The second picture: the heat kernel on $SO(3)$ as isotropic diffusion on the curved manifold — probability mass spreading outward from a data point $R_1$ according to the Riemannian geometry, converging to the Haar measure (uniform distribution) as time increases. The spectral expansion $k_t = \sum_\ell(2\ell+1)e^{-\ell(\ell+1)t}\chi_\ell$ decaying through the Wigner D-matrix eigenvalues $\ell(\ell+1)$ of the Laplace-Beltrami operator.
+
+The third picture: parallel transport as the essential correction for training on curved manifolds — the initial geodesic velocity $\log_{R_0}(R_1)\in T_{R_0}SO(3)$ transported to the current tangent space $T_{R_t}SO(3)$ along the geodesic $\gamma$, rotating as it moves to account for the manifold's curvature. Without parallel transport, training targets live in the wrong tangent space. With it, the velocity field is geometrically consistent, the learned flow stays on the manifold, and the generated pilgrim orientations are valid rotations.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: Riemannian manifolds and the geometric primitives for flow matching, the heat kernel as the canonical forward process on manifolds, the Riemannian score function and Fokker-Planck equation on manifolds, the conditional flow matching objective with geodesic interpolation and parallel transport, the specific instantiation on $SO(3)$ and $S^n$, and the connection to equivariant architectures and practical implementation.
+
+### Geometric Primitives for Riemannian Flow Matching
+
+**Setting.** Let $(\mathcal{M}, g)$ be a compact connected Riemannian manifold without boundary, with Riemannian metric $g$, Levi-Civita connection $\nabla$, and Riemannian volume measure $\text{vol}_g$.
+
+**Geodesic distance:**
+
+$$d_\mathcal{M}(x,y) = \inf_{\gamma:\gamma(0)=x,\gamma(1)=y}\int_0^1\sqrt{g_{\gamma(t)}(\dot\gamma(t),\dot\gamma(t))}\,dt$$
+
+**Exponential map:** $\exp_x: T_x\mathcal{M}\to\mathcal{M}$, $\exp_x(v) = \gamma_v(1)$ where $\gamma_v$ is the geodesic with $\gamma_v(0)=x$, $\dot\gamma_v(0)=v$.
+
+**Logarithmic map:** $\log_x: \mathcal{M}\to T_x\mathcal{M}$, the inverse of $\exp_x$ within the injectivity radius: $\log_x(y) = v$ such that $\exp_x(v) = y$ and $\|v\|_g = d_\mathcal{M}(x,y)$.
+
+**Geodesic interpolation:** The geodesic from $x_0$ to $x_1$ at time $t\in[0,1]$:
+
+$$\gamma_t(x_0,x_1) = \exp_{x_0}(t\cdot\log_{x_0}(x_1))$$
+
+with velocity $\dot\gamma_t = P_{\gamma,0\to t}(\log_{x_0}(x_1)/d_\mathcal{M}(x_0,x_1))\cdot d_\mathcal{M}(x_0,x_1)$ — constant speed.
+
+**Parallel transport:** $P_{\gamma,s\to t}: T_{\gamma(s)}\mathcal{M}\to T_{\gamma(t)}\mathcal{M}$, the linear isometry solving:
+
+$$\nabla_{\dot\gamma}V = 0, \quad V(s) = v_0$$
+
+where $\nabla_{\dot\gamma}V^k = \dot V^k + \Gamma^k_{ij}\dot\gamma^i V^j = 0$ in local coordinates.
+
+**Properties of parallel transport:** $P_{\gamma,s\to t}$ is a linear isometry: $g_{\gamma(t)}(P_{\gamma,s\to t}u, P_{\gamma,s\to t}v) = g_{\gamma(s)}(u,v)$ for all $u,v\in T_{\gamma(s)}\mathcal{M}$.
+
+**Riemannian gradient:** For $f\in C^\infty(\mathcal{M})$:
+
+$$\text{grad}_\mathcal{M}f(x) = g^{ij}(x)\partial_i f\,\partial_j\big|_x \in T_x\mathcal{M}$$
+
+where $g^{ij}$ is the inverse metric tensor. Satisfies $g_x(\text{grad}_\mathcal{M}f(x), v) = df_x(v)$ for all $v\in T_x\mathcal{M}$.
+
+**Riemannian divergence:** For a vector field $X$ on $\mathcal{M}$:
+
+$$\text{div}_\mathcal{M}X = \frac{1}{\sqrt{|g|}}\partial_i(\sqrt{|g|}X^i)$$
+
+**Laplace-Beltrami operator:**
+
+$$\Delta_\mathcal{M}f = \text{div}_\mathcal{M}(\text{grad}_\mathcal{M}f) = \frac{1}{\sqrt{|g|}}\partial_i(g^{ij}\sqrt{|g|}\partial_j f)$$
+
+Self-adjoint on $L^2(\mathcal{M},\text{vol}_g)$ with eigendecomposition $\Delta_\mathcal{M}\phi_k = -\lambda_k\phi_k$, $0=\lambda_0\leq\lambda_1\leq\cdots\nearrow\infty$.
+
+---
+
+### The Heat Kernel as Forward Process
+
+**Definition (Heat kernel).** The **heat kernel** $k_t: \mathcal{M}\times\mathcal{M}\to\mathbb{R}_{>0}$ is the fundamental solution of the heat equation on $\mathcal{M}$:
+
+$$\frac{\partial}{\partial t}k_t(x,y) = \Delta_{\mathcal{M},x}k_t(x,y), \quad \lim_{t\to 0}k_t(x,y) = \delta_y(x)$$
+
+**Spectral expansion:**
+
+$$k_t(x,y) = \sum_{k=0}^\infty e^{-\lambda_k t}\phi_k(x)\phi_k(y)$$
+
+where $\phi_k$ are $L^2(\mathcal{M})$-orthonormal eigenfunctions of $\Delta_\mathcal{M}$.
+
+**Properties:**
+
+Symmetry: $k_t(x,y) = k_t(y,x)$.
+
+Semigroup: $k_{s+t}(x,y) = \int_\mathcal{M}k_s(x,z)k_t(z,y)\,d\text{vol}(z)$.
+
+Normalization: $\int_\mathcal{M}k_t(x,y)\,d\text{vol}(y) = 1$ for all $x,t$.
+
+Convergence: $k_t(x,y)\to 1/\text{vol}(\mathcal{M})$ as $t\to\infty$ — approaches uniform distribution.
+
+**Varadhan's formula (short-time asymptotics):**
+
+$$k_t(x,y) = \frac{1}{(4\pi t)^{d/2}}\exp\!\left(-\frac{d_\mathcal{M}(x,y)^2}{4t}\right)(1 + O(t)) \quad \text{as } t\to 0$$
+
+**Forward process.** The **Riemannian forward process** with data point $x_1\in\mathcal{M}$:
+
+$$p_t(x|x_1) = k_{T(1-t)}(x,x_1)$$
+
+where $T > 0$ is a fixed time horizon. At $t=0$: $p_0(x|x_1) = k_T(x,x_1)\approx\text{uniform}$ (approximately the base distribution). At $t=1$: $p_1(x|x_1) = k_0(x,x_1) = \delta_{x_1}(x)$ (concentrated at data).
+
+**Riemannian Ornstein-Uhlenbeck (OU) process.** The SDE on $\mathcal{M}$:
+
+$$dX_t = -\frac{1}{2}X_t\,dt + dW_t^\mathcal{M}$$
+
+where $W_t^\mathcal{M}$ is Brownian motion on $\mathcal{M}$ (the process with generator $\Delta_\mathcal{M}/2$), has stationary distribution equal to the uniform measure (Haar measure for Lie groups) — the Riemannian analogue of $\mathcal{N}(0,I)$ being the stationary distribution of the Euclidean OU process.
+
+---
+
+### Riemannian Score Function and Fokker-Planck Equation
+
+**Definition (Riemannian score function).** For a density $\rho_t$ on $\mathcal{M}$ (with respect to $\text{vol}_g$):
+
+$$s_t(x) = \text{grad}_\mathcal{M}\log\rho_t(x) = g^{-1}\nabla_x\log\rho_t(x) \in T_x\mathcal{M}$$
+
+**Riemannian Fokker-Planck equation.** For the SDE $dX_t = b_t(X_t)dt + \sigma\,dW_t^\mathcal{M}$ on $\mathcal{M}$:
+
+$$\frac{\partial\rho_t}{\partial t} = -\text{div}_\mathcal{M}(\rho_t b_t) + \frac{\sigma^2}{2}\Delta_\mathcal{M}\rho_t$$
+
+**Riemannian continuity equation.** For a deterministic flow $\dot x_t = v_t(x_t)$ on $\mathcal{M}$:
+
+$$\frac{\partial\rho_t}{\partial t} + \text{div}_\mathcal{M}(\rho_t v_t) = 0$$
+
+**Riemannian score of the heat kernel:**
+
+$$\text{grad}_\mathcal{M}\log k_t(x,x_1) = -\frac{\log_x(x_1)}{2t} + O(d_\mathcal{M}(x,x_1)) \quad \text{as } t\to 0$$
+
+using the Varadhan asymptotic. For small $t$, the score of the heat kernel points along the geodesic from $x$ toward $x_1$, with magnitude proportional to the geodesic distance divided by $2t$ — the Riemannian analogue of the Euclidean score $\nabla\log\mathcal{N}(x;x_1,\sigma^2) = -(x-x_1)/\sigma^2$.
+
+**Riemannian denoising score matching.** The score $s_t(x) = \text{grad}_\mathcal{M}\log\rho_t(x)$ satisfies:
+
+$$s_t(x) = \mathbb{E}_{x_1\sim p_1(\cdot|x)}\!\left[-\frac{\log_x(x_1)}{2t(1-t)}\right] = -\frac{\mathbb{E}[\log_x(x_1)|X_t=x]}{2t(1-t)}$$
+
+the Riemannian Tweedie formula — replacing $-(x-x_1)/\sigma^2$ with $-\log_x(x_1)/(2t(1-t))$, where $\log_x(x_1)\in T_x\mathcal{M}$ is the Riemannian logarithm (geodesic direction toward $x_1$).
+
+---
+
+### Conditional Flow Matching on Manifolds
+
+**Definition (Riemannian conditional flow matching).** Given conditional probability path $p_t(\cdot|x_1)$ on $\mathcal{M}$ with conditional velocity field $u_t(\cdot|x_1): \mathcal{M}\to T\mathcal{M}$ satisfying:
+
+$$\frac{\partial p_t(x|x_1)}{\partial t} + \text{div}_\mathcal{M}(p_t(\cdot|x_1)\cdot u_t(\cdot|x_1)) = 0$$
+
+the **Riemannian conditional flow matching (RCFM) objective** is:
+
+$$\mathcal{L}_{\text{RCFM}}(\theta) = \mathbb{E}_{t,x_1\sim p_{\text{data}},x\sim p_t(\cdot|x_1)}\!\left[\|f_\theta(x,t) - u_t(x|x_1)\|_{g_x}^2\right]$$
+
+where $\|v\|_{g_x}^2 = g_x(v,v)$ is the Riemannian norm in $T_x\mathcal{M}$.
+
+**Geodesic conditional path.** The simplest choice: the geodesic interpolation $x = \gamma_t(x_0,x_1)$ with $x_0\sim p_0$ (base distribution). The conditional probability path:
+
+$$p_t(x|x_0,x_1) = \delta_{\gamma_t(x_0,x_1)}(x)$$
+
+Conditional velocity field — initial geodesic velocity parallel-transported to $x_t$:
+
+$$u_t(x_t|x_0,x_1) = P_{\gamma,0\to t}\!\left(\log_{x_0}(x_1)\right) \in T_{x_t}\mathcal{M}$$
+
+**Why parallel transport is necessary.** The initial geodesic velocity $v = \log_{x_0}(x_1)\in T_{x_0}\mathcal{M}$ lives in the tangent space at $x_0$. The velocity target for the network at $x_t$ must live in $T_{x_t}\mathcal{M}$. On a curved manifold, $T_{x_0}\mathcal{M}$ and $T_{x_t}\mathcal{M}$ are different vector spaces with no canonical identification. Parallel transport $P_{\gamma,0\to t}$ provides the geometrically correct identification, preserving the vector's magnitude and direction relative to the manifold's geometry.
+
+**On flat manifolds:** $P_{\gamma,0\to t}(v) = v$ — parallel transport is trivial (identity map). The velocity target at $x_t$ is the same as at $x_0$: $u_t = x_1-x_0$ — recovering the Euclidean rectified flow.
+
+**On curved manifolds:** $P_{\gamma,0\to t}(v)\neq v$ in general. The rotation accumulated by parallel transport equals the holonomy of the geodesic triangle, proportional to the curvature enclosed.
+
+**Theorem (RCFM equivalence).** Under regularity conditions:
+
+$$\nabla_\theta\mathcal{L}_{\text{RCFM}}(\theta) = \nabla_\theta\mathcal{L}_{\text{RFM}}(\theta)$$
+
+where $\mathcal{L}_{\text{RFM}}$ is the intractable marginal Riemannian flow matching objective. The proof follows the same tower property argument as the Euclidean CFM theorem, with the Riemannian inner product $g_x(\cdot,\cdot)$ replacing the Euclidean inner product.
+
+---
+
+### Instantiation on $SO(3)$
+
+**Group structure.** $SO(3) = \{R\in\mathbb{R}^{3\times 3}: R^\top R=I, \det R=+1\}$ with group operation being matrix multiplication.
+
+**Bi-invariant metric.** The unique (up to scaling) bi-invariant Riemannian metric on $SO(3)$:
+
+$$g_R(X,Y) = \frac{1}{2}\text{tr}(X^\top Y), \quad X,Y\in T_RSO(3)$$
+
+where $T_RSO(3) = \{R\Omega: \Omega\in\mathfrak{so}(3)\} = \{X\in\mathbb{R}^{3\times 3}: R^\top X\text{ skew-symmetric}\}$.
+
+**Geodesic distance:**
+
+$$d_{SO(3)}(R_1,R_2) = \frac{1}{\sqrt{2}}\|\log(R_1^\top R_2)\|_F = |\theta(R_1^\top R_2)|$$
+
+where $\theta(Q) = \arccos((\text{tr}(Q)-1)/2)$ is the rotation angle of $Q$.
+
+**Exponential map (Rodrigues formula):** For $\Omega\in\mathfrak{so}(3)$ with $\|\Omega\|_F = \sqrt{2}\theta$:
+
+$$\exp_I(\Omega) = I + \frac{\sin\theta}{\theta}\Omega + \frac{1-\cos\theta}{\theta^2}\Omega^2$$
+
+At general $R$: $\exp_R(X) = R\cdot\exp_I(R^\top X)$.
+
+**Logarithmic map:**
+
+$$\log_I(Q) = \frac{\theta}{2\sin\theta}(Q - Q^\top), \quad \theta = \arccos\!\left(\frac{\text{tr}(Q)-1}{2}\right)$$
+
+At general $R_0$: $\log_{R_0}(R_1) = R_0\cdot\log_I(R_0^\top R_1)$.
+
+**Parallel transport on $SO(3)$.** For a geodesic $\gamma(t) = R_0\exp(t\Omega)$ with $\Omega\in\mathfrak{so}(3)$, the parallel transport of $X_0\in T_{R_0}SO(3)$ to $T_{\gamma(t)}SO(3)$ is:
+
+$$P_{\gamma,0\to t}(X_0) = \gamma(t)\cdot\exp\!\left(-\frac{t}{2}\Omega\right)\cdot R_0^\top X_0\cdot\exp\!\left(\frac{t}{2}\Omega\right)$$
+
+For the bi-invariant metric, this simplifies to conjugation by the half-angle rotation.
+
+**Heat kernel on $SO(3)$.** Using the Peter-Weyl theorem and Wigner D-matrices $D^{(\ell)}: SO(3)\to GL(\mathbb{R}^{2\ell+1})$:
+
+$$k_t(R,R') = \sum_{\ell=0}^\infty (2\ell+1)e^{-\ell(\ell+1)t}\chi_\ell(R'^\top R)$$
+
+where $\chi_\ell(Q) = \text{tr}(D^{(\ell)}(Q)) = \sum_{m=-\ell}^\ell D^{(\ell)}_{mm}(Q)$ is the character of the $\ell$-th irreducible representation and $\lambda_\ell = \ell(\ell+1)$ is the eigenvalue of the Laplace-Beltrami operator on $SO(3)$ for the $\ell$-th irrep.
+
+**Varadhan asymptotics on $SO(3)$:** For small $t$:
+
+$$k_t(R,R') \approx \frac{1}{(4\pi t)^{3/2}}\exp\!\left(-\frac{d_{SO(3)}(R,R')^2}{4t}\right)\cdot\frac{d_{SO(3)}(R,R')/2}{\sin(d_{SO(3)}(R,R')/2)}$$
+
+The correction factor $\theta/(2\sin(\theta/2))$ (the Jacobian of the exponential map) accounts for the curvature of $SO(3)$.
+
+**Haar measure.** The unique left- and right-invariant probability measure on $SO(3)$: $d\text{Haar}(R) = \frac{1}{8\pi^2}\sin\beta\,d\alpha\,d\beta\,d\gamma$ in Euler angles. Base distribution for $SO(3)$ flow matching.
+
+**SLERP (Geodesic interpolation on $SO(3)$):**
+
+$$R_t = R_0\cdot\exp(t\cdot\log_I(R_0^\top R_1)) = R_0\cdot(R_0^\top R_1)^t$$
+
+where $(R_0^\top R_1)^t = \exp(t\log_I(R_0^\top R_1))$ uses the matrix exponential.
+
+**$SO(3)$ conditional flow matching objective:**
+
+$$\mathcal{L}_{SO(3)}(\theta) = \mathbb{E}_{t,R_1\sim p_{\text{data}},R_0\sim\text{Haar}}\!\left[\left\|f_\theta(R_t,t) - P_{\gamma,0\to t}(\log_{R_0}(R_1))\right\|_{g_{R_t}}^2\right]$$
+
+where $R_t = R_0\exp(t\log_I(R_0^\top R_1))$.
+
+---
+
+### Instantiation on $S^n$ and General Compact Manifolds
+
+**The $n$-sphere $S^n\subset\mathbb{R}^{n+1}$.** Geodesic distance: $d_{S^n}(x,y) = \arccos(x\cdot y)$. Exponential map: $\exp_x(v) = \cos(\|v\|)x + \sin(\|v\|)v/\|v\|$. Logarithmic map: $\log_x(y) = \frac{\arccos(x\cdot y)}{\sqrt{1-(x\cdot y)^2}}(y-(x\cdot y)x)$. Heat kernel: $k_t(x,y) = \sum_{k=0}^\infty e^{-k(k+n-1)t}P_k^{(n)}(x\cdot y)$ where $P_k^{(n)}$ are Gegenbauer polynomials (the $S^n$ analogues of Legendre polynomials), with eigenvalues $\lambda_k = k(k+n-1)$.
+
+**The flat torus $\mathbb{T}^n = (\mathbb{R}/2\pi\mathbb{Z})^n$.** Geodesic distance: $d_{\mathbb{T}^n}(\theta,\phi) = \sqrt{\sum_i\min(|\theta_i-\phi_i|,2\pi-|\theta_i-\phi_i|)^2}$ — the wrapped distance. Heat kernel: $k_t(\theta,\phi) = \prod_i\vartheta_3((\theta_i-\phi_i)/2,e^{-t})$ where $\vartheta_3$ is the Jacobi theta function. Flow matching on $\mathbb{T}^n$ is the natural model for protein backbone dihedral angles — the geodesic interpolation wraps correctly around the periodic boundary.
+
+**The special Euclidean group $SE(3) = SO(3)\ltimes\mathbb{R}^3$.** Acts on $\mathbb{R}^3$ as $(R,t)\cdot x = Rx+t$. Metric: product of $SO(3)$ and $\mathbb{R}^3$ metrics with tunable relative weighting. Flow matching on $SE(3)$ generates full molecular poses (orientation + position) — the framework used in FrameDiff, FoldFlow, and AlphaFlow for protein backbone generation.
+
+---
+
+### Equivariant Velocity Fields and Practical Implementation
+
+**Symmetry requirement.** For molecular generation on $SE(3)$, the velocity field $f_\theta: SE(3)\times[0,1]\to\mathfrak{se}(3)$ must be $SE(3)$-equivariant: for any $g\in SE(3)$:
+
+$$f_\theta(g\cdot x, t) = g\cdot f_\theta(x,t)$$
+
+where $g\cdot f_\theta$ denotes the adjoint action of $SE(3)$ on the Lie algebra $\mathfrak{se}(3)$.
+
+**Architecture.** The $SE(3)$-equivariant GNN from Phase 2 Chapter 2 — using $SO(3)$-equivariant message passing with spherical harmonic features and Clebsch-Gordan tensor products — is the canonical architecture for the velocity field. Node features are $SO(3)$ equivariant vectors; edge features are radial basis functions of inter-atomic distances (invariant) combined with spherical harmonics of direction vectors (equivariant).
+
+**Riemannian ODE solver.** The generation ODE $\dot R_t = f_\theta(R_t,t)\in T_{R_t}SO(3)$ is integrated using the **geodesic Euler method**:
+
+$$R_{t+h} = \exp_{R_t}(h\cdot f_\theta(R_t,t))$$
+
+each step uses the exponential map to stay on the manifold, replacing the Euclidean update $x_{t+h} = x_t + h\cdot f_\theta(x_t,t)$.
+
+**Higher-order Riemannian ODE solvers.** The Runge-Kutta method on manifolds (Munthe-Kaas method) uses the Lie group structure:
+
+$$k_1 = f_\theta(R_t,t), \quad k_2 = f_\theta(\exp_{R_t}(h k_1/2), t+h/2)$$
+$$R_{t+h} = \exp_{R_t}(h k_2 + O(h^3))$$
+
+**Practical heat kernel sampling.** Sampling from $k_t(R|R_1)$ on $SO(3)$: sample $\omega\sim p(\omega|t)\cdot\sin^2(\omega/2)$ for $p(\omega|t)\propto\sum_\ell(2\ell+1)e^{-\ell(\ell+1)t}\sin((\ell+1/2)\omega)/\sin(\omega/2)$, then sample a random axis $\hat n\sim\text{Uniform}(S^2)$, return $R = R_1\cdot\exp(\omega\hat n_\times)$.
+
+---
+
+### WHY THIS MATTERS
+
+In **MATH 217 (ODEs and PDEs)**, the heat equation on $\mathcal{M}$: $\partial_t k_t = \Delta_\mathcal{M}k_t$ is the generalization of the Euclidean heat equation $\partial_t u = \Delta u$ from MATH 217 — the same parabolic PDE, now with the Laplace-Beltrami operator replacing the flat Laplacian, and the manifold geometry determining the fundamental solution through the spectral expansion $k_t = \sum_k e^{-\lambda_k t}\phi_k\otimes\phi_k$. The geodesic ODE $\ddot\gamma^k + \Gamma^k_{ij}\dot\gamma^i\dot\gamma^j = 0$ — the equation defining geodesic interpolation — is the Euler-Lagrange equation for the length functional, a second-order nonlinear ODE system from MATH 217 whose unique solution is guaranteed by Picard-Lindelöf. The parallel transport ODE $\dot V^k + \Gamma^k_{ij}\dot\gamma^i V^j = 0$ is a first-order linear ODE along the geodesic — uniquely solvable by Picard-Lindelöf, producing the parallel transport map $P_{\gamma,0\to t}$ needed for the correct velocity target. The Riemannian Fokker-Planck equation $\partial_t\rho_t = -\text{div}_\mathcal{M}(\rho_t b_t) + \frac{\sigma^2}{2}\Delta_\mathcal{M}\rho_t$ is the manifold generalization of the flat Fokker-Planck equation from Phase 3 Chapter 1 — replacing $\nabla\cdot$ with $\text{div}_\mathcal{M}$ and $\Delta$ with $\Delta_\mathcal{M}$.
+
+In **MATH 325 (Analysis II)**, the spectral expansion $k_t(x,y) = \sum_k e^{-\lambda_k t}\phi_k(x)\phi_k(y)$ of the heat kernel uses the completeness of the Laplace-Beltrami eigenfunctions in $L^2(\mathcal{M},\text{vol}_g)$ — the Hilbert space result from Analysis II generalized to manifolds. The convergence $k_t\to\text{vol}(\mathcal{M})^{-1}$ as $t\to\infty$ is operator convergence in $L^2(\mathcal{M})$ — the $\ell^2$ summability of $e^{-\lambda_k t}\to 0$ for all $\lambda_k>0$, using the discrete spectrum of the compact self-adjoint operator $\Delta_\mathcal{M}$ on the compact manifold $\mathcal{M}$. The Riemannian denoising score matching objective $\mathbb{E}[\|f_\theta-u_t(\cdot|x_1)\|_{g_x}^2]$ uses the Riemannian $L^2$ inner product $\langle u,v\rangle_{L^2(\mathcal{M},g)} = \int_\mathcal{M}g_x(u(x),v(x))\,d\text{vol}(x)$ from Analysis II — the functional analytic foundation of the conditional flow matching equivalence theorem on manifolds.
+
+In **MATH 302 (Matrix Theory)**, the bi-invariant metric $g_R(X,Y) = \frac{1}{2}\text{tr}(X^\top Y)$ on $SO(3)$ is the Frobenius inner product from MATH 302 restricted to the tangent space — the matrix inner product that makes $SO(3)$ a Riemannian manifold with a metrically consistent Lie group structure. The Rodrigues formula $\exp_I(\Omega) = I + \frac{\sin\theta}{\theta}\Omega + \frac{1-\cos\theta}{\theta^2}\Omega^2$ is the matrix exponential of a skew-symmetric matrix — computable using the Cayley-Hamilton theorem from MATH 302 (which shows that $\Omega^3 = -\theta^2\Omega$ for $\|\Omega\|=\sqrt{2}\theta$, making the matrix exponential series terminate after three terms). The Wigner D-matrix eigenvalues $\lambda_\ell = \ell(\ell+1)$ of $\Delta_{SO(3)}$ are the matrix-analytic counterpart of the eigenvalues of the angular momentum operators from Phase 2's representation theory — the same $\ell(\ell+1)$ that appeared in the spherical harmonic eigenvalues $\Delta_{S^2}Y_\ell^m = -\ell(\ell+1)Y_\ell^m$ from MATH 217's treatment of the Laplacian in spherical coordinates.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Pashupatinath Temple Trust pilgrimage navigation story has a precise mathematical address. We walk through them completely — Pratima's curved manifold explanation, the gimbal lock failure, the bi-invariant metric, the exponential and logarithmic maps as SLERP, the heat kernel as isotropic diffusion, Bikash's parallel transport error, the full flow matching training procedure, and the synthesis of every roadmap thread — until the story and the formalism are a single object seen from two angles.
+
+---
+
+**The previous team's failure — generating invalid rotations with determinant $-1$ or wrong handedness by running the OU diffusion process in Euler angle coordinates — is the formal consequence of using a coordinate chart that is singular at certain orientations, producing a forward process that is not equivariant under the group action of $SO(3)$ and whose noise distribution is distorted by the Jacobian of the coordinate transformation.** The Euler angle parameterization $(\alpha,\beta,\gamma)\mapsto R_{ZYZ}(\alpha,\beta,\gamma)$ has Jacobian determinant proportional to $\sin\beta$ — which vanishes at $\beta = 0$ and $\beta = \pi$, the gimbal lock singularities. The OU noise added uniformly in Euler angle space adds noise proportional to $1/\sin\beta$ in rotation angle space near the singularities, creating anisotropic and divergent noise distributions that do not correspond to any intrinsic geometric operation on $SO(3)$. The generated samples outside the valid range correspond to the coordinate patch's image exceeding the fundamental domain of the parameterization — the pre-image of invalid rotation matrices under the broken coordinate chart. The correct forward process must be defined intrinsically on $SO(3)$ without any coordinate system — the Riemannian Brownian motion with generator $\frac{1}{2}\Delta_{SO(3)}$, which is by definition coordinate-independent and produces only valid rotation matrices at every time step.
+
+**Pratima's explanation that $SO(3)$ is a curved three-dimensional manifold that cannot be faithfully represented by any flat coordinate system without singularities — specifically the gimbal lock of Euler angles at $\beta=\pm 90°$ — is the precise content of the topological fact $SO(3)\cong\mathbb{RP}^3$, which is not diffeomorphic to any open subset of $\mathbb{R}^3$.** The real projective space $\mathbb{RP}^3$ is compact and has nontrivial fundamental group $\pi_1(\mathbb{RP}^3) = \mathbb{Z}/2\mathbb{Z}$ — it cannot be covered by a single coordinate chart without singularities. The Euler angle chart is one such attempted parameterization; the axis-angle chart is another; quaternion coordinates are a double cover ($SU(2)\cong S^3$ covering $SO(3)$ 2-to-1) that avoids singularities but introduces the identification $q\sim -q$. The Riemannian manifold structure of $SO(3)$ — its metric $g$, exponential map, logarithmic map, and Laplace-Beltrami operator — is defined intrinsically without any chart, making the Riemannian flow matching framework coordinate-free and singularity-free.
+
+---
+
+**The bi-invariant metric $g_R(X,Y) = \frac{1}{2}\text{tr}(X^\top Y)$ on $SO(3)$ — defining distance between orientations as the minimal rotation angle needed to bring one into alignment with the other — is the unique (up to scaling) Riemannian metric on $SO(3)$ that is invariant under both left multiplication $R\mapsto LR$ and right multiplication $R\mapsto RL$ for any $L\in SO(3)$, derived from the Frobenius inner product from MATH 302.** The bi-invariance means: rotating both orientations by the same global rotation (left multiplication) or by the same body-frame rotation (right multiplication) does not change their relative distance. For the pilgrim navigation problem: the distance between two pilgrim orientations $R_1$ and $R_2$ is the same whether measured in the world frame or in the pilgrim's body frame — a physically correct property that Euler angle distances do not have. The geodesic distance $d_{SO(3)}(R_1,R_2) = |\theta(R_1^\top R_2)| = \frac{1}{\sqrt{2}}\|\log(R_1^\top R_2)\|_F$ is computed as the Frobenius norm of the matrix logarithm — the MATH 302 matrix norm applied to the rotation difference matrix $R_1^\top R_2\in SO(3)$.
+
+**The Rodrigues rotation formula $\exp_I(\Omega) = I + \frac{\sin\theta}{\theta}\Omega + \frac{1-\cos\theta}{\theta^2}\Omega^2$ for $\Omega\in\mathfrak{so}(3)$ with $\|\Omega\|_F = \sqrt{2}\theta$ — the exponential map at the identity of $SO(3)$ — terminates after three terms by the Cayley-Hamilton theorem from MATH 302 applied to the skew-symmetric matrix $\Omega$.** The Cayley-Hamilton theorem states that every matrix satisfies its own characteristic polynomial. For a skew-symmetric $3\times 3$ matrix $\Omega$ with $\|\Omega\|_F = \sqrt{2}\theta$, the characteristic polynomial is $\lambda(\lambda^2+\theta^2) = 0$, giving the minimal polynomial identity $\Omega(\Omega^2+\theta^2 I) = 0$, i.e., $\Omega^3 = -\theta^2\Omega$. This makes all powers $\Omega^k$ for $k\geq 3$ expressible in terms of $\Omega$ and $\Omega^2$, and the matrix exponential series $e^\Omega = \sum_{k=0}^\infty\Omega^k/k!$ collapses to the three-term Rodrigues formula by grouping even and odd powers: $\sum_{k=0}^\infty(-1)^k\theta^{2k}/(2k)! = \cos\theta$ and $\sum_{k=0}^\infty(-1)^k\theta^{2k+1}/(2k+1)! = \sin\theta$. The formula $\exp_R(X) = R\cdot\exp_I(R^\top X)$ at general $R$ uses left-translation invariance of the metric: the exponential map at $R$ is computed by translating to the identity, applying the Rodrigues formula, and translating back.
+
+**The SLERP formula $R_t = R_0\cdot(R_0^\top R_1)^t = R_0\cdot\exp_I(t\cdot\log_I(R_0^\top R_1))$ — the geodesic interpolation between orientations $R_0$ and $R_1$ at time $t\in[0,1]$ — is the Riemannian exponential map applied to the scaled logarithmic map, and is the intrinsic $SO(3)$ analogue of the Euclidean linear interpolation $(1-t)x_0+tx_1$.** The pilgrim at time $t$ of their reorientation journey from $R_0$ to $R_1$ is at the orientation $R_t$ obtained by rotating from $R_0$ by fraction $t$ of the total rotation needed to reach $R_1$ — following the shortest rotation path at constant angular velocity. The SLERP has constant speed in the Riemannian sense: $\|\dot R_t\|_{g_{R_t}} = d_{SO(3)}(R_0,R_1)$ for all $t\in[0,1]$, the constant speed property of geodesics. The velocity $\dot R_t = R_0\cdot\Omega\cdot\exp_I(t\Omega)$ for $\Omega = \log_I(R_0^\top R_1)$ is a tangent vector in $T_{R_t}SO(3)$ — an element of the Lie algebra translated to the current point — confirming that the geodesic velocity is a valid tangent vector to $SO(3)$ at every time.
+
+---
+
+**The heat kernel on $SO(3)$: $k_t(R,R') = \sum_{\ell=0}^\infty(2\ell+1)e^{-\ell(\ell+1)t}\chi_\ell(R'^\top R)$ — the fundamental solution of the heat equation $\partial_t k_t = \Delta_{SO(3)}k_t$ — uses the Wigner D-matrix characters $\chi_\ell(Q) = \text{tr}(D^{(\ell)}(Q))$ as the eigenfunctions of $\Delta_{SO(3)}$, with eigenvalues $\lambda_\ell = \ell(\ell+1)$ from Phase 2's representation theory.** The spectral expansion of the heat kernel $k_t = \sum_k e^{-\lambda_k t}\phi_k\otimes\phi_k$ — general Laplace-Beltrami spectral theory from Phase 2's Chapter 3 — specializes to the $SO(3)$ case via the Peter-Weyl theorem: the complete orthonormal basis for $L^2(SO(3),\text{Haar})$ consists of the matrix elements $\sqrt{2\ell+1}D^{(\ell)}_{mn}(R)$ for $\ell\geq 0$ and $m,n\in\{-\ell,\ldots,\ell\}$. The Laplace-Beltrami operator $\Delta_{SO(3)}$ acts on each irrep $D^{(\ell)}$ as scalar multiplication by $-\ell(\ell+1)$ — the angular momentum eigenvalue from Phase 2's Chapter 1 group theory: $\Delta_{SO(3)}D^{(\ell)}_{mn} = -\ell(\ell+1)D^{(\ell)}_{mn}$. The character $\chi_\ell(Q) = \sum_m D^{(\ell)}_{mm}(Q) = \sum_m e^{-im\theta}$ for rotation $Q$ with angle $\theta$ — the trace of the Wigner D-matrix — depends only on the rotation angle, making the heat kernel $k_t(R,R')$ a function only of $d_{SO(3)}(R,R')$ (the bi-invariant property). The factor $(2\ell+1)$ counts the dimension of the $\ell$-th irrep — the number of matrix elements $D^{(\ell)}_{mn}$ contributing at each frequency level.
+
+**The convergence $k_t(R,R')\to 1$ (the Haar measure density) as $t\to\infty$ — the pilgrim's orientation distribution spreading to uniform over all possible orientations after long random walking — is the exponential decay of all $\ell>0$ terms in the spectral expansion, with the $\ell=0$ constant term surviving.** At $\ell=0$: $D^{(0)}(R) = 1$ for all $R$ (the trivial representation), $\chi_0(Q) = 1$, eigenvalue $\lambda_0 = 0$, so the $\ell=0$ term contributes $(2\cdot 0+1)e^0\cdot 1 = 1$ for all $t$ — the constant function on $SO(3)$ that integrates to $1$ under the Haar measure. For all $\ell\geq 1$: $\lambda_\ell = \ell(\ell+1)\geq 2$, so $e^{-\ell(\ell+1)t}\to 0$ as $t\to\infty$ — all non-trivial frequency components decay exponentially. The spectral gap $\lambda_1 = 2$ governs the rate of convergence to uniform: $\|k_t(\cdot,\cdot)-1\|_{L^2}\leq Ce^{-2t}$ for some constant $C$ — the same spectral gap that controlled over-smoothing in Phase 2's Chapter 2 GNN analysis, now controlling the rate at which the forward diffusion process destroys information about the original orientation $R_1$.
+
+**The Varadhan short-time asymptotic $k_t(R,R')\approx(4\pi t)^{-3/2}e^{-d_{SO(3)}(R,R')^2/4t}\cdot\frac{d_{SO(3)}(R,R')/2}{\sin(d_{SO(3)}(R,R')/2)}$ — the heat kernel concentrated near $R'$ like a Gaussian in geodesic distance for small $t$, with a curvature correction factor — confirms that the Riemannian forward process is the intrinsic analogue of the Euclidean Gaussian noise, with the geodesic distance replacing the Euclidean distance.** The flat-space heat kernel is $(4\pi t)^{-d/2}e^{-\|x-y\|^2/4t}$ — the Gaussian with variance $2t$ in Euclidean distance. The $SO(3)$ correction factor $\frac{\theta/2}{\sin(\theta/2)}$ for $\theta = d_{SO(3)}(R,R')$ — the Jacobian of the exponential map from Phase 2's Chapter 3 Topic 1 — accounts for the curvature of $SO(3)$: geodesic balls on $SO(3)$ have smaller volume than Euclidean balls of the same radius (because $SO(3)$ has positive sectional curvature), so the density is higher than the flat Gaussian prediction and must be corrected by this factor. The Riemannian Tweedie formula $s_t(x) = -\mathbb{E}[\log_x(X_1)|X_t=x]/(2t(1-t))$ is the manifold analogue of the Euclidean formula $s_t(x) = -(x-\alpha_t\hat x_0)/\sigma_t^2$ — replacing the Euclidean difference $x-\hat x_0$ with the Riemannian logarithm $\log_x(X_1)\in T_x\mathcal{M}$, which is the geodesic direction from $x$ toward the data point $X_1$ measured in the tangent space.
+
+---
+
+**Bikash's error — training the network to predict $v = \log_{R_0}(R_1)\in T_{R_0}SO(3)$ at the point $R_t\in SO(3)$, comparing objects from different tangent spaces — is the precise failure of treating a curved manifold as flat, comparing vectors from $T_{R_0}SO(3)$ and $T_{R_t}SO(3)$ as if they were the same vector space.** On $\mathbb{R}^d$, all tangent spaces are canonically identified: $T_x\mathbb{R}^d\cong\mathbb{R}^d$ for all $x$, and the parallel transport map is the identity. The Euclidean rectified flow velocity target $u_t = x_1-x_0$ is a vector in $T_{x_0}\mathbb{R}^d = \mathbb{R}^d$, identically used as a target in $T_{x_t}\mathbb{R}^d = \mathbb{R}^d$ because the two spaces are the same. On $SO(3)$, there is no canonical identification between $T_{R_0}SO(3)$ and $T_{R_t}SO(3)$ for $R_0\neq R_t$ — they are different vector spaces, related only through a choice of path. The naive comparison $\|f_\theta(R_t,t) - \log_{R_0}(R_1)\|^2$ subtracts a vector in $T_{R_t}SO(3)$ from a vector in $T_{R_0}SO(3)$, which is geometrically undefined on a curved manifold — equivalent to subtracting temperature in Kathmandu from altitude in Namche Bazaar.
+
+**The parallel transport correction $P_{\gamma,0\to t}(\log_{R_0}(R_1))\in T_{R_t}SO(3)$ — moving the initial geodesic velocity from $T_{R_0}SO(3)$ to $T_{R_t}SO(3)$ along the geodesic $\gamma$ — is the unique geometrically correct velocity target at $R_t$, satisfying $\nabla_{\dot\gamma}V = 0$ along $\gamma$ with initial value $V(0) = \log_{R_0}(R_1)$.** On $SO(3)$ with the bi-invariant metric, the parallel transport formula $P_{\gamma,0\to t}(X_0) = \gamma(t)\cdot\exp(-\frac{t}{2}\Omega)\cdot R_0^\top X_0\cdot\exp(\frac{t}{2}\Omega)$ for geodesic $\gamma(t) = R_0\exp(t\Omega)$ is a conjugation by the half-angle rotation — the curvature of $SO(3)$ rotates the tangent vector by half the rotation angle as it is transported along the geodesic. This is the holonomy of $SO(3)$: parallel transporting a vector around a geodesic triangle accumulates a rotation proportional to the area of the triangle times the sectional curvature — the Gauss-Bonnet theorem from Phase 2's Chapter 3 Topic 1 applied to the group manifold. The parallel transport ODE $\dot V^k + \Gamma^k_{ij}\dot\gamma^i V^j = 0$ from Phase 0's differential geometry, solved uniquely by Picard-Lindelöf, is what produces $P_{\gamma,0\to t}$ — and ignoring it, as Bikash did, produces systematic training errors that scale with the curvature of $SO(3)$ (proportional to $1/4$ for the standard normalization) times the squared geodesic distance $d_{SO(3)}(R_0,R_t)^2$.
+
+---
+
+**The complete Riemannian conditional flow matching objective $\mathcal{L}_{SO(3)}(\theta) = \mathbb{E}_{t,R_1,R_0}[\|f_\theta(R_t,t) - P_{\gamma,0\to t}(\log_{R_0}(R_1))\|_{g_{R_t}}^2]$ — using the Riemannian norm $\|v\|_{g_R}^2 = \frac{1}{2}\text{tr}(v^\top v)$ for $v\in T_RSO(3)$ — is the $SO(3)$ instantiation of the general Riemannian CFM framework, with the conditional flow matching equivalence theorem $\nabla_\theta\mathcal{L}_{\text{RCFM}} = \nabla_\theta\mathcal{L}_{\text{RFM}}$ holding by the same tower property argument from MATH 208 as in the Euclidean case.** The training procedure: sample $R_1\sim p_{\text{data}}$ (a data pilgrim orientation), sample $R_0\sim\text{Haar}(SO(3))$ (a uniform random orientation), sample $t\sim U[0,1]$, compute $R_t = R_0\exp(t\log_I(R_0^\top R_1))$ (SLERP interpolation), compute the parallel-transported velocity $P_{\gamma,0\to t}(\log_{R_0}(R_1))$ (correct tangent space target), evaluate $f_\theta(R_t,t)\in T_{R_t}SO(3)$ (network output), compute Riemannian MSE loss $\frac{1}{2}\text{tr}((f_\theta - P_{\gamma,0\to t}v)^\top(f_\theta - P_{\gamma,0\to t}v))$, backpropagate. The generation procedure: sample $R_0\sim\text{Haar}(SO(3))$, integrate the geodesic Euler method $R_{t+h} = \exp_{R_t}(h\cdot f_\theta(R_t,t))$ from $t=0$ to $t=1$, output $R_1 = R_T$ — a valid element of $SO(3)$ at every integration step, guaranteed by the exponential map's codomain.
+
+**The geodesic Euler method $R_{t+h} = \exp_{R_t}(h\cdot f_\theta(R_t,t))$ — using the exponential map to update on $SO(3)$ rather than the Euclidean update $R_{t+h} = R_t + h\cdot f_\theta(R_t,t)$ — stays on the manifold at every step because $\exp_R(v)\in SO(3)$ for any $v\in T_RSO(3)$, while the Euclidean update $R_t + hv\notin SO(3)$ in general.** The Euclidean update produces a matrix that is no longer orthogonal: $(R_t+hv)^\top(R_t+hv) = I + h(R_t^\top v + v^\top R_t) + h^2 v^\top v = I + O(h)$ — deviating from identity at first order in $h$. The exponential map update is exactly on $SO(3)$ at all step sizes $h$: $\exp_{R_t}(hv)^\top\exp_{R_t}(hv) = I$ exactly, because $\exp_I(h R_t^\top v)\in SO(3)$ and $SO(3)$ is closed under matrix multiplication. This is the fundamental advantage of Riemannian ODE solvers over projected solvers (which take a Euclidean step and then project back onto the manifold): the exponential map step is exactly on the manifold with no projection error, and the Rodrigues formula computes it in $O(d^2)$ matrix operations for $d=3$ in the $SO(3)$ case.
+
+---
+
+**The synthesis of the entire roadmap — every mathematical thread from Phase 0 through Phase 3 converging in the $SO(3)$ flow matching model — is not a coincidence but the inevitable consequence of the problem's geometric structure.** Phase 0's exponential map $\exp_R$ and logarithmic map $\log_R$ are used for SLERP interpolation and the geodesic Euler solver. Phase 0's Riemannian metric $g_R = \frac{1}{2}\text{tr}(\cdot^\top\cdot)$ defines the loss function's norm. Phase 0's parallel transport equation $\dot V^k+\Gamma^k_{ij}\dot\gamma^i V^j = 0$ defines the correct velocity target. Phase 1's Wasserstein-2 distance on $SO(3)$ using geodesic cost $d_{SO(3)}^2$ defines the optimal coupling problem whose solution the reflow procedure converges to. Phase 1's Brenier theorem on $SO(3)$ — the optimal transport map for the geodesic squared cost is a $c$-cyclically monotone map — characterizes the limiting coupling after infinite reflow iterations. Phase 2's Laplace-Beltrami operator $\Delta_{SO(3)}$ defines the heat equation whose fundamental solution $k_t$ is the forward process. Phase 2's Wigner D-matrices $D^{(\ell)}$ are the eigenfunctions of $\Delta_{SO(3)}$, giving the spectral expansion of $k_t$. Phase 2's equivariant architecture — the $SO(3)$-equivariant GNN with spherical harmonic features and Clebsch-Gordan tensor products — parameterizes the velocity field $f_\theta$ with the required equivariance $f_\theta(R\cdot x,t) = R\cdot f_\theta(x,t)$. Phase 3's JKO scheme characterizes the heat kernel as the gradient flow of entropy on $\mathcal{P}_2(SO(3))$. Phase 3's Fokker-Planck equation on $SO(3)$ governs the evolution of the forward and reverse process densities. Phase 3's conditional flow matching framework — with the tower property equivalence $\mathcal{L}_{\text{RCFM}} = \mathcal{L}_{\text{RFM}}+C$ — makes the training objective tractable without computing the intractable marginal velocity field.
+
+---
+
+**The connection to MATH 217 is through the geodesic ODE, parallel transport ODE, and manifold heat equation.** The geodesic equation $\ddot\gamma^k+\Gamma^k_{ij}\dot\gamma^i\dot\gamma^j = 0$ defines SLERP — solved by the Rodrigues formula via Cayley-Hamilton. The parallel transport equation $\dot V^k+\Gamma^k_{ij}\dot\gamma^i V^j = 0$ defines the correct velocity target — solved uniquely by Picard-Lindelöf, producing the half-angle conjugation formula for $SO(3)$. The heat equation $\partial_t k_t = \Delta_{SO(3)}k_t$ defines the forward process — solved by the spectral expansion using the completeness of Wigner D-matrix characters. **The connection to MATH 325 is through the $L^2(\mathcal{M},\text{vol}_g)$ spectral theory.** The completeness of the Wigner D-matrix basis in $L^2(SO(3),\text{Haar})$ gives the spectral expansion of $k_t$. The convergence $k_t\to 1$ in $L^2$ uses $e^{-\ell(\ell+1)t}\to 0$ for $\ell\geq 1$ — the $\ell^2$ summability of the spectral coefficients. The RCFM equivalence theorem uses the tower property $\mathbb{E}[\mathbb{E}[Y|Z]]=\mathbb{E}[Y]$ from MATH 208 in the Riemannian $L^2(g_x)$ inner product. **The connection to MATH 302 is through the matrix exponential, Frobenius inner product, and Cayley-Hamilton theorem.** The Rodrigues formula is the matrix exponential with Cayley-Hamilton truncation. The bi-invariant metric is the Frobenius inner product restricted to tangent spaces. The Wigner D-matrix eigenvalues $\ell(\ell+1)$ are the eigenvalues of the angular momentum operator in matrix representation — the same eigenvalue problem from MATH 302's matrix theory applied to the Lie algebra representation.
+
+---
+
+The Pashupatinath Temple Trust pilgrimage navigation story — Pratima's gimbal lock explanation as the singularity of the Euler angle chart, the bi-invariant metric as the Frobenius inner product on tangent spaces, the Rodrigues exponential map derived by Cayley-Hamilton, SLERP as geodesic interpolation via $\exp$ and $\log$, the heat kernel spectral expansion through Wigner D-matrix characters, the Varadhan asymptotic as the curvature-corrected Gaussian approximation, Bikash's parallel transport error as the consequence of comparing vectors in different tangent spaces, the correct training target as $P_{\gamma,0\to t}(\log_{R_0}(R_1))$, the geodesic Euler solver staying on $SO(3)$ at every step, and the synthesis of all four phases in a single model — is now completely dissolved into its mathematical form. The manifold is $SO(3)\cong\mathbb{RP}^3$. The metric is $g_R(X,Y) = \frac{1}{2}\text{tr}(X^\top Y)$. The distance is $d_{SO(3)}(R_0,R_1) = |\theta(R_0^\top R_1)|$. The exponential map is the Rodrigues formula. The logarithmic map is $\log_{R_0}(R_1) = R_0\log_I(R_0^\top R_1)$. The SLERP is $R_t = R_0(R_0^\top R_1)^t$. The heat kernel is $k_t = \sum_\ell(2\ell+1)e^{-\ell(\ell+1)t}\chi_\ell$. The Varadhan asymptotic is $k_t\approx(4\pi t)^{-3/2}e^{-d^2/4t}\cdot\frac{d/2}{\sin(d/2)}$. The parallel transport is $P_{\gamma,0\to t}(X_0) = \gamma(t)\exp(-\frac{t}{2}\Omega)R_0^\top X_0\exp(\frac{t}{2}\Omega)$. The RCFM objective is $\mathbb{E}[\|f_\theta(R_t,t)-P_{\gamma,0\to t}(\log_{R_0}(R_1))\|_{g_{R_t}}^2]$. The geodesic Euler solver is $R_{t+h} = \exp_{R_t}(h f_\theta(R_t,t))$.
+
+---
+---

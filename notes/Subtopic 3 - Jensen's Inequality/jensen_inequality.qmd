@@ -1,0 +1,349 @@
+# Subtopic 3 - Jensen's Inequality
+
+## Layer 1 (Story)
+
+You are the risk manager for a microfinance institution operating across the hill districts of Nepal — Sindhupalchok, Dolakha, Kavrepalanchok. Your institution lends small amounts to farmers, and your job is to assess the financial health of the loan portfolio at the end of each growing season. The portfolio's health is measured by a single number — the expected loss — and your job is to estimate it accurately without visiting every borrower individually.
+
+You have a field officer in each district who reports the average income of farmers in their district. These are the average incomes — not individual incomes, but district-level averages. You take these averages, feed them into your loss model, and compute the predicted loss for each district. Then you aggregate across districts to get the total predicted portfolio loss.
+
+Your senior actuary pulls you aside one afternoon and asks a quiet but devastating question: are you sure you are computing the loss correctly?
+
+---
+
+The loss model is nonlinear. Specifically, the probability of default — the chance that a farmer cannot repay — is not a linear function of income. It is a convex function of income: as income drops below a critical threshold, the default probability rises steeply, disproportionately fast. A farmer earning 5,000 rupees per month is not twice as likely to default as one earning 10,000 — they are far more than twice as likely, because survival costs are fixed and the margin for repayment collapses catastrophically below the threshold.
+
+Now here is the actuary's point. When you feed the district average income into the default probability model, you are computing the default probability at the average income. But the actual portfolio loss depends on the average of the default probabilities across all individual farmers — not the default probability at the average income. And for a convex default probability function, these two quantities are not the same. The default probability at the average income is strictly less than the average of the default probabilities.
+
+Let us make this concrete. Suppose District A has two types of farmers in equal numbers. Half earn 20,000 rupees per month — comfortably above the threshold, very low default risk. The other half earn 2,000 rupees per month — far below the threshold, very high default risk. The district average income is 11,000 rupees per month.
+
+Your model says: feed in 11,000, get the default probability at 11,000. This is the default probability for a farmer earning exactly the average income — someone comfortably above the critical threshold, with moderate default risk. Call this number 5%.
+
+But the actual portfolio loss is the average of the default probabilities of the two groups. The 20,000-rupee farmers have, say, 1% default probability. The 2,000-rupee farmers have, say, 40% default probability. The average is $\frac{1}{2}(1\%) + \frac{1}{2}(40\%) = 20.5\%$.
+
+You computed 5%. The true answer is 20.5%. You underestimated the portfolio loss by a factor of four. Your risk assessment is catastrophically wrong — not because your model is wrong, but because you applied it to the average input rather than averaging the model outputs. The convexity of the default probability function means that the two operations — evaluate then average, versus average then evaluate — produce different answers, and the correct order is always evaluate then average.
+
+This is Jensen's inequality.
+
+---
+
+Let us state the principle precisely in the language the actuary uses. You have a random variable $X$ — the income of a randomly selected farmer from the district, drawn from the income distribution of that district. You have a convex function $\phi$ — the default probability as a function of income. Jensen's inequality says:
+
+$$\phi(\mathbb{E}[X]) \leq \mathbb{E}[\phi(X)]$$
+
+The left side is the default probability at the expected income — what you computed by feeding the district average into the model. The right side is the expected default probability across all farmers — the true portfolio loss. The inequality says: for a convex $\phi$, the left side is always at most the right side. Computing the function at the average always underestimates the true average of the function. The gap between the two sides measures the cost of your error — the amount by which naive averaging of inputs underestimates the true expected output.
+
+For a concave $\phi$, the inequality reverses: $\phi(\mathbb{E}[X]) \geq \mathbb{E}[\phi(X)]$. For a linear $\phi$, equality holds: $\phi(\mathbb{E}[X]) = \mathbb{E}[\phi(X)]$. Linearity is the special case where it does not matter whether you average the inputs or the outputs — both give the same answer. But the moment the function curves, in either direction, the order of operations matters, and Jensen's inequality tells you in which direction the inequality runs.
+
+---
+
+Your actuary now shows you three consequences of Jensen's inequality that appear throughout financial risk management — and that will reappear, in different clothing, throughout the roadmap.
+
+**The first consequence: the AM-GM inequality.** Consider two investments with returns $r_1$ and $r_2$. The arithmetic mean return is $\frac{r_1 + r_2}{2}$. The geometric mean return is $\sqrt{r_1 r_2}$. Which is larger? The function $\phi(x) = e^x$ is convex. Apply Jensen's inequality to the random variable $X$ taking values $\log r_1$ and $\log r_2$ with equal probability: $e^{\mathbb{E}[X]} \leq \mathbb{E}[e^X]$. This gives $e^{\frac{\log r_1 + \log r_2}{2}} \leq \frac{r_1 + r_2}{2}$, which is $\sqrt{r_1 r_2} \leq \frac{r_1 + r_2}{2}$. The arithmetic mean is always at least the geometric mean — the AM-GM inequality — and it is a direct consequence of the convexity of the exponential function and Jensen's inequality.
+
+**The second consequence: the log-sum inequality.** The function $\phi(x) = -\log x$ is convex on $(0,\infty)$. Apply Jensen's inequality: $-\log(\mathbb{E}[X]) \leq \mathbb{E}[-\log X]$, which gives $\log(\mathbb{E}[X]) \geq \mathbb{E}[\log X]$. This is the log-sum inequality — the log of the average is at least the average of the logs. In information theory, this inequality is the foundation of the non-negativity of KL divergence: $D_{KL}(p \| q) = \mathbb{E}_p[\log \frac{p}{q}] \geq \log \mathbb{E}_p[\frac{p}{q}] \cdot (-1)$... actually let us state it more carefully.
+
+The non-negativity of KL divergence follows from Jensen's inequality applied to the concave function $\phi(x) = \log x$:
+
+$$D_{KL}(p \| q) = \mathbb{E}_p\left[\log \frac{p(X)}{q(X)}\right] = -\mathbb{E}_p\left[\log \frac{q(X)}{p(X)}\right] \geq -\log \mathbb{E}_p\left[\frac{q(X)}{p(X)}\right] = -\log 1 = 0$$
+
+The KL divergence is always non-negative, and it equals zero if and only if $p = q$ almost everywhere. This is not a coincidence — it is Jensen's inequality applied to the concave logarithm. Every time anyone says "KL divergence is non-negative," they are invoking Jensen's inequality without naming it.
+
+**The third consequence: the evidence lower bound.** In variational inference — the foundation of variational autoencoders in Phase 3 — you want to compute the log-likelihood $\log p(x)$ of a data point $x$ under a model with latent variable $z$. You cannot compute this directly because integrating over $z$ is intractable. You introduce an approximate posterior $q(z|x)$ and write:
+
+$$\log p(x) = \log \int p(x,z) \, dz = \log \mathbb{E}_{q(z|x)}\left[\frac{p(x,z)}{q(z|x)}\right] \geq \mathbb{E}_{q(z|x)}\left[\log \frac{p(x,z)}{q(z|x)}\right]$$
+
+The last inequality is Jensen's inequality applied to the concave function $\phi = \log$: $\log \mathbb{E}[Y] \geq \mathbb{E}[\log Y]$ for any non-negative random variable $Y$. The right-hand side is the **evidence lower bound** (ELBO) — the tractable lower bound on the intractable log-likelihood that every variational model maximizes. The ELBO is not a heuristic approximation. It is Jensen's inequality applied to the log function. The gap between the ELBO and the true log-likelihood is exactly the KL divergence between the approximate and true posteriors — which is also Jensen's inequality.
+
+---
+
+Here is the break moment. The naive assumption — and it is one that trips up experienced practitioners, not just beginners — is that Jensen's inequality is a mathematical curiosity that only matters for extreme cases of high variance, where the nonlinearity of $\phi$ is very pronounced. Surely for a well-behaved, not-too-variable income distribution, the difference between $\phi(\mathbb{E}[X])$ and $\mathbb{E}[\phi(X)]$ is small and can be ignored in practice?
+
+This breaks in a very specific way. The gap between $\phi(\mathbb{E}[X])$ and $\mathbb{E}[\phi(X)]$ is not just a function of how convex $\phi$ is. It is also a function of the variance of $X$. Specifically, for a twice-differentiable $\phi$, a second-order Taylor expansion gives:
+
+$$\mathbb{E}[\phi(X)] \approx \phi(\mathbb{E}[X]) + \frac{1}{2}\phi''(\mathbb{E}[X]) \cdot \text{Var}(X)$$
+
+The gap is approximately $\frac{1}{2}\phi''(\mathbb{E}[X]) \cdot \text{Var}(X)$ — proportional to both the curvature of $\phi$ at the mean and the variance of $X$. When the variance is small, the gap is small. But when the variance is large — when the income distribution is highly unequal, as in the hill district example — the gap can be enormous, regardless of how gently $\phi$ curves. A district with extreme income inequality has a large $\text{Var}(X)$, which amplifies even a mild curvature into a catastrophic underestimate.
+
+This matters for the roadmap because the distributions that generative models work with — the distributions over high-dimensional images, molecules, and proteins — have enormous variance in every relevant function. The gap in Jensen's inequality is not a rounding error in these settings. It is the dominant term. Every lower bound derived from Jensen's inequality in Phase 3 — the ELBO, the score matching bound, the Kantorovich duality bound — has a gap that is large precisely when the distribution is complex and high-variance. Understanding when the gap is tight and when it is loose is the key to understanding when these bounds are useful approximations and when they are uninformative.
+
+---
+
+Hold this picture in your mind. The microfinance risk manager feeding district averages into a convex default probability model, systematically underestimating every district's true portfolio loss, by an amount proportional to both the curvature of the model and the income inequality of the district. The fix is always the same: for a convex $\phi$, the true expected output $\mathbb{E}[\phi(X)]$ is always at least the output at the expected input $\phi(\mathbb{E}[X])$. The inequality runs upward for convex functions. And the gap between the two sides is the price of ignoring the distribution's variance — the cost of pretending the world is simpler than it is.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the precise statement of Jensen's inequality in finite and infinite dimensions, the equality conditions, the second-order gap formula, the fundamental information-theoretic consequences, the ELBO derivation, and the role of Jensen's inequality in the Kantorovich duality of Optimal Transport.
+
+### The Precise Statement
+
+Let $(\Omega, \mathcal{F}, P)$ be a probability space, let $X: \Omega \to \mathbb{R}^n$ be an integrable random variable, and let $\phi: C \to \mathbb{R}$ be a convex function defined on a convex set $C \subseteq \mathbb{R}^n$ containing the range of $X$. Then:
+
+$$\phi(\mathbb{E}[X]) \leq \mathbb{E}[\phi(X)]$$
+
+provided $\mathbb{E}[\phi(X)]$ exists. If $\phi$ is concave, the inequality reverses:
+
+$$\phi(\mathbb{E}[X]) \geq \mathbb{E}[\phi(X)]$$
+
+**Proof for the scalar case.** Let $\mu = \mathbb{E}[X]$. Since $\phi$ is convex, by the first-order characterization there exists a subgradient $g \in \partial \phi(\mu)$ such that:
+
+$$\phi(x) \geq \phi(\mu) + g(x - \mu) \quad \forall x \in C$$
+
+Taking expectations of both sides with respect to $X$:
+
+$$\mathbb{E}[\phi(X)] \geq \phi(\mu) + g(\mathbb{E}[X] - \mu) = \phi(\mu) + g \cdot 0 = \phi(\mu) = \phi(\mathbb{E}[X])$$
+
+The key step is that $\mathbb{E}[X] - \mu = 0$ by definition of $\mu$. The subgradient inequality — the first-order characterization of convexity — is doing all the work. $\square$
+
+This proof is elegant precisely because it uses only the subgradient inequality and linearity of expectation. It requires no smoothness of $\phi$ — only convexity — and it works in any dimension.
+
+---
+
+### The Discrete and Continuous Forms
+
+**Discrete Jensen's Inequality.** For a convex function $\phi: \mathbb{R} \to \mathbb{R}$, a finite collection of points $x_1, \ldots, x_n$, and non-negative weights $\lambda_1, \ldots, \lambda_n$ with $\sum_{i=1}^n \lambda_i = 1$:
+
+$$\phi\left(\sum_{i=1}^n \lambda_i x_i\right) \leq \sum_{i=1}^n \lambda_i \phi(x_i)$$
+
+This is Jensen's inequality with $X$ taking value $x_i$ with probability $\lambda_i$. The left side is $\phi$ evaluated at the weighted average of the $x_i$. The right side is the weighted average of $\phi$ evaluated at the $x_i$.
+
+**Continuous Jensen's Inequality.** For a convex function $\phi$, an integrable function $f: \Omega \to \mathbb{R}$, and a probability measure $\mu$ on $\Omega$:
+
+$$\phi\left(\int_\Omega f \, d\mu\right) \leq \int_\Omega \phi \circ f \, d\mu$$
+
+This is the measure-theoretic form — $\int f \, d\mu$ is the expectation of $f$ under $\mu$, and $\int \phi \circ f \, d\mu$ is the expectation of $\phi(f)$.
+
+**Operator Jensen's Inequality.** For operator-convex functions and positive operators on Hilbert spaces, Jensen's inequality extends to the non-commutative setting — but this is beyond our current scope and will appear naturally in the spectral theory chapter.
+
+---
+
+### Equality Conditions
+
+Jensen's inequality is an equality if and only if one of the following holds:
+
+$$\phi(\mathbb{E}[X]) = \mathbb{E}[\phi(X)] \iff \begin{cases} \phi \text{ is affine on the support of } X, \quad \text{or} \\ X \text{ is almost surely constant: } X = \mathbb{E}[X] \text{ a.s.} \end{cases}$$
+
+For strictly convex $\phi$: equality holds if and only if $X$ is almost surely constant.
+
+**Proof.** If $X = \mu$ a.s., both sides equal $\phi(\mu)$. If $X$ is not a.s. constant, there exists a set of positive probability where $X \neq \mu$. For strictly convex $\phi$, the subgradient inequality $\phi(x) \geq \phi(\mu) + g(x-\mu)$ is strict at every $x \neq \mu$. Taking expectations: $\mathbb{E}[\phi(X)] > \phi(\mu) = \phi(\mathbb{E}[X])$. $\square$
+
+The equality condition for KL divergence is the most important instance: $D_{KL}(p \| q) = 0$ if and only if $p = q$ almost everywhere, because the logarithm is strictly concave and the equality condition of Jensen's inequality for strictly concave functions requires the argument to be constant almost surely.
+
+---
+
+### The Second-Order Gap Formula
+
+For a twice-differentiable convex function $\phi: \mathbb{R} \to \mathbb{R}$ and a scalar random variable $X$ with mean $\mu = \mathbb{E}[X]$ and variance $\sigma^2 = \text{Var}(X)$, the gap in Jensen's inequality is:
+
+$$\mathbb{E}[\phi(X)] - \phi(\mathbb{E}[X]) = \frac{1}{2}\phi''(\mu)\sigma^2 + O(\sigma^3)$$
+
+This follows from a second-order Taylor expansion of $\phi(X)$ around $\mu$:
+
+$$\phi(X) = \phi(\mu) + \phi'(\mu)(X-\mu) + \frac{1}{2}\phi''(\mu)(X-\mu)^2 + O((X-\mu)^3)$$
+
+Taking expectations: $\mathbb{E}[\phi(X)] = \phi(\mu) + \frac{1}{2}\phi''(\mu)\mathbb{E}[(X-\mu)^2] + O(\sigma^3) = \phi(\mu) + \frac{1}{2}\phi''(\mu)\sigma^2 + O(\sigma^3)$.
+
+In multiple dimensions, the gap generalizes to:
+
+$$\mathbb{E}[\phi(X)] - \phi(\mathbb{E}[X]) \approx \frac{1}{2}\text{tr}(\nabla^2 \phi(\mu) \cdot \text{Cov}(X))$$
+
+where $\text{Cov}(X) = \mathbb{E}[(X-\mu)(X-\mu)^T]$ is the covariance matrix of $X$ and $\nabla^2 \phi(\mu)$ is the Hessian of $\phi$ at the mean. The gap is the trace of the product of the Hessian and the covariance — it measures how much the curvature of $\phi$ interacts with the spread of $X$.
+
+This formula makes the break moment precise. The gap is proportional to both $\phi''(\mu)$ — the curvature of the default probability function at the mean income — and $\sigma^2$ — the income variance, which measures inequality. High inequality amplifies even mild curvature into a large gap. Low inequality suppresses even strong curvature into a small gap. The two factors multiply.
+
+---
+
+### The AM-GM Inequality as Jensen
+
+The **arithmetic mean — geometric mean inequality** states that for non-negative $x_1, \ldots, x_n$:
+
+$$\frac{x_1 + \cdots + x_n}{n} \geq (x_1 \cdots x_n)^{1/n}$$
+
+**Proof via Jensen.** The function $\phi(t) = -\log t$ is convex on $(0,\infty)$ — its second derivative is $\phi''(t) = 1/t^2 > 0$. Apply Jensen's inequality to the random variable $X$ taking values $x_1, \ldots, x_n$ with equal probabilities $\frac{1}{n}$:
+
+$$-\log\left(\frac{x_1 + \cdots + x_n}{n}\right) \leq \frac{1}{n}\sum_{i=1}^n (-\log x_i) = -\frac{1}{n}\log(x_1 \cdots x_n)$$
+
+Multiplying both sides by $-1$ and exponentiating:
+
+$$\frac{x_1 + \cdots + x_n}{n} \geq (x_1 \cdots x_n)^{1/n}$$
+
+The AM-GM inequality is Jensen's inequality for the convex function $-\log$. $\square$
+
+---
+
+### Non-Negativity of KL Divergence — Gibbs' Inequality
+
+The **Kullback-Leibler divergence** from $q$ to $p$ is:
+
+$$D_{KL}(p \| q) = \int p(x) \log \frac{p(x)}{q(x)} \, d\lambda(x) = \mathbb{E}_p\left[\log \frac{p(X)}{q(X)}\right]$$
+
+**Theorem (Gibbs' Inequality).** $D_{KL}(p \| q) \geq 0$ with equality if and only if $p = q$ almost everywhere.
+
+**Proof via Jensen.** The function $\phi(t) = -\log t$ is strictly convex. Apply Jensen's inequality to the random variable $Y = q(X)/p(X)$ under the distribution $p$:
+
+$$-\log\left(\mathbb{E}_p\left[\frac{q(X)}{p(X)}\right]\right) \leq \mathbb{E}_p\left[-\log \frac{q(X)}{p(X)}\right] = \mathbb{E}_p\left[\log \frac{p(X)}{q(X)}\right] = D_{KL}(p \| q)$$
+
+The left side is $-\log\left(\int q(x) \, d\lambda(x)\right) = -\log 1 = 0$, because $q$ is a probability density integrating to 1. Therefore $D_{KL}(p \| q) \geq 0$. Equality holds if and only if $q(X)/p(X)$ is almost surely constant under $p$ — that is, $q = cp$ for some constant $c$, and since both integrate to 1, $c = 1$, so $p = q$ a.e. $\square$
+
+This is perhaps the single most important application of Jensen's inequality in the roadmap. Every divergence minimization in generative modeling — every training objective that pushes the model distribution toward the data distribution — is implicitly using the fact that $D_{KL} \geq 0$ with equality at $p = q$.
+
+---
+
+### The Evidence Lower Bound — Formal Derivation
+
+Let $p_\theta(x, z) = p_\theta(x|z)p(z)$ be a latent variable model — a joint distribution over observed data $x$ and latent variable $z$, parameterized by $\theta$. The marginal likelihood — the quantity maximized in training — is:
+
+$$\log p_\theta(x) = \log \int p_\theta(x,z) \, dz$$
+
+This integral is intractable for complex models. Introduce a variational distribution $q_\phi(z|x)$ — an approximate posterior parameterized by $\phi$. Multiply and divide inside the log by $q_\phi(z|x)$:
+
+$$\log p_\theta(x) = \log \int q_\phi(z|x) \cdot \frac{p_\theta(x,z)}{q_\phi(z|x)} \, dz = \log \mathbb{E}_{q_\phi(z|x)}\left[\frac{p_\theta(x,z)}{q_\phi(z|x)}\right]$$
+
+Apply Jensen's inequality with the concave function $\phi = \log$:
+
+$$\log \mathbb{E}_{q_\phi(z|x)}\left[\frac{p_\theta(x,z)}{q_\phi(z|x)}\right] \geq \mathbb{E}_{q_\phi(z|x)}\left[\log \frac{p_\theta(x,z)}{q_\phi(z|x)}\right]$$
+
+The right-hand side is the **Evidence Lower Bound** (ELBO):
+
+$$\text{ELBO}(\theta, \phi) = \mathbb{E}_{q_\phi(z|x)}\left[\log p_\theta(x,z) - \log q_\phi(z|x)\right]$$
+
+Expanding further:
+
+$$\text{ELBO}(\theta, \phi) = \mathbb{E}_{q_\phi(z|x)}[\log p_\theta(x|z)] - D_{KL}(q_\phi(z|x) \| p(z))$$
+
+The first term is the reconstruction loss — how well the model reconstructs $x$ from latent samples $z \sim q_\phi$. The second term is the KL divergence between the approximate posterior and the prior — a regularizer keeping the approximate posterior close to the prior. Both terms are consequences of Jensen's inequality, and the gap between the ELBO and the true log-likelihood is:
+
+$$\log p_\theta(x) - \text{ELBO}(\theta, \phi) = D_{KL}(q_\phi(z|x) \| p_\theta(z|x)) \geq 0$$
+
+The gap is exactly the KL divergence between the approximate and true posteriors. Maximizing the ELBO is equivalent to simultaneously maximizing the log-likelihood and minimizing the KL divergence to the true posterior. When $q_\phi = p_\theta(\cdot|x)$ — when the approximate posterior is exact — the gap closes and the ELBO equals the log-likelihood. Jensen's inequality gives both the bound and the exact characterization of when the bound is tight.
+
+---
+
+### Jensen's Inequality and Kantorovich Duality
+
+In Phase 1, the Kantorovich duality theorem expresses the Wasserstein distance as a supremum over pairs of potential functions. The key step in the duality proof uses Jensen's inequality in the following form.
+
+For a convex cost function $c(x,y)$ and a coupling $\pi$ with marginals $\mu$ and $\nu$:
+
+$$\int c(x,y) \, d\pi(x,y) \geq \int \phi(x) \, d\mu(x) + \int \psi(y) \, d\nu(y)$$
+
+whenever $\phi(x) + \psi(y) \leq c(x,y)$ for all $x,y$. This is not Jensen's inequality itself, but the duality gap between the primal and dual Kantorovich problems is controlled by a Jensen-type argument: the optimal potential function $\phi$ is the $c$-transform of $\psi$, and the equality between the primal and dual values — strong duality — holds because the cost $c$ is convex and the coupling constraint is linear. The convexity of $c$ ensures that the supporting hyperplane argument — which is Jensen's inequality's geometric foundation — applies to the cost function, making the duality gap zero.
+
+---
+
+### The $f$-Divergence Family via Jensen
+
+Jensen's inequality generates the entire family of **$f$-divergences**. For a convex function $f: (0,\infty) \to \mathbb{R}$ with $f(1) = 0$, the $f$-divergence between probability measures $p$ and $q$ is:
+
+$$D_f(p \| q) = \int q(x) f\left(\frac{p(x)}{q(x)}\right) d\lambda(x) = \mathbb{E}_q\left[f\left(\frac{p(X)}{q(X)}\right)\right]$$
+
+By Jensen's inequality applied to the convex $f$:
+
+$$D_f(p\|q) = \mathbb{E}_q\left[f\left(\frac{p(X)}{q(X)}\right)\right] \geq f\left(\mathbb{E}_q\left[\frac{p(X)}{q(X)}\right]\right) = f(1) = 0$$
+
+Every $f$-divergence is non-negative, with equality if and only if $p = q$ a.e., entirely as a consequence of Jensen's inequality applied to the convex $f$ and the fact that $\mathbb{E}_q[p/q] = 1$.
+
+The specific choices of $f$ generate the most important divergences in the roadmap:
+
+$$f(t) = t\log t \implies D_f = D_{KL}(p\|q) \quad \text{(KL divergence)}$$
+$$f(t) = -\log t \implies D_f = D_{KL}(q\|p) \quad \text{(reverse KL)}$$
+$$f(t) = (t-1)^2 \implies D_f = \chi^2(p\|q) \quad \text{(chi-squared divergence)}$$
+$$f(t) = |t-1| \implies D_f = 2\text{TV}(p,q) \quad \text{(total variation distance)}$$
+
+All non-negative by Jensen's inequality. All zero if and only if $p = q$. The entire family is unified by a single application of Jensen's inequality to a single convex function.
+
+---
+
+### Log-Sum Inequality
+
+**Theorem (Log-Sum Inequality).** For non-negative numbers $a_1, \ldots, a_n$ and positive numbers $b_1, \ldots, b_n$:
+
+$$\sum_{i=1}^n a_i \log \frac{a_i}{b_i} \geq \left(\sum_{i=1}^n a_i\right) \log \frac{\sum_{i=1}^n a_i}{\sum_{i=1}^n b_i}$$
+
+**Proof.** Let $A = \sum_i a_i$ and $B = \sum_i b_i$. Apply Jensen's inequality to the convex function $\phi(t) = t\log t$ with weights $\lambda_i = b_i/B$ and points $t_i = a_i/b_i$:
+
+$$\phi\left(\sum_i \lambda_i t_i\right) \leq \sum_i \lambda_i \phi(t_i)$$
+
+$$\frac{A}{B}\log\frac{A}{B} \leq \frac{1}{B}\sum_i a_i \log \frac{a_i}{b_i}$$
+
+Multiplying both sides by $B$ gives the result. $\square$
+
+The log-sum inequality is used in the proof that the KL divergence is convex jointly in $(p,q)$, and it appears in the convergence analysis of the Sinkhorn algorithm in Phase 1.
+
+---
+
+### Jensen's Inequality in Infinite Dimensions
+
+For a convex functional $F: L^2(\mu) \to \mathbb{R}$ and a random element $X$ taking values in $L^2(\mu)$, Jensen's inequality extends directly:
+
+$$F(\mathbb{E}[X]) \leq \mathbb{E}[F(X)]$$
+
+The proof is identical — apply the subgradient inequality and take expectations. The infinite-dimensional case is used in Phase 3 when bounding expectations of convex functionals of probability distributions — for example, when proving that the entropy $H(p_t) = -\int p_t \log p_t \, d\lambda$ is concave along the heat flow, which is a Jensen-type statement about the concavity of entropy under convex combinations of distributions.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 208 (Statistics and Probability), you used the AM-GM inequality without proof in many places — it is now a theorem, a consequence of Jensen's inequality for the convex function $-\log$. Every time you took a log-likelihood and applied the inequality $\log \mathbb{E}[X] \geq \mathbb{E}[\log X]$ — for example in the EM algorithm's derivation — you were applying Jensen's inequality for the concave $\log$. In MATH 201 (Advanced Calculus), the inequality $\frac{a+b}{2} \geq \sqrt{ab}$ for non-negative $a,b$ — the AM-GM for two numbers — is Jensen's inequality for $\phi = -\log$ applied to a two-point distribution. Every convexity argument you made in calculus that involved comparing a function at an average to the average of the function was an instance of Jensen's inequality. In MATH 304 (Computational Operations Research), the duality gap in linear programming — the difference between the primal and dual objective values — is zero at optimality by strong duality, and this zero gap is a consequence of the equality conditions of Jensen-type inequalities for linear (affine) functions.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the microfinance risk manager's story has a precise mathematical address. Let us walk through them one by one, until the hill district farmers, the default probability model, and the full formal apparatus are completely fused into a single picture.
+
+---
+
+**The microfinance institution's loan portfolio — the full collection of borrowers across all districts — is the probability space $(\Omega, \mathcal{F}, P)$.** Each borrower is a point $\omega \in \Omega$. The probability measure $P$ is the distribution of borrowers across the portfolio — how many borrowers occupy each income level, each district, each risk category. The probability space is the formal universe within which the random variable $X$ — income — and the function $\phi$ — default probability — are both defined. Without this ambient structure, neither expectation makes sense.
+
+**The income of a randomly selected farmer from the district is the random variable $X: \Omega \to \mathbb{R}$.** It assigns to each farmer $\omega$ their monthly income $X(\omega)$ in rupees. The randomness is not in the income itself — each farmer has a definite income — but in the selection process: if you draw a farmer uniformly at random from the district, $X$ is the resulting income, and its distribution reflects the income inequality of the district. The expected income $\mathbb{E}[X]$ is the district average — 11,000 rupees in the story. This is the number the field officer reports, and it is the number the risk manager naively feeds into the default probability model.
+
+**The default probability model — the function mapping income to default risk — is the convex function $\phi: C \to \mathbb{R}$.** It maps each income level to a probability of default. Its convexity — $\phi''(p) > 0$ everywhere below the critical threshold — is the formal expression of the economic reality that default risk rises disproportionately fast as income falls below survival costs. The parabolic bowl shape of the insurance cost function from the previous subtopic is the same geometric object here: both are convex functions whose chords lie above their curves, and both produce the same Jensen gap when their inputs are replaced by averages.
+
+---
+
+**The risk manager's erroneous computation — feeding the district average into the model — is $\phi(\mathbb{E}[X])$, the left side of Jensen's inequality.** The operation is: compute the expected income $\mathbb{E}[X] = 11,000$, then evaluate $\phi(11,000)$. This produces the default probability for a hypothetical farmer earning exactly the average income — a farmer who may not exist in the portfolio at all. The 5% default probability in the story is $\phi(11,000)$. It is a valid number. It is simply the wrong number for the risk manager's purpose.
+
+**The true portfolio loss — the average of default probabilities across all individual farmers — is $\mathbb{E}[\phi(X)]$, the right side of Jensen's inequality.** The operation is: for each farmer $\omega$, compute their default probability $\phi(X(\omega))$, then average across all farmers. This produces the true expected default rate — the 20.5% in the story. The two operations — evaluate then average versus average then evaluate — are the two sides of Jensen's inequality. For a convex $\phi$, the first operation always underestimates the second. $\phi(\mathbb{E}[X]) \leq \mathbb{E}[\phi(X)]$ is the formal statement that the risk manager's computation is always a lower bound on the true portfolio loss, never an upper bound, and the gap grows with both the curvature of $\phi$ and the income inequality of the district.
+
+**The proof of Jensen's inequality is the subgradient argument made explicit in the story's terms.** At the average income $\mu = \mathbb{E}[X] = 11,000$, the convex default probability function $\phi$ has a subgradient $g \in \partial\phi(\mu)$ — a slope that defines a global linear underestimate: $\phi(p) \geq \phi(\mu) + g(p - \mu)$ for all income levels $p$. This says: the default probability at any income $p$ is at least the default probability at the average income plus the linear correction $g(p-\mu)$. Taking expectations over all farmers: $\mathbb{E}[\phi(X)] \geq \phi(\mu) + g(\mathbb{E}[X] - \mu) = \phi(\mu) + g \cdot 0 = \phi(\mathbb{E}[X])$. The term $g \cdot 0$ is the key: the expected deviation from the mean is zero by definition of the mean. The subgradient inequality plus the zero mean deviation together produce Jensen's inequality in one line.
+
+---
+
+**The two groups of farmers in District A — half earning 20,000 and half earning 2,000 — are the discrete random variable $X$ taking values $x_1 = 20,000$ and $x_2 = 2,000$ with weights $\lambda_1 = \lambda_2 = \frac{1}{2}$.** The discrete form of Jensen's inequality is: $\phi(\lambda_1 x_1 + \lambda_2 x_2) \leq \lambda_1 \phi(x_1) + \lambda_2 \phi(x_2)$. The left side is $\phi(11,000) = 5\%$. The right side is $\frac{1}{2}(1\%) + \frac{1}{2}(40\%) = 20.5\%$. The inequality $5\% \leq 20.5\%$ is Jensen's inequality made numerically explicit. The district average masks the bimodal income distribution, and the convexity of the default probability function amplifies the masking into a fourfold underestimate. The discrete form is the foundational case — the continuous form extends it to arbitrary distributions by replacing the finite sum with an integral $\phi(\int f \, d\mu) \leq \int \phi \circ f \, d\mu$.
+
+**The equality condition — $\phi(\mathbb{E}[X]) = \mathbb{E}[\phi(X)]$ if and only if $X$ is almost surely constant — is the statement that Jensen's gap vanishes only when all farmers have the same income.** If every farmer in the district earns exactly 11,000 rupees — a perfectly equal income distribution — then the district average income and the average default probability contain identical information. The risk manager's shortcut is exact. But the moment there is any income variation — any positive variance $\sigma^2 > 0$ — the gap opens. For strictly convex $\phi$, the gap is strictly positive whenever $\sigma^2 > 0$. Perfect income equality is the only escape from Jensen's inequality. Income inequality is the formal cause of the risk manager's error.
+
+**The second-order gap formula $\mathbb{E}[\phi(X)] - \phi(\mathbb{E}[X]) \approx \frac{1}{2}\phi''(\mu)\sigma^2$ is the actuary's quantitative diagnosis of the error.** The gap is approximately the product of two factors: $\frac{1}{2}\phi''(\mu)$, which measures how strongly the default probability function curves at the average income level, and $\sigma^2 = \text{Var}(X)$, which measures the income inequality of the district. A district with mild income inequality ($\sigma^2$ small) produces a small gap even if $\phi$ is strongly convex. A district with extreme income inequality ($\sigma^2$ large) produces a large gap even if $\phi$ curves only mildly. The product structure is the formal version of the break moment: neither curvature alone nor variance alone determines the gap — both must be large simultaneously for the gap to be catastrophic. This is why Jensen's inequality matters most in high-variance settings — exactly the settings that arise in generative modeling over complex, high-dimensional distributions.
+
+---
+
+**The AM-GM inequality $\frac{x_1 + \cdots + x_n}{n} \geq (x_1 \cdots x_n)^{1/n}$ is Jensen's inequality for the convex function $\phi = -\log$.** The district analogy: if the field officer reports the average of log-incomes rather than the log of average income, the two numbers satisfy this inequality. The arithmetic mean of incomes is always at least the geometric mean of incomes, because the function $-\log$ is convex and Jensen's inequality runs in the correct direction. Every time you used the AM-GM inequality in MATH 201 or MATH 208 — in bounding products, in proving convergence, in deriving probability bounds — you were applying Jensen's inequality for the convex $-\log$ without naming it.
+
+**The non-negativity of KL divergence $D_{KL}(p\|q) \geq 0$ is Jensen's inequality for the strictly concave $\log$.** The risk manager analogy: the KL divergence measures how surprised you are on average when you model the portfolio using $q$ but the true distribution is $p$. The quantity $\log(q(X)/p(X))$ measures the surprise at each income level $X$. Its expectation under $p$ is $-D_{KL}(p\|q)$, and Jensen's inequality for the concave $\log$ gives $\mathbb{E}_p[\log(q/p)] \leq \log \mathbb{E}_p[q/p] = \log 1 = 0$, so $D_{KL}(p\|q) \geq 0$. The KL divergence is the expected logarithmic surprise of using the wrong model, and it is always non-negative because logarithmic surprise is a concave function of the likelihood ratio, and Jensen's inequality for concave functions says the expectation at the average is at least the function at the average — which here is exactly zero.
+
+**The ELBO derivation is the risk manager's problem restated in the language of latent variable models.** The risk manager wants to compute $\log p_\theta(x)$ — the log-likelihood of the observed data $x$ under the model. This is intractable because it requires integrating over all possible latent states $z$ — all possible unobserved income sources, supply chain factors, rainfall levels that could have generated the observed repayment behavior. The variational distribution $q_\phi(z|x)$ is the field officer's approximate model of the unobserved factors. The ELBO is:
+
+$$\text{ELBO} = \mathbb{E}_{q_\phi(z|x)}\left[\log \frac{p_\theta(x,z)}{q_\phi(z|x)}\right] \leq \log p_\theta(x)$$
+
+The inequality is Jensen's inequality for the concave $\log$ — the function of the expectation $\log \mathbb{E}[\cdot]$ is at least the expectation of the function $\mathbb{E}[\log(\cdot)]$, but the inequality runs the other way when we write it as above because the $\log$ is outside the expectation on the right and inside on the left. The gap is $D_{KL}(q_\phi \| p_\theta(\cdot|x))$ — exactly how wrong the field officer's approximate model is about the unobserved factors. Maximizing the ELBO pushes the gap toward zero, simultaneously maximizing the true log-likelihood and making the approximate posterior exact. The entire variational inference framework — VAEs, variational EM, mean field approximations — is Jensen's inequality applied to the concave $\log$, with the training objective being the bound and the training goal being to close the Jensen gap.
+
+---
+
+**The $f$-divergence family — KL, reverse KL, $\chi^2$, total variation — is the entire zoo of dissimilarity measures between probability distributions, all born from a single application of Jensen's inequality.** For each convex $f$ with $f(1) = 0$, the $f$-divergence $D_f(p\|q) = \mathbb{E}_q[f(p/q)] \geq f(\mathbb{E}_q[p/q]) = f(1) = 0$ is non-negative by Jensen's inequality. The condition $f(1) = 0$ is the normalization that makes $D_f(p\|p) = 0$ — no divergence from a distribution to itself. The convexity of $f$ is what makes the divergence non-negative. The choice of $f$ determines which aspects of the difference between $p$ and $q$ are penalized — KL penalizes regions where $p$ is large relative to $q$, reverse KL penalizes regions where $q$ is large relative to $p$, $\chi^2$ penalizes squared relative differences, total variation penalizes absolute differences. Every training objective in Phase 3 that pushes a model distribution toward a data distribution is minimizing some $f$-divergence, and every such divergence is non-negative by Jensen's inequality.
+
+**The log-sum inequality is Jensen's inequality in the form that controls the convergence of the Sinkhorn algorithm.** The Sinkhorn algorithm iteratively rescales the transport plan matrix, and each rescaling step decreases the KL divergence between the current transport plan and the optimal one. The proof that the KL divergence decreases at each step uses the log-sum inequality — which is Jensen's inequality for the convex function $t\log t$ — to bound the decrease. The convergence of Sinkhorn is therefore a corollary of Jensen's inequality, applied repeatedly at each iteration.
+
+---
+
+**The connection to MATH 208 (Statistics and Probability) is now complete and explicit.** Every time you computed a maximum likelihood estimator in MATH 208, you maximized the log-likelihood $\mathbb{E}[\log p_\theta(X)]$. The concavity of $\log$ means that $\mathbb{E}[\log p_\theta(X)] \leq \log \mathbb{E}[p_\theta(X)] = \log 1 = 0$ by Jensen's inequality — the log-likelihood is always non-positive. The maximum likelihood estimator is the $\theta$ that pushes the log-likelihood as close to zero as possible — as close to the Jensen bound as possible. The EM algorithm, which alternates between an E-step and an M-step, is precisely the algorithm that maximizes the ELBO — a Jensen lower bound on the log-likelihood — and iteratively tightens the bound by updating the variational distribution. The EM algorithm is Jensen's inequality turned into an optimization procedure.
+
+**The connection to MATH 201 (Advanced Calculus) closes through the Taylor expansion.** The second-order gap formula $\mathbb{E}[\phi(X)] - \phi(\mathbb{E}[X]) \approx \frac{1}{2}\phi''(\mu)\sigma^2$ is a Taylor expansion argument — exactly the kind of second-order analysis you performed in MATH 201 when approximating functions near a point. The convexity of $\phi$ — the non-negativity of $\phi''$ — is what ensures the Taylor approximation of the gap is non-negative, consistent with the inequality. The Taylor expansion gives the gap's magnitude; Jensen's inequality gives its sign. Together they give both the direction and the size of the risk manager's error.
+
+---
+
+**Looking forward across the roadmap**, Jensen's inequality is the invisible hand behind every bound, every lower estimate, and every duality gap. In Phase 1, the duality gap of the Kantorovich problem — the difference between the primal transport cost and the dual potential value — is zero at optimality, and this zero gap is a consequence of the affinity of the cost function along optimal transport rays, which is a Jensen equality condition. The entropic regularization of the Sinkhorn algorithm adds a strictly convex KL divergence penalty, ensuring strict convexity of the regularized problem and a unique solution — the strict convexity is what makes the Jensen gap in the regularized duality exactly zero at the unique optimum. In Phase 2, the equivariance loss functions of geometric deep learning are expectations of squared norms — Jensen's inequality guarantees they are convex in the network parameters, ensuring that gradient descent on the equivariance loss has no spurious local minima. In Phase 3, the score matching objective, the ELBO of VAEs, the diffusion model's denoising loss, and the flow matching regression loss are all lower bounds derived from Jensen's inequality applied to the concave $\log$. Every one of them is tight — equal to the true log-likelihood — when the model is perfect, and their gap from the true objective is a KL divergence that vanishes at the global optimum. The microfinance risk manager's error is the conceptual core of every one of these bounds: the gap between the function at the average and the average of the function, controlled by the curvature of the objective and the variance of the distribution, closing to zero only when the model perfectly matches reality.
+
+---
+---

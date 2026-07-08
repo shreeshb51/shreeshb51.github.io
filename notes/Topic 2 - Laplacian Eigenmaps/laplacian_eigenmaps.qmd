@@ -1,0 +1,507 @@
+# Topic 2 - Laplacian Eigenmaps: Geometry Through the Spectrum
+
+## Introduction
+
+Topic 1 built the machinery for processing signals defined on a known manifold — you had a terrain surface, you knew its geometry, and you designed filters that respected that geometry through geodesic neighbourhoods, local polar coordinates, and gauge-equivariant kernels. The manifold was given. The problem was computation on it.
+
+Topic 2 reverses the problem entirely. The manifold is not given. You have a cloud of high-dimensional data points — a set of observations in $\mathbb{R}^D$ where $D$ is large, perhaps hundreds or thousands of dimensions — and you suspect, guided by the manifold hypothesis, that these points lie near a low-dimensional smooth manifold $\mathcal{M}$ embedded in $\mathbb{R}^D$. You do not know $\mathcal{M}$. You cannot write down its metric tensor or compute its geodesics. All you have is the point cloud itself, and the question is: can you discover the manifold's intrinsic geometry from the data alone, and use that geometry to produce a low-dimensional representation of the data that is faithful to the manifold's true structure?
+
+Laplacian Eigenmaps answer this question. They do so by constructing the graph Laplacian of a neighbourhood graph built from the data points, computing its eigenvectors, and using those eigenvectors as coordinates for the embedding. The correctness of this procedure — that it recovers the manifold's intrinsic geometry rather than the extrinsic geometry of the ambient space — rests on the Belkin-Niyogi convergence theorem that you already met in Topic 2 of Chapter 2: the graph Laplacian eigenvectors converge to the Laplace-Beltrami eigenfunctions as the data density increases. The embedding is the manifold's own harmonic coordinate system, made computable from finite data through the spectral approximation of its Laplace-Beltrami operator.
+
+Topic 2 is, in a precise sense, the culmination of the spectral thread that has run through the entire Phase 2. The spectral thread began in Chapter 1, where the spherical harmonics $Y_\ell^m$ appeared as the eigenfunctions of $\Delta_{S^2}$ and the natural basis for $SO(3)$-equivariant features. It continued in Chapter 2's Topic 2, where the graph Laplacian $L = D - A$ appeared as the discrete approximation of the Laplace-Beltrami operator and its eigenvectors gave the graph Fourier basis. It deepened in Chapter 3's Topic 1, where the Laplace-Beltrami operator $\Delta_\mathcal{M}$ appeared as the intrinsic differential operator governing geodesic convolution and manifold harmonic analysis, with DiffusionNet using its eigenfunctions as the basis for intrinsic feature propagation. Laplacian Eigenmaps complete this thread: they take the spectral theory of $\Delta_\mathcal{M}$, made computable from data through the graph Laplacian approximation, and use it not to define a filter or a convolution but to define the embedding itself — to discover the manifold's coordinate system from the data.
+
+The problem that Laplacian Eigenmaps solve is dimensionality reduction with geometric fidelity. Dimensionality reduction — finding a low-dimensional representation of high-dimensional data — is one of the central problems of machine learning and data analysis. The classical approaches are Principal Component Analysis, which finds the directions of maximum variance in the data and projects onto a low-dimensional linear subspace, and Multidimensional Scaling, which finds an embedding that preserves pairwise Euclidean distances between all data points. Both are linear methods: they represent the data as points in a Euclidean subspace, with the embedding coordinates being linear functions of the original features. Linear methods work well when the data lies near a linear subspace of the ambient space — when the manifold is flat. When the manifold is curved — when the data lies near a sphere, a Swiss roll, a torus, or any other nonlinearly curved surface — linear methods fail: they find the best linear approximation to a nonlinear structure, producing embeddings that distort the manifold's intrinsic geometry in ways that make the low-dimensional representation misleading.
+
+Laplacian Eigenmaps are a nonlinear dimensionality reduction method: they find an embedding that preserves the manifold's intrinsic geometric structure — the geodesic distances between nearby points — rather than the Euclidean distances in the ambient space. Two data points that are close on the manifold surface will be close in the Laplacian Eigenmap embedding, even if they are far apart in the ambient Euclidean space because the manifold curves between them. Two data points that are far apart on the manifold will be far apart in the embedding, even if the manifold happens to fold them close together in the ambient space. The embedding is faithful to the manifold's intrinsic geometry, not to the extrinsic geometry of its ambient embedding.
+
+This topic develops Laplacian Eigenmaps across three components that correspond to the three stages of the algorithm and its theoretical justification.
+
+The first component is **the neighbourhood graph construction and its geometric justification**. The starting point is a finite set of data points $\{x_1,\ldots,x_n\} \subset \mathbb{R}^D$. The algorithm constructs a neighbourhood graph $G$ by connecting each point to its $k$ nearest neighbours (or all points within a fixed Euclidean radius $\epsilon$) and assigning edge weights using a Gaussian kernel $W_{ij} = \exp(-\|x_i-x_j\|^2/\sigma^2)$. The geometric justification for this construction is the manifold hypothesis: if the data lies near a smooth $d$-dimensional manifold $\mathcal{M}$ embedded in $\mathbb{R}^D$, then for nearby points on the manifold (within a geodesic ball of radius much smaller than the manifold's curvature scale), the Euclidean distance in $\mathbb{R}^D$ is a good approximation to the geodesic distance on $\mathcal{M}$. The neighbourhood graph therefore approximates the manifold's local metric structure, and the graph Laplacian computed from this neighbourhood graph approximates the Laplace-Beltrami operator of the manifold. The Gaussian kernel weights encode the strength of the local geometric connection: nearby points receive high weights (the Gaussian is nearly 1), distant points receive low weights (the Gaussian decays to 0), and the bandwidth parameter $\sigma$ controls the scale of the local approximation — small $\sigma$ gives a tight neighbourhood, large $\sigma$ gives a broader one.
+
+The second component is **the eigenvalue problem and its variational interpretation**. Having constructed the graph Laplacian $L = D - W$ (where $W$ is the weight matrix and $D$ is the weighted degree matrix $D_{ii} = \sum_j W_{ij}$), the Laplacian Eigenmap embedding into $\mathbb{R}^d$ is computed by solving the generalized eigenvalue problem $Lu = \lambda Du$ and using the eigenvectors corresponding to the $d$ smallest nonzero eigenvalues as embedding coordinates. The variational interpretation makes the geometric meaning of this embedding transparent: the eigenvalue problem minimizes $\sum_{ij}W_{ij}\|y_i-y_j\|^2 = \text{tr}(Y^\top LY)$ subject to the orthonormality constraint $Y^\top DY = I$. The objective is a weighted sum of squared distances in the embedding space, with the weights $W_{ij}$ being large for nearby manifold points and small for distant ones. Minimizing this objective places nearby manifold points close together in the embedding, preserving the local geometric structure that the neighbourhood graph encodes. The constraint $Y^\top DY = I$ prevents the trivial collapsed solution and removes the degrees of freedom corresponding to translation, rotation, and scaling of the embedding.
+
+The third component is **the connection to the continuous theory and the full spectral thread**. The generalized eigenvalue problem $Lu = \lambda Du$ is the discrete analogue of the Laplace-Beltrami eigenvalue problem $\Delta_\mathcal{M}\phi = -\lambda\phi$. The eigenvectors of $Lu = \lambda Du$ converge to the eigenfunctions of $\Delta_\mathcal{M}$ as the data density increases, by the Belkin-Niyogi theorem. The Laplacian Eigenmap embedding coordinates are therefore the manifold harmonic functions of lowest frequency — the functions that vary most slowly over the manifold surface, changing as little as possible between geodesically nearby points. This is the precise sense in which the embedding is geometrically faithful: the embedding coordinates are the manifold's own natural coordinate functions, the functions most adapted to its intrinsic geometry. The connection closes the spectral thread: from the spherical harmonics as eigenfunctions of $\Delta_{S^2}$ in Chapter 1, through the graph Laplacian eigenvectors as discrete approximations of Laplace-Beltrami eigenfunctions in Chapter 2, through the DiffusionNet's use of those eigenfunctions for intrinsic feature propagation in Topic 1 of Chapter 3, to the Laplacian Eigenmap's use of those eigenfunctions as the embedding coordinates themselves — all are expressions of the same fundamental principle, that the Laplace-Beltrami operator encodes the intrinsic geometry of the manifold and its eigenfunctions are the natural coordinate system for that geometry.
+
+The connections to your curriculum are the most integrated they have been at any point in the roadmap, because Laplacian Eigenmaps sit at the intersection of four mathematical threads that your courses have independently developed.
+
+Your MATH 302 course on Matrix Theory is the primary computational scaffold. The generalized eigenvalue problem $Lu = \lambda Du$ is solved by converting to the standard eigenvalue problem $D^{-1/2}LD^{-1/2}v = \lambda v$ for $v = D^{1/2}u$ — a symmetric matrix eigenvalue problem, the central computation of MATH 302. The positive semidefiniteness of $L$, established by the same Dirichlet energy argument as in Chapter 2's Topic 2, guarantees non-negative eigenvalues. The Courant-Fischer minimax theorem gives the variational characterization of eigenvalues that makes the optimization interpretation of the embedding transparent.
+
+Your MATH 213 and MATH 325 courses on Analysis provide the functional analytic foundation: the $L^2(\mathcal{M})$ Hilbert space, the completeness of the Laplace-Beltrami eigenfunctions, and the convergence theory that connects the discrete graph computation to the continuous manifold geometry. The Belkin-Niyogi convergence theorem is a result in functional analysis — the convergence of finite-dimensional matrix operators to infinite-dimensional differential operators in the operator norm — and its proof uses the Analysis tools of uniform approximation, integration by parts, and the spectral theorem for compact self-adjoint operators.
+
+Your MATH 208 course on Statistics and Probability provides the probabilistic interpretation of the neighbourhood graph construction. The data points are samples from a distribution $p$ on the manifold. The Gaussian kernel weights $W_{ij} = \exp(-\|x_i-x_j\|^2/\sigma^2)$ are the values of the heat kernel at pairs of nearby data points. The degree $d_i = \sum_j W_{ij}$ estimates the local data density at point $x_i$. Different normalizations of the graph Laplacian — the unnormalized $L$, the symmetric normalized $\mathcal{L} = D^{-1/2}LD^{-1/2}$, and the random walk normalized $L_{\text{rw}} = D^{-1}L$ — correspond to different operators on the manifold under different assumptions about the data density $p$, with the Coifman-Lafon diffusion maps framework providing the full probabilistic theory of how the choice of normalization determines which geometric operator the graph Laplacian approximates.
+
+Your COMP 202 course on Data Structures and Algorithms provides the computational foundation: the $k$-nearest-neighbour graph construction costs $O(n^2 D)$ by brute force (comparing all pairs) or $O(n\log n\, D)$ with approximate nearest-neighbour structures; the eigendecomposition of the sparse graph Laplacian costs $O(nd^2 + nd\,\text{nnz}(L))$ using the Lanczos algorithm for sparse matrices, where $\text{nnz}(L)$ is the number of nonzero entries determined by the graph's sparsity.
+
+By the end of this topic, Laplacian Eigenmaps will feel not like a standalone dimensionality reduction algorithm but like the inevitable application of the Laplace-Beltrami spectral theory to the problem of discovering manifold geometry from data. The algorithm's three steps — build a neighbourhood graph, compute graph Laplacian eigenvectors, use them as embedding coordinates — will feel not like engineering choices but like the natural discretization of the continuous problem: approximate $\mathcal{M}$ by a graph, approximate $\Delta_\mathcal{M}$ by $L$, approximate the manifold harmonics by the graph Laplacian eigenvectors. The Laplacian Eigenmap is the manifold's harmonic coordinate system, computed from finite data. Phase 2 is complete. The chassis is fully assembled.
+
+---
+
+## Layer 1 (Story)
+
+It is 2015. The Survey Department of Nepal has commissioned an unusual project. A team of researchers from Tribhuvan University has spent three years travelling to remote Himalayan villages — Dolpo, Mustang, Humla, Jumla, Taplejung — collecting detailed measurements of local culture: the vocabulary of each village's dialect, the patterns of their woven textiles, the tuning of their folk instruments, the recipes of their fermented foods, the calendar systems they use for planting and harvest. Each village has been measured across four hundred cultural dimensions, producing a data point in $\mathbb{R}^{400}$ — a four-hundred-dimensional vector describing that village's cultural profile.
+
+The research team returns to Kathmandu with measurements from two hundred villages. They sit down to make sense of the data. Four hundred dimensions is incomprehensible. No human can visualize a point cloud in $\mathbb{R}^{400}$. No map can be drawn in four hundred dimensions. The team needs to reduce the data to two or three dimensions — to find a map of the cultural landscape of the Himalayas — without destroying the geometric structure that makes the data meaningful.
+
+The team's lead mathematician poses the question precisely: the two hundred villages are points in $\mathbb{R}^{400}$, but they do not fill $\mathbb{R}^{400}$ uniformly. They cluster near a low-dimensional surface — a cultural manifold embedded in the four-hundred-dimensional measurement space. The manifold hypothesis says that the true degrees of freedom of Himalayan culture are far fewer than four hundred: perhaps three or four fundamental axes of cultural variation, corresponding to altitude gradient, east-west trade route influence, proximity to the Tibetan plateau, and distance from the Terai lowlands. The four hundred measured dimensions are highly correlated projections of these few underlying axes. The goal is to find those axes — to discover the manifold and embed it in two or three dimensions — using only the two hundred data points, without any prior knowledge of what the manifold looks like.
+
+---
+
+**The first attempt: Principal Component Analysis.**
+
+The team's statistician tries the obvious approach. Compute the covariance matrix of the four-hundred-dimensional data, find its largest eigenvectors, and project the data onto the two-dimensional subspace spanned by those eigenvectors. This is Principal Component Analysis — the workhorse of linear dimensionality reduction, introduced in your MATH 208 Statistics course.
+
+The PCA embedding arrives. It looks reasonable at first: the villages spread out in a two-dimensional plane, with some visible clustering. But the mathematician notices something wrong. Two villages from Dolpo — Upper Dolpo at 4200 metres altitude and Lower Dolpo at 2800 metres — appear very close together in the PCA embedding, as if they are culturally similar. But the researcher who visited both knows they are culturally quite different: Upper Dolpo has maintained strong Tibetan Buddhist influence for centuries, largely isolated by high passes; Lower Dolpo has absorbed significant influence from trade routes connecting Nepal and Tibet, producing a distinct hybrid culture. They are close in Euclidean distance in $\mathbb{R}^{400}$ — many of their four hundred measurements are similar — but culturally distant, separated by a long path along the cultural manifold that winds through intermediate village types.
+
+PCA measures Euclidean distance in the ambient space $\mathbb{R}^{400}$. The cultural manifold is curved. The two Dolpo villages are on the same manifold but on opposite sides of a fold — the manifold curves between them so that their straight-line Euclidean distance in $\mathbb{R}^{400}$ is short, but their manifold distance, measured along the surface of the cultural manifold through the sequence of culturally intermediate villages, is long. PCA cannot see this difference. It projects both villages onto the same region of the two-dimensional plane because it only measures straight-line distances. The map it produces is geometrically dishonest: it collapses the fold and places culturally distant villages near each other.
+
+---
+
+**The manifold's true geometry: intrinsic versus extrinsic distance.**
+
+The mathematician draws an analogy on the whiteboard. She sketches a Swiss roll — a rectangular strip of paper rolled into a spiral. Two points on the surface of the Swiss roll might be very close in Euclidean three-dimensional space (just across the gap between adjacent layers of the spiral) but very far apart along the surface of the roll (requiring you to unwind the entire spiral to travel from one to the other along the paper surface). PCA would place these two points close together in the embedding, because it measures Euclidean distance. But they are genuinely far apart on the manifold — they are separated by the entire length of the unrolled strip.
+
+The cultural manifold of Himalayan villages is the same idea in four hundred dimensions. Upper and Lower Dolpo are like two points on adjacent layers of the Swiss roll: close in ambient Euclidean space, far apart on the manifold surface. The correct embedding must measure distances along the manifold surface — intrinsic distances — not through the ambient space. Two villages are close in the correct embedding if and only if they are connected by a short path along the cultural manifold — a path through culturally intermediate villages — not if their four-hundred-dimensional vectors happen to be numerically close.
+
+The question is: how do you measure distances along a manifold you do not know? The manifold is hidden inside $\mathbb{R}^{400}$. You cannot see it. You cannot parameterize it. You have only the two hundred data points and their pairwise Euclidean distances in $\mathbb{R}^{400}$. How do you reconstruct the manifold's intrinsic geometry from these observations alone?
+
+---
+
+**The key insight: local Euclidean distances approximate intrinsic distances.**
+
+The mathematician makes a crucial observation. For nearby points on the manifold — points so close that the manifold is approximately flat between them — the Euclidean distance in $\mathbb{R}^{400}$ is a good approximation to the intrinsic geodesic distance along the manifold. The manifold looks flat when you zoom in close enough. The curvature that creates the fold between Upper and Lower Dolpo only becomes significant at larger scales. At the local scale of immediately neighbouring villages — villages within a day's walk of each other — the cultural manifold is nearly flat, and the Euclidean distance between their cultural measurement vectors is an honest reflection of their cultural distance.
+
+This is the same observation as the exponential map from Topic 1: the manifold is locally flat to first order, so local Euclidean distances are locally honest. The strategy is to use local Euclidean distances to build a graph that captures the manifold's local geometry, and then to use the global structure of this graph — the way the local connections chain together — to recover the manifold's global intrinsic geometry.
+
+---
+
+**Step One: Building the neighbourhood graph.**
+
+The team builds a graph with the two hundred villages as nodes. For each village, they connect it to its ten nearest neighbours in $\mathbb{R}^{400}$ — the ten villages with the most similar four-hundred-dimensional cultural profiles. Each connection receives a weight proportional to the cultural similarity of the two villages: very similar villages (close in $\mathbb{R}^{400}$) receive high weights, moderately similar villages receive moderate weights.
+
+The specific weighting uses a Gaussian: if villages $i$ and $j$ are connected, the weight of their connection is $W_{ij} = \exp(-\|x_i - x_j\|^2/\sigma^2)$, where $\|x_i - x_j\|^2$ is the squared Euclidean distance between their four-hundred-dimensional cultural profiles and $\sigma$ is a bandwidth parameter controlling what counts as nearby. The Gaussian weight is close to one for very nearby villages, decays smoothly as distance increases, and is essentially zero for villages beyond the neighbourhood radius. It is the probabilistic equivalent of the MoNet Gaussian kernel from Topic 1, now used not as a filter weight but as a graph edge weight encoding local geometric proximity.
+
+After connecting every village to its ten nearest neighbours, the team examines the resulting graph. Upper Dolpo is connected to its ten nearest cultural neighbours — intermediate altitude Dolpo villages that share characteristics of both Upper and Lower Dolpo. Lower Dolpo is connected to its ten nearest neighbours, which are trade-route-influenced villages at lower altitude. Upper and Lower Dolpo are not directly connected in the graph — their Euclidean cultural distance is larger than the ten-nearest-neighbour threshold. But there is a path of graph edges connecting them through intermediate villages: Upper Dolpo connects to a mid-altitude Dolpo village, which connects to another, which eventually connects to Lower Dolpo through a chain of culturally intermediate steps. The graph has captured the manifold's local geometry and encoded the long winding path between Upper and Lower Dolpo as a chain of short steps.
+
+The neighbourhood graph is the discrete approximation to the continuous manifold. Its nodes are the data points. Its edges encode local proximity. Its weighted adjacency matrix $W$ encodes the strength of local geometric connection. The geodesic distance along the manifold — which cannot be computed directly because the manifold is unknown — is approximated by the shortest weighted path distance in the graph, which can be computed from the data using Dijkstra's algorithm from your COMP 202 course.
+
+---
+
+**The break moment: why shortest-path distances are not enough.**
+
+The team's engineer proposes a natural completion of this approach: compute the shortest-path distances between all pairs of villages in the neighbourhood graph, and then find a two-dimensional embedding that places villages at pairwise distances matching these shortest-path distances. This is the ISOMAP algorithm — and it seems like the complete solution.
+
+Here is why it breaks.
+
+You have two hundred villages and therefore $200 \times 199 / 2 = 19{,}900$ pairwise distances to match. You want a two-dimensional embedding of two hundred points whose pairwise Euclidean distances match these nineteen thousand nine hundred values. But you have only $200 \times 2 = 400$ free parameters — the two-dimensional coordinates of the two hundred points. You have vastly more constraints than degrees of freedom. An exact solution generally does not exist: no two-dimensional embedding can simultaneously match all nineteen thousand nine hundred pairwise distances, because the manifold might genuinely be three-dimensional or higher, and compression to two dimensions inevitably introduces distortion.
+
+More fundamentally, the ISOMAP approach treats all nineteen thousand nine hundred pairwise distances equally — it tries to match the distances between Upper and Lower Dolpo (geodesically distant) with the same fidelity as the distances between two adjacent Kathmandu Valley villages (geodesically nearby). But the long-range distances were estimated through a chain of short hops in the neighbourhood graph — each hop introduces approximation error (Euclidean distance approximating geodesic distance), and these errors compound along the chain. The estimated distance between Upper and Lower Dolpo, passed through ten intermediate hops, has ten times the approximation error of a single-hop distance. Treating all pairwise distances equally ignores this heterogeneous error structure and produces embeddings that are distorted by accumulated hop errors.
+
+The correct approach is not to match all pairwise distances, but to match only the local distances — the distances between nearby neighbours in the graph — and to let the global structure of the embedding emerge from the consistent satisfaction of these local constraints. This is exactly what the graph Laplacian and its eigenvectors accomplish.
+
+---
+
+**Step Two: The graph Laplacian as the local distance operator.**
+
+The mathematician turns to the graph Laplacian. From your COMP 323 Graph Theory course and Chapter 2's Topic 2, you know the Laplacian $L = D - W$ precisely: $D$ is the diagonal matrix of weighted degrees $D_{ii} = \sum_j W_{ij}$, and $W$ is the weighted adjacency matrix. The Laplacian measures local variation of a signal across the graph: $(Lf)_i = \sum_{j\in\mathcal{N}(i)} W_{ij}(f_i - f_j)$ is the weighted sum of differences between village $i$'s value and each neighbour's value, weighted by the neighbourhood strength.
+
+Now the mathematician writes the Dirichlet energy of the embedding. Suppose $Y \in \mathbb{R}^{n\times d}$ is the embedding matrix — row $y_i \in \mathbb{R}^d$ is the embedding coordinate of village $i$. The total local distortion of the embedding is:
+
+$$\sum_{i,j} W_{ij} \|y_i - y_j\|^2$$
+
+This is the sum of squared embedding distances between all pairs of villages, weighted by their graph edge weights $W_{ij}$. For nearby village pairs (large $W_{ij}$), large embedding distances contribute heavily to this sum — nearby villages must be placed close in the embedding. For distant village pairs (small $W_{ij} \approx 0$), large embedding distances contribute negligibly — the embedding is not required to place distant villages any particular distance apart. The objective function cares about local geometry, not global pairwise distances. It is the opposite of ISOMAP: instead of matching all nineteen thousand nine hundred pairwise distances, it matches only the local neighbourhood distances, with the matching strength proportional to the neighbourhood weight.
+
+The mathematician shows that this objective equals $\text{tr}(Y^\top LY)$ — the trace of the embedding matrix times the graph Laplacian times the embedding matrix. This is the Dirichlet energy of the embedding on the graph: it is minimized when the embedding varies as smoothly as possible across the graph's edge structure, placing highly connected villages close together and weakly connected villages further apart. Minimizing $\text{tr}(Y^\top LY)$ subject to a normalization constraint gives the Laplacian Eigenmap embedding.
+
+---
+
+**Step Three: The normalization constraint and what it prevents.**
+
+Before minimizing $\text{tr}(Y^\top LY)$, the mathematician identifies a trivial solution: $Y = 0$ — place all villages at the origin. This collapses all two hundred villages to the same point, achieving zero local distortion trivially and uselessly. A normalization constraint must prevent this collapse.
+
+The correct normalization is $Y^\top D Y = I_d$ — the degree-weighted orthonormality of the embedding coordinates. The degree matrix $D$ appears in the constraint because the data points have heterogeneous densities in the ambient space: villages in a densely sampled cultural region have large weighted degree $D_{ii} = \sum_j W_{ij}$ (many strong neighbourhood connections), while villages in a sparsely sampled region have small weighted degree. The degree-weighted constraint $Y^\top DY = I_d$ normalizes the embedding by the local sampling density, preventing the embedding from being dominated by dense regions of the data at the expense of sparse regions.
+
+The constraint also eliminates the trivial zero-frequency mode: the constant embedding $y_i = c$ for all $i$ satisfies $L(c) = 0$ — the constant signal has zero Dirichlet energy — but is excluded by the orthogonality constraint $Y^\top D\mathbf{1} = 0$, which forces the embedding coordinates to be orthogonal to the constant vector in the degree-weighted inner product. This is the graph analogue of requiring the manifold harmonic basis to be orthogonal to the constant function in $L^2(\mathcal{M})$.
+
+---
+
+**The solution: the Laplacian eigenvectors as natural coordinates.**
+
+The constrained optimization problem — minimize $\text{tr}(Y^\top LY)$ subject to $Y^\top DY = I_d$ — has a beautiful closed-form solution. The optimal embedding coordinates are the eigenvectors of the generalized eigenvalue problem $Lu = \lambda Du$, corresponding to the $d$ smallest nonzero eigenvalues.
+
+The mathematician orders the eigenvalues: $0 = \lambda_1 < \lambda_2 \leq \lambda_3 \leq \cdots \leq \lambda_n$. The smallest eigenvalue is always zero, with eigenvector $\mathbf{1}$ (the constant signal — excluded by the normalization constraint). The second eigenvector $u_2$, with eigenvalue $\lambda_2$, is the smoothest non-constant signal on the cultural neighbourhood graph — the cultural axis along which neighbouring villages change most gradually. The third eigenvector $u_3$, with eigenvalue $\lambda_3$, is the second smoothest non-constant signal, orthogonal to $u_2$. Using $u_2$ and $u_3$ as the two embedding coordinates gives a two-dimensional map of the cultural landscape in which nearby villages in the original four-hundred-dimensional space remain nearby in the embedding, and the embedding axes correspond to the two dominant smooth axes of cultural variation across the Himalayan network.
+
+This is the Laplacian Eigenmap: embed village $i$ at the point $(u_2(i), u_3(i)) \in \mathbb{R}^2$, where $u_2(i)$ and $u_3(i)$ are the $i$-th components of the second and third eigenvectors of the graph Laplacian. The map is two-dimensional, but it has recovered the manifold's true intrinsic structure: villages that are genuinely culturally similar — connected by short paths of intermediate cultural types on the manifold — appear close together in the map, while villages that are culturally distant — like Upper and Lower Dolpo — appear far apart, because the chain of edges connecting them in the neighbourhood graph has forced their eigenvector coordinates to differ.
+
+---
+
+**Why the eigenvectors give the right coordinates: the harmonic interpretation.**
+
+The research team's mathematician offers the deep explanation. Each eigenvector $u_k$ of the graph Laplacian is the discrete analogue of an eigenfunction of the Laplace-Beltrami operator on the cultural manifold. The eigenvalue $\lambda_k$ measures how much the function $u_k$ varies across the graph — its Dirichlet energy. Small $\lambda_k$ means $u_k$ varies slowly across the manifold — it is a smooth, low-frequency function that changes gradually as you move from village to village along the manifold. Large $\lambda_k$ means $u_k$ varies rapidly — it is a high-frequency function that oscillates quickly between neighbouring villages.
+
+The lowest-frequency non-constant eigenvector $u_2$ is the function that varies as slowly as possible while being non-constant and orthogonal to $\mathbf{1}$. On the cultural manifold, this function is the longest, smoothest cultural gradient — the axis along which culture changes most gradually across the Himalayan landscape. In practice, after training, this axis often corresponds to altitude: culture changes gradually with altitude, from Terai lowlands through mid-hills to high Himalayan villages. The second eigenvector $u_3$ is the second smoothest cultural gradient, orthogonal to the first — perhaps the east-west axis of trade route influence.
+
+These are not axes that the researcher chose in advance. They are the axes that the data itself reveals — the intrinsic coordinate system of the cultural manifold, discovered from the data through the spectral theory of the graph Laplacian. The Laplacian Eigenmap does not impose a coordinate system on the data. It listens to the data and extracts the coordinate system that the manifold itself is whispering through the neighbourhood structure of the observations.
+
+---
+
+**The connection to the spectral thread: closing the loop.**
+
+The young researcher who built the GNN postal network in Chapter 2 and the geodesic convolution filter in Topic 1 of Chapter 3 sits in the team meeting and suddenly sees the entire spectral thread come together.
+
+In Chapter 2's Topic 2, the graph Laplacian eigenvectors were the graph Fourier basis — the frequency modes of signals defined on the graph. Low-frequency eigenvectors corresponded to smooth signals that varied slowly across the graph; high-frequency eigenvectors corresponded to rapidly varying signals. The spectral GNN filtered in this basis, retaining low frequencies and attenuating high ones.
+
+In Topic 1 of Chapter 3, the Laplace-Beltrami eigenfunctions were the manifold harmonics — the natural frequency basis for signals on the curved surface. The DiffusionNet used the lowest-frequency eigenfunctions as the basis for intrinsic feature propagation.
+
+Now, in Laplacian Eigenmaps, the lowest-frequency eigenvectors of the graph Laplacian — which approximate the lowest-frequency eigenfunctions of the Laplace-Beltrami operator by the Belkin-Niyogi theorem — are used as embedding coordinates. The same eigenvectors that were the graph Fourier basis for signal processing in Chapter 2 are now the intrinsic coordinates for manifold learning in Chapter 3. They are both things simultaneously: the natural frequency modes of the graph, and the natural coordinate functions of the manifold. The Laplace-Beltrami operator unifies these two interpretations: its eigenfunctions are simultaneously the optimal embedding coordinates and the natural frequency basis for processing signals defined on the manifold.
+
+---
+
+**What the Laplacian Eigenmap reveals about the Himalayan cultural landscape.**
+
+The team runs the algorithm on the two-hundred-village dataset. The two-dimensional Laplacian Eigenmap embedding appears. The mathematician studies it carefully.
+
+The first embedding axis — the direction of smallest nonzero eigenvalue — runs from the bottom-left of the map to the top-right. Checking which villages fall where, she sees that the bottom-left corner contains the high-altitude Trans-Himalayan villages of Dolpo, Mustang, and Humla — strongly Tibetan Buddhist cultural influence, yak herding, barley agriculture, Tibetan script. The top-right corner contains the mid-hill villages of the middle mountains — mixed cultural influence, terraced rice and millet farming, Nepali as the primary language. This axis corresponds roughly to altitude and Tibetan cultural proximity. It is the first principal axis of Himalayan cultural variation — not because anyone chose it to be, but because it is the smoothest gradient of cultural change across the village network.
+
+The second embedding axis runs perpendicular to the first. The left side of this axis contains the western Himalayan villages — Humla, Jumla, Dolpo — with their distinct western Himalayan cultural traditions. The right side contains the eastern villages — Taplejung, Ilam — with their different eastern Himalayan traditions. This axis corresponds roughly to the east-west geographic gradient along the Himalayan range. Again, no one specified this: it emerged from the eigenvector computation.
+
+Upper and Lower Dolpo, which were incorrectly placed close together by PCA, now appear correctly far apart in the Laplacian Eigenmap: Upper Dolpo sits in the bottom-left corner of the altitude-Tibetan axis, while Lower Dolpo sits considerably higher along that axis, reflecting their genuine cultural distance despite Euclidean proximity in the ambient measurement space. The fold in the cultural manifold — the curvature that PCA collapsed — has been correctly unfolded by the Laplacian Eigenmap.
+
+---
+
+**Three pictures to carry into the mathematics.**
+
+Before moving to the formalism, hold three geometric pictures simultaneously.
+
+The first picture: the Swiss roll in $\mathbb{R}^3$, with two points on adjacent layers that are close in Euclidean space but far apart along the surface. PCA projects both to the same region of the flat plane. The Laplacian Eigenmap unrolls the spiral and places them far apart, correctly reflecting their manifold distance. The cultural manifold of Himalayan villages is the four-hundred-dimensional analogue: the same failure of PCA, the same success of the spectral embedding.
+
+The second picture: the neighbourhood graph as a discrete approximation to the manifold, with edges encoding local geometric proximity and weights encoding similarity strength. The graph Laplacian $L = D - W$ of this neighbourhood graph is the discrete approximation to the Laplace-Beltrami operator $\Delta_\mathcal{M}$ of the underlying manifold. The eigenvectors of $L$ approximate the eigenfunctions of $\Delta_\mathcal{M}$ by Belkin-Niyogi. The embedding uses those eigenvectors as coordinates — the manifold's own harmonic coordinate system, computed from finite data.
+
+The third picture: the optimization problem — minimize the weighted sum of squared embedding distances $\sum_{ij}W_{ij}\|y_i-y_j\|^2$, subject to degree-weighted orthonormality — as the discrete analogue of minimizing the Dirichlet energy $\int_\mathcal{M}\|\nabla\phi\|^2_g\,d\text{vol}$ among orthonormal functions on the manifold. Both are solved by the eigenfunctions of the respective Laplacian. The embedding is the solution to the variational problem of placing points as smoothly as possible on the manifold while maintaining orthogonality — the discrete manifestation of the manifold harmonic analysis that has threaded through the entire Phase 2.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the neighbourhood graph construction and its geometric justification, the graph Laplacian and its weighted variants, the Laplacian Eigenmap optimization problem and its solution, the convergence theory connecting the discrete embedding to the continuous manifold, the relationship to classical dimensionality reduction methods, and the diffusion maps generalization.
+
+### Neighbourhood Graph Construction
+
+**Setting.** Let $\{x_1,\ldots,x_n\} \subset \mathbb{R}^D$ be $n$ data points assumed to lie near a compact $d$-dimensional Riemannian manifold $\mathcal{M} \hookrightarrow \mathbb{R}^D$ with $d \ll D$.
+
+**Definition ($\epsilon$-neighbourhood graph).** Connect $x_i$ and $x_j$ with an edge if $\|x_i - x_j\|_{\mathbb{R}^D} < \epsilon$:
+
+$$E_\epsilon = \{(i,j) : \|x_i - x_j\| < \epsilon\}$$
+
+**Definition ($k$-nearest neighbour graph).** Connect $x_i$ to its $k$ nearest neighbours in Euclidean distance (symmetrized: connect $i$ and $j$ if $j$ is among the $k$-NN of $i$ or $i$ is among the $k$-NN of $j$).
+
+**Edge weights — Gaussian kernel:**
+
+$$W_{ij} = \begin{cases} \exp\!\left(-\dfrac{\|x_i - x_j\|^2}{\sigma^2}\right) & \text{if } (i,j) \in E \\ 0 & \text{otherwise} \end{cases}$$
+
+where $\sigma > 0$ is the bandwidth parameter. The weight matrix $W \in \mathbb{R}^{n\times n}$ is symmetric, non-negative, and sparse (most entries zero).
+
+**Binary weights (alternative):**
+
+$$W_{ij} = \begin{cases} 1 & \text{if } (i,j) \in E \\ 0 & \text{otherwise} \end{cases}$$
+
+**Geometric justification.** For points $x_i, x_j$ on $\mathcal{M}$ with small Euclidean distance $\|x_i - x_j\| \ll 1/\kappa$ (where $\kappa$ is the maximum principal curvature of $\mathcal{M}$):
+
+$$d_\mathcal{M}(x_i, x_j) = \|x_i - x_j\| + O(\|x_i-x_j\|^3)$$
+
+Local Euclidean distances approximate geodesic distances to second order. Therefore for small $\epsilon$ or small $k$ (tight neighbourhoods), $W_{ij}$ encodes local manifold proximity honestly.
+
+**Weighted degree matrix:**
+
+$$D_{ii} = \sum_{j=1}^n W_{ij} = \sum_{j \in \mathcal{N}(i)} W_{ij}$$
+
+the total connection strength of node $i$. $D = \text{diag}(D_{11},\ldots,D_{nn})$.
+
+---
+
+### The Graph Laplacian and Its Variants
+
+**Definition (Unnormalized graph Laplacian):**
+
+$$L = D - W \in \mathbb{R}^{n\times n}$$
+
+with entries $L_{ii} = D_{ii}$, $L_{ij} = -W_{ij}$ for $i\neq j$.
+
+**Positive semidefiniteness:**
+
+$$f^\top L f = \frac{1}{2}\sum_{i,j} W_{ij}(f_i - f_j)^2 \geq 0 \quad \forall f \in \mathbb{R}^n$$
+
+Eigenvalues $0 = \lambda_1 \leq \lambda_2 \leq \cdots \leq \lambda_n$, with $\lambda_1 = 0$ having eigenvector $\mathbf{1}$ for a connected graph.
+
+**Definition (Symmetric normalized Laplacian):**
+
+$$\mathcal{L} = D^{-1/2}LD^{-1/2} = I - D^{-1/2}WD^{-1/2}$$
+
+Eigenvalues in $[0,2]$. Related to $L$ by the similarity transform: if $Lu = \lambda Du$ then $\mathcal{L}(D^{1/2}u) = \lambda(D^{1/2}u)$.
+
+**Definition (Random walk Laplacian):**
+
+$$L_{\text{rw}} = D^{-1}L = I - D^{-1}W$$
+
+$D^{-1}W$ is the random walk transition matrix with $(D^{-1}W)_{ij} = W_{ij}/D_{ii}$ — the probability of transitioning from node $i$ to node $j$ in one step of a random walk. Eigenvalues in $[0,2]$.
+
+**Relationship between variants:**
+
+$$L_{\text{rw}} = D^{-1/2}\mathcal{L}D^{1/2}$$
+
+They share the same eigenvalues; eigenvectors of $L_{\text{rw}}$ are $D^{-1/2}$ times eigenvectors of $\mathcal{L}$.
+
+---
+
+### The Laplacian Eigenmap Optimization Problem
+
+**Objective.** Find embedding coordinates $Y = [y_1|\cdots|y_n]^\top \in \mathbb{R}^{n\times d}$ (one row $y_i \in \mathbb{R}^d$ per data point) minimizing the local distortion:
+
+$$\min_{Y \in \mathbb{R}^{n\times d}} \sum_{i,j=1}^n W_{ij}\|y_i - y_j\|^2$$
+
+**Reformulation as trace minimization.**
+
+$$\sum_{i,j} W_{ij}\|y_i - y_j\|^2 = \sum_{i,j}W_{ij}\sum_{k=1}^d (y_{ik} - y_{jk})^2 = 2\sum_{k=1}^d \mathbf{y}_k^\top L\, \mathbf{y}_k = 2\,\text{tr}(Y^\top L Y)$$
+
+where $\mathbf{y}_k \in \mathbb{R}^n$ is the $k$-th column of $Y$.
+
+**Constraint.** The degree-weighted orthonormality constraint:
+
+$$Y^\top D Y = I_d$$
+
+prevents: (1) the trivial solution $Y = 0$; (2) translation (all $y_i = c$ gives $Y^\top DY = c^2 D_{++}I \neq I_d$); (3) the zero-frequency mode $y_i = \mathbf{1}$ (excluded by $\mathbf{1}^\top D y_k = 0$ implicit in the constraint via the Lagrangian); (4) arbitrary scaling and rotation.
+
+**The constrained optimization problem:**
+
+$$\min_{Y \in \mathbb{R}^{n\times d},\; Y^\top DY = I_d} \text{tr}(Y^\top LY)$$
+
+**Solution via generalized eigenvalue problem.**
+
+**Theorem (Belkin-Niyogi 2003).** The solution to the Laplacian Eigenmap optimization is:
+
+$$Y^* = [u_2 | u_3 | \cdots | u_{d+1}]$$
+
+where $u_2, u_3,\ldots,u_{d+1}$ are the eigenvectors corresponding to the $d$ smallest nonzero eigenvalues of the **generalized eigenvalue problem**:
+
+$$Lu = \lambda Du, \quad 0 = \lambda_1 \leq \lambda_2 \leq \cdots \leq \lambda_n$$
+
+**Proof.** Using the substitution $v = D^{1/2}u$ (so $u = D^{-1/2}v$), the constraint $u^\top Du = 1$ becomes $v^\top v = 1$, and the objective $u^\top Lu$ becomes $v^\top D^{-1/2}LD^{-1/2}v = v^\top\mathcal{L}v$. The problem reduces to:
+
+$$\min_{V \in \mathbb{R}^{n\times d},\; V^\top V = I_d} \text{tr}(V^\top \mathcal{L} V)$$
+
+By the Courant-Fischer minimax theorem, the solution is $V^* = [\tilde{u}_2|\cdots|\tilde{u}_{d+1}]$, the $d$ eigenvectors of $\mathcal{L}$ with smallest nonzero eigenvalues. Converting back: $u_k = D^{-1/2}\tilde{u}_k$. These are the eigenvectors of $L u = \lambda D u$ with smallest nonzero eigenvalues. $\square$
+
+**Embedding map:**
+
+$$\Phi: x_i \mapsto (u_2(i), u_3(i), \ldots, u_{d+1}(i)) \in \mathbb{R}^d$$
+
+**Eigenvalue interpretation.** The eigenvalue $\lambda_k$ of $Lu_k = \lambda_k Du_k$ equals:
+
+$$\lambda_k = \frac{u_k^\top Lu_k}{u_k^\top Du_k} = \frac{\sum_{ij}W_{ij}(u_k(i)-u_k(j))^2}{\sum_i D_{ii}u_k(i)^2}$$
+
+the Rayleigh quotient — the ratio of local variation to degree-weighted energy. The smallest nonzero $\lambda_2$ corresponds to the smoothest non-constant embedding direction; the largest $\lambda_n$ corresponds to the most rapidly varying direction.
+
+---
+
+### Convergence Theory: Discrete to Continuous
+
+**Setup.** Let $\{x_1,\ldots,x_n\}$ be i.i.d. samples from density $p$ on compact $d$-dimensional manifold $\mathcal{M} \subset \mathbb{R}^D$. Construct the neighbourhood graph with Gaussian weights:
+
+$$W_{ij}^{(n,\sigma)} = \exp\!\left(-\frac{\|x_i-x_j\|^2}{\sigma^2}\right)$$
+
+Let $L^{(n,\sigma)}$ be the resulting unnormalized graph Laplacian and $\mathcal{L}^{(n,\sigma)} = D^{-1/2}L^{(n,\sigma)}D^{-1/2}$ its normalized version.
+
+**Theorem (Belkin-Niyogi 2003 — pointwise convergence).** Under the scaling $\sigma = \sigma(n)$ with $\sigma \to 0$ and $n\sigma^{d+2}/\log n \to \infty$:
+
+$$\frac{1}{n\sigma^{d+2}} \sum_j W_{ij}^{(n,\sigma)} (f(x_j) - f(x_i)) \xrightarrow{n\to\infty} c_d \cdot (\Delta_\mathcal{M}f + \nabla\log p \cdot \nabla f)(x_i)$$
+
+where $c_d = \int_{\mathbb{R}^d} \|v\|^2 e^{-\|v\|^2} dv / (2d)$ is a dimension-dependent constant and $\Delta_\mathcal{M}$ is the Laplace-Beltrami operator.
+
+**Corollary (Uniform density).** When $p$ is uniform on $\mathcal{M}$ (or after density normalization):
+
+$$\frac{1}{n\sigma^{d+2}} (L^{(n,\sigma)}f)_i \xrightarrow{n\to\infty} c_d \cdot \Delta_\mathcal{M}f(x_i)$$
+
+The graph Laplacian, properly normalized, converges to the Laplace-Beltrami operator.
+
+**Theorem (Coifman-Lafon 2006 — spectral convergence).** The eigenvalues $\lambda_k^{(n)}/(n\sigma^{d+2})$ and eigenvectors $u_k^{(n)}$ of the normalized graph Laplacian converge to the eigenvalues $\lambda_k$ and eigenfunctions $\phi_k$ of $\Delta_\mathcal{M}$:
+
+$$\lambda_k^{(n)}/(n\sigma^{d+2}) \to \lambda_k, \quad u_k^{(n)}(x_i) \to \phi_k(x_i)$$
+
+as $n\to\infty$, uniformly over $x_i \in \mathcal{M}$.
+
+**Consequence for Laplacian Eigenmaps.** The embedding coordinates $(u_2^{(n)}(x_i),\ldots,u_{d+1}^{(n)}(x_i))$ converge to the manifold harmonic coordinates $(\phi_2(x_i),\ldots,\phi_{d+1}(x_i))$ — the eigenfunctions of the Laplace-Beltrami operator evaluated at the data points. The Laplacian Eigenmap recovers the true manifold harmonic coordinate system in the limit of dense sampling.
+
+---
+
+### Density Correction and Diffusion Maps
+
+**Problem with uniform Laplacian.** When data density $p$ is non-uniform on $\mathcal{M}$, the graph Laplacian converges to $\Delta_\mathcal{M} + \nabla\log p \cdot \nabla$ — not the pure Laplace-Beltrami operator $\Delta_\mathcal{M}$. The density gradient term $\nabla\log p \cdot \nabla$ biases the eigenvectors toward high-density regions, distorting the embedding.
+
+**Definition (Diffusion Maps — Coifman-Lafon 2006).** The $\alpha$-normalized kernel removes the density bias:
+
+$$\tilde{W}_{ij}^{(\alpha)} = \frac{W_{ij}}{d_i^\alpha d_j^\alpha}, \quad d_i = \sum_j W_{ij}$$
+
+with parameter $\alpha \in [0,1]$ controlling density normalization:
+
+- $\alpha = 0$: no normalization — graph Laplacian (biased by density)
+- $\alpha = 1/2$: Fokker-Planck operator
+- $\alpha = 1$: Laplace-Beltrami operator (density-unbiased)
+
+**Diffusion map embedding.** Compute the random walk matrix $P = \tilde{D}^{-1}\tilde{W}^{(\alpha)}$ where $\tilde{D}_{ii} = \sum_j\tilde{W}_{ij}^{(\alpha)}$. The **diffusion distance** at time $t$ between $x_i$ and $x_j$ is:
+
+$$D_t(x_i,x_j)^2 = \sum_{k\geq 2} \left(\mu_k^t(\psi_k(x_i) - \psi_k(x_j))\right)^2$$
+
+where $\mu_k$ are eigenvalues of $P$ (with $\mu_1=1$ excluded) and $\psi_k$ are corresponding right eigenvectors. The **diffusion map** embeds $x_i$ as:
+
+$$\Psi_t(x_i) = (\mu_2^t\psi_2(x_i), \mu_3^t\psi_3(x_i), \ldots, \mu_{d+1}^t\psi_{d+1}(x_i)) \in \mathbb{R}^d$$
+
+**Theorem (Coifman-Lafon 2006).** The Euclidean distance in the diffusion map equals the diffusion distance:
+
+$$\|\Psi_t(x_i) - \Psi_t(x_j)\|^2 = D_t(x_i,x_j)^2$$
+
+The diffusion distance is robust to noise (it integrates over all paths of length $t$, averaging out noise) and geometrically meaningful (it equals the geodesic distance for small $t$ on a flat manifold).
+
+---
+
+### Relationship to Classical Dimensionality Reduction
+
+**Principal Component Analysis (PCA).** Find $Y \in \mathbb{R}^{n\times d}$ minimizing reconstruction error:
+
+$$\min_{Y = XQ,\; Q^\top Q = I_d} \|X - YQ^\top\|_F^2$$
+
+Solution: $Q^* = $ top $d$ eigenvectors of $X^\top X$ (or equivalently $XX^\top$). PCA minimizes global Euclidean reconstruction error — it is the optimal linear embedding. It does not preserve manifold structure when the manifold is nonlinear.
+
+**Classical Multidimensional Scaling (cMDS).** Find $Y \in \mathbb{R}^{n\times d}$ minimizing:
+
+$$\min_{Y} \sum_{i,j} \left(\|y_i - y_j\|^2 - \|x_i-x_j\|^2\right)^2$$
+
+Solution: double-centering of the pairwise distance matrix and taking the top $d$ eigenvectors. Equivalent to PCA on the centered Gram matrix. Preserves pairwise Euclidean distances — also linear, same failure mode as PCA for nonlinear manifolds.
+
+**ISOMAP (Tenenbaum et al. 2000).** Replace Euclidean pairwise distances with graph shortest-path distances $d_G(i,j)$ in cMDS:
+
+$$\min_{Y} \sum_{i,j}\left(\|y_i-y_j\|^2 - d_G(i,j)^2\right)^2$$
+
+Preserves geodesic distances — handles Swiss roll correctly. Failures: (1) $O(n^2)$ memory for pairwise distances; (2) sensitive to noise (one wrong edge corrupts all shortest paths through it); (3) requires the manifold to be convex (no holes); (4) over-constrains long-range distances estimated through error-accumulating hop chains.
+
+**Laplacian Eigenmaps vs. ISOMAP.** LE optimizes only local distances (weighted by $W_{ij}$, zero for non-neighbours). ISOMAP optimizes all pairwise distances. LE is:
+- More robust to noise (local edges independent, errors do not propagate)
+- Faster ($O(nd)$ after eigenvector computation vs. $O(n^2\log n)$ for all-pairs shortest paths)
+- Applicable to non-convex manifolds (no requirement of convexity)
+- Theoretically grounded in the spectral theory of $\Delta_\mathcal{M}$
+
+**Summary table:**
+
+| Method | Distances preserved | Manifold type | Complexity |
+|---|---|---|---|
+| PCA | Euclidean (global, linear) | Flat only | $O(nD^2)$ |
+| cMDS | Euclidean (global) | Flat only | $O(n^2D)$ |
+| ISOMAP | Geodesic (global) | Convex manifolds | $O(n^2\log n)$ |
+| Laplacian Eigenmaps | Local weighted | General manifolds | $O(nd + \text{nnz}(L))$ |
+| Diffusion Maps | Diffusion distance | General manifolds | $O(nd + \text{nnz}(\tilde W))$ |
+
+---
+
+### The Laplacian Eigenmap as a Graph Neural Network
+
+**Connection to GNNs.** The Laplacian Eigenmap embedding $\Phi(x_i) = (u_2(i),\ldots,u_{d+1}(i))$ can be computed iteratively using the power method: starting from a random matrix $Y^{(0)}$, iterate $Y^{(k+1)} = D^{-1}WY^{(k)}$ (random walk diffusion), followed by Gram-Schmidt orthonormalization. Each iteration is one step of a graph diffusion — equivalent to one layer of a GCN with $\hat{A} = D^{-1}W$ and no learned weights.
+
+**Theorem.** The power iteration $Y^{(k)} = (D^{-1}W)^k Y^{(0)}$ converges to the top eigenvectors of the random walk matrix $D^{-1}W$ (equivalently, bottom eigenvectors of $L_{\text{rw}}$). For $k\to\infty$: the non-constant columns converge to $u_2,\ldots,u_{d+1}$.
+
+**Consequence.** An infinitely deep GCN with no learned weights and shared propagation matrix $\hat{A} = D^{-1}W$ computes the Laplacian Eigenmap embedding — it converges to the manifold's harmonic coordinate system. This is over-smoothing from Chapter 2 reinterpreted constructively: what looked like a failure (convergence to a fixed point) is precisely the Laplacian Eigenmap algorithm, computing the manifold's intrinsic coordinates through iterated local averaging.
+
+---
+
+### Computational Implementation
+
+**Algorithm (Laplacian Eigenmaps).**
+
+1. **Build neighbourhood graph:** Compute $k$-NN graph from $\{x_1,\ldots,x_n\}$ using approximate nearest-neighbour search. Cost: $O(n\log n\cdot D)$.
+
+2. **Assign weights:** $W_{ij} = \exp(-\|x_i-x_j\|^2/\sigma^2)$ for connected pairs. Cost: $O(nk)$.
+
+3. **Compute Laplacian:** $L = D - W$. Cost: $O(nk)$.
+
+4. **Solve generalized eigenvalue problem:** Find $d+1$ smallest eigenpairs of $Lu = \lambda Du$. Equivalently, find $d+1$ smallest eigenpairs of $\mathcal{L} = D^{-1/2}LD^{-1/2}$ (standard symmetric eigenvalue problem). Use the **Lanczos algorithm** for sparse matrices. Cost: $O(nk\cdot d + nd^2)$.
+
+5. **Embed:** $\Phi(x_i) = (u_2(i),\ldots,u_{d+1}(i))$.
+
+**Bandwidth selection.** The bandwidth $\sigma$ is a critical hyperparameter:
+- Too small ($\sigma \to 0$): graph becomes disconnected; many isolated nodes.
+- Too large ($\sigma \to \infty$): all weights approach 1; graph loses local structure; Laplacian approximates global average.
+- Optimal: $\sigma$ proportional to the local neighbourhood scale — empirically chosen by inspecting the connectivity of the resulting graph or by cross-validation.
+
+**Intrinsic dimension estimation.** The eigenvalue gap — the jump between $\lambda_{d+1}$ and $\lambda_{d+2}$ — provides an estimate of the manifold's intrinsic dimension $d$: a large gap suggests the first $d$ nontrivial eigenvectors capture most of the manifold's geometry, with higher eigenvectors capturing noise or fine-grained detail.
+
+---
+
+### WHY THIS MATTERS
+
+In **MATH 302 (Matrix Theory)**, the generalized eigenvalue problem $Lu = \lambda Du$ is transformed to the standard symmetric eigenvalue problem $\mathcal{L}v = \lambda v$ for $v = D^{1/2}u$ via the congruence transformation $D^{-1/2}(\cdot)D^{-1/2}$. The Courant-Fischer minimax theorem — $\lambda_k = \min_{\dim S = k}\max_{u\in S, u^\top Du=1}u^\top Lu$ — gives the variational characterization of the $k$-th embedding direction as the $k$-th smoothest non-constant function on the graph, measured by the Rayleigh quotient $u^\top Lu / u^\top Du$. The Lanczos algorithm for computing the smallest eigenpairs of a sparse symmetric matrix uses the Gram-Schmidt process from MATH 302 to build a Krylov subspace orthonormal basis and reduces the $n\times n$ eigenvalue problem to a small $m\times m$ tridiagonal eigenvalue problem — the reduction of a large sparse symmetric matrix to tridiagonal form being a key application of orthogonal similarity transformations from MATH 302.
+
+In **MATH 208 (Statistics and Probability)**, the Gaussian kernel $W_{ij} = \exp(-\|x_i-x_j\|^2/\sigma^2)$ is proportional to the value of a multivariate Gaussian density $\mathcal{N}(x_i, \sigma^2/2\, I_D)$ evaluated at $x_j$ — it encodes the probability that $x_j$ was generated from a Gaussian centred at $x_i$. The degree $D_{ii} = \sum_j W_{ij}$ estimates the local data density at $x_i$: in a densely sampled region, many $x_j$ are nearby and the sum is large; in a sparse region, few $x_j$ are nearby and the sum is small. The $\alpha$-normalization of Diffusion Maps $\tilde W_{ij}^{(\alpha)} = W_{ij}/(d_i^\alpha d_j^\alpha)$ is a density correction: dividing by $d_i^\alpha$ (proportional to $p(x_i)^\alpha$) removes the density bias from the graph Laplacian, making it converge to the pure Laplace-Beltrami operator rather than the density-modified operator $\Delta_\mathcal{M} + \nabla\log p\cdot\nabla$. This is a bias-correction procedure from statistics — removing the sampling density's influence on the geometric operator — applied in the operator theory setting.
+
+In **COMP 202 (Data Structures and Algorithms)**, the $k$-nearest-neighbour graph construction uses the $k$-d tree data structure (from COMP 202's tree chapter) to reduce the naive $O(n^2D)$ all-pairs distance computation to $O(n\log n\cdot D)$ for low-to-moderate $D$. For high $D$ (the curse of dimensionality makes $k$-d trees degrade), approximate nearest-neighbour algorithms (locality-sensitive hashing, HNSW graphs) from COMP 202's hashing chapter achieve $O(n\log n\cdot D)$ with bounded approximation error. The Dijkstra's algorithm for computing shortest-path distances in ISOMAP — compared to the Laplacian Eigenmap's avoidance of all-pairs shortest paths — illustrates the computational advantage of the local-distance-only approach: Dijkstra costs $O((n + m)\log n)$ per source node and $O(n(n+m)\log n)$ for all-pairs, while the Laplacian Eigenmap requires only the sparse Lanczos eigensolver at $O(nk\cdot d)$ — a significant computational saving that makes Laplacian Eigenmaps scalable to large datasets where ISOMAP is intractable.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Tribhuvan University cultural survey story has a precise mathematical address. We walk through them completely — the four-hundred-dimensional cultural profile vectors, the PCA failure on the folded manifold, the Swiss roll as the precise geometric analogy, the neighbourhood graph as discrete manifold approximation, the break moment exposing ISOMAP's failure, the graph Laplacian as local distance operator, the eigenvectors as natural coordinates, the Belkin-Niyogi convergence, and the closing of the spectral thread — until the story and the formalism are a single object seen from two angles.
+
+---
+
+**The two hundred villages measured across four hundred cultural dimensions — each village a point $x_i \in \mathbb{R}^{400}$ — are the data points $\{x_1,\ldots,x_n\} \subset \mathbb{R}^D$ with $n = 200$ and $D = 400$, assumed to lie near a compact $d$-dimensional Riemannian manifold $\mathcal{M} \hookrightarrow \mathbb{R}^{400}$ with $d \ll 400$.** The four hundred measured cultural dimensions — vocabulary, textile patterns, instrument tuning, recipe profiles, calendar systems — are the ambient coordinates of $\mathbb{R}^D$, highly correlated projections of the few underlying degrees of freedom that actually parameterize Himalayan cultural variation. The manifold hypothesis asserts that these four hundred numbers, despite their apparent independence, trace out a $d$-dimensional surface in $\mathbb{R}^{400}$ — a surface parameterized by three or four fundamental cultural axes corresponding to altitude gradient, trade route influence, Tibetan proximity, and lowland contact. The manifold $\mathcal{M}$ is not known explicitly: you cannot write down its metric tensor $g_{ij}$ or its geodesic equations. It is a hidden geometric structure inferred from the data points, which are noisy samples lying near its surface. The entire Laplacian Eigenmap algorithm is the procedure for discovering this hidden structure and making it explicit as a low-dimensional coordinate system.
+
+**The PCA failure — Upper and Lower Dolpo placed near each other despite being culturally distant — is the failure of the linear projection $Y = XQ$ with $Q^\top Q = I_d$ to preserve the manifold's intrinsic geometry when the manifold is nonlinear.** PCA minimizes $\|X - XQQ^\top\|_F^2$ — the global Frobenius reconstruction error in the ambient space $\mathbb{R}^{400}$ — by projecting onto the subspace spanned by the top $d$ eigenvectors of $X^\top X$. The projection distance $\|y_i - y_j\| = \|QQ^\top(x_i-x_j)\|$ is a lower bound on the Euclidean ambient distance $\|x_i-x_j\|$, which is itself a lower bound on the geodesic distance $d_\mathcal{M}(x_i,x_j)$. When the manifold folds — when two points are geodesically distant but Euclidean-close because the manifold curves back on itself — PCA collapses the fold: it places the two points close in the embedding because their ambient Euclidean distance is small, even though their geodesic distance is large. Upper and Lower Dolpo have small $\|x_{\text{Upper}} - x_{\text{Lower}}\|_{\mathbb{R}^{400}}$ (many cultural measurements numerically similar) but large $d_\mathcal{M}(x_{\text{Upper}}, x_{\text{Lower}})$ (long path of intermediate cultural types along the manifold surface). PCA measures the former; the correct embedding must measure the latter.
+
+**The Swiss roll in $\mathbb{R}^3$ — two points on adjacent spiral layers that are Euclidean-close but geodesically far — is the canonical low-dimensional instance of the fold failure, and the cultural manifold of Himalayan villages is its four-hundred-dimensional analogue.** The Swiss roll is a rectangular strip $[0,L]\times[0,W]$ rolled into a spiral $\gamma(s,t) = ((a+bs)\cos s, t, (a+bs)\sin s) \in \mathbb{R}^3$ for $s\in[0,2\pi]$. Two points on adjacent layers at the same angle $s$ have Euclidean distance $\approx 2\pi b$ (the layer spacing) but geodesic distance $\approx L$ (the full length of the strip). PCA projects the spiral onto a two-dimensional plane, folding the strip back into a compact region and placing the two points close. The Laplacian Eigenmap unrolls the spiral: its eigenvectors recover the $(s,t)$ parameterization of the unrolled strip, placing the two points at Euclidean distance $\approx L$ in the embedding. The cultural manifold is the same geometry in $\mathbb{R}^{400}$: the fold that PCA collapses is the curvature of the manifold between Upper and Lower Dolpo, and the Laplacian Eigenmap unrolls this fold by measuring intrinsic rather than extrinsic distances.
+
+---
+
+**The key insight that local Euclidean distances approximate geodesic distances — that nearby villages in $\mathbb{R}^{400}$ are genuinely culturally nearby on the manifold, while the failure of Euclidean distance only appears at large scales where the manifold folds — is the geometric fact $d_\mathcal{M}(x_i,x_j) = \|x_i-x_j\| + O(\|x_i-x_j\|^3)$ for points with $\|x_i-x_j\| \ll 1/\kappa$ where $\kappa$ is the manifold's maximum principal curvature.** This is the third-order agreement between Euclidean and geodesic distance, the discrete analogue of the exponential map's property $d(\exp_x)_0 = \text{Id}$ from Topic 1: locally, the manifold is flat to first order, so local Euclidean distances are honest proxies for geodesic distances. The approximation error is $O(\|x_i-x_j\|^3)$ — cubic in the pairwise distance, negligible for tight neighbourhoods. The bandwidth parameter $\sigma$ in the Gaussian weight $W_{ij} = \exp(-\|x_i-x_j\|^2/\sigma^2)$ controls what counts as local: small $\sigma$ restricts the neighbourhood to points within the regime where the cubic approximation error is negligible, ensuring the weights encode honest local manifold proximity. The regime breakdown — where Euclidean distance no longer approximates geodesic distance — is precisely where the manifold curvature $\kappa$ becomes significant at the scale $\sigma$, which is the discrete analogue of the injectivity radius condition from Topic 1 that limits geodesic polar coordinates to radii smaller than $\text{inj}(x)$.
+
+**The neighbourhood graph connecting each village to its ten nearest neighbours with Gaussian weights $W_{ij} = \exp(-\|x_i-x_j\|^2/\sigma^2)$ — and the weighted degree matrix $D_{ii} = \sum_j W_{ij}$ recording total connection strength — is the discrete approximation to the Riemannian manifold $(\mathcal{M}, g)$, with the weight matrix $W$ encoding the local metric structure.** The $k$-nearest-neighbour graph is the discrete instance of the $\epsilon$-neighbourhood definition $E_\epsilon = \{(i,j): \|x_i-x_j\| < \epsilon\}$, with the neighbourhood radius determined adaptively by the $k$-th nearest neighbour distance rather than a fixed global $\epsilon$. The Gaussian weight $W_{ij}$ is the discrete analogue of the heat kernel $k_t(x,y) = (4\pi t)^{-d/2}\exp(-d_\mathcal{M}(x,y)^2/4t)$ on the manifold, with $\sigma^2 \approx 4t$ being the diffusion time. The degree $D_{ii} = \sum_j W_{ij}$ estimates the local sampling density $p(x_i)$ at village $i$: a culturally popular village type (many measurements in its neighbourhood) has large $D_{ii}$; a culturally isolated village type has small $D_{ii}$. The weight matrix $W$ and degree matrix $D$ are the computational objects from which the graph Laplacian is built, and their geometric meaning — local metric proximity, local sampling density — is what makes the resulting Laplacian a valid approximation to $\Delta_\mathcal{M}$.
+
+---
+
+**The break moment — ISOMAP's failure to correctly handle long-range distance estimation through error-accumulating hop chains — is the formal consequence of the over-constraint in cMDS applied to graph shortest-path distances: $19{,}900$ distance constraints for $400$ free parameters, with heterogeneous error structure that ISOMAP treats uniformly.** The ISOMAP objective $\min_Y\sum_{i,j}(\|y_i-y_j\|^2 - d_G(i,j)^2)^2$ weights all $\binom{200}{2} = 19{,}900$ pairwise distances equally. But the graph shortest-path distance $d_G(\text{Upper Dolpo}, \text{Lower Dolpo})$ — estimated through ten intermediate hops — accumulates ten independent approximation errors of size $O(\|x_i-x_j\|^3)$ each, while the direct single-hop distance $d_G(x_i, x_j)$ for neighbouring villages has only one error of the same size. ISOMAP treats both with the same squared loss coefficient, giving equal weight to a reliable local estimate and a noisy long-range estimate. The Laplacian Eigenmap resolves this by using $W_{ij} \approx 0$ for non-neighbouring villages — the Gaussian weight makes the contribution of long-range distances to the objective $\sum_{ij}W_{ij}\|y_i-y_j\|^2$ negligible, because $W_{ij}$ decays exponentially with distance. Only local distances — where the cubic approximation error is negligible and the weights are large — contribute meaningfully to the objective. The algorithm is automatically robust to error accumulation because its objective function applies weights that are proportional to the inverse of the approximation error.
+
+---
+
+**The graph Laplacian $L = D - W$ — with $(Lf)_i = \sum_{j\in\mathcal{N}(i)}W_{ij}(f_i - f_j)$ measuring the weighted departure of signal $f$ at village $i$ from its neighbourhood average — is the discrete approximation to the Laplace-Beltrami operator $\Delta_\mathcal{M}$, with the Dirichlet energy $f^\top Lf = \frac{1}{2}\sum_{ij}W_{ij}(f_i-f_j)^2$ measuring the total local variation of signal $f$ across the cultural neighbourhood graph.** The positive semidefiniteness proof $f^\top Lf = \frac{1}{2}\sum_{ij}W_{ij}(f_i-f_j)^2\geq 0$ — the same proof as for the unweighted combinatorial Laplacian in Chapter 2, now with the weights $W_{ij}$ playing the role of edge indicators — establishes that all eigenvalues are non-negative. The zero eigenvalue with eigenvector $\mathbf{1}$ follows from $(L\mathbf{1})_i = \sum_j W_{ij}(1-1) = 0$: the constant cultural signal, assigning the same value to every village, has zero variation across all edges. For a connected graph — all villages reachable from any other through neighbourhood hops — the zero eigenvalue has multiplicity one: the only zero-variation signal is the constant. The Belkin-Niyogi convergence theorem makes the approximation precise: under the scaling $\sigma\to 0$ and $n\sigma^{d+2}/\log n\to\infty$, the normalized graph Laplacian operator $(n\sigma^{d+2})^{-1}L^{(n,\sigma)}$ converges pointwise to $c_d\Delta_\mathcal{M}$ for uniform data density. The graph Laplacian is not merely analogous to the Laplace-Beltrami operator — it converges to it in the limit of dense sampling, making every spectral computation on $L$ a finite-sample approximation to the corresponding spectral computation on $\Delta_\mathcal{M}$.
+
+**The Dirichlet energy minimization $\min_{Y^\top DY=I_d}\text{tr}(Y^\top LY) = \min_{Y^\top DY=I_d}\sum_{ij}W_{ij}\|y_i-y_j\|^2$ — the variational problem whose solution gives the Laplacian Eigenmap embedding — is the discrete analogue of the continuous variational problem $\min_{\phi\in L^2(\mathcal{M}), \|\phi\|_{L^2}=1}\int_\mathcal{M}\|\nabla\phi\|_g^2\,d\text{vol} = \min_\phi\langle\phi,-\Delta_\mathcal{M}\phi\rangle_{L^2}$, whose solutions are the eigenfunctions $\phi_k$ of $\Delta_\mathcal{M}$.** The equivalence $\sum_{ij}W_{ij}\|y_i-y_j\|^2 = 2\,\text{tr}(Y^\top LY)$ follows by expanding $\|y_i-y_j\|^2 = \sum_k(y_{ik}-y_{jk})^2$ and recognizing each column's contribution $\sum_{ij}W_{ij}(y_{ik}-y_{jk})^2 = 2\mathbf{y}_k^\top L\mathbf{y}_k$ as the Dirichlet energy of the $k$-th embedding coordinate. The constraint $Y^\top DY = I_d$ is the discrete analogue of the $L^2(\mathcal{M})$ orthonormality $\langle\phi_j,\phi_k\rangle_{L^2} = \int_\mathcal{M}\phi_j\phi_k\,d\text{vol} = \delta_{jk}$, with the degree matrix $D$ approximating the volume measure $d\text{vol}$ — the degree $D_{ii}$ is proportional to the Voronoi cell area of sample point $x_i$ on the manifold, which converges to $d\text{vol}(x_i)$ under uniform sampling. The Courant-Fischer theorem applied to the constrained problem gives the solution: the $k$-th embedding coordinate is the $k$-th eigenvector of $Lu = \lambda Du$, corresponding to the $k$-th smallest nonzero eigenvalue $\lambda_k$ — the $k$-th smoothest non-constant signal on the cultural neighbourhood graph, the discrete approximation to the $k$-th manifold harmonic $\phi_k$.
+
+---
+
+**The substitution $v = D^{1/2}u$ converting the generalized eigenvalue problem $Lu = \lambda Du$ to the standard symmetric eigenvalue problem $\mathcal{L}v = \lambda v$ for the normalized Laplacian $\mathcal{L} = D^{-1/2}LD^{-1/2}$ — is the congruence transformation from MATH 302 that reduces a generalized eigenproblem to a standard one when the right-hand matrix is positive definite.** The positive definiteness of $D$ (all diagonal entries $D_{ii} > 0$ for a connected graph with positive weights) guarantees the well-definedness of $D^{1/2}$ and $D^{-1/2}$ as diagonal matrices with positive square-root entries. The congruence $\mathcal{L} = D^{-1/2}LD^{-1/2}$ is a similarity transformation that preserves eigenvalues (the spectrum of $\mathcal{L}$ equals the spectrum of $L$ in the $D$-weighted inner product) while converting the non-standard inner product $\langle u,v\rangle_D = u^\top Dv$ to the standard Euclidean inner product $\langle\tilde{u},\tilde{v}\rangle = \tilde{u}^\top\tilde{v}$ for $\tilde{u} = D^{1/2}u$. The Lanczos algorithm then applies to $\mathcal{L}$ — a sparse symmetric positive semidefinite matrix — computing the smallest $d+1$ eigenpairs through a Krylov subspace iteration that builds an orthonormal basis $\{q_1,\ldots,q_m\}$ via Gram-Schmidt and reduces the $n\times n$ problem to an $m\times m$ tridiagonal problem, with $m\ll n$ sufficient for convergence of the smallest eigenpairs. The total cost $O(nk\cdot d + nd^2)$ — where $nk$ is the number of nonzero entries of $\mathcal{L}$ (each village has $k$ neighbours) and $d$ is the embedding dimension — is the computational expression of the algorithm's scalability advantage over ISOMAP's $O(n^2\log n)$ all-pairs shortest-path computation.
+
+**The embedding $\Phi(x_i) = (u_2(i), u_3(i), \ldots, u_{d+1}(i)) \in \mathbb{R}^d$ — placing village $i$ at the coordinates given by its values in the second through $(d+1)$-th eigenvectors of $Lu = \lambda Du$ — is the discrete manifestation of the manifold harmonic coordinate map $\Phi_\mathcal{M}(x) = (\phi_2(x), \phi_3(x),\ldots,\phi_{d+1}(x))$ evaluated at the sample points.** The first eigenvector $u_1 = \mathbf{1}/\sqrt{n}$ (constant, eigenvalue zero) is excluded because it maps all villages to the same constant coordinate — the constant function carries no structural information about the manifold. The second eigenvector $u_2$ — the Fiedler vector of the weighted graph, which you encountered in Chapter 2's Topic 2 as the smoothest non-constant graph signal — is the first non-trivial embedding coordinate: it assigns to each village a real number that varies as smoothly as possible across the cultural neighbourhood graph. In the story, this eigenvector separates high-altitude Tibetan-Buddhist villages (negative $u_2$ values) from mid-hill mixed-influence villages (positive $u_2$ values), corresponding to the altitude-Tibetan cultural gradient. The third eigenvector $u_3$, orthogonal to $u_2$ in the $D$-weighted inner product, captures the second smoothest independent cultural gradient — the east-west axis. The pair $(u_2(i), u_3(i))$ is the village's natural coordinate in the two-dimensional manifold harmonic system, the same coordinate system that the Laplace-Beltrami operator's eigenfunctions would provide on the continuous cultural manifold.
+
+---
+
+**Upper and Lower Dolpo — incorrectly collapsed by PCA, correctly separated by Laplacian Eigenmaps — is the validation of the convergence theorem: their eigenvector coordinates $(u_2(\text{Upper}), u_3(\text{Upper}))$ and $(u_2(\text{Lower}), u_3(\text{Lower}))$ differ because the chain of neighbourhood edges separating them in the cultural graph forces their eigenvector values to differ, just as the manifold harmonic functions $\phi_2$ and $\phi_3$ take different values at geodesically distant points on $\mathcal{M}$.** The mechanism is the Dirichlet energy minimization: the eigenvector $u_2$ minimizes $\sum_{ij}W_{ij}(u_2(i)-u_2(j))^2$ subject to normalization. Nearby villages (large $W_{ij}$) must have nearly equal $u_2$ values; if Upper and Lower Dolpo are connected by a chain of ten intermediate villages, the eigenvector must vary smoothly along this chain, distributing the total variation $u_2(\text{Upper}) - u_2(\text{Lower})$ across ten steps rather than concentrating it in one discontinuous jump. The result is that Upper Dolpo, at the beginning of the chain, has a significantly different $u_2$ value from Lower Dolpo at the end — the embedding correctly reflects their geodesic separation through the smooth variation of the harmonic function along the intermediate chain. PCA placed them close because $\|x_{\text{Upper}} - x_{\text{Lower}}\|_{\mathbb{R}^{400}}$ is small — the ambient Euclidean distance is small because the manifold folds them near each other in $\mathbb{R}^{400}$. The Laplacian Eigenmap places them far because $d_\mathcal{M}(x_{\text{Upper}}, x_{\text{Lower}})$ is large — the geodesic distance is large because the manifold path between them winds through many intermediate cultural types.
+
+---
+
+**The power iteration $Y^{(k+1)} = D^{-1}WY^{(k)}$ — iterated random walk diffusion on the neighbourhood graph, converging to the Laplacian Eigenmap embedding — is the constructive link between Laplacian Eigenmaps and the over-smoothing of deep GCNs from Chapter 2, now reinterpreted as the convergence of iterative local averaging to the manifold's harmonic coordinate system.** The random walk matrix $P = D^{-1}W$ has $(P)_{ij} = W_{ij}/D_{ii}$ — the probability of moving from village $i$ to village $j$ in one step of a random walk on the cultural neighbourhood graph. Multiplying the feature matrix $Y$ by $P$ is one step of a random walk diffusion: each village's coordinate is replaced by the weighted average of its neighbours' coordinates. This is exactly the GCN propagation step $H^{(k+1)} = D^{-1}WH^{(k)}$ with no learned weight matrix ($W^{(k)} = I$) and no nonlinearity ($\sigma = \text{Id}$). After $K$ iterations, $Y^{(K)} = P^K Y^{(0)}$; as $K\to\infty$, $P^K$ projects onto the eigenspace of $P$'s largest eigenvalues — equivalently, $L_{\text{rw}} = I - P$'s smallest eigenvalues — which are the Laplacian Eigenmap coordinates. Over-smoothing, which in Chapter 2 was the failure of deep GCNs to preserve high-frequency information, is now constructively the convergence of the power method to the manifold's lowest-frequency harmonic coordinates. The distinction is one of purpose: for a classification GNN, convergence to the constant eigenvector is a failure (all nodes receive the same representation). For the Laplacian Eigenmap computation, convergence to the low-frequency eigenvectors is the goal (the manifold's natural coordinate system is precisely the lowest-frequency harmonic functions).
+
+---
+
+**The Belkin-Niyogi convergence theorem — $(n\sigma^{d+2})^{-1}(L^{(n,\sigma)}f)_i \to c_d\Delta_\mathcal{M}f(x_i)$ as $n\to\infty$, $\sigma\to 0$, $n\sigma^{d+2}/\log n\to\infty$ — is the mathematical statement that the cultural neighbourhood graph's Laplacian is a consistent estimator of the Laplace-Beltrami operator of the cultural manifold, with the eigenvalues $\lambda_k^{(n)}/(n\sigma^{d+2})\to\lambda_k$ and eigenvectors $u_k^{(n)}(x_i)\to\phi_k(x_i)$ converging to the manifold harmonics.** The three conditions on $\sigma$ and $n$ balance three competing requirements: $\sigma\to 0$ ensures that only genuinely local — geometrically honest — edges are included, so the Euclidean weight approximates the geodesic weight accurately; $n\sigma^d\to\infty$ ensures that each village has enough neighbours within radius $\sigma$ for the law of large numbers to make the empirical average $\sum_j W_{ij}f(x_j)$ converge to the integral $\int k_\sigma(x,y)f(y)p(y)d\text{vol}(y)$; and the logarithmic correction $n\sigma^{d+2}/\log n\to\infty$ (rather than just $n\sigma^{d+2}\to\infty$) ensures uniform convergence over all data points simultaneously, the standard log factor from concentration inequalities in your MATH 208 Statistics course. The scaling $n\sigma^{d+2}$ in the normalization of $L^{(n,\sigma)}$ accounts for both the diffusion kernel's mass ($\sigma^d$) and the second-derivative scaling ($\sigma^2$) that converts the kernel-weighted difference operator into a second-order differential operator — the discrete analogue of the Taylor expansion $(f(x+\sigma v) - f(x))/\sigma^2 \to v\cdot\nabla f(x) + \sigma(v\cdot\nabla)^2f(x)/2$ that converts finite differences to derivatives.
+
+**The density correction $\tilde W_{ij}^{(\alpha)} = W_{ij}/(d_i^\alpha d_j^\alpha)$ of Diffusion Maps — removing the sampling density's influence on the graph Laplacian so that it converges to the pure Laplace-Beltrami operator rather than the density-modified operator $\Delta_\mathcal{M} + \nabla\log p\cdot\nabla$ — is the bias correction from MATH 208 applied to the operator estimation setting.** Without correction ($\alpha = 0$), the graph Laplacian converges to $\Delta_\mathcal{M} + \nabla\log p\cdot\nabla$ — the Laplace-Beltrami operator plus a drift term $\nabla\log p\cdot\nabla$ that pushes the eigenfunctions toward high-density regions of the manifold, distorting the embedding. In the cultural survey: if Kathmandu Valley villages are over-represented in the dataset (more samples from accessible areas), the unweighted Laplacian's eigenvectors would cluster the embedding near Kathmandu Valley cultural types, compressing the representation of under-sampled remote village types. With $\alpha = 1$ correction, dividing by $d_i d_j$ (proportional to $p(x_i)p(x_j)$) removes this density bias: the corrected Laplacian converges to pure $\Delta_\mathcal{M}$, whose eigenfunctions depend only on the manifold's intrinsic geometry and not on the sampling density. The eigenvalue gap $\lambda_{d+1} \ll \lambda_{d+2}$ — the jump between the $d$-th and $(d+1)$-th nonzero eigenvalues — is the spectral signature of the manifold's intrinsic dimension $d$: the first $d$ harmonics capture the manifold's global geometry, while higher harmonics capture fine-grained local details or noise, with the gap marking the transition.
+
+---
+
+**The closing of the spectral thread — spherical harmonics as $\Delta_{S^2}$ eigenfunctions in Chapter 1, graph Laplacian eigenvectors as GNN frequency basis in Chapter 2, Laplace-Beltrami eigenfunctions as DiffusionNet propagation basis in Topic 1, and Laplacian Eigenmap coordinates as manifold harmonic coordinate functions in Topic 2 — is the realization that all four are the same mathematical object: the spectral decomposition of the Laplacian operator on the relevant geometric domain, appearing in four different computational roles across Phase 2.** The spherical harmonics $Y_\ell^m$ satisfy $\Delta_{S^2}Y_\ell^m = -\ell(\ell+1)Y_\ell^m$ — they are the manifold harmonics of the sphere $S^2$ with its round metric, and in Chapter 1 they appeared as the natural basis for $SO(3)$-equivariant features because $SO(3)$ is the isometry group of $S^2$. The graph Laplacian eigenvectors $u_k$ of Chapter 2 are the discrete approximations to the manifold harmonics of whatever manifold the graph approximates, and they appeared as the graph Fourier basis for signal processing — the frequency modes in which spectral GNN filters operate. The Laplace-Beltrami eigenfunctions $\phi_k$ of Chapter 3 Topic 1 appeared as the propagation basis for DiffusionNet's intrinsic feature diffusion — the heat operator $e^{-t\Delta_\mathcal{M}}$ acting on features through its spectral decomposition $\sum_k e^{-\lambda_k t}\phi_k\phi_k^\top$. And now in Topic 2, the same eigenfunctions $\phi_k$ — approximated by $u_k$ through the Belkin-Niyogi convergence — appear as the embedding coordinates themselves. Four roles: equivariant feature basis, frequency filter basis, diffusion propagation basis, embedding coordinate basis. One mathematical object: the spectral decomposition of the Laplacian on the geometric domain.
+
+---
+
+**The connection to MATH 302 is the generalized eigenvalue problem, the congruence transformation, and the Courant-Fischer theorem.** The generalized eigenproblem $Lu = \lambda Du$ is converted to the standard symmetric eigenproblem $\mathcal{L}v = \lambda v$ by the MATH 302 congruence $\mathcal{L} = D^{-1/2}LD^{-1/2}$ with $v = D^{1/2}u$. The Courant-Fischer characterization $\lambda_k = \min_{\dim S=k}\max_{u\in S, u^\top Du=1}u^\top Lu$ gives the variational interpretation of each embedding axis as the $k$-th smoothest cultural gradient — the most slowly varying non-constant function on the neighbourhood graph, orthogonal to all smoother ones. **The connection to MATH 208 is the Gaussian kernel as a density estimator, the degree as a local density proxy, and the density correction as bias removal.** The Gaussian weight $W_{ij} = \exp(-\|x_i-x_j\|^2/\sigma^2)$ is a Parzen window density estimator kernel; the degree $D_{ii} = \sum_j W_{ij}$ is proportional to the kernel density estimate $\hat p(x_i)$ at village $i$; the $\alpha$-normalization is the bias correction that removes $\hat p$'s influence from the Laplacian operator, exactly as standardization removes mean and variance from features in MATH 208's regression analysis. **The connection to COMP 202 is the $k$-NN graph construction using $k$-d trees, the Dijkstra comparison exposing ISOMAP's computational disadvantage, and the Lanczos eigensolver as a Krylov subspace method.** The $k$-nearest-neighbour graph costs $O(n\log n\cdot D)$ with a $k$-d tree from COMP 202; ISOMAP's all-pairs Dijkstra costs $O(n^2\log n)$; the Lanczos algorithm costs $O(nk\cdot d)$ — all three complexity comparisons involving data structures and algorithms from COMP 202.
+
+---
+
+The Tribhuvan University cultural survey — its four-hundred-dimensional village profiles, PCA failure on the cultural fold, Swiss roll analogy, neighbourhood graph construction, ISOMAP break moment, graph Laplacian as local distance operator, eigenvector coordinates as natural axes, altitude and east-west gradients as discovered eigenvectors, Upper and Lower Dolpo correctly separated, power iteration as constructive over-smoothing, Belkin-Niyogi convergence, density correction, and spectral thread closure — is now completely dissolved into its mathematical form. The cultural profiles are $x_i\in\mathbb{R}^{400}$. The manifold is $\mathcal{M}\hookrightarrow\mathbb{R}^{400}$. The neighbourhood graph is $(V,E,W)$. The Gaussian weight is $W_{ij} = \exp(-\|x_i-x_j\|^2/\sigma^2)$. The graph Laplacian is $L = D-W$. The Dirichlet energy is $f^\top Lf = \frac{1}{2}\sum_{ij}W_{ij}(f_i-f_j)^2$. The optimization is $\min_{Y^\top DY=I_d}\text{tr}(Y^\top LY)$. The solution is $Y^* = [u_2|\cdots|u_{d+1}]$ from $Lu = \lambda Du$. The convergence is $u_k^{(n)}\to\phi_k$ by Belkin-Niyogi. The embedding is $\Phi(x_i) = (u_2(i),\ldots,u_{d+1}(i))$. The spectral thread is closed.
+
+---
+---

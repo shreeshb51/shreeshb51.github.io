@@ -1,0 +1,456 @@
+# Topic 3 - Reimannian Metrics: Distance, Angle, and the Geometry of Curved Space
+
+## Introduction
+
+You have now built two of the three foundational structures of differential geometry. The manifold gave you the space — a curved domain where points live and smooth maps operate, described by charts and atlases. The tangent bundle gave you the velocities — at each point, a local vector space of directions and speeds, assembled into a smooth $2n$-dimensional arena where vector fields, integral curves, and flows all reside.
+
+What you do not yet have is measurement.
+
+The manifold, as you built it in Topic 1, is a purely topological object. It tells you which points are near each other — which sequences converge, which sets are open — but it assigns no numerical distances. Two points on the manifold are either close or far in the topological sense, but you cannot say they are exactly 3.7 kilometres apart, or that the angle between two paths crossing at a point is 45 degrees, or that a curve connecting them has length 12. The smooth structure added differentiability — the ability to take derivatives — but still no distances, no angles, no lengths. The tangent bundle gave you a vector space at each point, but without an inner product, you cannot measure the length of a tangent vector, cannot compute the angle between two tangent vectors, cannot even say whether two directions at a point are perpendicular.
+
+The Riemannian metric is the structure that supplies all of this. It is a smooth assignment of an inner product to each tangent space — a rule that, at every point $p$ of the manifold, tells you how to measure the length of any tangent vector at $p$ and the angle between any two tangent vectors at $p$. Once a Riemannian metric is in place, every geometric measurement becomes possible: the length of a curve, the distance between two points, the angle at which two paths cross, the volume of a region, the gradient of a function as a tangent vector rather than a covector. The metric turns the differentiable manifold into a geometric one — a space with both shape and scale.
+
+The roadmap describes this topic with a precise phrase: defining distance and angle on a curve. This is an exact description. The Riemannian metric is the minimal additional structure needed to measure distances and angles on a manifold — it is the curved-space generalization of the Euclidean inner product that you have used since MATH 101 and MATH 103.
+
+The chapter has four subtopics building the Riemannian metric's theory in logical order.
+
+The first subtopic is **the Riemannian metric tensor** — the precise definition of a smoothly varying family of inner products on the tangent spaces, how it is expressed in local coordinates as a matrix $g_{ij}(p)$ at each point, and how the metric coefficients transform under chart changes. The metric tensor is the fundamental object: everything else in Riemannian geometry is derived from it.
+
+The second subtopic is **arc length and the Riemannian distance function** — how the metric tensor is used to measure the length of a smooth curve on the manifold by integrating the lengths of its velocity vectors, and how the distance between two points is defined as the infimum of arc lengths over all curves connecting them. The Riemannian distance function makes the manifold into a metric space in the sense of Topic 1 of Chapter 1 — it is the curved-space generalization of the Euclidean distance.
+
+The third subtopic is **the gradient of a function on a Riemannian manifold** — how the metric converts the exterior derivative $df$ (a covector field, an element of $T^*M$) into the gradient vector field $\text{grad}(f)$ (a tangent vector field, an element of $TM$), and why this conversion requires the metric and not just the smooth structure. This subtopic makes precise the gradient that appears in gradient descent on manifolds, in score matching, and in the JKO scheme.
+
+The fourth subtopic is **canonical examples of Riemannian metrics** — the Euclidean metric on $\mathbb{R}^n$, the round metric on the sphere $S^n$, the hyperbolic metric on the hyperbolic space $\mathbb{H}^n$, and the Fisher information metric on the statistical manifold. Each example is a specific choice of inner product on each tangent space, producing a specific geometry — specific distances, specific angles, specific shortest paths — on a specific manifold. The Fisher information metric is particularly important for the roadmap: it is the Riemannian metric that makes the statistical manifold of probability distributions a genuine geometric object, and it is the metric that governs natural gradient descent and information geometry.
+
+By the end of this topic, when you see the flow matching loss written as $\mathbb{E}[\|F_\theta(x,t) - \dot{x}(t)\|_{T_{x}M}^2]$, you will know exactly what $\|\cdot\|_{T_xM}$ means: it is the norm induced by the Riemannian metric $g_x$ on the tangent space $T_xM$ at the point $x$. The loss penalizes the discrepancy between the learned velocity field and the true velocity, measured by the inner product that the Riemannian metric places on the tangent space at each trajectory point. Without the Riemannian metric, the flow matching loss cannot be evaluated. With it, the loss is a well-defined real number at every trajectory point, and its gradient with respect to $\theta$ is computable by differentiating through the metric.
+
+**ALL FOUR SUBTOPICS ARE TREATED AS A SINGLE TOPIC FOR EASY COMPREHENSION.**
+
+---
+
+## Layer 1 (Story)
+
+You are a land surveyor working for the Surveyor General of Nepal, and you have been assigned to measure the Langtang valley — a high glacial valley north of Kathmandu, flanked by peaks exceeding 7,000 metres on both sides. Your task is not merely to map the valley's shape — the atlas of charts from Topic 1 handles that — but to measure it. You need to answer questions with precise numbers: how far is it from Kyanjin Gompa to the snout of the Langtang glacier? What angle does the ridge between Langtang Lirung and Gangchenpo make when it meets the main valley floor? How long is the trekking route from Lama Hotel to Kyanjin Ri? These are measurement questions — they require a notion of distance, angle, and length that the smooth structure of the manifold alone cannot provide.
+
+You arrive in the valley with your survey equipment: a theodolite for measuring angles, a total station for measuring distances, and a GPS device for verifying positions. Your equipment works locally — it measures angles and distances in the immediate vicinity of the instrument's position. At each survey station, your equipment gives you a precise local measurement capability: given any two directions from that station, you can measure the angle between them; given any short displacement from that station, you can measure its length.
+
+This local measurement capability — the ability to measure angles and lengths at each point, varying smoothly from station to station — is precisely what a Riemannian metric provides. At each point $p$ of the manifold, the Riemannian metric is the surveyor's equipment: a rule that assigns a length to every tangent vector at $p$ and an angle to every pair of tangent vectors at $p$.
+
+---
+
+**The inner product at each survey station**
+
+Set up your theodolite at Kyanjin Gompa, at an elevation of 3,870 metres. From this station, you can measure two things: the length of any short displacement in any direction, and the angle between any two directions. These two measurements are precisely what an inner product provides. Given two tangent vectors $u, v \in T_pM$ at your station $p$:
+
+The **length** of $u$ is $\|u\|_p = \sqrt{g_p(u,u)}$, where $g_p(u,u)$ is the inner product of $u$ with itself.
+
+The **angle** $\theta$ between $u$ and $v$ satisfies $\cos\theta = \frac{g_p(u,v)}{\|u\|_p \|v\|_p}$, where $g_p(u,v)$ is the inner product of $u$ and $v$.
+
+The inner product $g_p$ at your station must satisfy the same axioms as any inner product: it is symmetric ($g_p(u,v) = g_p(v,u)$), bilinear (linear in each argument), and positive definite ($g_p(v,v) > 0$ for all $v \neq 0$). These three axioms are exactly the conditions your survey equipment implicitly satisfies: the angle from $u$ to $v$ is the same as from $v$ to $u$ (symmetry), scaling a direction scales its length proportionally (linearity), and every nonzero direction has a positive length (positive definiteness).
+
+The Riemannian metric $g$ is not a single inner product — it is a smooth family of inner products, one at each point of the manifold. At Kyanjin Gompa, the metric $g_p$ measures distances and angles in the flat valley floor. At the ridge crest of Langtang Lirung, the metric $g_q$ measures distances and angles on the steep, curved ridge. At each point, the metric is the local measurement rule — the surveyor's equipment calibrated to that specific location on the curved terrain.
+
+---
+
+**The metric in local coordinates — the matrix of coefficients**
+
+Your survey team works in the local coordinate chart of the Langtang valley — the topo map grid with eastings $x^1$ and northings $x^2$ at each point. In this coordinate system, the two coordinate basis vectors at each point $p$ are $\partial/\partial x^1|_p$ (pointing east along the grid) and $\partial/\partial x^2|_p$ (pointing north along the grid). These basis vectors are not necessarily orthogonal or unit-length with respect to the Riemannian metric — the terrain is curved and the coordinate grid may be distorted.
+
+The metric at $p$ is completely determined by its values on the coordinate basis vectors:
+
+$$g_{11}(p) = g_p\!\left(\frac{\partial}{\partial x^1}, \frac{\partial}{\partial x^1}\right), \quad g_{12}(p) = g_p\!\left(\frac{\partial}{\partial x^1}, \frac{\partial}{\partial x^2}\right), \quad g_{22}(p) = g_p\!\left(\frac{\partial}{\partial x^2}, \frac{\partial}{\partial x^2}\right)$$
+
+The three numbers $g_{11}(p)$, $g_{12}(p)$, $g_{22}(p)$ are the **metric coefficients** at $p$, and they encode the complete local measurement capability of the metric. For any two tangent vectors $u = u^1 \partial/\partial x^1 + u^2 \partial/\partial x^2$ and $v = v^1 \partial/\partial x^1 + v^2 \partial/\partial x^2$, the inner product is:
+
+$$g_p(u, v) = g_{11}(p) u^1 v^1 + g_{12}(p)(u^1 v^2 + u^2 v^1) + g_{22}(p) u^2 v^2 = \sum_{i,j} g_{ij}(p) u^i v^j$$
+
+The matrix $G(p) = \begin{pmatrix} g_{11}(p) & g_{12}(p) \\ g_{12}(p) & g_{22}(p) \end{pmatrix}$ is the **metric matrix** or **metric tensor in coordinates**. It must be symmetric (because the inner product is symmetric) and positive definite (because the inner product is positive definite) at every point.
+
+In the flat valley floor, the coordinate grid is approximately orthogonal and the metric coefficients are approximately $g_{11} = g_{22} = 1$ and $g_{12} = 0$ — the metric is approximately Euclidean. On the steep ridge where the terrain curves sharply, the metric coefficients deviate significantly from the flat Euclidean values — distances in the steep direction are longer than the coordinate grid suggests, and the grid lines are no longer orthogonal with respect to the true metric.
+
+---
+
+**Measuring the length of a trekking route**
+
+Your first measurement task is to compute the length of the trekking route from Lama Hotel to Kyanjin Ri — a route that winds through the valley, gaining elevation steadily, covering approximately 22 kilometres in horizontal distance but much more in actual trekking distance along the curved terrain.
+
+The route is a smooth curve $\gamma: [0,1] \to M$ on the manifold, parameterized so that $\gamma(0)$ is Lama Hotel and $\gamma(1)$ is Kyanjin Ri. At each moment $t$, the trekker is at position $\gamma(t)$ on the terrain, moving with velocity $\gamma'(t) \in T_{\gamma(t)}M$. The speed of the trekker at time $t$ is the length of the velocity vector, measured by the metric at that point:
+
+$$\text{speed}(t) = \|\gamma'(t)\|_{\gamma(t)} = \sqrt{g_{\gamma(t)}(\gamma'(t), \gamma'(t))}$$
+
+The total length of the route is the integral of the speed over the entire parameterization:
+
+$$L(\gamma) = \int_0^1 \|\gamma'(t)\|_{\gamma(t)} \, dt = \int_0^1 \sqrt{g_{\gamma(t)}(\gamma'(t), \gamma'(t))} \, dt$$
+
+This is the **arc length formula** — the length of a curve on a Riemannian manifold. It integrates the metric-induced speed of the curve at each point to produce the total length. In flat Euclidean space with the standard metric, this formula reduces to the familiar arc length formula from MATH 201: $L = \int_0^1 \|\gamma'(t)\|_2 \, dt$. The Riemannian metric is the curved-space generalization — it replaces the constant Euclidean inner product with a smoothly varying family of inner products.
+
+Notice that the length $L(\gamma)$ is independent of the parameterization. If you walk the same route slowly, covering it in two hours, or quickly in one hour, the route length does not change — only the parameterization speed changes. The metric measures the route's intrinsic geometric length, not a time-dependent speed.
+
+---
+
+**The distance between two points**
+
+You want to know the true distance between Kyanjin Gompa and the glacier snout — the shortest possible route through the valley terrain. The valley has no straight-line path between these two points: the terrain curves, the glacier's surface is undulating, and any path must navigate the physical constraints of the landscape.
+
+The **Riemannian distance** between two points $p$ and $q$ on the manifold is the infimum of arc lengths over all smooth curves connecting them:
+
+$$d(p, q) = \inf_\gamma \left\{ L(\gamma) : \gamma(0) = p, \gamma(1) = q, \gamma \text{ smooth} \right\}$$
+
+This distance function $d: M \times M \to [0,\infty)$ has all the properties you need. It is symmetric: the distance from Kyanjin Gompa to the glacier snout is the same as from the snout to Kyanjin Gompa. It satisfies the triangle inequality: going from $p$ to $r$ to $q$ is never shorter than going directly from $p$ to $q$. And it is zero if and only if $p = q$.
+
+Together, these properties make $(M, d)$ a metric space — the Riemannian metric induces a genuine metric space structure on the manifold, in exactly the sense of Topic 1 of Chapter 1. The circle is now complete: the Riemannian metric on the manifold induces the kind of distance function that Chapter 1 used to define metric spaces. The metric space of Chapter 1 and the Riemannian metric of Chapter 3 are two levels of the same geometric hierarchy.
+
+The curve that achieves the infimum — the shortest path between $p$ and $q$ — is a **geodesic**. Geodesics are the subject of the next topic, and they are the curved-space generalization of straight lines. For now, it is enough to know that they exist (at least locally) and that the Riemannian distance is determined by the lengths of geodesics.
+
+---
+
+**The gradient of a function — converting a covector to a vector**
+
+Your team wants to compute the direction of steepest ascent from any point in the Langtang valley — the direction in which elevation gains most rapidly per unit of horizontal distance. This is the gradient of the elevation function.
+
+In flat Euclidean space, the gradient $\nabla f$ of a function $f$ is a vector: you compute the partial derivatives, assemble them into a vector $(\partial f/\partial x^1, \partial f/\partial x^2)$, and that vector points in the direction of steepest ascent with magnitude equal to the rate of ascent. This is the computation you performed routinely in MATH 201.
+
+On a curved manifold, the situation is more subtle. The partial derivatives $\partial f/\partial x^i$ are the components of the exterior derivative $df$ — a covector, an element of the cotangent space $T_p^*M$, not the tangent space $T_pM$. The covector $df_p$ is a linear functional on tangent vectors: given a direction $v$, it returns $df_p(v) = v(f)$, the rate of change of $f$ in the direction $v$. But a covector is not a vector — it lives in the dual space, not the tangent space itself.
+
+To convert the covector $df_p$ into a tangent vector — the gradient vector $\text{grad}(f)|_p \in T_pM$ — you need the Riemannian metric. The gradient vector is the unique tangent vector satisfying:
+
+$$g_p(\text{grad}(f)|_p, v) = df_p(v) = v(f) \quad \forall v \in T_pM$$
+
+The gradient is the tangent vector that, when paired with any direction $v$ using the metric's inner product, gives the same result as the covector $df_p$ acting on $v$. In coordinates, this means:
+
+$$\text{grad}(f)|_p = \sum_{i,j} g^{ij}(p) \frac{\partial f}{\partial x^j}\bigg|_p \frac{\partial}{\partial x^i}\bigg|_p$$
+
+where $g^{ij}(p)$ are the entries of the inverse metric matrix $G(p)^{-1}$. The inverse metric is the tool that converts covector components $\partial f/\partial x^j$ into vector components.
+
+In flat Euclidean space with the standard metric $g_{ij} = \delta_{ij}$, the inverse metric is also $g^{ij} = \delta^{ij}$, and the gradient reduces to $\text{grad}(f) = \sum_i \frac{\partial f}{\partial x^i} \frac{\partial}{\partial x^i}$ — the familiar gradient vector from MATH 201. On a curved manifold with a non-trivial metric, the gradient is distorted by the metric coefficients: the steepest direction is not simply the direction of largest partial derivative, but the direction of largest rate of change per unit of metric distance. The metric corrects for the stretching and distortion introduced by the coordinate system and the curvature of the space.
+
+This is the gradient that appears in the JKO scheme of Phase 3: the direction of steepest descent of the energy functional in the Wasserstein space, computed with the Wasserstein metric rather than the Euclidean metric. Without the Riemannian metric, the JKO scheme's gradient cannot be defined.
+
+---
+
+**The Fisher information metric — the geometry of probability distributions**
+
+Now here is the connection to the roadmap's most important application of Riemannian geometry. Your survey department has been asked to measure distances not between physical locations in the Langtang valley, but between probability distributions — between different models of the distribution of monsoon rainfall across Nepal.
+
+The statistical manifold of probability distributions — the set of all parameterized densities $\{p_\theta : \theta \in \Theta\}$ — is a smooth manifold whose points are probability distributions and whose tangent vectors are perturbations of distributions. But what is the natural notion of distance between two distributions on this manifold? Two distributions that are statistically indistinguishable by any experiment should be close together; two distributions that any experiment can reliably distinguish should be far apart.
+
+The natural answer is the **Fisher information metric**: the Riemannian metric on the statistical manifold defined by:
+
+$$g_{ij}(\theta) = \mathbb{E}_{p_\theta}\!\left[\frac{\partial \log p_\theta(X)}{\partial \theta^i} \frac{\partial \log p_\theta(X)}{\partial \theta^j}\right]$$
+
+This is the Fisher information matrix — the expected outer product of the score function's components. It is symmetric and positive definite (under mild regularity conditions), making it a valid Riemannian metric. Geometrically, it measures the curvature of the log-likelihood surface: in directions where the log-likelihood changes rapidly, the metric assigns large distances; in directions where the log-likelihood is flat, the metric assigns small distances.
+
+The gradient descent on the statistical manifold with respect to the Fisher information metric is the **natural gradient** — the update rule that accounts for the curved geometry of the distribution space. Standard gradient descent minimizes the loss function using the Euclidean metric on parameter space, which ignores the curvature of the statistical manifold and can be inefficient. Natural gradient descent uses the Fisher metric's inverse to convert the gradient covector into a tangent vector in the correct curved geometry, producing updates that are invariant to reparameterization and often converge much faster.
+
+---
+
+Here is the break moment. The naive assumption is that the Euclidean metric — the standard inner product from MATH 101 and MATH 103 — is the correct or natural metric on any manifold, and that the Riemannian metric is merely a generalization for exotic curved spaces that arise in pure mathematics but rarely in practice.
+
+This breaks completely in machine learning. Consider two Gaussian distributions: $\mathcal{N}(0,1)$ and $\mathcal{N}(0.01, 1)$ — differing only in mean by 0.01 units. And consider $\mathcal{N}(0,1)$ and $\mathcal{N}(0, 1.01)$ — differing only in variance by 0.01 units. In Euclidean parameter space, these pairs have the same distance of 0.01. But statistically, they are not equally distinguishable: the mean shift produces a much more noticeable distributional change than the variance shift at these parameter values, because the Fisher information in the mean direction is much larger than in the variance direction near these parameter values.
+
+The Fisher metric sees this difference — it assigns different lengths to the mean direction and the variance direction, reflecting the statistical geometry of the distributions. Euclidean gradient descent, which treats mean and variance directions as equally weighted, takes steps that are too large in the variance direction and too small in the mean direction, converging slowly. Natural gradient descent, which uses the Fisher metric, takes steps calibrated to the statistical geometry of the manifold, converging much faster. The choice of metric is not a mathematical technicality — it is a practical engineering decision that determines how fast and accurately a model learns.
+
+In Phase 3, the flow matching loss $\mathbb{E}[\|F_\theta - \dot{x}\|_{T_xM}^2]$ uses the Riemannian metric of the data manifold — not the Euclidean metric of the ambient space — to measure the discrepancy between the learned and true velocity fields. If the data lives on a sphere (protein orientations, molecular conformations), the correct metric is the round metric on the sphere, not the Euclidean metric of the ambient $\mathbb{R}^3$. Using the wrong metric produces a model that learns efficiently in the ambient space but generates samples that lie off the data manifold or that do not respect the manifold's geometry. The Riemannian metric is not exotic mathematics — it is the correct tool for every problem where data lives on a curved space.
+
+---
+
+Hold four pictures simultaneously.
+
+The surveyor's equipment at Kyanjin Gompa: measuring the length of every tangent vector and the angle between every pair of tangent vectors at that specific point — a local, point-specific inner product, the Riemannian metric at one point.
+
+The metric coefficients $g_{ij}(p)$: the $2\times 2$ matrix encoding the inner product in the coordinate basis at $p$, varying smoothly from point to point across the valley, the complete local description of the metric.
+
+The arc length formula: integrating the metric-induced speed of a curve to measure its true geometric length, the tool that converts the local inner product into a global measurement of distances between points.
+
+The Fisher information metric: the Riemannian metric on the statistical manifold, measuring distances between probability distributions in terms of statistical distinguishability, the metric that governs natural gradient descent and information geometry.
+
+When you have all four pictures clearly in mind, let me know and we will move to Layer 2, where we give the Riemannian metric its full and precise mathematical form.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the precise definition of the Riemannian metric tensor, its coordinate representation and transformation law, the arc length functional and Riemannian distance, the gradient and musical isomorphisms, canonical examples, and the Fisher information metric with its role in natural gradient descent.
+
+### The Riemannian Metric Tensor
+
+Let $M$ be a smooth $n$-manifold. A **Riemannian metric** $g$ on $M$ is a smooth symmetric positive definite $(0,2)$-tensor field — a smooth assignment, to each point $p \in M$, of a bilinear form:
+
+$$g_p: T_pM \times T_pM \to \mathbb{R}$$
+
+satisfying three axioms for all $p \in M$ and all $u, v, w \in T_pM$, $\lambda \in \mathbb{R}$:
+
+$$\text{(i) Symmetry: } g_p(u,v) = g_p(v,u)$$
+$$\text{(ii) Bilinearity: } g_p(\lambda u + v, w) = \lambda g_p(u,w) + g_p(v,w)$$
+$$\text{(iii) Positive definiteness: } g_p(v,v) > 0 \quad \forall v \neq 0$$
+
+The smoothness condition means: for any two smooth vector fields $X, Y \in \mathfrak{X}(M)$, the function $p \mapsto g_p(X(p), Y(p))$ is smooth. The pair $(M, g)$ is called a **Riemannian manifold**.
+
+The metric $g$ induces a norm on each tangent space:
+
+$$\|v\|_p = \sqrt{g_p(v,v)}, \qquad v \in T_pM$$
+
+and an angle between nonzero tangent vectors:
+
+$$\cos\angle(u,v) = \frac{g_p(u,v)}{\|u\|_p \|v\|_p}$$
+
+Two tangent vectors are **orthogonal** at $p$ if $g_p(u,v) = 0$.
+
+**Existence theorem.** Every smooth manifold admits a Riemannian metric. The proof uses a partition of unity: pull back the Euclidean metric through each chart, then blend the local metrics using a partition of unity subordinate to the atlas. The resulting global metric is smooth and positive definite everywhere.
+
+---
+
+### Coordinate Representation and Transformation Law
+
+In a chart $(U, \phi)$ with local coordinates $(x^1, \ldots, x^n)$, the metric is determined by its values on coordinate basis vectors. Define the **metric coefficients**:
+
+$$g_{ij}(p) = g_p\!\left(\frac{\partial}{\partial x^i}\bigg|_p, \frac{\partial}{\partial x^j}\bigg|_p\right), \quad i,j = 1,\ldots,n$$
+
+The metric coefficients form a symmetric positive definite matrix $G(p) = (g_{ij}(p))$ at each $p \in U$, with $g_{ij}(p) = g_{ji}(p)$. The inner product of two tangent vectors $u = \sum_i u^i \partial/\partial x^i$ and $v = \sum_j v^j \partial/\partial x^j$ is:
+
+$$g_p(u,v) = \sum_{i,j=1}^n g_{ij}(p) u^i v^j = u^T G(p) v$$
+
+The metric is often written in the classical notation as a **line element**:
+
+$$ds^2 = \sum_{i,j=1}^n g_{ij}(x) \, dx^i \otimes dx^j$$
+
+or more informally as $ds^2 = \sum_{i,j} g_{ij} dx^i dx^j$, where $dx^i \otimes dx^j$ is the tensor product of coordinate covectors.
+
+**Transformation law.** Under a change of coordinates $\tilde{x}^k = \tau^k(x^1,\ldots,x^n)$ with Jacobian $J_\tau$, the metric coefficients transform as:
+
+$$\tilde{g}_{kl}(p) = \sum_{i,j=1}^n \frac{\partial x^i}{\partial \tilde{x}^k}\bigg|_p \frac{\partial x^j}{\partial \tilde{x}^l}\bigg|_p g_{ij}(p) = \left(J_\tau^{-T} G \, J_\tau^{-1}\right)_{kl}$$
+
+In matrix form: $\tilde{G} = J_\tau^{-T} G J_\tau^{-1}$. The metric coefficients transform as a covariant $(0,2)$-tensor — by the inverse Jacobian on each index. This is opposite to the transformation of tangent vector components (which transform by the Jacobian), reflecting the duality between vectors and covectors.
+
+---
+
+### Arc Length and Riemannian Distance
+
+**Arc length.** For a smooth curve $\gamma: [a,b] \to M$, the **arc length** is:
+
+$$L(\gamma) = \int_a^b \|\gamma'(t)\|_{\gamma(t)} \, dt = \int_a^b \sqrt{g_{\gamma(t)}(\gamma'(t), \gamma'(t))} \, dt$$
+
+In local coordinates, with $\gamma(t) = (x^1(t), \ldots, x^n(t))$ and $\gamma'(t) = \sum_i \dot{x}^i(t) \partial/\partial x^i$:
+
+$$L(\gamma) = \int_a^b \sqrt{\sum_{i,j} g_{ij}(\gamma(t)) \dot{x}^i(t) \dot{x}^j(t)} \, dt$$
+
+Arc length is invariant under reparameterization: if $\sigma: [c,d] \to [a,b]$ is a smooth increasing bijection and $\tilde\gamma = \gamma \circ \sigma$, then $L(\tilde\gamma) = L(\gamma)$.
+
+**Arc length parameterization.** A curve $\gamma$ is **parameterized by arc length** if $\|\gamma'(t)\|_{\gamma(t)} = 1$ for all $t$ — the speed is constantly 1. For any smooth curve with nonvanishing velocity, an arc length reparameterization exists and the arc length parameter $s$ satisfies $ds/dt = \|\gamma'(t)\|$.
+
+**Riemannian distance.** The **Riemannian distance function** $d_g: M \times M \to [0,\infty)$ is:
+
+$$d_g(p,q) = \inf\{L(\gamma) : \gamma \text{ smooth}, \gamma(0) = p, \gamma(1) = q\}$$
+
+**Theorem.** $(M, d_g)$ is a metric space: $d_g$ is symmetric, satisfies the triangle inequality, and $d_g(p,q) = 0 \iff p = q$.
+
+The proof uses the positive definiteness of $g$ to establish $d_g(p,q) > 0$ for $p \neq q$ (by computing the infimum of arc lengths in a chart neighborhood), and the triangle inequality follows by concatenating curves.
+
+**Theorem (Hopf-Rinow).** If $(M,g)$ is a connected Riemannian manifold, the following are equivalent: (i) $(M, d_g)$ is a complete metric space, (ii) every geodesic can be extended to all of $\mathbb{R}$, (iii) every bounded closed subset of $M$ is compact. A manifold satisfying these conditions is called **geodesically complete**. For geodesically complete manifolds, the distance $d_g(p,q)$ is always realized by a geodesic — the infimum is achieved.
+
+---
+
+### The Musical Isomorphisms — Gradient and Its Dual
+
+The Riemannian metric provides a canonical isomorphism between the tangent bundle $TM$ and the cotangent bundle $T^*M$, called the **musical isomorphisms** (from the notation $\flat$ and $\sharp$, like musical flat and sharp signs).
+
+**The flat map $\flat: TM \to T^*M$.** For each $v \in T_pM$, define the covector $v^\flat \in T_p^*M$ by:
+
+$$v^\flat(u) = g_p(v, u) \quad \forall u \in T_pM$$
+
+In coordinates: if $v = \sum_i v^i \partial/\partial x^i$, then $v^\flat = \sum_{i,j} g_{ij} v^i dx^j = \sum_j \left(\sum_i g_{ij} v^i\right) dx^j$. The flat map lowers the index: $v_j = \sum_i g_{ij} v^i$.
+
+**The sharp map $\sharp: T^*M \to TM$.** For each covector $\omega \in T_p^*M$, define the tangent vector $\omega^\sharp \in T_pM$ by:
+
+$$g_p(\omega^\sharp, u) = \omega(u) \quad \forall u \in T_pM$$
+
+In coordinates: if $\omega = \sum_j \omega_j dx^j$, then $\omega^\sharp = \sum_{i,j} g^{ij} \omega_j \partial/\partial x^i$, where $g^{ij}$ are the entries of the inverse metric matrix $G^{-1}$. The sharp map raises the index: $\omega^i = \sum_j g^{ij} \omega_j$.
+
+The two maps are inverses: $(\flat)^{-1} = \sharp$ and $(\sharp)^{-1} = \flat$. Together they provide the canonical identification between $TM$ and $T^*M$ that the metric supplies.
+
+**The gradient.** The **gradient** of a smooth function $f \in C^\infty(M)$ is the vector field:
+
+$$\text{grad}(f) = (df)^\sharp$$
+
+It is the unique vector field satisfying:
+
+$$g_p(\text{grad}(f)|_p, v) = df_p(v) = v(f) \quad \forall v \in T_pM$$
+
+In coordinates:
+
+$$\text{grad}(f) = \sum_{i,j} g^{ij} \frac{\partial f}{\partial x^j} \frac{\partial}{\partial x^i}$$
+
+The gradient points in the direction of steepest ascent of $f$, measured with respect to the Riemannian metric. Its magnitude $\|\text{grad}(f)\|_p = \sqrt{\sum_{i,j} g^{ij} \frac{\partial f}{\partial x^i} \frac{\partial f}{\partial x^j}}$ is the maximum directional derivative of $f$ at $p$.
+
+For the Euclidean metric on $\mathbb{R}^n$ with $g_{ij} = \delta_{ij}$ and $g^{ij} = \delta^{ij}$: $\text{grad}(f) = \sum_i \frac{\partial f}{\partial x^i} \frac{\partial}{\partial x^i} = \nabla f$, recovering the familiar gradient from MATH 201.
+
+---
+
+### The Riemannian Volume Form
+
+The Riemannian metric induces a canonical **volume form** $\text{vol}_g$ — a smooth $n$-form on $M$ that assigns a volume to every open subset. In local coordinates:
+
+$$\text{vol}_g = \sqrt{\det G(x)} \, dx^1 \wedge \cdots \wedge dx^n$$
+
+where $\det G(x) = \det(g_{ij}(x)) > 0$ (positive definite metric has positive determinant) and $dx^1 \wedge \cdots \wedge dx^n$ is the coordinate volume form. The factor $\sqrt{\det G}$ corrects for the metric's distortion of the coordinate volume element.
+
+The **integral of a function** $f \in C^\infty(M)$ over a Riemannian manifold is:
+
+$$\int_M f \, \text{vol}_g = \int_{\mathbb{R}^n} f(\phi^{-1}(x)) \sqrt{\det G(x)} \, dx^1 \cdots dx^n$$
+
+in any chart $(U, \phi)$ covering $M$ (using a partition of unity for the global definition). This is the Riemannian version of the Lebesgue integral — it uses the metric to define the correct notion of area or volume on the curved manifold.
+
+---
+
+### Canonical Examples
+
+**1. Euclidean metric on $\mathbb{R}^n$.** The standard Riemannian metric is $g_{ij} = \delta_{ij}$ everywhere:
+
+$$g_p(u,v) = \sum_{i=1}^n u^i v^i = u \cdot v$$
+
+The arc length formula reduces to $L(\gamma) = \int_a^b \|\gamma'(t)\|_2 \, dt$ and the Riemannian distance is the Euclidean distance $d_g(p,q) = \|p-q\|_2$. The gradient is the standard gradient $\nabla f$.
+
+**2. Round metric on $S^n$.** The unit sphere $S^n \subset \mathbb{R}^{n+1}$ inherits the **round metric** (or **standard metric**) $g_{\text{round}}$ as the pullback of the Euclidean metric on $\mathbb{R}^{n+1}$ to the tangent spaces of $S^n$. For $S^2$ in spherical coordinates $(\theta, \phi)$:
+
+$$ds^2 = d\theta^2 + \sin^2\!\theta \, d\phi^2, \quad G = \begin{pmatrix} 1 & 0 \\ 0 & \sin^2\theta \end{pmatrix}$$
+
+The factor $\sin^2\theta$ reflects the shrinking of longitude circles near the poles — a circle of constant latitude $\theta$ near the pole ($\theta \approx 0$) has circumference $2\pi\sin\theta \approx 2\pi\theta$, shrinking to zero at the pole. Distances on $S^2$ measured by $g_{\text{round}}$ are the great-circle distances — the arc lengths along great circles.
+
+**3. Hyperbolic metric on $\mathbb{H}^n$.** The upper half-space model $\mathbb{H}^n = \{(x^1,\ldots,x^n) \in \mathbb{R}^n : x^n > 0\}$ carries the **hyperbolic metric**:
+
+$$g_{ij}(x) = \frac{\delta_{ij}}{(x^n)^2}, \quad ds^2 = \frac{(dx^1)^2 + \cdots + (dx^n)^2}{(x^n)^2}$$
+
+The metric scales the Euclidean metric by $1/(x^n)^2$ — distances are magnified near $x^n = 0$ (the boundary) and shrink to zero as $x^n \to \infty$. Hyperbolic space has constant negative sectional curvature $-1$, making it the canonical model of negatively curved geometry. It arises in machine learning as the natural embedding space for hierarchical data (trees and hierarchies embed isometrically in $\mathbb{H}^n$) and in the Poincaré embeddings framework.
+
+**4. Pullback metric.** If $F: M \to (N, h)$ is a smooth map and $(N,h)$ is a Riemannian manifold, the **pullback metric** $F^*h$ on $M$ is defined by:
+
+$$(F^*h)_p(u,v) = h_{F(p)}(dF_p(u), dF_p(v)) \quad u,v \in T_pM$$
+
+The pullback metric is the metric induced on $M$ by measuring lengths using $F$ and $h$. If $F$ is an embedding, $F^*h$ is the induced metric — the natural metric on a submanifold. The round metric on $S^n$ is the pullback of the Euclidean metric under the inclusion $\iota: S^n \hookrightarrow \mathbb{R}^{n+1}$: $g_{\text{round}} = \iota^* g_{\text{Euclidean}}$.
+
+---
+
+### The Fisher Information Metric
+
+Let $\mathcal{M} = \{p_\theta : \theta \in \Theta \subseteq \mathbb{R}^d\}$ be a smooth family of probability densities on $(\mathcal{X}, \mathcal{F}, \lambda)$, parameterized by $\theta$. The statistical manifold $\mathcal{M}$ is a $d$-dimensional smooth manifold. The **Fisher information metric** is the Riemannian metric $g^F$ on $\mathcal{M}$ with coefficients:
+
+$$g^F_{ij}(\theta) = \mathbb{E}_{p_\theta}\!\left[\frac{\partial \log p_\theta(X)}{\partial \theta^i} \frac{\partial \log p_\theta(X)}{\partial \theta^j}\right] = \int \frac{\partial \log p_\theta(x)}{\partial \theta^i} \frac{\partial \log p_\theta(x)}{\partial \theta^j} p_\theta(x) \, d\lambda(x)$$
+
+This is the **Fisher information matrix** $I(\theta)$. It is symmetric and positive semidefinite by construction; it is positive definite (a valid Riemannian metric) under identifiability conditions.
+
+**Equivalent formulations.** Using $\frac{\partial \log p_\theta}{\partial \theta^i} = \frac{1}{p_\theta} \frac{\partial p_\theta}{\partial \theta^i}$ and the fact that $\int p_\theta \, d\lambda = 1$ implies $\int \frac{\partial p_\theta}{\partial \theta^i} \, d\lambda = 0$:
+
+$$g^F_{ij}(\theta) = -\mathbb{E}_{p_\theta}\!\left[\frac{\partial^2 \log p_\theta(X)}{\partial \theta^i \partial \theta^j}\right]$$
+
+The Fisher metric equals the negative expected Hessian of the log-likelihood — the curvature of the log-likelihood surface. Large curvature in a direction means small steps in that direction produce large likelihood changes — the distribution changes rapidly, meaning that direction is statistically informative and should receive large metric weight. Small curvature means the distribution changes slowly — that direction is statistically uninformative.
+
+**Reparameterization invariance.** The Fisher metric is invariant under reparameterization: if $\tilde\theta = \tau(\theta)$ is a smooth bijection, the Fisher metrics in the two parameterizations are related by $\tilde{g}^F = J_\tau^{-T} g^F J_\tau^{-1}$ — exactly the transformation law for Riemannian metrics. This invariance is the precise statement that the Fisher metric measures intrinsic statistical geometry, not parameter-dependent geometry.
+
+**Cramér-Rao bound.** For any unbiased estimator $\hat\theta$ of $\theta$ based on a single observation from $p_\theta$:
+
+$$\text{Cov}(\hat\theta) \succeq I(\theta)^{-1} = (g^F(\theta))^{-1}$$
+
+The inverse Fisher metric bounds the covariance of any estimator — it is the minimum achievable variance. The Fisher metric determines the fundamental limits of statistical estimation.
+
+---
+
+### Natural Gradient Descent
+
+Standard gradient descent on a loss function $\mathcal{L}(\theta)$ uses the Euclidean metric on parameter space:
+
+$$\theta_{t+1} = \theta_t - \eta \nabla_\theta \mathcal{L}(\theta_t)$$
+
+The update direction $\nabla_\theta \mathcal{L}$ is the gradient in Euclidean space — the sharp map $(d\mathcal{L})^\sharp$ with respect to the Euclidean metric $g_{ij} = \delta_{ij}$.
+
+**Natural gradient descent** replaces the Euclidean metric with the Fisher information metric:
+
+$$\theta_{t+1} = \theta_t - \eta I(\theta_t)^{-1} \nabla_\theta \mathcal{L}(\theta_t)$$
+
+The update direction $I(\theta_t)^{-1} \nabla_\theta \mathcal{L}(\theta_t)$ is the gradient with respect to the Fisher metric: $(d\mathcal{L})^\sharp$ with respect to $g^F$. In coordinates: $\text{grad}_{g^F}(\mathcal{L})^i = \sum_j (g^F)^{ij} \frac{\partial \mathcal{L}}{\partial \theta^j} = \sum_j I(\theta)^{-1}_{ij} \frac{\partial \mathcal{L}}{\partial \theta^j}$.
+
+Natural gradient descent is reparameterization-invariant: changing the parameterization of the model does not change the update direction in distribution space. This invariance makes natural gradient faster and more robust than standard gradient descent, particularly for models where different parameter directions have very different statistical effects — as in deep neural networks and diffusion models.
+
+**Connection to KL divergence.** The Fisher metric is the Hessian of the KL divergence at the diagonal:
+
+$$g^F_{ij}(\theta) = \frac{\partial^2}{\partial \epsilon^i \partial \epsilon^j}\bigg|_{\epsilon=0} D_{KL}(p_\theta \| p_{\theta+\epsilon})$$
+
+The Fisher metric measures how fast the KL divergence grows when you perturb the parameters — it is the local curvature of the KL divergence landscape. Natural gradient descent takes steps of constant KL divergence size, not constant Euclidean parameter size.
+
+---
+
+### The Levi-Civita Connection — Preview
+
+The Riemannian metric determines a unique **connection** on $TM$ — the **Levi-Civita connection** $\nabla$ — satisfying two conditions: compatibility with the metric ($\nabla g = 0$) and torsion-freeness ($\nabla_X Y - \nabla_Y X = [X,Y]$). The Levi-Civita connection is the tool for differentiating vector fields along curves on the manifold, and it is what defines the geodesic equation. We will encounter it explicitly in the next topic on geodesics.
+
+In coordinates, the Levi-Civita connection is determined by the **Christoffel symbols**:
+
+$$\Gamma^k_{ij} = \frac{1}{2}\sum_l g^{kl}\!\left(\frac{\partial g_{jl}}{\partial x^i} + \frac{\partial g_{il}}{\partial x^j} - \frac{\partial g_{ij}}{\partial x^l}\right)$$
+
+The Christoffel symbols encode how the coordinate basis vectors change as you move along the manifold — they measure the rate at which the metric coefficients vary. For the Euclidean metric, $\frac{\partial g_{ij}}{\partial x^k} = 0$ everywhere, so $\Gamma^k_{ij} = 0$ — the connection is flat, and there is no rotation of basis vectors as you move through space.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 103 (Linear Algebra), the Euclidean inner product $\langle u,v\rangle = u^T v$ is the Riemannian metric on $\mathbb{R}^n$ in the standard basis — the simplest Riemannian metric, with $g_{ij} = \delta_{ij}$ constant everywhere. Every inner product computation in MATH 103 — dot products, orthogonality, projections, Gram-Schmidt — was a Riemannian geometry computation in the flat metric. The general Riemannian metric $g_{ij}(p)$ is a position-dependent generalization: the inner product varies from point to point, reflecting the curvature of the manifold. In MATH 201 (Advanced Calculus), the arc length formula $L = \int_a^b \|\gamma'(t)\|_2 \, dt$ for a curve in $\mathbb{R}^n$ is the arc length formula for the Euclidean Riemannian metric. The gradient $\nabla f$ is the gradient vector field for the Euclidean metric — the sharp map of $df$ under $g_{ij} = \delta_{ij}$. Every arc length computation in MATH 201 was an arc length computation on the Riemannian manifold $(\mathbb{R}^n, g_{\text{Euclidean}})$. In MATH 208 (Statistics and Probability), the Fisher information matrix $I(\theta)$ appeared as the inverse of the Cramér-Rao lower bound. It is now recognized as the metric tensor of the statistical manifold — the Riemannian metric that makes parameter space into a curved geometric object whose geometry reflects statistical distinguishability.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Langtang valley survey story has a precise mathematical address. Let us walk through them one by one, until the theodolite, the metric coefficients, the trekking route length, and the full formal apparatus are completely fused into a single picture.
+
+---
+
+**The Langtang valley terrain — the curved two-dimensional surface being surveyed — is the smooth manifold $(M, g)$, now equipped with a Riemannian metric.** The manifold $M$ existed before the metric: it was the smooth surface described by charts and atlases in Topic 1, the arena of tangent vectors and vector fields in Topic 2. But $M$ without a metric is a purely topological and differential object — it has shape but no scale. The Riemannian metric $g$ is the additional structure that gives the manifold both shape and measurement capability simultaneously. It is the metric that makes the valley a genuine geometric object — a space where questions like "how far?" and "at what angle?" have precise numerical answers.
+
+**The survey team's theodolite and total station at each survey station — the equipment that measures angles and distances locally at each point — is the inner product $g_p: T_pM \times T_pM \to \mathbb{R}$ at the point $p$.** The equipment at Kyanjin Gompa measures angles and distances in the immediate vicinity of that station. It cannot measure distances to Lama Hotel directly — those require integrating along a path. But it can measure, with arbitrary precision, the angle between any two directions from the station and the length of any short displacement from the station. This local measurement capability is exactly what the inner product $g_p$ provides: given any two tangent vectors $u, v \in T_pM$, it returns $g_p(u,v)$ — a real number encoding both lengths and angles through the formulas $\|v\|_p = \sqrt{g_p(v,v)}$ and $\cos\theta = g_p(u,v)/(\|u\|_p\|v\|_p)$.
+
+**The three axioms of the inner product — symmetry, bilinearity, positive definiteness — are the three physical properties that the survey equipment implicitly satisfies.** Symmetry $g_p(u,v) = g_p(v,u)$ is the fact that the angle from direction $u$ to direction $v$ equals the angle from $v$ to $u$ — the theodolite reads the same angle regardless of which direction you designate as first. Bilinearity is the fact that doubling a displacement doubles its measured length, and that the measurement is additive in each argument separately. Positive definiteness $g_p(v,v) > 0$ for $v \neq 0$ is the fact that every nonzero displacement has positive length — the total station never measures a zero distance for a genuine movement in any direction. These three axioms are not mathematical impositions on the survey equipment — they are properties the equipment already has, made explicit.
+
+---
+
+**The metric coefficients $g_{ij}(p) = g_p(\partial/\partial x^i|_p, \partial/\partial x^j|_p)$ — the three numbers $g_{11}$, $g_{12}$, $g_{22}$ encoding the inner product in the coordinate basis at $p$ — are the survey team's calibration data at each station.** The coordinate basis vectors $\partial/\partial x^1|_p$ and $\partial/\partial x^2|_p$ are the unit steps in the easting and northing directions of the topo map grid. The metric coefficient $g_{11}(p)$ is the squared length of the easting unit step at $p$ — how much actual terrain distance corresponds to one grid unit east. The coefficient $g_{22}(p)$ is the squared length of the northing unit step. The coefficient $g_{12}(p)$ is the inner product of the easting and northing unit steps — zero if the grid is orthogonal at $p$, nonzero if the grid is skewed. In the flat valley floor, $g_{11} \approx g_{22} \approx 1$ and $g_{12} \approx 0$: the grid is approximately orthogonal and the coordinate steps have approximately unit terrain length. On the steep ridge, $g_{11}$ and $g_{22}$ deviate significantly from 1 — the terrain distance corresponding to one grid unit is much larger than in the flat valley — and $g_{12}$ may be nonzero if the ridge runs diagonally across the grid.
+
+**The metric matrix $G(p) = (g_{ij}(p))$ being symmetric positive definite at every $p$ is the condition that the survey equipment is nondegenerate and consistent.** Symmetry $g_{ij} = g_{ji}$ reflects the symmetry of the inner product. Positive definiteness means $v^T G(p) v > 0$ for all nonzero $v$ — every nonzero displacement at $p$ has positive squared length. A degenerate metric (with $G(p)$ only positive semidefinite) would mean some nonzero direction has zero length — a physically impossible situation for a genuine two-dimensional terrain. The condition $\det G(p) > 0$ — which follows from positive definiteness — is what makes the volume form $\sqrt{\det G} \, dx^1 dx^2$ well-defined and positive: the metric assigns positive area to every region of the terrain.
+
+**The transformation law $\tilde{G} = J_\tau^{-T} G J_\tau^{-1}$ under a change of coordinates is the statement that the terrain's physical geometry is independent of which survey grid you use.** If the guide company switches from easting-northing coordinates to a polar coordinate system centered at Kyanjin Gompa, the metric coefficients change — the matrix $G(p)$ looks different in the new chart. But the inner product $g_p(u,v)$ is the same geometric number regardless of which coordinate system expresses $u$ and $v$. The transformation law encodes exactly this chart-independence: it tells you how to convert $G$ from one chart to another so that the geometric content is preserved. Comparing $g_{11}$ values across different charts without applying the transformation law is meaningless — they refer to different coordinate directions and are not directly comparable.
+
+---
+
+**The trekking route from Lama Hotel to Kyanjin Ri — the smooth curve $\gamma: [0,1] \to M$ — has a well-defined geometric length $L(\gamma) = \int_0^1 \sqrt{g_{\gamma(t)}(\gamma'(t), \gamma'(t))} \, dt$ given by the arc length formula.** At each moment $t$, the trekker is at position $\gamma(t)$ on the terrain with velocity $\gamma'(t) \in T_{\gamma(t)}M$. The speed at time $t$ is $\|\gamma'(t)\|_{\gamma(t)} = \sqrt{g_{\gamma(t)}(\gamma'(t), \gamma'(t))}$ — the metric-induced length of the velocity vector at the current position. Integrating the speed over the entire journey gives the total route length. In the topo map coordinates, this is $L(\gamma) = \int_0^1 \sqrt{\sum_{i,j} g_{ij}(\gamma(t)) \dot{x}^i(t) \dot{x}^j(t)} \, dt$ — the metric coefficients weight the coordinate velocity components to produce the true terrain speed. The familiar arc length formula $\int_a^b \|\gamma'(t)\|_2 \, dt$ from MATH 201 is this formula with $g_{ij} = \delta_{ij}$ — the Euclidean metric. The Riemannian formula replaces the constant Euclidean inner product with the position-dependent metric $g_{\gamma(t)}$, accounting for the terrain's curvature.
+
+**The independence of $L(\gamma)$ from the parameterization is the physical fact that the trekking route's length does not depend on how fast the trekker walks.** A slow trekker covering the route in two hours and a fast trekker covering it in one hour trace the same geometric path and the same geometric length. The parameterization changes — the function $\gamma$ changes — but the image $\gamma([0,1])$ and the integral $L(\gamma)$ are the same. This is not a mathematical convenience — it is the physical requirement that length is a geometric property of the path, not a dynamical property of the motion along it.
+
+**The Riemannian distance $d_g(p,q) = \inf_\gamma L(\gamma)$ — the shortest route between Kyanjin Gompa and the glacier snout, measured along the terrain — is the Riemannian distance function.** The infimum is over all smooth curves connecting the two points. The shortest curve — the one achieving the infimum — is the geodesic between $p$ and $q$, the subject of the next topic. The Riemannian distance satisfies all the axioms of a metric space from Topic 1 of Chapter 1: positivity, symmetry, and the triangle inequality. The circle connecting Chapter 1 and Chapter 3 is now explicit: the metric space of Chapter 1 was always the Riemannian metric of Chapter 3, viewed at the level of the distance function rather than the inner product.
+
+---
+
+**The direction of steepest ascent from any survey station — the gradient of the elevation function — is $\text{grad}(f) = (df)^\sharp$, the sharp map converting the covector $df$ to the tangent vector $\text{grad}(f)$.** The exterior derivative $df_p$ is a covector: it acts on tangent vectors by $df_p(v) = v(f)$, returning the rate of elevation change in the direction $v$. But a covector is not a direction — it is a linear functional on directions. To convert it to a direction — the direction of steepest ascent — you need the Riemannian metric. The gradient vector $\text{grad}(f)|_p$ is the unique tangent vector satisfying $g_p(\text{grad}(f)|_p, v) = df_p(v)$ for all $v$. In coordinates: $\text{grad}(f)|_p = \sum_{i,j} g^{ij}(p) \frac{\partial f}{\partial x^j}|_p \frac{\partial}{\partial x^i}|_p$. The inverse metric $g^{ij}$ is the crucial ingredient: it converts the covector components $\partial f/\partial x^j$ into vector components. In the flat valley floor where $g^{ij} \approx \delta^{ij}$, the gradient reduces to the familiar $\nabla f$ from MATH 201. On the steep ridge where $g^{ij}$ deviates from $\delta^{ij}$, the gradient is rotated and rescaled by the inverse metric — the steepest direction in terrain geometry is not the same as the largest partial derivative in the coordinate grid.
+
+**The flat map $v^\flat(u) = g_p(v,u)$ and the sharp map $\omega^\sharp$ satisfying $g_p(\omega^\sharp, u) = \omega(u)$ are the surveyor's conversion tools between directions and measurements.** The flat map converts a tangent vector (a direction) into a covector (a measurement rule): $v^\flat$ is the rule that measures the component of any displacement in the direction of $v$, using the metric to define the projection. The sharp map converts a covector (a measurement rule) into a tangent vector (a direction): $\omega^\sharp$ is the direction that maximizes $\omega$ per unit metric length. The gradient is the sharp map applied to the exterior derivative: $\text{grad}(f) = (df)^\sharp$ — the direction that maximizes the rate of elevation change per unit terrain distance. Without the metric, this conversion is impossible. The metric is the bridge between the world of directions (tangent vectors) and the world of measurements (covectors).
+
+---
+
+**The round metric on $S^2$ in spherical coordinates — $ds^2 = d\theta^2 + \sin^2\theta \, d\phi^2$ with $G = \text{diag}(1, \sin^2\theta)$ — is the metric tensor for the Earth's surface as a physical measuring instrument.** The coefficient $g_{\theta\theta} = 1$ means that one radian of latitude subtends one radian of arc length along any meridian — moving north or south, one degree of latitude is one degree of arc regardless of where you are. The coefficient $g_{\phi\phi} = \sin^2\theta$ means that one radian of longitude subtends $\sin\theta$ radians of arc length along a parallel at colatitude $\theta$ — moving east or west, one degree of longitude corresponds to $\cos(\text{latitude})$ degrees of arc, shrinking to zero at the poles. The off-diagonal coefficient $g_{\theta\phi} = 0$ means latitude and longitude directions are orthogonal everywhere. In the Langtang valley at latitude $\theta \approx 28°$ north ($\theta \approx 62°$ colatitude in spherical convention), $\sin\theta \approx 0.88$, so one degree of longitude corresponds to approximately $0.88$ degrees of arc length — a nontrivial correction that a flat Euclidean model would miss.
+
+**The Fisher information metric $g^F_{ij}(\theta) = \mathbb{E}_{p_\theta}[\frac{\partial \log p_\theta}{\partial \theta^i} \frac{\partial \log p_\theta}{\partial \theta^j}]$ is the survey equipment applied to the statistical manifold — measuring the angle and distance between probability distributions.** The statistical manifold's points are probability distributions $p_\theta$. Its tangent vectors at $p_\theta$ are directions of perturbation — infinitesimal changes $\dot\theta$ in the parameters. The Fisher metric assigns to each perturbation direction $\dot\theta$ the length $\|\dot\theta\|_{g^F} = \sqrt{\dot\theta^T I(\theta) \dot\theta}$ — the statistical distinguishability of the perturbation, measured by how much the log-likelihood changes. A perturbation that changes the distribution a lot (large score function inner product) has large metric length. A perturbation that barely changes the distribution (flat log-likelihood) has small metric length. The Fisher metric is the Riemannian metric that makes statistical distinguishability into a geometric distance.
+
+**The break moment — the Euclidean metric being wrong for the statistical manifold — is made precise by the reparameterization invariance of the Fisher metric.** Two Gaussian parameterizations — one in terms of mean and variance $(\mu, \sigma^2)$, another in terms of mean and log-variance $(\mu, \log\sigma^2)$ — represent the same statistical manifold with the same distributions at the same geometric points. The Euclidean metric on parameter space gives different distances depending on which parameterization you use: the Euclidean distance between $(\mu, \sigma^2)$ and $(\mu, \sigma^2 + 0.01)$ is $0.01$, but the Euclidean distance between $(\mu, \log\sigma^2)$ and $(\mu, \log\sigma^2 + 0.01/(sigma^2))$ is $0.01/\sigma^2$, which depends on $\sigma^2$. The Fisher metric gives the same distance regardless of parameterization — it measures the intrinsic statistical geometry, not the coordinate-dependent Euclidean geometry. This is the formal content of the Fisher metric's reparameterization invariance: $\tilde{g}^F = J_\tau^{-T} g^F J_\tau^{-1}$, the transformation law that makes the metric coordinate-independent.
+
+**Natural gradient descent — $\theta_{t+1} = \theta_t - \eta I(\theta_t)^{-1} \nabla_\theta \mathcal{L}(\theta_t)$ — is gradient descent on the statistical manifold using the Fisher metric rather than the Euclidean metric.** The standard gradient $\nabla_\theta \mathcal{L}$ is the exterior derivative $d\mathcal{L}$ — a covector in the cotangent space of the parameter manifold. Converting it to a tangent vector — the gradient vector field $\text{grad}_{g^F}(\mathcal{L})$ — using the Euclidean metric gives $\nabla_\theta \mathcal{L}$ directly. Converting it using the Fisher metric gives $I(\theta)^{-1} \nabla_\theta \mathcal{L}$ — the natural gradient. The natural gradient is the direction of steepest descent in the Fisher metric geometry — the direction that decreases the loss most rapidly per unit of KL divergence from the current distribution. This is why natural gradient converges faster: it takes steps proportional to statistical change rather than parameter change, avoiding the spurious metric dependence that makes standard gradient descent slow when the statistical geometry is highly curved.
+
+---
+
+**The connection to MATH 103 (Linear Algebra) is now total and explicit.** Every inner product computation in MATH 103 — the dot product $u \cdot v = u^T v$, the Gram matrix $G_{ij} = \langle e_i, e_j\rangle$, the orthogonality condition $u \cdot v = 0$, the projection formula $\hat{u} = (u \cdot v/\|v\|^2)v$ — was Riemannian geometry on $\mathbb{R}^n$ with the Euclidean metric $g_{ij} = \delta_{ij}$. The Gram-Schmidt orthogonalization process is the construction of an orthonormal basis for $T_p\mathbb{R}^n$ using the Euclidean inner product — a flat-space version of the same process that constructs orthonormal frames on Riemannian manifolds. The matrix of the inner product in a non-standard basis — $G_{ij} = \langle e_i, e_j\rangle$ — is the metric matrix $g_{ij}$ in the basis $\{e_i\}$. The change-of-basis formula for the Gram matrix — $\tilde{G} = P^T G P$ for a change-of-basis matrix $P$ — is the metric transformation law $\tilde{G} = J_\tau^{-T} G J_\tau^{-1}$ with $J_\tau = P^{-1}$.
+
+**The connection to MATH 201 (Advanced Calculus) closes through the arc length formula and the gradient.** The arc length formula $L = \int_a^b \|\gamma'(t)\|_2 \, dt$ from MATH 201 is the Riemannian arc length formula with $g_{ij} = \delta_{ij}$. The gradient $\nabla f$ from MATH 201 is the sharp map $(df)^\sharp$ with respect to the Euclidean metric — the conversion from the covector $df$ to the tangent vector $\nabla f$ using $g^{ij} = \delta^{ij}$. The directional derivative formula $D_v f = \nabla f \cdot v$ from MATH 201 is the identity $g_p(\text{grad}(f)|_p, v) = df_p(v)$ — the defining property of the gradient, now recognized as the musical isomorphism condition. Every gradient computation, every directional derivative, every arc length integral in MATH 201 was Riemannian geometry on the flat manifold $\mathbb{R}^n$.
+
+**The connection to MATH 208 (Statistics and Probability) closes through the Fisher information matrix.** The Fisher information matrix $I(\theta) = \mathbb{E}_{p_\theta}[\nabla_\theta \log p_\theta \cdot \nabla_\theta \log p_\theta^T]$ that appeared in MATH 208 as the inverse of the Cramér-Rao bound is now recognized as the Riemannian metric tensor of the statistical manifold. The Cramér-Rao bound $\text{Cov}(\hat\theta) \succeq I(\theta)^{-1}$ is the statement that the inverse Fisher metric provides a lower bound on the covariance of any estimator — the metric geometry of the statistical manifold limits what any estimation procedure can achieve. The MLE's asymptotic efficiency — the fact that the MLE achieves the Cramér-Rao bound — is the statement that the MLE is the geodesic-following estimator on the statistical manifold in the Fisher metric geometry.
+
+---
+
+**Looking forward across the roadmap**, the Riemannian metric is the measurement tool of every phase. In Phase 1, the Wasserstein-2 distance $W_2(\mu,\nu)$ is the Riemannian distance on the Wasserstein manifold equipped with the $L^2$ metric on tangent vectors — transport plans are geodesics in this metric, and the geodesic length is $W_2$. The JKO scheme performs gradient descent in the Wasserstein metric — gradient descent using the Riemannian gradient in the Fisher-like metric on distribution space. In Phase 2, the equivariance conditions of graph neural networks are conditions on the isometry group of the data manifold's Riemannian metric — transformations that preserve metric distances. The graph Laplacian eigenmaps use the graph's combinatorial metric as an approximation to the data manifold's Riemannian metric, and the eigenmaps are the harmonic maps — energy-minimizing maps — with respect to this metric. In Phase 3, the flow matching loss $\mathbb{E}[\|F_\theta(x,t) - \dot{x}(t)\|_{T_xM}^2]$ uses the Riemannian metric $g_x$ to measure the discrepancy between the learned and true velocity fields at each trajectory point. For data on the sphere — protein orientations, directional data — the correct metric is the round metric $g_{\text{round}}$, not the Euclidean metric of the ambient $\mathbb{R}^3$. Riemannian flow matching on the sphere uses geodesics of the round metric as the reference trajectories, and the flow matching loss is evaluated in the round metric's tangent space norm. The Riemannian metric is not a mathematical decoration — it is the measurement instrument that makes every geometric computation in the roadmap quantitatively correct.
+
+---
+---

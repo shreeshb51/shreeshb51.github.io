@@ -1,0 +1,302 @@
+# Topic 5 - The Push-forward
+
+## Introduction
+
+You have now built the complete mathematical language for describing mass distributed over a space. You know which subsets are allowed to carry mass — the Borel sets. You know how to assign mass to them consistently — the Lebesgue measure. You know how to sum mass weighted by a function — the Lebesgue integral. And you know how to compare two different mass distributions on the same space — the Radon-Nikodym derivative. Every one of these tools answers a question about mass sitting still, distributed across a fixed space, being measured and compared.
+
+But the roadmap is not about mass sitting still. It is about mass in motion. Every generative model you will study in Phase 3 is fundamentally a story about transformation — taking a simple distribution, like a Gaussian cloud of noise, and moving it through a learned map until it becomes a complex distribution over real data. Every optimal transport problem in Phase 1 is a story about moving mass from one configuration to another at minimum cost. Every flow matching algorithm is a story about finding the most efficient path along which mass travels from noise to data.
+
+To tell any of these stories rigorously, you need one more tool: a precise language for what happens to a distribution when a function acts on it. If mass is distributed according to $\mu$ over a space $\Omega_1$, and a function $T$ carries every point $x \in \Omega_1$ to a new location $T(x) \in \Omega_2$, what is the resulting distribution of mass over $\Omega_2$? This question has a clean, complete, and beautiful answer — and that answer is the push-forward measure $T_\# \mu$.
+
+The push-forward is not merely a technical construction appended to the end of a chapter. It is the conceptual bridge between everything you have built in Chapter 1 and everything that follows in the roadmap. The Radon-Nikodym theorem told you how to express one static distribution in terms of another. The push-forward tells you how a dynamic transformation — a map, a flow, a neural network — carries one distribution into another. Together, they form the complete toolkit for reasoning about distributions both at rest and in motion.
+
+This topic has one central object — the push-forward measure $T_\# \mu$ — but its full understanding requires three tightly connected ideas. The first is the definition itself: what $(T_\# \mu)(A) = \mu(T^{-1}(A))$ means geometrically and physically, and why this is the only sensible definition. The second is the integration formula $\int g \, d(T_\# \mu) = \int g \circ T \, d\mu$ — the computational identity that makes the push-forward usable in practice, connecting integrals over the output space to integrals over the input space. The third is the density transformation formula — how the push-forward interacts with the Radon-Nikodym theorem to produce the explicit density of the transformed distribution, which is the formula that every generative model in Phase 3 relies on for computing likelihoods.
+
+By the end of this topic, when you see a generative model described as "pushing a Gaussian through a neural network," you will see not a metaphor but a precise mathematical operation — the push-forward of the standard Gaussian measure through the network's function, with a density given exactly by the Radon-Nikodym formula you derived in Topic 4. The push-forward is where the static mathematics of Chapter 1 becomes dynamic, and where the entire roadmap begins to move.
+
+---
+
+## Layer 1 (Story)
+
+You are the chief logistics coordinator for the largest mela in Nepal — the Indra Jatra festival in Kathmandu. On the morning before the festival begins, the population of the city is distributed across the valley in its ordinary daily pattern: some people are in Thamel, some in Patan, some in Bhaktapur, some in Kirtipur, and so on. This ordinary morning distribution is well understood — you have census data, you have maps, you have a precise picture of how many people occupy each neighborhood at each hour. Call this the **before distribution**.
+
+Then the festival begins. And the festival does something very specific: it moves people. Not randomly, not chaotically, but according to a definite pattern. Everyone in Thamel walks to Hanuman Dhoka. Everyone in the northern wards converges on Basantapur. Everyone from the surrounding hills pours into the old city center. The festival is a transformation — a function $T$ that takes each person's morning location $x$ and maps it to their festival location $T(x)$. Every person moves. Every person's destination is determined by where they started and the pull of the festival's geography.
+
+After the transformation — after everyone has moved to their festival location — the population is distributed completely differently across the city. The old city center is dense with people. The outlying neighborhoods are nearly empty. This new distribution of people across the city is the **after distribution**. And your job, as logistics coordinator, is to compute it precisely — to know exactly how many people are in each neighborhood after the festival transformation has acted on the morning distribution.
+
+---
+
+The question is: given that you know the before distribution perfectly, and you know the transformation $T$ perfectly, how do you compute the after distribution?
+
+The answer is surprisingly clean. To find out how many people end up in any given region $A$ after the transformation, you simply ask: which morning locations map into $A$ under $T$? That is, which people — based on where they started — end up inside $A$ after moving? The set of all morning locations that map into $A$ is exactly the preimage $T^{-1}(A) = \{x : T(x) \in A\}$. And the number of people in $A$ after the transformation is simply the number of people who were in $T^{-1}(A)$ before the transformation — because every person in $T^{-1}(A)$ moves into $A$, and every person who ends up in $A$ must have come from $T^{-1}(A)$.
+
+This gives you the fundamental formula: the after distribution assigns to each region $A$ the mass that the before distribution assigned to its preimage:
+
+$$(T_\# \mu)(A) = \mu(T^{-1}(A))$$
+
+This is the push-forward. It is the unique, logically inevitable answer to the question "where does the mass go when $T$ acts?" There is no other formula that could be correct. If you know where everyone started and you know the map $T$, the preimage formula is the only consistent way to compute where everyone ends up.
+
+---
+
+Let us make the story richer and more precise by working through a specific example. Suppose the morning distribution $\mu$ is uniform — every square metre of the valley has the same population density. The valley is the unit interval $[0,1]$, and $\mu$ is the Lebesgue measure, assigning to each interval its length. Now suppose the festival transformation is $T(x) = x^2$ — a smooth map that compresses the left part of the valley and stretches the right part. Everyone in the left half of the valley gets pushed closer together at the festival grounds, while everyone in the right half spreads out more.
+
+What is the after distribution? Let us compute $(T_\# \mu)(A)$ for a typical region $A = [a, b] \subseteq [0,1]$. The preimage of $[a,b]$ under $T(x) = x^2$ is:
+
+$$T^{-1}([a,b]) = \{x \in [0,1] : x^2 \in [a,b]\} = [\sqrt{a}, \sqrt{b}]$$
+
+So the after distribution assigns to $[a,b]$ the measure:
+
+$$(T_\# \mu)([a,b]) = \mu([\sqrt{a}, \sqrt{b}]) = \sqrt{b} - \sqrt{a}$$
+
+This is not the Lebesgue measure — the after distribution is not uniform. The region $[0, 0.01]$ near zero receives measure $\sqrt{0.01} - 0 = 0.1$, while the region $[0.99, 1]$ near one receives measure $1 - \sqrt{0.99} \approx 0.005$. The compression near zero has concentrated mass there, and the stretching near one has diluted it. The push-forward has converted a uniform before distribution into a non-uniform after distribution, entirely determined by the geometry of $T$.
+
+And crucially, the after distribution has a density — a Radon-Nikodym derivative with respect to the Lebesgue measure. That density is:
+
+$$p_{T_\# \mu}(y) = \frac{d(T_\# \mu)}{d\lambda}(y) = \frac{1}{2\sqrt{y}}$$
+
+which blows up near $y = 0$ — reflecting the heavy concentration of mass that $T(x) = x^2$ creates there — and decays near $y = 1$ — reflecting the dilution at the stretched end. The Jacobian of $T^{-1}(y) = \sqrt{y}$ is $\frac{d}{dy}\sqrt{y} = \frac{1}{2\sqrt{y}}$, which is exactly the density. The push-forward density formula and the Radon-Nikodym theorem are working in perfect concert.
+
+---
+
+Now here is the break moment. The naive assumption is that the push-forward is simply the composition of $T$ with the density — that if $\mu$ has density $p$, then $T_\# \mu$ has density $p \circ T$. After all, the density at the output location $T(x)$ should just be the density at the input location $x$, right? You move the mass, you move the density value with it.
+
+This breaks immediately and visibly. If $p \circ T$ were the density of $T_\# \mu$, it would have to integrate to 1 over the output space. But:
+
+$$\int_0^1 p(T(x)) \, d\lambda(y) = \int_0^1 1 \, dy = 1$$
+
+Wait — this seems to work for the uniform case. Let us try something less trivial. Suppose $T(x) = 2x$ on $[0, 1]$, mapping $[0,1]$ onto $[0,2]$, and $\mu$ is the uniform measure on $[0,1]$ with density $p = 1$. The naive formula $p \circ T^{-1}(y) = p(y/2) = 1$ would suggest the density of $T_\# \mu$ is $1$ everywhere on $[0,2]$. But that cannot be right — a density on $[0,2]$ that equals $1$ everywhere integrates to $2$, not $1$. Probability mass has not been conserved. The naive formula loses track of the stretching that $T$ performs on the space.
+
+The correct density is $p(T^{-1}(y)) \cdot |\det J_{T^{-1}}(y)| = 1 \cdot \frac{1}{2} = \frac{1}{2}$, which integrates to $\int_0^2 \frac{1}{2} \, dy = 1$. The Jacobian factor $\frac{1}{2}$ is the correction for the factor-of-2 stretching that $T$ applies. When $T$ doubles all distances, it dilutes the density by a factor of 2. The Jacobian is not optional bookkeeping — it is the conservation law that ensures mass is neither created nor destroyed by the transformation. Without it, the density formula violates the most basic requirement of a probability measure: that it integrates to 1.
+
+The push-forward density formula $p_{T_\# \mu}(y) = p(T^{-1}(y)) \cdot |\det J_{T^{-1}}(y)|$ is the correct formula precisely because it carries both the value of the density at the source location and the local volume correction at the destination. The naive formula $p \circ T$ carries only the value, forgetting the geometry. And in a world where the entire roadmap is about transforming distributions through complex, high-dimensional maps — neural networks, flows, diffusion processes — forgetting the geometry is not a minor error. It is a fundamental conceptual failure.
+
+---
+
+Now let us step back and see the full picture of what the push-forward does to the story of generative AI.
+
+A generative model is precisely a push-forward machine. It takes a simple, tractable distribution $\mu$ — typically the standard Gaussian $\mathcal{N}(0, I)$ in high dimensions, whose density is known exactly — and it pushes this distribution forward through a learned transformation $T_\theta$ — a neural network with parameters $\theta$ — to produce a complex distribution $T_{\theta\#} \mu$ over the data space. The goal of training is to find parameters $\theta$ such that the push-forward distribution $T_{\theta\#} \mu$ matches the true data distribution as closely as possible.
+
+The festival analogy captures this exactly. The Gaussian noise distribution is the morning distribution — the simple, well-understood starting point. The neural network $T_\theta$ is the festival transformation — the map that moves every noise sample to a data sample. The data distribution is the after distribution — the complex, high-dimensional distribution over images, molecules, proteins, or whatever the model is generating. The push-forward formula is the precise mathematical statement of what the neural network does to the distribution, not just to individual points.
+
+And the Radon-Nikodym theorem connects everything: the likelihood of any generated data point $y$ under the model is $p_{T_{\theta\#}\mu}(y) = p_\mu(T_\theta^{-1}(y)) \cdot |\det J_{T_\theta^{-1}}(y)|$. This is the formula that normalizing flows compute exactly, that diffusion models approximate, and that flow matching learns efficiently. Every generative model in Phase 3 is a push-forward, and every likelihood computation is a Radon-Nikodym derivative of that push-forward.
+
+---
+
+Hold three pictures in your mind simultaneously.
+
+The first picture: the festival morning. People distributed across the valley according to $\mu$. The transformation $T$ moves each person from their morning location to their festival location. The after distribution $T_\# \mu$ is computed by the preimage formula — the population in any region $A$ after the festival equals the population in $T^{-1}(A)$ before it.
+
+The second picture: the stretching map $T(x) = 2x$. The uniform distribution on $[0,1]$ pushed forward to $[0,2]$. The density halved everywhere because the space doubled. The Jacobian $\frac{1}{2}$ is the conservation factor that keeps total mass equal to 1.
+
+The third picture: the generative model. Gaussian noise as the morning distribution. The neural network as the festival transformation. The data distribution as the after distribution. The push-forward density formula as the likelihood computation. The entire apparatus of Chapter 1 — $\sigma$-algebras, Lebesgue measure, Lebesgue integral, Radon-Nikodym theorem — converging into a single formula that is the mathematical foundation of modern generative AI.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in five stages: the precise definition of the push-forward measure, the fundamental integration formula, the push-forward density formula via the Radon-Nikodym theorem, the composition and linearity properties, and finally the connection to the Wasserstein distance and optimal transport that anchors the push-forward to Phase 1 of the roadmap.
+
+### The Definition
+
+Let $(\Omega_1, \mathcal{F}_1, \mu)$ and $(\Omega_2, \mathcal{F}_2)$ be measurable spaces and let $T: \Omega_1 \to \Omega_2$ be a measurable function — meaning $T^{-1}(A) \in \mathcal{F}_1$ for every $A \in \mathcal{F}_2$. The **push-forward measure** of $\mu$ under $T$, written $T_\# \mu$ or $T_* \mu$, is the measure on $(\Omega_2, \mathcal{F}_2)$ defined by:
+
+$$(T_\# \mu)(A) = \mu(T^{-1}(A)) \quad \forall A \in \mathcal{F}_2$$
+
+where $T^{-1}(A) = \{\omega \in \Omega_1 : T(\omega) \in A\}$ is the preimage of $A$ under $T$.
+
+We must verify that $T_\# \mu$ is indeed a measure on $(\Omega_2, \mathcal{F}_2)$. The two axioms are immediate:
+
+$$\text{(i) } (T_\# \mu)(\emptyset) = \mu(T^{-1}(\emptyset)) = \mu(\emptyset) = 0$$
+
+$$\text{(ii) If } A_1, A_2, \ldots \in \mathcal{F}_2 \text{ are pairwise disjoint, then } T^{-1}\left(\bigsqcup_{n=1}^\infty A_n\right) = \bigsqcup_{n=1}^\infty T^{-1}(A_n)$$
+
+and therefore:
+
+$$(T_\# \mu)\left(\bigsqcup_{n=1}^\infty A_n\right) = \mu\left(\bigsqcup_{n=1}^\infty T^{-1}(A_n)\right) = \sum_{n=1}^\infty \mu(T^{-1}(A_n)) = \sum_{n=1}^\infty (T_\# \mu)(A_n)$$
+
+The disjointness of preimages follows from the disjointness of the original sets: if $A_i \cap A_j = \emptyset$ then $T^{-1}(A_i) \cap T^{-1}(A_j) = \emptyset$. Both measure axioms are satisfied, so $T_\# \mu$ is a valid measure on $(\Omega_2, \mathcal{F}_2)$.
+
+If $\mu$ is a probability measure — $\mu(\Omega_1) = 1$ — then $T_\# \mu$ is also a probability measure, because $(T_\# \mu)(\Omega_2) = \mu(T^{-1}(\Omega_2)) = \mu(\Omega_1) = 1$. Push-forwards preserve total mass.
+
+---
+
+### The Fundamental Integration Formula
+
+The most computationally important property of the push-forward is the following change of variables identity. For any measurable function $g: \Omega_2 \to \mathbb{R}$ that is either non-negative or integrable with respect to $T_\# \mu$:
+
+$$\int_{\Omega_2} g \, d(T_\# \mu) = \int_{\Omega_1} g \circ T \, d\mu$$
+
+This formula says that integrating $g$ over the output space $\Omega_2$ against the push-forward measure is identical to integrating $g \circ T$ over the input space $\Omega_1$ against the original measure. The proof proceeds by verifying the identity for indicator functions first, then simple functions, then non-negative measurable functions via the monotone convergence theorem, and finally general integrable functions by linearity.
+
+For indicator functions $g = \mathbf{1}_A$ with $A \in \mathcal{F}_2$:
+
+$$\int_{\Omega_2} \mathbf{1}_A \, d(T_\# \mu) = (T_\# \mu)(A) = \mu(T^{-1}(A)) = \int_{\Omega_1} \mathbf{1}_{T^{-1}(A)} \, d\mu = \int_{\Omega_1} \mathbf{1}_A \circ T \, d\mu$$
+
+The identity for indicator functions is immediate from the definition. Linearity extends it to simple functions, and the MCT extends it to all non-negative measurable functions.
+
+**Expectation formulation.** When $\mu = P$ is a probability measure and $X: \Omega_1 \to \Omega_2$ is a random variable with law $\mathcal{L}(X) = X_\# P$ on $\Omega_2$, the integration formula becomes:
+
+$$\mathbb{E}_{Y \sim X_\# P}[g(Y)] = \mathbb{E}_{X \sim P}[g(X)]$$
+
+This is the familiar fact that expectations of functions of a random variable can be computed either by integrating against the law of that variable on the output space, or by integrating the composed function against the original probability measure on the input space. The push-forward integration formula is the measure-theoretic foundation of this fact.
+
+---
+
+### The Push-Forward Density Formula
+
+Now suppose $\mu$ has a density $p$ with respect to the Lebesgue measure $\lambda$ on $\mathbb{R}^n$ — that is, $\mu \ll \lambda$ and $p = \frac{d\mu}{d\lambda} \in L^1(\lambda)$. Suppose $T: \mathbb{R}^n \to \mathbb{R}^n$ is a $C^1$ diffeomorphism — a continuously differentiable bijection whose inverse $T^{-1}$ is also continuously differentiable. Then:
+
+$$T_\# \mu \ll \lambda$$
+
+and the Radon-Nikodym derivative — the density of $T_\# \mu$ with respect to $\lambda$ — is:
+
+$$\frac{d(T_\# \mu)}{d\lambda}(y) = p(T^{-1}(y)) \cdot |\det J_{T^{-1}}(y)|$$
+
+where $J_{T^{-1}}(y)$ denotes the $n \times n$ Jacobian matrix of $T^{-1}$ at the point $y$:
+
+$$(J_{T^{-1}}(y))_{ij} = \frac{\partial (T^{-1})_i}{\partial y_j}(y)$$
+
+Using the inverse function theorem, which states $J_{T^{-1}}(y) = (J_T(T^{-1}(y)))^{-1}$, the formula can be rewritten equivalently as:
+
+$$\frac{d(T_\# \mu)}{d\lambda}(y) = \frac{p(T^{-1}(y))}{|\det J_T(T^{-1}(y))|}$$
+
+**Proof.** For any Borel set $A \subseteq \mathbb{R}^n$, the classical change of variables theorem gives:
+
+$$(T_\# \mu)(A) = \mu(T^{-1}(A)) = \int_{T^{-1}(A)} p(x) \, d\lambda(x) = \int_A p(T^{-1}(y)) |\det J_{T^{-1}}(y)| \, d\lambda(y)$$
+
+Since this holds for all Borel sets $A$, the Radon-Nikodym uniqueness theorem identifies $p(T^{-1}(\cdot)) \cdot |\det J_{T^{-1}}(\cdot)|$ as the density of $T_\# \mu$ with respect to $\lambda$. $\square$
+
+The Jacobian determinant $|\det J_{T^{-1}}(y)|$ is the local volume scaling factor of $T^{-1}$ at $y$ — it measures how much $T^{-1}$ stretches or compresses an infinitesimal volume element near $y$. When $|\det J_{T^{-1}}(y)| > 1$, the inverse map expands volume near $y$, diluting the density. When $|\det J_{T^{-1}}(y)| < 1$, it compresses volume, concentrating the density.
+
+---
+
+### Normalizing Flows — The Direct Application
+
+The push-forward density formula is the mathematical foundation of **normalizing flows** — a class of generative models that explicitly learn an invertible transformation $T_\theta$ mapping a simple base distribution to a complex data distribution. The training objective maximizes the log-likelihood of the data under the model:
+
+$$\log p_{T_{\theta\#}\mu}(y) = \log p_\mu(T_\theta^{-1}(y)) + \log |\det J_{T_\theta^{-1}}(y)|$$
+
+Every term here is a push-forward computation. The first term $\log p_\mu(T_\theta^{-1}(y))$ is the log-density of the base distribution evaluated at the preimage of the data point — straightforward to compute when $\mu$ is Gaussian. The second term $\log |\det J_{T_\theta^{-1}}(y)|$ is the log-Jacobian — the local volume correction. Computing this term efficiently is the central engineering challenge of normalizing flows, and the various flow architectures — RealNVP, Glow, Neural Spline Flows — are distinguished primarily by how they construct $T_\theta$ to make the Jacobian determinant tractable to compute.
+
+---
+
+### Composition of Push-Forwards
+
+The push-forward interacts cleanly with composition of maps. If $T_1: \Omega_1 \to \Omega_2$ and $T_2: \Omega_2 \to \Omega_3$ are both measurable, then:
+
+$$(T_2 \circ T_1)_\# \mu = (T_2)_\# ((T_1)_\# \mu)$$
+
+Pushing forward by the composition $T_2 \circ T_1$ produces the same measure as pushing forward first by $T_1$ and then by $T_2$. The proof is immediate from the preimage definition:
+
+$$((T_2 \circ T_1)_\# \mu)(A) = \mu((T_2 \circ T_1)^{-1}(A)) = \mu(T_1^{-1}(T_2^{-1}(A))) = (T_1)_\# \mu(T_2^{-1}(A)) = ((T_2)_\# (T_1)_\# \mu)(A)$$
+
+This composition property is the measure-theoretic foundation of the layered architecture of normalizing flows and neural ODEs. Each layer of a flow model pushes the distribution forward by one transformation, and the full model pushes the distribution forward by the composition of all layers. The density after all layers is the push-forward density of the composition, computable by applying the chain rule to the Jacobian determinants:
+
+$$\log |\det J_{T_2 \circ T_1}(x)| = \log |\det J_{T_2}(T_1(x))| + \log |\det J_{T_1}(x)|$$
+
+The log-Jacobian of the composition is the sum of the log-Jacobians of the individual maps — a direct consequence of the multiplicativity of determinants under matrix products.
+
+---
+
+### Linearity and Mixtures
+
+The push-forward is linear in the measure. If $\mu = \alpha \mu_1 + \beta \mu_2$ for $\alpha, \beta \geq 0$, then:
+
+$$T_\# \mu = \alpha (T_\# \mu_1) + \beta (T_\# \mu_2)$$
+
+This follows immediately from the definition: $(T_\# \mu)(A) = \mu(T^{-1}(A)) = \alpha \mu_1(T^{-1}(A)) + \beta \mu_2(T^{-1}(A))$. The linearity of the push-forward means that a mixture of distributions pushes forward to a mixture of the pushed-forward distributions. If the data distribution is a mixture of Gaussians — a common modeling assumption — the push-forward of the mixture is the mixture of the push-forwards of the individual components.
+
+---
+
+### The Push-Forward and the Wasserstein Distance
+
+The connection between the push-forward and Optimal Transport — the subject of Phase 1 — deserves explicit statement here, as it provides the conceptual bridge between Chapter 1 and the rest of the roadmap.
+
+Let $\mu$ and $\nu$ be two probability measures on $\mathbb{R}^n$. A measurable map $T: \mathbb{R}^n \to \mathbb{R}^n$ is called a **transport map** from $\mu$ to $\nu$ if it pushes $\mu$ forward to $\nu$:
+
+$$T_\# \mu = \nu$$
+
+The Monge problem of Optimal Transport — the first topic of Phase 1 — asks: among all transport maps $T$ satisfying $T_\# \mu = \nu$, which one minimizes the total transport cost $\int c(x, T(x)) \, d\mu(x)$, where $c: \mathbb{R}^n \times \mathbb{R}^n \to [0,\infty)$ is a cost function? The push-forward constraint $T_\# \mu = \nu$ is the feasibility condition — the map must actually transport all the mass from $\mu$ to $\nu$, not just some of it. The Wasserstein distance between $\mu$ and $\nu$ is defined as the minimum cost of the optimal transport map, and the push-forward is what makes "transport" precise.
+
+The $p$-Wasserstein distance is:
+
+$$W_p(\mu, \nu) = \left(\inf_{T : T_\# \mu = \nu} \int_{\mathbb{R}^n} \|x - T(x)\|^p \, d\mu(x)\right)^{1/p}$$
+
+where the infimum is over all measurable maps $T$ satisfying the push-forward constraint. This is the Monge formulation. In Phase 1, you will see that this infimum is not always achieved — there may be no optimal map, only optimal plans — which motivates the Kantorovich relaxation. But the push-forward constraint $T_\# \mu = \nu$ is the heart of the problem, and every formulation of Optimal Transport is built around it.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 201 (Advanced Calculus), the substitution rule $\int_a^b f(g(x)) |g'(x)| \, dx = \int_{g(a)}^{g(b)} f(y) \, dy$ and the multivariable change of variables formula $\int_U f(T(x)) |\det J_T(x)| \, dx = \int_{T(U)} f(y) \, dy$ are both instances of the push-forward integration formula with $T_\# \lambda$ replacing $\lambda$ on the output side. The Jacobian determinant is the push-forward density correction, appearing because the Lebesgue measure is not invariant under general smooth maps — only under isometries and rigid motions. In MATH 208 (Statistics and Probability), the transformation theorem for random variables — if $Y = g(X)$ and $X$ has density $p_X$, then $Y$ has density $p_Y(y) = p_X(g^{-1}(y)) |{(g^{-1})}'(y)|$ — is the one-dimensional push-forward density formula with $T = g$, $\mu = p_X \lambda$, and $T_\# \mu = p_Y \lambda$. You applied this formula every time you derived the distribution of a transformed random variable, and now you know its full measure-theoretic foundation.
+
+In MATH 103 (Linear Algebra), the change of basis formula and the effect of a linear map on volumes — $\text{vol}(T(U)) = |\det T| \cdot \text{vol}(U)$ — is the push-forward density formula for linear maps, where $J_T$ is constant and equal to the matrix of $T$ itself. The determinant you computed in linear algebra to measure volume scaling is precisely the Jacobian determinant of the push-forward density formula, evaluated at a linear map.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Indra Jatra festival story has a precise mathematical address. Let us walk through them one by one, until the morning distribution, the festival transformation, the after distribution, and the full formal apparatus are completely fused into a single picture.
+
+---
+
+**The Kathmandu valley on festival morning — the full terrain across which people are distributed before anything moves — is the input measurable space $(\Omega_1, \mathcal{F}_1, \mu)$.** The set $\Omega_1$ is every possible morning location in the valley. The $\sigma$-algebra $\mathcal{F}_1$ is the collection of all measurable regions — the Borel sets of the valley — which are the only regions to which the morning distribution assigns a population count. The measure $\mu$ is the morning distribution itself — the precise assignment of population mass to every registered region. This is the complete before picture: space, allowed regions, and mass distribution, packaged into a single measure space.
+
+**The festival grounds and post-festival city — the output space where people end up — is the output measurable space $(\Omega_2, \mathcal{F}_2)$.** It may be the same physical valley — in which case $\Omega_2 = \Omega_1$ — or it may be a different space entirely, as when a generative model maps noise from $\mathbb{R}^n$ to images in pixel space. The push-forward is defined for maps between any two measurable spaces, not just self-maps. The after distribution $T_\# \mu$ lives on $(\Omega_2, \mathcal{F}_2)$, not on the input space. The output space is where the consequences of the transformation are measured.
+
+**The festival transformation — the map that carries each person from their morning location $x$ to their festival location $T(x)$ — is the measurable function $T: \Omega_1 \to \Omega_2$.** The measurability condition $T^{-1}(A) \in \mathcal{F}_1$ for every $A \in \mathcal{F}_2$ is the logistical requirement that the preimage of every registered output region is itself a registered input region. In the festival story, this means: for any group of festival locations you can legally describe, the set of morning locations that map into that group is also a legally describable set. The measurability of $T$ is the compatibility condition between the input and output information structures — without it, the preimage formula $(T_\# \mu)(A) = \mu(T^{-1}(A))$ would be undefined, because $T^{-1}(A)$ might not be in $\mathcal{F}_1$ and therefore might not have a $\mu$-measure.
+
+---
+
+**The answer to "how many people end up in region $A$ after the festival?" is the push-forward formula $(T_\# \mu)(A) = \mu(T^{-1}(A))$.** The preimage $T^{-1}(A)$ is the set of all morning locations that the festival transformation carries into $A$. Every person in $T^{-1}(A)$ ends up in $A$ — by definition of $T$. Every person who ends up in $A$ must have come from $T^{-1}(A)$ — because $T$ is a function, and a function assigns each input exactly one output. The population in $A$ after the festival is therefore exactly the population in $T^{-1}(A)$ before the festival. The formula is not a definition chosen for convenience — it is the logically inevitable consequence of conservation of people. Mass is neither created nor destroyed by $T$. The push-forward is the unique measure that encodes this conservation law.
+
+**The verification that $T_\# \mu$ is a valid measure — the two-axiom check — is the verification that the after distribution is a legitimate probability distribution.** The empty region receives zero population: $(T_\# \mu)(\emptyset) = \mu(T^{-1}(\emptyset)) = \mu(\emptyset) = 0$. Disjoint regions receive additive populations: if $A_1, A_2, \ldots$ are non-overlapping festival regions, then their preimages $T^{-1}(A_1), T^{-1}(A_2), \ldots$ are also non-overlapping morning regions, and the total population across all of them is the sum of the individual populations. Both axioms are satisfied because the preimage operation respects both the empty set and disjoint unions — a pure consequence of set theory, requiring no special properties of $T$ beyond measurability.
+
+---
+
+**The stretching map $T(x) = x^2$ on $[0,1]$ — compressing morning locations near zero and stretching those near one — is the concrete diffeomorphism example that makes the density formula visible.** The preimage computation $(T_\# \mu)([a,b]) = \mu([\sqrt{a}, \sqrt{b}]) = \sqrt{b} - \sqrt{a}$ is the push-forward formula applied directly: the population in the output interval $[a,b]$ equals the population in the input interval $[\sqrt{a}, \sqrt{b}]$, which is its length under the uniform morning distribution. The non-uniformity of the after distribution — dense near zero, sparse near one — is the geometric consequence of the map's compression and stretching. The push-forward has converted a uniform measure into a non-uniform one, entirely determined by the Jacobian of $T$.
+
+**The density of the push-forward $p_{T_\# \mu}(y) = \frac{1}{2\sqrt{y}}$ is the Radon-Nikodym derivative $\frac{d(T_\# \mu)}{d\lambda}$ evaluated explicitly.** The formula $p(T^{-1}(y)) \cdot |\det J_{T^{-1}}(y)| = 1 \cdot \frac{1}{2\sqrt{y}} = \frac{1}{2\sqrt{y}}$ has two factors. The first factor $p(T^{-1}(y)) = p(\sqrt{y}) = 1$ is the morning density at the source location $\sqrt{y}$ — which is uniform, so always 1. The second factor $|J_{T^{-1}}(y)| = \frac{d}{dy}\sqrt{y} = \frac{1}{2\sqrt{y}}$ is the Jacobian of the inverse map $T^{-1}(y) = \sqrt{y}$ — the local volume scaling that $T^{-1}$ applies near $y$. Near $y = 0$, the inverse map $\sqrt{y}$ expands infinitesimally — its derivative blows up — meaning many input locations near 0 get compressed into a tiny output region near 0, producing a high density there. Near $y = 1$, the inverse map has derivative $\frac{1}{2}$ — moderate expansion — producing a moderate density. The Jacobian is the conservation correction. It is not optional bookkeeping. It is the factor that ensures $\int_0^1 \frac{1}{2\sqrt{y}} \, dy = 1$ — that total mass is preserved.
+
+---
+
+**The break moment — the naive formula $p \circ T$ losing conservation of mass — is the formal proof that the Jacobian is necessary.** The doubling map $T(x) = 2x$ stretches $[0,1]$ to $[0,2]$. The naive formula $p \circ T^{-1}(y) = p(y/2) = 1$ produces a function that integrates to 2 over $[0,2]$ — a violation of the fundamental requirement that a probability density integrates to 1. The Jacobian factor $|J_{T^{-1}}(y)| = \frac{1}{2}$ corrects this: $p(T^{-1}(y)) \cdot |J_{T^{-1}}(y)| = 1 \cdot \frac{1}{2} = \frac{1}{2}$, which integrates to $\int_0^2 \frac{1}{2} \, dy = 1$. The factor of $\frac{1}{2}$ is the inverse of the stretching factor of 2 — when $T$ doubles all distances, it dilutes the density by exactly half. The naive formula carries the value of the density but forgets the geometry. The correct formula carries both. In high-dimensional generative models where the transformation is a deep neural network with complex local geometry, forgetting the Jacobian does not just give the wrong likelihood — it gives a number that does not correspond to any probability distribution at all.
+
+---
+
+**The fundamental integration formula $\int_{\Omega_2} g \, d(T_\# \mu) = \int_{\Omega_1} g \circ T \, d\mu$ is the festival accountant's identity.** Measuring any quantity $g$ at the festival locations — summing $g$ over where people ended up — gives exactly the same total as measuring $g \circ T$ at the morning locations — summing $g$ evaluated at the destination $T(x)$, over where people started. It does not matter whether you survey people after they have moved or predict their survey responses before they move, as long as you know $T$. The two computations give identical totals. This is the push-forward change of variables formula, and it is what makes the push-forward computationally useful: integrals over the complex output distribution $T_\# \mu$ can always be converted into integrals over the simpler input distribution $\mu$, which is typically far easier to work with.
+
+**The expectation formulation $\mathbb{E}_{Y \sim T_\# \mu}[g(Y)] = \mathbb{E}_{X \sim \mu}[g(T(X))]$ is the same identity stated in the language of random variables.** Computing the expected value of $g(Y)$ when $Y$ is drawn from the push-forward distribution is identical to computing the expected value of $g(T(X))$ when $X$ is drawn from the original distribution. This is the foundation of the reparameterization trick — the computational device used in variational autoencoders and flow-based models to compute gradients of expectations with respect to the parameters of the transformation $T$. The reparameterization trick is the push-forward integration formula applied to the gradient of the log-likelihood.
+
+---
+
+**The composition property $(T_2 \circ T_1)_\# \mu = (T_2)_\# ((T_1)_\# \mu)$ is the festival in two stages.** First the morning transformation $T_1$ moves everyone from their homes to the outer gathering points. Then the inner transformation $T_2$ moves everyone from the outer gathering points to the final festival positions. The distribution after both transformations is the push-forward of the original morning distribution under the composition $T_2 \circ T_1$. This is identical to applying the push-forward twice in sequence — first by $T_1$, then by $T_2$. The composition property is why deep generative models — which apply many transformations in sequence — can be analyzed layer by layer. Each layer pushes the distribution forward by one step, and the final distribution is the push-forward of the base distribution under the full composition. The log-Jacobian additivity $\log |\det J_{T_2 \circ T_1}| = \log |\det J_{T_2}(T_1(x))| + \log |\det J_{T_1}(x)|$ is the conservation law for the multi-stage transformation — each stage contributes its own local volume correction, and the total correction is their sum.
+
+---
+
+**The Wasserstein distance formulation $W_p(\mu, \nu) = (\inf_{T: T_\# \mu = \nu} \int \|x - T(x)\|^p \, d\mu)^{1/p}$ is the festival logistics optimization problem.** Among all possible festival transformations $T$ that move the morning distribution $\mu$ to the desired after distribution $\nu$ — all maps satisfying the push-forward constraint $T_\# \mu = \nu$ — which one minimizes the total distance that people have to walk? The push-forward constraint is the feasibility condition: the transformation must actually deliver the right crowd at every festival location, not approximately and not on average, but exactly in the measure-theoretic sense. The Wasserstein distance is the minimum total walking cost among all feasible transformations. This formulation — the Monge problem — is the starting point of Phase 1, and the push-forward constraint is its central mathematical object. Every concept you have built in Chapter 1 leads directly to this problem.
+
+---
+
+**The generative model as a push-forward machine is now fully formalized.** The Gaussian noise distribution $\mu = \mathcal{N}(0, I_n)$ is the morning distribution — simple, well-understood, with known density $p_\mu(x) = (2\pi)^{-n/2} e^{-\|x\|^2/2}$. The neural network $T_\theta: \mathbb{R}^n \to \mathbb{R}^n$ with parameters $\theta$ is the festival transformation — a learned diffeomorphism that carries noise samples to data samples. The data distribution is the after distribution $T_{\theta\#} \mu$ — the push-forward of the Gaussian through the network. The likelihood of any data point $y$ is the push-forward density:
+
+$$\log p_{T_{\theta\#}\mu}(y) = \log p_\mu(T_\theta^{-1}(y)) + \log |\det J_{T_\theta^{-1}}(y)|$$
+
+Training the model by maximum likelihood is finding the parameters $\theta$ that make this formula as large as possible for the observed data. The first term rewards the model for mapping data points back to high-probability noise locations. The second term penalizes or rewards the model based on the local volume distortion of the inverse map. The tension between these two terms — getting the preimage into a good noise location while controlling the Jacobian — is the geometric heart of normalizing flow training. Every architecture choice in flow-based models is an engineering decision about how to make the Jacobian determinant tractable while keeping the map expressive.
+
+---
+
+**The connection to MATH 201 (Advanced Calculus) is now total and explicit.** The substitution rule $\int_a^b f(g(x))|g'(x)| \, dx = \int_{g(a)}^{g(b)} f(y) \, dy$ is the push-forward integration formula $\int g \, d(T_\# \mu) = \int g \circ T \, d\mu$ with $T = g$, $\mu = \lambda$ on $[a,b]$, and the Jacobian $|g'(x)|$ appearing on the left as the density correction. The multivariable change of variables formula $\int_U f(T(x)) |\det J_T(x)| \, dx = \int_{T(U)} f(y) \, dy$ is the same formula in $\mathbb{R}^n$. Both are consequences of the push-forward definition and the Radon-Nikodym theorem. Every substitution you ever made in MATH 201 was a push-forward computation.
+
+**The connection to MATH 208 (Statistics and Probability) is equally complete.** The transformation theorem for random variables — $p_Y(y) = p_X(g^{-1}(y)) |(g^{-1})'(y)|$ — is the one-dimensional push-forward density formula. Every time you derived the distribution of $Y = g(X)$ from the distribution of $X$ in MATH 208, you were computing $g_\# \mu_X$ and finding its Radon-Nikodym derivative with respect to the Lebesgue measure. The formula was given to you as a recipe. What you have now is the theorem that generates the recipe from first principles, and that extends it to maps between arbitrary measurable spaces in any dimension.
+
+**The connection to MATH 103 (Linear Algebra) closes the last loop.** The volume scaling formula $\text{vol}(T(U)) = |\det T| \cdot \text{vol}(U)$ for a linear map $T$ is the push-forward density formula evaluated for the special case where $T$ is linear and the Jacobian $J_T$ is the matrix of $T$ itself — constant everywhere. The determinant you computed to measure volume scaling in linear algebra is the Jacobian determinant of the push-forward density formula, specialized to linear maps. The general nonlinear case — the Jacobian varying from point to point — is the extension of that linear-algebraic insight to the full smooth setting.
+
+---
+
+**Looking forward across the roadmap**, the push-forward is the unifying concept of everything that follows. In Phase 1, the Monge problem is the optimization of push-forward maps under a cost constraint, the Kantorovich relaxation replaces deterministic push-forward maps with probabilistic couplings, and the Wasserstein distance is the minimum-cost push-forward. In Phase 2, the equivariance of graph neural networks is stated as a push-forward condition: a network is equivariant if the push-forward of the input distribution under any group transformation commutes with the network's output. In Phase 3, every generative model is a push-forward machine — normalizing flows compute the push-forward density exactly, diffusion models approximate it through a stochastic push-forward, and flow matching learns the push-forward map directly by regressing on the velocity field that generates it. The Fokker-Planck equation, the JKO scheme, and score matching are all statements about how push-forward densities evolve over time under different classes of transformations.
+
+The festival is over. Everyone has moved. The morning distribution has been transformed into the after distribution by the map $T$. The formula $(T_\# \mu)(A) = \mu(T^{-1}(A))$ is the conservation law that makes this transformation precise, rigorous, and computable. And every generative model you will build in Phase 3 is this story, told in a very high-dimensional space, with a very complicated $T$, and a very large crowd of noise samples trying to find their way to the festival.
+
+---
+---

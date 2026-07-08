@@ -1,0 +1,377 @@
+# Topic 3 - The Log-Sum-Exp Trick: Numerical Stability for Small $\varepsilon$
+
+## Introduction
+
+Topics 1 and 2 built the complete theoretical and algorithmic picture of entropic optimal transport. The regularized problem has a unique Gibbs-structured solution. The Sinkhorn iterations find it by alternating KL projections, converging geometrically with complexity $O(n^2)$ per iteration. The theory is airtight.
+
+The implementation is not — and for a reason that has nothing to do with mathematics.
+
+The Gibbs kernel $K_{ij} = e^{-C_{ij}/\varepsilon}$ is the object around which everything revolves. For $\varepsilon$ in a reasonable range, this kernel is well-behaved. But the practical demands of machine learning push $\varepsilon$ small — small enough that the regularized solution is a faithful approximation to the true Wasserstein distance, small enough that the geometry is preserved. And for small $\varepsilon$, the exponential function catastrophically destroys numerical information. Entries of $K$ that are mathematically distinct and nonzero become computationally indistinguishable from zero. The Sinkhorn iterations divide by these zeros, produce NaN, and the algorithm dies — not because the mathematical problem is ill-posed, but because floating-point arithmetic cannot represent the numbers involved.
+
+This topic is about fixing that failure completely and permanently.
+
+The log-sum-exp trick is the numerical technique that resolves the instability. It works by recognizing that the Sinkhorn iterations never actually need the kernel entries $K_{ij}$ individually — they only need the log-sum-exp aggregations $\log\sum_j e^{(g_j - C_{ij})/\varepsilon}$ and $\log\sum_i e^{(f_i - C_{ij})/\varepsilon}$. By working directly with the log-domain potentials $f = \varepsilon\log u$ and $g = \varepsilon\log v$ — and by stabilizing every log-sum-exp computation via a max-subtraction trick — the algorithm avoids ever explicitly constructing the kernel $K$ at all. The exponential is applied only to differences of potentials, not to raw costs divided by $\varepsilon$, and these differences remain in a numerically representable range regardless of how small $\varepsilon$ is.
+
+This topic has one bullet point in the roadmap's syllabus — the log-sum-exp trick itself — but its scope is broader than that single phrase suggests. A complete treatment requires four interconnected components.
+
+The first is **the numerical failure mode in precise detail** — exactly how and why the standard Sinkhorn iterations break for small $\varepsilon$, tracing the failure through IEEE 754 double-precision arithmetic, identifying the specific operations that produce underflow, overflow, NaN, and Inf, and understanding why more iterations cannot rescue a collapsed computation. The failure is not merely slow convergence — it is outright algorithmic death, and understanding exactly where the death occurs is prerequisite to understanding why the fix works.
+
+The second is **the log-sum-exp stabilization identity** — the algebraic manipulation $\log\sum_j e^{x_j} = \max_j x_j + \log\sum_j e^{x_j - \max_j x_j}$ that shifts the argument of the exponential by its maximum before summing, guaranteeing that at least one term in the sum is $e^0 = 1$ and all others are at most $1$. This prevents both overflow (no term exceeds $e^0 = 1$ after shifting) and underflow-dominated sums (the largest term is always exactly $1$, so the sum is always at least $1$ and the log is always at least $0$). The identity is algebraically exact — no approximation is introduced — so the stabilized computation produces the same mathematical result as the unstabilized version, in exact arithmetic.
+
+The third is **the full log-domain Sinkhorn algorithm** — the complete reformulation of the Sinkhorn iterations in terms of the potentials $f \in \mathbb{R}^m$ and $g \in \mathbb{R}^n$ rather than the scaling vectors $u \in \mathbb{R}^m_{++}$ and $v \in \mathbb{R}^n_{++}$, with every operation expressed as a stabilized log-sum-exp. The log-domain algorithm never constructs the Gibbs kernel $K$ explicitly, never stores or manipulates exponentially small numbers, and is numerically stable for all $\varepsilon > 0$ down to machine precision. The cost matrix $C$ enters the computation only through differences with the current potentials, and these differences are always numerically benign.
+
+The fourth is **the soft-minimum interpretation** — the observation that the log-sum-exp function $\text{LSE}(x) = \log\sum_j e^{x_j}$ is a smooth approximation to the maximum function $\max_j x_j$, with approximation error controlled by $\varepsilon$. The log-domain Sinkhorn update $f_i \leftarrow -\varepsilon\,\text{LSE}_j((g_j - C_{ij})/\varepsilon)$ is a soft minimum over destinations — a smooth, differentiable approximation to the hard minimum that would arise in the $\varepsilon \to 0$ limit. As $\varepsilon \to 0$, the soft minimum sharpens to the hard minimum, and the log-domain Sinkhorn iterations converge to the auction algorithm for the exact assignment problem — making the $\varepsilon \to 0$ limit of the log-domain Sinkhorn a direct bridge between the regularized and exact OT problems.
+
+By the end of this topic, you will have a complete, production-ready implementation of the Sinkhorn algorithm that is numerically stable across the full range of practically relevant $\varepsilon$ values, differentiable end-to-end for use as a neural network loss, and efficient enough to run inside a training loop at machine learning scale. The gap between the mathematics of Topic 1 and Topic 2 and the working code of the Phase 1 checkpoint project closes here.
+
+---
+
+## Layer 1 (Story)
+
+You are the night-shift supervisor at Nepal Telecom's main data centre in Jawalakhel, and tonight you are staring at a crisis on your monitoring dashboard.
+
+Your team runs a distributed logging system that collects signal-strength measurements from thousands of cell towers across the country. Every hour, the system computes a stability score for each tower cluster by aggregating the log-likelihood of the received signals — a sum of the form $\log\sum_j e^{x_j}$, where each $x_j$ is the log-probability of receiving a particular signal pattern from tower $j$. This aggregation tells you which cluster is most likely generating a given interference pattern, and it feeds directly into the network's automated fault-detection pipeline.
+
+Tonight, the pipeline has crashed. The fault-detection output is a spreadsheet of NaN values. Every cluster score is undefined. The automated alerts are firing. Your senior engineer is asleep. You are alone with the logs and a deadline.
+
+You open the raw computation logs and trace the failure step by step.
+
+---
+
+**Tracing the failure: how NaN is born**
+
+The pipeline receives a vector of log-probabilities $x = (x_1, x_2, \ldots, x_n)$ — one per tower in the cluster. These are negative numbers, because they are logarithms of probabilities less than one. For a well-functioning cluster, the values are moderate: $x_j \approx -5$ to $-20$. The computation $\log\sum_j e^{x_j}$ is straightforward — the exponentials are small but representable, the sum is positive, the logarithm is finite. No problem.
+
+But tonight, one cluster has extremely weak signals. The log-probabilities are not $-20$. They are $-850, -912, -1043, -798$. These are not unusual in physics — they correspond to genuinely improbable signal patterns from distant towers. Mathematically, $\log\sum_j e^{x_j}$ for these values is a perfectly well-defined real number. Computationally, the pipeline attempts to evaluate $e^{-850}$, $e^{-912}$, $e^{-1043}$, $e^{-798}$.
+
+IEEE 754 double-precision floating point can represent numbers as small as approximately $5 \times 10^{-324}$, corresponding to $e^{-745}$ approximately. Beyond that, the representation underflows to exactly zero. So the pipeline computes: $e^{-850} = 0.0$, $e^{-912} = 0.0$, $e^{-1043} = 0.0$, $e^{-798} = 0.0$. The sum is $0.0$. The logarithm of zero is $-\infty$. The stability score is $-\infty$, and downstream operations that subtract two such scores produce $-\infty - (-\infty) = $ NaN. The entire fault-detection pipeline outputs NaN for every cluster that passed through this computation path.
+
+The mathematics is not wrong. The numbers are not wrong. The floating-point representation simply cannot hold them.
+
+---
+
+**The first naive fix and why it breaks**
+
+Your first instinct is to clip the input values. If $x_j < -700$, replace it with $-700$ before exponentiating. This prevents underflow. The exponentials are now representable.
+
+But this breaks the computation in a different way. You have silently discarded the information that $x_j = -850$ is different from $x_j = -700$. The clipped values are not the true log-probabilities — they are truncated approximations. For a single cluster, this might seem harmless. But your pipeline computes differences between cluster scores to rank towers. If two clusters both have all values below $-700$ and get clipped to the same truncated inputs, their scores become identical, and the ranking is destroyed. Towers that should be flagged as faulty are indistinguishable from towers that should be flagged as healthy.
+
+Clipping introduces error. The error is not small and not controlled. It corrupts the downstream ranking.
+
+---
+
+**The correct fix: the max-subtraction identity**
+
+Your most junior engineer — a recent graduate who took a numerical methods course last semester — walks in early and looks at your screen for thirty seconds. She writes one line on the whiteboard:
+
+$$\log\sum_j e^{x_j} = M + \log\sum_j e^{x_j - M}, \quad \text{where } M = \max_j x_j$$
+
+This is the log-sum-exp identity. It is algebraically exact — no approximation, no clipping, no information loss. Let us verify it for the failing cluster.
+
+The values are $x = (-850, -912, -1043, -798)$. The maximum is $M = -798$. Subtract $M$ from every value: $x - M = (-52, -114, -245, 0)$. Now exponentiate: $e^{-52} \approx 1.7 \times 10^{-23}$, $e^{-114} \approx 4.0 \times 10^{-50}$, $e^{-245} \approx 10^{-107}$, $e^{0} = 1.0$. All of these are representable in double precision. Sum them: approximately $1.0 + 1.7\times 10^{-23} + \text{tiny} + \text{tiny} \approx 1.0$. Take the logarithm: $\log(1.0) \approx 0$. Add back $M$: $-798 + 0 = -798$.
+
+The pipeline now outputs $-798$ instead of NaN. The fault-detection ranking works. The alerts are correct.
+
+The key observation: after subtracting $M$, every shifted value $x_j - M \leq 0$, so every exponential $e^{x_j - M} \leq 1$. No overflow is possible. And at least one shifted value is exactly $0$ — the one achieving the maximum — so $e^0 = 1$ guarantees the sum is at least $1$ and the logarithm is at least $0$. No underflow-dominated sum is possible — the sum always has at least one term of magnitude $1$. The identity is numerically perfect.
+
+---
+
+**Bringing this back to Sinkhorn: the same failure, the same fix**
+
+Now your engineer points to the Sinkhorn algorithm running in the adjacent pipeline — the one computing optimal transport distances between network traffic distributions at different times of day, used for anomaly detection.
+
+The Sinkhorn iterations in scaling-vector form are:
+
+$$u_i \leftarrow \frac{a_i}{\sum_j K_{ij} v_j} = \frac{a_i}{\sum_j e^{-C_{ij}/\varepsilon} v_j}$$
+
+For small $\varepsilon = 0.01$ and cost values $C_{ij}$ ranging from $1$ to $100$, the kernel entries are $e^{-C_{ij}/0.01} = e^{-100}$ to $e^{-10000}$. The value $e^{-10000}$ is so astronomically small that it underflows to zero in every floating-point system ever built. The matrix $K$ is a table of zeros. The denominator $\sum_j K_{ij}v_j = 0$ for every row $i$. The update produces $u_i = a_i / 0 = \text{Inf}$. On the next iteration, $v_j = b_j / (K^\top u)_j = b_j / \text{Inf} = 0$. Then $u_i = a_i / 0 = \text{Inf}$ again. The algorithm oscillates between Inf and zero and never converges.
+
+This is exactly the same failure as the fault-detection pipeline. The exponential function applied to large negative numbers underflows. The fix is the same: stop working with $K$ directly, and instead work in log-space.
+
+---
+
+**The log-domain reformulation: potentials instead of scaling vectors**
+
+Define the log-domain potentials $f = \varepsilon \log u \in \mathbb{R}^m$ and $g = \varepsilon \log v \in \mathbb{R}^n$. These are the Kantorovich-style dual potentials from Topic 4 — the same objects, now serving as the primary variables of the algorithm instead of derived quantities.
+
+In terms of $f$ and $g$, the coupling matrix is:
+
+$$P_{ij} = e^{(f_i + g_j - C_{ij})/\varepsilon}$$
+
+This replaces $P_{ij} = u_i K_{ij} v_j = e^{f_i/\varepsilon} \cdot e^{-C_{ij}/\varepsilon} \cdot e^{g_j/\varepsilon}$ — the same expression, rewritten as a single exponential of a sum. The key difference: instead of computing three separately tiny numbers and multiplying them, you compute their sum in the exponent and exponentiate once. The sum $f_i + g_j - C_{ij}$ is a difference of moderate-sized numbers — it does not underflow.
+
+The Sinkhorn row-update $u_i \leftarrow a_i / (Kv)_i$ becomes, in log-domain:
+
+$$f_i \leftarrow \varepsilon \log a_i - \varepsilon \log \sum_j e^{(g_j - C_{ij})/\varepsilon}$$
+
+The problematic term is $\log\sum_j e^{(g_j - C_{ij})/\varepsilon}$ — a log-sum-exp over the arguments $(g_j - C_{ij})/\varepsilon$. Apply the max-subtraction identity with $M_i = \max_j (g_j - C_{ij})/\varepsilon$:
+
+$$\log\sum_j e^{(g_j - C_{ij})/\varepsilon} = M_i + \log\sum_j e^{(g_j - C_{ij})/\varepsilon - M_i}$$
+
+Every term in the stabilized sum is at most $e^0 = 1$. No underflow. No overflow. The computation is numerically safe for all values of $\varepsilon$, all values of $C_{ij}$, all values of $g_j$.
+
+The column-update is identical in structure:
+
+$$g_j \leftarrow \varepsilon \log b_j - \varepsilon \log \sum_i e^{(f_i - C_{ij})/\varepsilon}$$
+
+stabilized by subtracting $M_j = \max_i (f_i - C_{ij})/\varepsilon$ before summing.
+
+The stabilized log-domain Sinkhorn algorithm never constructs the kernel $K$ explicitly. It never computes $e^{-C_{ij}/\varepsilon}$ for any individual $(i,j)$. It works entirely with the potentials $f$ and $g$, which are moderate-sized real numbers, updating them via stabilized log-sum-exp operations that are safe in double precision for all practically relevant parameter regimes.
+
+---
+
+**The soft-minimum interpretation: what the log-domain update is really computing**
+
+Your engineer draws one more thing on the whiteboard. The log-domain row-update:
+
+$$f_i \leftarrow \varepsilon\log a_i - \varepsilon\log\sum_j e^{(g_j - C_{ij})/\varepsilon}$$
+
+can be rewritten as:
+
+$$f_i \leftarrow \varepsilon\log a_i + \text{softmin}_j^\varepsilon(C_{ij} - g_j)$$
+
+where $\text{softmin}_j^\varepsilon(z_j) = -\varepsilon\log\sum_j e^{-z_j/\varepsilon}$ is the **soft minimum** — a smooth approximation to $\min_j z_j$ that, as $\varepsilon \to 0$, sharpens into the hard minimum.
+
+This is revealing. The row-update is computing: the optimal potential $f_i$ is approximately the minimum cost of reaching any destination from source $i$, corrected by the current destination potentials $g_j$. As $\varepsilon \to 0$, the soft minimum becomes the hard minimum, and the update becomes:
+
+$$f_i \leftarrow \min_j (C_{ij} - g_j)$$
+
+This is exactly the update rule of the **auction algorithm** — the classical algorithm for the exact assignment problem, which you can derive from the KKT conditions of the discrete Kantorovich LP in MATH 304. The log-domain Sinkhorn algorithm in the limit $\varepsilon \to 0$ becomes the auction algorithm for the exact OT problem. The soft minimum of the regularized problem is the smoothed interpolation between the diffuse Gibbs distribution of large $\varepsilon$ and the sharp assignment of the exact problem at $\varepsilon = 0$.
+
+---
+
+**The break moment**
+
+Here is the naive assumption that breaks.
+
+You might think: the log-sum-exp stabilization fixes the numerical problem completely and unconditionally. Work in log-domain, apply the max-subtraction identity, and the algorithm is numerically safe for all $\varepsilon > 0$, no matter how small.
+
+This is almost true, but breaks at one precise point.
+
+The stabilization prevents underflow in the exponentials. But it does not prevent a different failure: for extremely small $\varepsilon$, the arguments $(g_j - C_{ij})/\varepsilon$ are enormous in magnitude — even after subtracting the maximum, the second-largest term can be $e^{-\Delta/\varepsilon}$ where $\Delta$ is the gap between the largest and second-largest argument. For $\varepsilon = 10^{-10}$ and $\Delta = 1$, this is $e^{-10^{10}}$ — still zero in double precision. The sum is dominated entirely by the single maximum term: $\sum_j e^{x_j - M} \approx 1$. The log-sum-exp returns exactly $M + \log(1) = M$. This is numerically correct! The soft minimum has sharpened to the hard minimum, and the algorithm is computing the auction update exactly.
+
+The break is not numerical — it is convergence-theoretic. For such small $\varepsilon$, the log-domain Sinkhorn iterations converge to the exact assignment solution, but the number of iterations required diverges as $O(e^{\Delta C/\varepsilon})$ as derived in Topic 2. The stabilization resolves the floating-point failure completely, but cannot overcome the fundamental algorithmic slowdown for very small $\varepsilon$. The log-sum-exp trick makes the algorithm numerically correct for all $\varepsilon$; it does not make it fast for all $\varepsilon$. For very small $\varepsilon$, you must either accept slow convergence, use warm-starting from a larger $\varepsilon$, or switch to the exact assignment algorithm directly. The log-sum-exp trick is a necessary condition for a working implementation — but not a sufficient condition for an efficient one at all scales.
+
+---
+
+Hold four pictures simultaneously as you move to the mathematics.
+
+The Jawalakhel data centre: a log-sum-exp computation crashing to NaN because the exponential of large negative numbers underflows to zero in IEEE 754 double precision — the identical failure mode that kills the standard Sinkhorn iterations for small $\varepsilon$.
+
+The max-subtraction identity: $\log\sum_j e^{x_j} = M + \log\sum_j e^{x_j - M}$, algebraically exact, numerically safe, guaranteeing that the largest term in the stabilized sum is always $e^0 = 1$ — preventing both underflow and overflow.
+
+The log-domain Sinkhorn algorithm: potentials $f$ and $g$ as primary variables, coupling $P_{ij} = e^{(f_i+g_j-C_{ij})/\varepsilon}$ reconstructed only at the end, updates expressed entirely as stabilized log-sum-exp operations that never construct $K$ explicitly.
+
+The soft-minimum interpretation: the log-domain update as a smooth approximation to the hard minimum of the auction algorithm, sharpening as $\varepsilon \to 0$, bridging the regularized and exact OT problems through the temperature parameter.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in five stages: the precise characterization of floating-point failure in the standard Sinkhorn iterations, the log-sum-exp identity and its numerical guarantees, the complete log-domain Sinkhorn algorithm, the soft-minimum and its connection to the $c$-transform, and the $\varepsilon$-scaling heuristic for practical implementation.
+
+### Floating-Point Failure — Precise Characterization
+
+IEEE 754 double-precision floating point represents numbers in the range $[5 \times 10^{-324}, 1.8 \times 10^{308}]$. Numbers below the underflow threshold $\approx e^{-745}$ are rounded to exactly $0.0$. Numbers above the overflow threshold $\approx e^{+709}$ are rounded to $\pm\infty$.
+
+**Failure in the standard Sinkhorn iterations.** The Gibbs kernel entry is $K_{ij} = e^{-C_{ij}/\varepsilon}$. For cost range $\Delta C = \max_{ij} C_{ij} - \min_{ij} C_{ij}$ and regularization $\varepsilon$:
+
+$$K_{ij} \text{ underflows to } 0 \iff C_{ij}/\varepsilon \gtrsim 745$$
+
+For $\Delta C = 10$ (a modest cost range), underflow occurs when $\varepsilon \lesssim 0.013$. For $\Delta C = 100$, underflow occurs when $\varepsilon \lesssim 0.13$. These are not pathologically small values of $\varepsilon$ — they are the regime where the regularized solution is a useful approximation to the true Wasserstein distance.
+
+**Cascade of failures.** Once underflow occurs:
+
+$$\text{Step 1: } K_{ij} = 0 \text{ for most } (i,j) \implies (Kv)_i = \sum_j K_{ij}v_j = 0$$
+$$\text{Step 2: } u_i = a_i / (Kv)_i = a_i / 0 = +\infty$$
+$$\text{Step 3: } (K^\top u)_j = \sum_i K_{ij} u_i = 0 \cdot \infty = \text{NaN}$$
+$$\text{Step 4: } v_j = b_j / \text{NaN} = \text{NaN}$$
+
+All subsequent iterates are NaN. The algorithm is dead after a single iteration. Increasing the iteration count does not help — NaN propagates through all subsequent operations. The failure is not gradual degradation but catastrophic immediate collapse.
+
+---
+
+### The Log-Sum-Exp Identity — Derivation and Guarantees
+
+**Definition.** For $x = (x_1, \ldots, x_n) \in \mathbb{R}^n$, the **log-sum-exp function** is:
+
+$$\text{LSE}(x) = \log \sum_{j=1}^n e^{x_j}$$
+
+**The stabilized identity.** For any $M \in \mathbb{R}$:
+
+$$\text{LSE}(x) = M + \log \sum_{j=1}^n e^{x_j - M}$$
+
+**Proof.** $M + \log\sum_j e^{x_j - M} = M + \log\left(e^{-M}\sum_j e^{x_j}\right) = M - M + \log\sum_j e^{x_j} = \text{LSE}(x)$. $\square$
+
+**Standard choice:** $M = \max_j x_j$. With this choice:
+
+1. $x_j - M \leq 0$ for all $j$, so $e^{x_j - M} \leq 1$ — **no overflow possible**.
+2. $\exists j^* : x_{j^*} = M$, so $e^{x_{j^*} - M} = e^0 = 1$ — **sum is always $\geq 1$, so $\log$ is always $\geq 0$, no underflow-dominated result**.
+3. Terms with $x_j \ll M$ underflow to $0$ but are numerically negligible — their true value is exponentially smaller than the dominant term, so dropping them introduces relative error at most $e^{-(M - x_j^{(2)})/1}$ where $x_j^{(2)}$ is the second-largest value.
+
+**Numerical error bound.** Let $\widehat{\text{LSE}}(x)$ denote the computed value using the stabilized identity in double precision with machine epsilon $\epsilon_{\text{mach}} \approx 2.2 \times 10^{-16}$. Then:
+
+$$|\widehat{\text{LSE}}(x) - \text{LSE}(x)| \leq n \cdot \epsilon_{\text{mach}} \cdot \frac{\sum_j e^{x_j - M}}{\sum_j e^{x_j - M}} + O(\epsilon_{\text{mach}}^2) = O(n \cdot \epsilon_{\text{mach}})$$
+
+The error is proportional to $n$ times machine epsilon — independent of the magnitude of $x$ and independent of $\varepsilon$. This is the optimal error bound for any floating-point summation algorithm.
+
+---
+
+### The Log-Domain Sinkhorn Algorithm
+
+**Variable substitution.** Define log-domain potentials:
+
+$$f_i = \varepsilon \log u_i \in \mathbb{R}, \qquad g_j = \varepsilon \log v_j \in \mathbb{R}$$
+
+The coupling matrix in terms of potentials:
+
+$$P_{ij} = u_i K_{ij} v_j = e^{f_i/\varepsilon} \cdot e^{-C_{ij}/\varepsilon} \cdot e^{g_j/\varepsilon} = e^{(f_i + g_j - C_{ij})/\varepsilon}$$
+
+The argument $(f_i + g_j - C_{ij})/\varepsilon$ is a difference of moderate-sized numbers — numerically safe for all $\varepsilon > 0$.
+
+**Derivation of log-domain updates.** The row marginal constraint $\sum_j P_{ij} = a_i$ gives:
+
+$$\sum_j e^{(f_i + g_j - C_{ij})/\varepsilon} = a_i$$
+$$e^{f_i/\varepsilon} \sum_j e^{(g_j - C_{ij})/\varepsilon} = a_i$$
+$$f_i = \varepsilon \log a_i - \varepsilon \log \sum_j e^{(g_j - C_{ij})/\varepsilon}$$
+$$\boxed{f_i \leftarrow \varepsilon \log a_i - \varepsilon \cdot \text{LSE}_j\left(\frac{g_j - C_{ij}}{\varepsilon}\right)}$$
+
+where $\text{LSE}_j$ denotes log-sum-exp over index $j$ with stabilization constant $M_i = \max_j (g_j - C_{ij})/\varepsilon$.
+
+Similarly, the column marginal constraint gives:
+
+$$\boxed{g_j \leftarrow \varepsilon \log b_j - \varepsilon \cdot \text{LSE}_i\left(\frac{f_i - C_{ij}}{\varepsilon}\right)}$$
+
+with stabilization constant $M_j = \max_i (f_i - C_{ij})/\varepsilon$.
+
+**Complete log-domain Sinkhorn algorithm.**
+
+```
+Initialize: f = zeros(m), g = zeros(n)
+For ℓ = 1, 2, ..., L:
+    For each i: M_i = max_j (g_j - C_ij) / ε
+                f_i ← ε·log(a_i) - M_i·ε - ε·log Σ_j exp((g_j - C_ij)/ε - M_i)
+    For each j: M_j = max_i (f_i - C_ij) / ε
+                g_j ← ε·log(b_j) - M_j·ε - ε·log Σ_i exp((f_i - C_ij)/ε - M_j)
+Return: P_ij = exp((f_i + g_j - C_ij)/ε)  [only if P is needed explicitly]
+        OT_ε = Σ_i f_i · a_i + Σ_j g_j · b_j  [the dual objective value]
+```
+
+**Key properties of the log-domain algorithm:**
+
+1. The kernel matrix $K$ is **never explicitly constructed** — $C$ enters only through the differences $g_j - C_{ij}$ and $f_i - C_{ij}$.
+2. Every LSE computation is stabilized by subtracting the row/column maximum before exponentiating.
+3. The potentials $f$ and $g$ remain $O(\|C\|_\infty)$ in magnitude throughout — no accumulation of large values.
+4. The coupling $P$ is reconstructed only when needed, as a single pass of $e^{(f_i + g_j - C_{ij})/\varepsilon}$.
+5. The dual objective $\text{OT}_\varepsilon = \langle f, a\rangle + \langle g, b\rangle$ is available directly from the converged potentials.
+
+---
+
+### The Soft-Minimum and the $c$-Transform
+
+**Definition (soft-minimum).** The **soft-minimum** with temperature $\varepsilon > 0$ is:
+
+$$\text{softmin}_j^\varepsilon(z_j) = -\varepsilon \log \sum_j e^{-z_j/\varepsilon}$$
+
+**Properties:**
+
+$$\text{softmin}_j^\varepsilon(z_j) \leq \min_j z_j \quad \forall \varepsilon > 0$$
+$$\lim_{\varepsilon \to 0} \text{softmin}_j^\varepsilon(z_j) = \min_j z_j$$
+$$\lim_{\varepsilon \to \infty} \text{softmin}_j^\varepsilon(z_j) = -\varepsilon \log n + \frac{1}{n}\sum_j z_j \approx \text{mean}_j z_j - \varepsilon\log n$$
+
+The soft-minimum is a smooth, strictly increasing (in $-\varepsilon$) approximation to the minimum, with approximation error bounded by $\varepsilon \log n$.
+
+**The log-domain update as a soft $c$-transform.** Rewrite the row update:
+
+$$f_i \leftarrow \varepsilon \log a_i - \varepsilon \log \sum_j e^{(g_j - C_{ij})/\varepsilon} = \varepsilon \log a_i + \text{softmin}_j^\varepsilon(C_{ij} - g_j)$$
+
+Define the **soft $c$-transform** of $g$:
+
+$$g^{\bar{c},\varepsilon}(x_i) = \text{softmin}_j^\varepsilon(C_{ij} - g_j) = -\varepsilon \log \sum_j e^{(g_j - C_{ij})/\varepsilon}$$
+
+Then the log-domain row update is:
+
+$$f_i \leftarrow \varepsilon \log a_i + g^{\bar{c},\varepsilon}(x_i)$$
+
+**Convergence to the exact $c$-transform.** As $\varepsilon \to 0$:
+
+$$g^{\bar{c},\varepsilon}(x_i) \to \min_j (C_{ij} - g_j) = g^{\bar{c}}(x_i)$$
+
+the exact $c$-transform from Topic 4 of Chapter 1. The log-domain Sinkhorn iteration at $\varepsilon \to 0$ becomes:
+
+$$f_i \leftarrow g^{\bar{c}}(x_i), \qquad g_j \leftarrow f^c(y_j)$$
+
+These are exactly the **competitive equilibrium updates of the auction algorithm** — the classical $O(n^2 \log n)$ algorithm for exact optimal assignment. The log-domain Sinkhorn is the smooth interpolation between the diffuse entropic regime ($\varepsilon$ large) and the sharp combinatorial regime ($\varepsilon \to 0$).
+
+---
+
+### The $\varepsilon$-Scaling Heuristic
+
+A practical technique for computing accurate Sinkhorn solutions at small $\varepsilon$ is **$\varepsilon$-scaling** (also called **annealing**): solve a sequence of regularized problems $\varepsilon_1 > \varepsilon_2 > \cdots > \varepsilon_T = \varepsilon_{\text{target}}$, using the converged potentials from $\varepsilon_k$ as the warm start for $\varepsilon_{k+1}$.
+
+**Why this works.** The Birkhoff contraction coefficient $\eta(K_\varepsilon) \to 1$ as $\varepsilon \to 0$, making direct Sinkhorn slow for small $\varepsilon$. But the distance from the warm-started potentials to the true solution $\|(f^{(\varepsilon_{k+1},0)}, g^{(\varepsilon_{k+1},0)}) - (f^*, g^*)\|$ is small when $\varepsilon_{k+1}$ is close to $\varepsilon_k$. The product of small initialization distance and slow contraction can still give fast practical convergence.
+
+**Geometric schedule.** A common choice is $\varepsilon_k = \varepsilon_1 \cdot \rho^{k-1}$ for $\rho \in (0,1)$, with $\varepsilon_1 = \|C\|_\infty$ (large enough that the Sinkhorn iterations converge in $O(1)$ steps) and $\varepsilon_T = \varepsilon_{\text{target}}$. The total number of Sinkhorn iterations across all stages is $O(\log(\varepsilon_1/\varepsilon_T) \cdot \log(1/\delta) / |\log \rho|)$ — polylogarithmic in the ratio $\varepsilon_1/\varepsilon_T$, far better than the $O(e^{\Delta C / \varepsilon_T})$ iterations required without warm-starting.
+
+---
+
+### WHY THIS MATTERS
+
+In MSCS 202 (Numerical Methods), the **condition number** of a matrix $A$ is $\kappa(A) = \|A\|\|A^{-1}\|$, and the relative error in the computed solution of $Ax = b$ is bounded by $\kappa(A) \cdot \epsilon_{\text{mach}}$. For the Gibbs kernel $K$ with small $\varepsilon$, the condition number is $\kappa(K) \approx e^{\Delta C/\varepsilon}$ — exponentially large. The standard Sinkhorn iterations are equivalent to solving a linear system with this condition number, making the computed solution dominated by floating-point error. The log-domain reformulation is the numerical analyst's response: instead of working with the ill-conditioned $K$ directly, factor the computation into operations on the logarithm of $K$, reducing the effective condition number to $O(\Delta C / \varepsilon)$ — polynomial rather than exponential in $1/\varepsilon$.
+
+In MATH 304 (Computational Operations Research), the **auction algorithm** for the assignment problem updates dual variables via $f_i \leftarrow \min_j (C_{ij} - g_j)$ and $g_j \leftarrow \min_i (C_{ij} - f_i)$ — exact hard minima over the cost matrix. The log-domain Sinkhorn updates $f_i \leftarrow \varepsilon\log a_i + \text{softmin}_j^\varepsilon(C_{ij} - g_j)$ are the regularized soft-minimum versions of exactly these auction updates. The log-domain Sinkhorn algorithm is the smooth entropic generalization of the auction algorithm, collapsing to it as $\varepsilon \to 0$. Every LP dual update you computed in MATH 304 is the zero-temperature limit of a log-domain Sinkhorn update.
+
+In MATH 213 (Analysis I), the **uniform convergence** of smooth approximations to non-smooth functions is a central theme. The soft-minimum $\text{softmin}^\varepsilon \to \min$ uniformly on compact sets as $\varepsilon \to 0$, with error $O(\varepsilon \log n)$. This is the approximation-theory content of the log-domain Sinkhorn: the algorithm computes smooth approximations to the hard combinatorial $c$-transforms of Topic 4, with approximation error controlled uniformly by $\varepsilon$. The convergence of the regularized OT value $\text{OT}_\varepsilon \to W_c$ as $\varepsilon \to 0$ — proved in Topic 1 — is the integral version of the pointwise convergence of soft-minimum to hard minimum.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Jawalakhel data centre story has a precise mathematical address. Let us walk through them one by one until the floating-point failure, the max-subtraction identity, the log-domain algorithm, and the soft-minimum are completely fused with the formalism.
+
+---
+
+**The tower cluster log-likelihood computation — the pipeline aggregating log-probabilities via $\log\sum_j e^{x_j}$ and crashing to NaN — is the log-sum-exp function $\text{LSE}(x) = \log\sum_j e^{x_j}$, the exact operation appearing in every Sinkhorn update.** The log-probabilities $x_j \in \{-850, -912, -1043, -798\}$ are large negative numbers — mathematically finite, computationally unrepresentable as exponentials in IEEE 754 double precision. The underflow threshold $e^{-745} \approx 5\times 10^{-324}$ is the hard boundary of the double-precision representation: any $e^{x_j}$ with $x_j < -745$ is rounded to exactly $0.0$, not to a small positive number. The sum $\sum_j e^{x_j} = 0.0$ is a computational lie — the true sum is positive and finite — and $\log(0) = -\infty$ propagates to NaN in all downstream arithmetic. This is not approximation error. It is total information loss. The Sinkhorn failure is identical in structure: the Gibbs kernel entries $K_{ij} = e^{-C_{ij}/\varepsilon}$ play the role of $e^{x_j}$, and the row-sum $(Kv)_i = \sum_j K_{ij}v_j$ plays the role of $\sum_j e^{x_j}$.
+
+**The cascade of failures — $K_{ij} = 0$ leading to $(Kv)_i = 0$ leading to $u_i = \infty$ leading to $\text{NaN}$ — is the precise sequence $e^{-C_{ij}/\varepsilon} \to 0 \Rightarrow (Kv)_i = 0 \Rightarrow u_i = a_i/0 = +\infty \Rightarrow (K^\top u)_j = 0\cdot\infty = \text{NaN}$, happening in the first iteration for $\varepsilon \lesssim \Delta C / 745$.** For cost range $\Delta C = 10$, this threshold is $\varepsilon \lesssim 0.013$ — not a pathological edge case but the standard operating regime for faithful Wasserstein approximation. The cascade is not recoverable by running more iterations: NaN is an absorbing state in IEEE 754 arithmetic, propagating through every subsequent multiplication, addition, and division without exception. This is the condition number blow-up from MSCS 202 made concrete: the effective condition number of the Sinkhorn linear system is $e^{\Delta C/\varepsilon}$, exponentially large for small $\varepsilon$, making the computed solution meaningless in finite precision.
+
+---
+
+**The clipping fix that breaks the downstream ranking — replacing $x_j < -700$ with $-700$ before exponentiating — is the introduction of uncontrolled approximation error into the LSE computation, destroying the relative ordering of cluster scores.** Clipping changes the mathematical problem being solved: instead of computing $\text{LSE}(x)$ for the true values, you compute $\text{LSE}(\tilde{x})$ for the clipped values $\tilde{x}$. The error $|\text{LSE}(x) - \text{LSE}(\tilde{x})|$ is not bounded by machine epsilon — it is bounded by the clipping magnitude, which can be arbitrarily large. Two clusters with all values below $-700$ become computationally identical after clipping, even if their true scores differ significantly. In the Sinkhorn context, clipping the kernel is equivalent to replacing the true cost matrix $C$ with a modified matrix $\tilde{C}$ that caps large costs — solving a different OT problem entirely, producing a biased estimate of $\text{OT}_\varepsilon$ with uncontrolled error. The log-sum-exp stabilization produces no such bias: it is algebraically exact, solving the original problem without modification.
+
+**The max-subtraction identity $\text{LSE}(x) = M + \log\sum_j e^{x_j - M}$ with $M = \max_j x_j$ — algebraically exact, numerically safe — is the identity that the junior engineer writes on the whiteboard, verified term by term for the cluster values $(-850, -912, -1043, -798)$.** The proof is one line: $M + \log\sum_j e^{x_j - M} = M + \log(e^{-M}\sum_j e^{x_j}) = M - M + \log\sum_j e^{x_j} = \text{LSE}(x)$. The numerical safety follows from two simultaneous guarantees. First, $x_j - M \leq 0$ for all $j$, so $e^{x_j - M} \leq e^0 = 1$ — overflow is structurally impossible. Second, $\exists j^*$ with $x_{j^*} = M$, so $e^{x_{j^*} - M} = 1$ — the sum is always at least $1$, the logarithm is always at least $0$, and the result is never dominated by underflowed zeros. The error bound $O(n\cdot\epsilon_{\text{mach}})$, independent of the magnitude of $x$ and of $\varepsilon$, is the optimal achievable accuracy for floating-point summation — the same error analysis you performed for Gaussian elimination and numerical integration in MSCS 202.
+
+---
+
+**The variable substitution $f = \varepsilon\log u$ and $g = \varepsilon\log v$ — replacing the scaling vectors with their log-domain counterparts — is the change of variables that converts the multiplicative Sinkhorn iterations into additive log-sum-exp operations, with the coupling expressed as $P_{ij} = e^{(f_i + g_j - C_{ij})/\varepsilon}$.** The scaling-vector form $P_{ij} = u_i K_{ij} v_j = e^{f_i/\varepsilon} e^{-C_{ij}/\varepsilon} e^{g_j/\varepsilon}$ involves three separate exponentials, each of which can underflow independently. The log-domain form collapses them into a single exponential $e^{(f_i + g_j - C_{ij})/\varepsilon}$ of the sum $f_i + g_j - C_{ij}$ — a difference of moderate real numbers. The argument $f_i + g_j - C_{ij}$ does not blow up as $\varepsilon \to 0$ because $f_i$ and $g_j$ are themselves $O(\|C\|_\infty)$ — they track the scale of the cost matrix, not the scale of $1/\varepsilon$. This is the fundamental reason the log-domain formulation is stable: the $\varepsilon$ dependence is absorbed into the argument of a single exponential rather than spread across three separately catastrophic ones. The potentials $f$ and $g$ are the Kantorovich dual potentials from Topic 4 of Chapter 1 — the same objects that certify optimality of the primal coupling, now serving double duty as the numerically stable primary variables of the algorithm.
+
+**The log-domain row update $f_i \leftarrow \varepsilon\log a_i - \varepsilon\cdot\text{LSE}_j((g_j - C_{ij})/\varepsilon)$ — derived by substituting $P_{ij} = e^{(f_i+g_j-C_{ij})/\varepsilon}$ into the row marginal constraint $\sum_j P_{ij} = a_i$ and solving for $f_i$ — is the stabilized form of the Sinkhorn row normalization, with the LSE computed via max-subtraction over the stabilization constant $M_i = \max_j(g_j - C_{ij})/\varepsilon$.** The derivation is direct: $\sum_j e^{(f_i+g_j-C_{ij})/\varepsilon} = a_i$ gives $e^{f_i/\varepsilon}\sum_j e^{(g_j-C_{ij})/\varepsilon} = a_i$, so $f_i = \varepsilon\log a_i - \varepsilon\log\sum_j e^{(g_j-C_{ij})/\varepsilon} = \varepsilon\log a_i - \varepsilon\cdot\text{LSE}_j((g_j-C_{ij})/\varepsilon)$. The stabilization constant $M_i$ ensures that the largest argument in the LSE is shifted to zero before exponentiating — the max-subtraction from the data centre story, applied now to the argument $(g_j - C_{ij})/\varepsilon$ rather than to raw log-probabilities. The column update is the symmetric mirror: $g_j \leftarrow \varepsilon\log b_j - \varepsilon\cdot\text{LSE}_i((f_i - C_{ij})/\varepsilon)$ with $M_j = \max_i(f_i - C_{ij})/\varepsilon$.
+
+**The property that $K$ is never explicitly constructed in the log-domain algorithm — the cost matrix $C$ entering only through the differences $g_j - C_{ij}$ and $f_i - C_{ij}$ — is the computational realization of the observation that the Gibbs kernel is an intermediate object, not a fundamental one.** The algorithm stores $C \in \mathbb{R}^{m\times n}$ and the potential vectors $f \in \mathbb{R}^m$, $g \in \mathbb{R}^n$. Total memory: $O(mn + m + n) = O(mn)$. The coupling $P \in \mathbb{R}^{m\times n}$ is reconstructed only at the end via a single pass $P_{ij} = e^{(f_i+g_j-C_{ij})/\varepsilon}$, when the application actually needs the transport plan. The dual objective $\text{OT}_\varepsilon = \langle f,a\rangle + \langle g,b\rangle$ is available immediately from the converged potentials without reconstructing $P$ — useful when only the distance value is needed, not the coupling itself.
+
+---
+
+**The soft-minimum $\text{softmin}_j^\varepsilon(C_{ij} - g_j) = -\varepsilon\log\sum_j e^{-(C_{ij}-g_j)/\varepsilon}$ — the smooth approximation to $\min_j(C_{ij} - g_j)$ appearing in the log-domain row update — is the entropic $c$-transform of $g$, the regularized version of the exact $c$-transform $g^{\bar{c}}(x_i) = \min_j(C_{ij} - g_j)$ from Topic 4 of Chapter 1.** The log-domain row update rewrites as $f_i \leftarrow \varepsilon\log a_i + g^{\bar{c},\varepsilon}(x_i)$ where $g^{\bar{c},\varepsilon}(x_i) = \text{softmin}_j^\varepsilon(C_{ij} - g_j)$ is the soft $c$-transform. As $\varepsilon \to 0$, $\text{softmin}^\varepsilon \to \min$ uniformly on compact sets with approximation error $O(\varepsilon\log n)$ — the same uniform convergence result from MATH 213 (Analysis I) for smooth approximations to continuous but non-differentiable functions. The Sinkhorn iterations are alternating soft $c$-transforms: each row update computes the soft $c$-transform of $g$, each column update computes the soft $\bar{c}$-transform of $f$. At $\varepsilon = 0$, these collapse to the exact $c$-transforms — the duality engine of Topic 4 — recovering the auction algorithm updates $f_i \leftarrow \min_j(C_{ij} - g_j)$ and $g_j \leftarrow \min_i(C_{ij} - f_i)$.
+
+**The auction algorithm connection — the log-domain Sinkhorn at $\varepsilon \to 0$ collapsing to the exact dual updates $f_i \leftarrow \min_j(C_{ij} - g_j)$, $g_j \leftarrow \min_i(C_{ij} - f_i)$ — is the competitive equilibrium interpretation of optimal transport from MATH 304.** The auction algorithm, which you can derive from the KKT conditions of the discrete Kantorovich LP, updates dual variables by finding the cheapest available destination for each source — the hard minimum over the cost matrix corrected by current destination prices. The log-domain Sinkhorn updates are the soft version: instead of the cheapest destination getting all the flow, all destinations share the flow with weights proportional to $e^{-(C_{ij}-g_j)/\varepsilon}$ — exponentially more flow to cheaper destinations, exponentially less to expensive ones. The temperature $\varepsilon$ controls the sharpness of this competition, interpolating smoothly between the diffuse entropic regime ($\varepsilon$ large, all destinations share equally) and the sharp combinatorial regime ($\varepsilon \to 0$, the cheapest destination wins everything). This interpolation is the mathematical content of the $\varepsilon$ dial from Topic 1, now visible at the level of individual update equations.
+
+---
+
+**The break moment — the log-sum-exp stabilization resolving floating-point failure but not the exponentially slow convergence for very small $\varepsilon$ — is the distinction between numerical correctness and algorithmic efficiency.** The stabilization guarantees that the computed potentials $f^{(\ell)}$ and $g^{(\ell)}$ satisfy $|\hat{f}^{(\ell)}_i - f^{(\ell)}_i| = O(\epsilon_{\text{mach}})$ at every iteration — the floating-point error is controlled at machine precision regardless of $\varepsilon$. But the number of iterations required to reach $\|f^{(\ell)} - f^*\|_\infty \leq \delta$ is $O(\varepsilon\log(1/\delta)/\Delta C)$ from Topic 2's convergence analysis — this grows without bound as $\varepsilon \to 0$, independently of whether the algorithm runs in standard or log-domain form. The log-sum-exp trick resolves the first problem (numerical) completely; it does not resolve the second problem (algorithmic). For very small $\varepsilon$, one must combine the log-domain formulation with $\varepsilon$-scaling annealing: solve a sequence $\varepsilon_1 > \varepsilon_2 > \cdots > \varepsilon_T$ with warm starts, achieving polylogarithmic total iteration count $O(\log(\varepsilon_1/\varepsilon_T)\log(1/\delta))$ — the practical production-grade implementation of Sinkhorn for small $\varepsilon$.
+
+**The $\varepsilon$-scaling annealing schedule — solving a geometric sequence of regularized problems $\varepsilon_k = \varepsilon_1\cdot\rho^{k-1}$ with warm-started potentials — is the numerical methods analogue of continuation methods from MSCS 202, where a hard problem is solved by deforming it from an easy nearby problem through a sequence of intermediate problems.** The initial $\varepsilon_1 = \|C\|_\infty$ is chosen large enough that the Sinkhorn iterations converge in $O(1)$ steps — the Gibbs kernel is nearly flat and the marginal constraints are nearly decoupled. Each subsequent stage reduces $\varepsilon$ by a factor $\rho$, warm-starting from the previous stage's converged potentials. The initialization distance $\|(f^{(\varepsilon_{k+1},0)},g^{(\varepsilon_{k+1},0)}) - (f^*_{\varepsilon_{k+1}},g^*_{\varepsilon_{k+1}})\|$ is small when $\varepsilon_{k+1}$ is close to $\varepsilon_k$, because the optimal potentials vary continuously with $\varepsilon$ — a consequence of the smooth differentiability of $\text{OT}_\varepsilon$ in $\varepsilon$ established in Topic 1. The annealing schedule is the practical bridge between the theoretical $O(n^2)$ complexity of a single Sinkhorn stage and the end-to-end computation of accurate Wasserstein distances at machine learning scale.
+
+---
+
+**The connection to MSCS 202 (Numerical Methods) runs through condition number theory, continuation methods, and stabilized summation.** The Gibbs kernel's condition number $\kappa(K) = e^{\Delta C/\varepsilon}$ is the condition number of the Sinkhorn linear system — exponentially large for small $\varepsilon$. The log-domain reformulation reduces the effective condition number to $O(\Delta C/\varepsilon)$ by working with logarithms of the kernel entries rather than the entries themselves, exactly as diagonal scaling and preconditioning reduce condition numbers in linear system solvers. The stabilized LSE summation achieves $O(n\epsilon_{\text{mach}})$ error regardless of input magnitude — the compensated summation guarantee from MSCS 202 applied to the specific structure of log-sum-exp. The $\varepsilon$-scaling continuation method is the MSCS 202 homotopy continuation strategy: deform the problem from an easy warm-started initial point to the target, solving a sequence of intermediate problems rather than attacking the hard target directly.
+
+**The connection to MATH 304 (Computational Operations Research) closes through the dual variable interpretation and the auction algorithm limit.** The potentials $f^*$ and $g^*$ produced by the log-domain Sinkhorn are the optimal dual variables of the regularized transportation LP — the shadow prices of the supply and demand constraints, exactly as in the transportation LP duality from MATH 304. The log-domain updates are the smooth coordinate ascent steps on the dual objective, collapsing to the auction algorithm's exact dual updates as $\varepsilon \to 0$. The dual objective value $\text{OT}_\varepsilon = \langle f^*,a\rangle + \langle g^*,b\rangle$ is the regularized Wasserstein distance, available from the converged potentials without constructing the primal coupling — exactly as the LP optimal value equals the dual objective at strong duality, from the duality theory of MATH 304.
+
+---
+
+**Looking forward across the roadmap**, the log-domain Sinkhorn algorithm is the production implementation of everything built in Chapter 2. It is the code that runs inside the Phase 1 checkpoint project — the Shape Shifter that morphs a donut into a crescent via Sinkhorn transport. It is the differentiable loss function that the Wasserstein GAN's discriminator optimizes via the Kantorovich-Rubinstein formula. It is the computational primitive that Chapter 3's barycenter algorithm iterates across multiple marginals. And in Phase 3, the connection between the log-domain Sinkhorn soft $c$-transform and the score function update of a diffusion model — both are log-gradient operations on a smoothed energy landscape, both converge to hard assignments as temperature goes to zero — makes the log-domain algorithm the algorithmic ancestor of score-based generative modeling.
+
+The junior engineer's one line on the whiteboard — $\log\sum_j e^{x_j} = M + \log\sum_j e^{x_j - M}$ — is the log-sum-exp identity, the algebraically exact, numerically perfect manipulation that converts the catastrophically unstable standard Sinkhorn into the production-ready log-domain algorithm: $f_i \leftarrow \varepsilon\log a_i - \varepsilon\cdot\text{LSE}_j((g_j - C_{ij})/\varepsilon)$, stable for all $\varepsilon > 0$, differentiable end-to-end, converging to the exact $c$-transform duality of Chapter 1 as $\varepsilon \to 0$.
+
+---
+---

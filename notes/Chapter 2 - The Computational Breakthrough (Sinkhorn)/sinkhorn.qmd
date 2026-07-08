@@ -1,0 +1,32 @@
+# Chapter 2 - The Computational Breakthrough (Sinkhorn)
+
+## Introduction
+
+Chapter 1 gave you the complete theoretical architecture of Optimal Transport. The Monge problem posed the question. The Kantorovich relaxation made it convex. The Wasserstein distance defined the metric. The Kantorovich duality gave you two equivalent representations of the same optimal value — one as a minimum over couplings, one as a maximum over potential functions — and the complementary slackness condition told you exactly where the optimal coupling concentrates its mass.
+
+The theory is complete. The computation is not.
+
+Here is the problem. In practice, your distributions are not abstract continuous measures — they are discrete. You have a histogram of $n$ pixel intensities in one image and a histogram of $n$ pixel intensities in another, and you want to compute the Wasserstein distance between them. Or you have $n$ sampled points from a data distribution and $n$ sampled points from a model distribution, and you want to measure how far apart they are geometrically. In every real application, the distributions are discretized over $n$ support points, and the Kantorovich problem becomes a finite linear program with $n^2$ variables and $2n$ constraints — the transportation LP from MATH 304.
+
+The transportation LP is solvable. The simplex method solves it. Interior point methods solve it. The Hungarian algorithm solves the assignment problem special case. But all of these methods have the same fundamental bottleneck: the exact solution of the Kantorovich LP costs $O(n^3)$ operations. For $n = 1000$ points — a modest number by any machine learning standard — this is $10^9$ operations per distance computation. For $n = 10000$, it is $10^{12}$. For a training loop that computes this distance thousands of times per epoch, exact Optimal Transport is computationally dead on arrival.
+
+The question Chapter 2 answers is: can we approximate the Wasserstein distance efficiently, without solving the exact LP, in a way that is fast enough for machine learning while remaining geometrically meaningful?
+
+The answer is yes, and the key is entropy.
+
+The Sinkhorn algorithm — introduced in its modern machine learning form by Marco Cuturi in 2013, though the underlying mathematics goes back to the Sinkhorn-Knopp matrix scaling theorem of the 1960s — resolves the computational bottleneck by adding a single regularization term to the Kantorovich objective. Instead of minimizing the transport cost exactly, you minimize the transport cost plus a small penalty for using a coupling that is too concentrated. The penalty is the negative entropy of the coupling — a term that pushes the optimal coupling away from the sparse, deterministic structure of the exact Kantorovich solution and toward a smoother, more spread-out distribution. The regularized problem is no longer a linear program — it is a strictly convex smooth optimization problem, and its unique solution can be found by an astonishingly simple iterative algorithm: alternately normalize the rows and columns of a kernel matrix until convergence.
+
+This regularization does three things simultaneously. It makes the problem strictly convex, guaranteeing a unique solution. It makes the solution differentiable with respect to the input distributions, enabling gradient-based optimization through the Wasserstein distance. And it makes the computation fast: each iteration of the Sinkhorn algorithm costs $O(n^2)$ operations, and the algorithm converges geometrically, so the total cost is $O(n^2)$ up to logarithmic factors — a cubic-to-quadratic improvement that makes Optimal Transport practical for machine learning at scale.
+
+This chapter has three topics corresponding to the three bullet points in the roadmap's syllabus.
+
+The first topic is **Entropic Regularization** — the precise modification of the Kantorovich problem that adds $+\varepsilon H(\pi)$ to the objective, where $H(\pi) = -\int \log \frac{d\pi}{d(\mu\otimes\nu)} \, d\pi$ is the relative entropy of the coupling with respect to the product measure. The regularization parameter $\varepsilon > 0$ controls the trade-off between transport cost and entropy: large $\varepsilon$ produces a very smooth, spread-out coupling close to the independent product $\mu \otimes \nu$; small $\varepsilon$ produces a coupling close to the exact Kantorovich solution but numerically harder to compute. The entropic regularization converts the LP into a strictly convex problem with a unique solution that has a specific product form — a Gibbs kernel times two diagonal scalings — which is the key structural insight that makes Sinkhorn work.
+
+The second topic is **the Sinkhorn-Knopp Theorem** — the theorem that characterizes the solution of the regularized problem as the unique matrix with prescribed row and column sums that can be written as $P^* = \text{diag}(u) \cdot K \cdot \text{diag}(v)$, where $K_{ij} = e^{-C_{ij}/\varepsilon}$ is the Gibbs kernel and $u \in \mathbb{R}^m_+$, $v \in \mathbb{R}^n_+$ are positive scaling vectors found by alternating normalization. The Sinkhorn-Knopp theorem guarantees that this alternating normalization converges geometrically to the unique solution, and the convergence rate is controlled by the condition number of the kernel matrix $K$.
+
+The third topic is **the Log-Sum-Exp trick** — the numerical stabilization technique that prevents the Sinkhorn algorithm from underflowing to zero or overflowing to infinity when $\varepsilon$ is small. For small $\varepsilon$, the Gibbs kernel entries $e^{-C_{ij}/\varepsilon}$ span many orders of magnitude and cannot be represented in floating point. The log-domain reformulation replaces the scaling vectors $u$ and $v$ with their logarithms $f = \varepsilon \log u$ and $g = \varepsilon \log v$, converting the multiplicative Sinkhorn iterations into additive log-sum-exp operations that remain numerically stable across the full range of $\varepsilon$.
+
+By the end of this chapter, you will be able to implement the Sinkhorn algorithm from scratch, understand exactly why it converges, diagnose and fix its numerical instabilities, and use it as a differentiable loss function inside a neural network training loop. The theoretical Wasserstein distance of Chapter 1 becomes a practical, computable, differentiable object. That transformation — from theory to computation — is the breakthrough this chapter is named for.
+
+---
+---

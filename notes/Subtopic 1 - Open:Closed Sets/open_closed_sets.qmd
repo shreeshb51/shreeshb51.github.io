@@ -1,0 +1,157 @@
+# Subtopic 1 - Open/Closed Sets
+
+## Layer 1 (Story)
+
+Picture Asan Tole on a busy Saturday morning. You are standing in the middle of the market, surrounded by vegetable vendors, spice sellers, and the constant noise of haggling. Now someone asks you a simple question: are you *in* the market?
+
+Of course you are. That feels obvious. But now imagine you take one step toward the edge of the market, toward the boundary where the last vegetable stall ends and the street begins. Are you still in the market? Probably yes. Now take another step. And another. At some point you are standing exactly at the last stall — the very boundary of the market. Are you in the market now, or are you outside it? You hesitate. The answer is no longer obvious.
+
+This hesitation is not a personal failing. It is a genuine mathematical tension, and open and closed sets exist precisely to resolve it.
+
+---
+
+Let us build the story carefully. Imagine the entire neighborhood of Asan as a space — every point on the ground is a location, and every pair of locations has a well-defined walking distance between them. This is your metric space. The distance satisfies the rules you would expect: the distance from A to A is zero, the distance from A to B equals the distance from B to A, and going from A to C directly is never longer than going via B. These rules — and only these rules — are what makes something a valid notion of distance. Hold that thought.
+
+Now, inside this space, consider the market itself as a region — a subset of all the points in the neighborhood. You want to classify this region. Is it open, or is it closed?
+
+Here is the key intuition. An **open** region is one where, no matter where you stand inside it, you have some breathing room — some small bubble of space around you that is entirely still inside the region. You are never standing so close to the edge that one more step would take you out. If you are in the market and the market is open, then for every position you occupy, there exists some small radius around you such that everyone within that radius is also in the market.
+
+A **closed** region is different. A closed region is one that contains its own boundary. If you are standing at the very last stall — right at the edge — and that edge belongs to the market, then the market is closed. It has swallowed its own frontier.
+
+---
+
+Now here is the break moment. The naive assumption almost everyone makes when they first hear this is: *surely a region is either open or closed — like a door.* It must be one or the other. This seems completely reasonable. After all, the market either includes its boundary or it does not. What else could happen?
+
+It breaks in two directions simultaneously.
+
+First, a region can be **both open and closed at the same time**. The entire neighborhood of Asan — the whole space itself — is both open and closed. It has no boundary that lies outside it, so trivially it contains all its boundary points (closed), and every point inside it has a bubble entirely within it (open). Mathematicians call such a set "clopen," and it is not a curiosity — it plays a deep role in understanding whether a space is connected.
+
+Second, a region can be **neither open nor closed**. Imagine the set of all locations that are strictly more than 100 meters from the center of Asan, but at most 200 meters away. The inner boundary — exactly 100 meters — is excluded (so it is not closed), but the outer boundary — exactly 200 meters — is included (so it is not open either). It is a half-open annulus, sitting uncomfortably between both categories.
+
+The door analogy is dead. Open and closed are not opposites. They are independent properties, and a set can have either, both, or neither.
+
+---
+
+This matters deeply for the roadmap ahead. When you work with probability distributions later — asking questions like "does this sequence of distributions converge to something?" — you will need to know whether the limiting object is inside the space you are working in, or whether it has escaped to some boundary your space does not contain. Open and closed sets are the vocabulary for asking and answering that question precisely. Without them, convergence itself becomes ambiguous.
+
+---
+
+Take a moment to sit with this picture: a bustling market where some regions are generous enough to give you breathing room no matter where you stand, others are possessive enough to claim their own edges, some manage to do both, and some do neither. That tension — between interior and boundary, between belonging and escaping — is the entire story of open and closed sets.
+
+---
+
+## Layer 2 (Mathematics)
+
+We begin by formalizing the space itself, before we can talk about what lives inside it.
+
+### The Metric Space
+
+A **metric space** is a pair $(X, d)$ where $X$ is any non-empty set, and $d$ is a function called the **metric**, defined as:
+
+$$d: X \times X \to [0, \infty)$$
+
+This notation says that $d$ takes any two points in $X$ and returns a non-negative real number — their distance. But not every function qualifies as a metric. To earn that name, $d$ must satisfy exactly four axioms for all points $x, y, z \in X$:
+
+$$\text{(i) } d(x, y) \geq 0 \quad \text{(non-negativity)}$$
+$$\text{(ii) } d(x, y) = 0 \iff x = y \quad \text{(identity of indiscernibles)}$$
+$$\text{(iii) } d(x, y) = d(y, x) \quad \text{(symmetry)}$$
+$$\text{(iv) } d(x, z) \leq d(x, y) + d(y, z) \quad \text{(triangle inequality)}$$
+
+These four rules are the minimal contract that any notion of distance must honor. Nothing more is assumed. $X$ could be the real line, a graph, a space of functions, or a space of probability distributions — as long as $d$ satisfies these four axioms, the entire theory applies.
+
+---
+
+### The Open Ball
+
+Before defining open sets, we need one intermediate object. Given a point $x \in X$ and a radius $r > 0$, the **open ball** centered at $x$ with radius $r$ is:
+
+$$B(x, r) = \{ y \in X : d(x, y) < r \}$$
+
+This is the set of all points strictly within distance $r$ of $x$. Notice the strict inequality — the boundary circle itself is excluded. This object is the precise mathematical form of the "breathing room bubble" from the story.
+
+---
+
+### Open Sets
+
+A subset $U \subseteq X$ is called **open** if for every point $x \in U$, there exists some radius $r > 0$ such that the entire open ball $B(x, r)$ is contained within $U$:
+
+$$U \text{ is open} \iff \forall x \in U, \; \exists r > 0 \text{ such that } B(x, r) \subseteq U$$
+
+Read this carefully. It is a statement about every single point in $U$ without exception. For each such point, you must be able to find some — possibly very tiny, but strictly positive — radius such that the bubble around that point never escapes $U$. The radius $r$ is allowed to depend on $x$; it does not need to be uniform across all points. It simply must exist.
+
+---
+
+### Closed Sets
+
+A subset $F \subseteq X$ is called **closed** if its complement is open. Formally, if we write $F^c = X \setminus F$ for the set of all points in $X$ not in $F$, then:
+
+$$F \text{ is closed} \iff F^c \text{ is open}$$
+
+This is the definition, and it is important to absorb it on its own terms before reaching for intuition. Closed is defined via open, not independently. However, there is an equivalent and more intuitive characterization that will serve you well. A set $F$ is closed if and only if it contains all its **limit points**. A point $x \in X$ is a limit point of $F$ if every open ball around $x$, no matter how small, contains at least one point of $F$ other than $x$ itself:
+
+$$x \text{ is a limit point of } F \iff \forall r > 0, \; B(x, r) \cap F \setminus \{x\} \neq \emptyset$$
+
+So $F$ is closed precisely when it has swallowed every point that sequences in $F$ can converge to. If you build a sequence of points entirely inside $F$ and that sequence converges to some limit, that limit cannot escape — it must also be in $F$.
+
+---
+
+### The Boundary
+
+The **boundary** of a set $A \subseteq X$, written $\partial A$, is the set of all points $x \in X$ such that every open ball around $x$ contains at least one point inside $A$ and at least one point outside $A$:
+
+$$\partial A = \{ x \in X : \forall r > 0, \; B(x, r) \cap A \neq \emptyset \text{ and } B(x, r) \cap A^c \neq \emptyset \}$$
+
+This is the precise mathematical definition of the edge of the market — the set of points that sit exactly at the frontier, with $A$ on one side and $X \setminus A$ on the other. An open set never contains any of its boundary points. A closed set contains all of them.
+
+---
+
+### The Clopen Reality
+
+Now the break moment finds its formal expression. The axioms of a metric space require that $\emptyset$ and $X$ itself are always both open and closed — the so-called **clopen** sets that exist in every metric space. And a set like the half-open interval $[0, 1)$ on the real line is neither open (the point $0$ has no bubble contained entirely within it) nor closed (the limit point $1$ is not in the set). These are not edge cases. They are the rule, not the exception.
+
+---
+
+### WHY THIS MATTERS
+
+You have already seen sequences in MATH 213 (Analysis I). There, convergence was defined on the real line, and the underlying metric was always $d(x, y) = |x - y|$. What you now have is the same concept of convergence, but liberated from the real line entirely. A sequence $(x_n)$ in any metric space $(X, d)$ converges to $x$ if:
+
+$$\forall \varepsilon > 0, \; \exists N \in \mathbb{N} \text{ such that } \forall n > N, \; d(x_n, x) < \varepsilon$$
+
+This is identical in structure to what you saw in Analysis I — the only change is that $|x_n - x|$ has been replaced by $d(x_n, x)$. The abstraction costs nothing and buys everything.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the story in Asan Tole has a precise mathematical home. Let us walk through them one by one, deliberately, so that the formalism and the narrative fuse into a single object in your mind.
+
+---
+
+**The neighborhood of Asan itself — the entire ground you can stand on — is $X$, the underlying set of the metric space.** It is the universe of all points under consideration. When we said "every location in the neighborhood," we meant every element of $X$. Nothing exists outside it for the purposes of this discussion.
+
+**The walking distance between any two locations is $d(x, y)$, the metric.** When you walk from one stall to another, that distance satisfies all four axioms automatically — it is never negative, it is zero only when you are standing at the same spot, it does not matter which direction you measure it, and taking a detour through a third point is never shorter than going directly. The real line's distance $|x - y|$ that you used throughout MATH 213 is simply one particular choice of metric on one particular space. The metric $d$ is the abstraction of that familiar idea.
+
+**The "breathing room bubble" around a vendor at position $x$ is the open ball $B(x, r)$.** When you said in the story that a person standing inside an open region always has some personal space entirely within the region, you were describing exactly the condition $B(x, r) \subseteq U$. The radius $r$ is the size of that personal space — it can be as small as a single centimeter, but it must be strictly greater than zero. A bubble of radius zero is not a bubble at all.
+
+**The market as a region is a subset $U \subseteq X$.** Not all of $X$, just the portion we are examining. Every mathematical set we work with — a region, a collection of distributions, a space of functions — is a subset of some ambient metric space, exactly as the market is a subset of the full neighborhood.
+
+**The condition that every vendor inside the market has breathing room is the formal definition of an open set.** The statement $\forall x \in U, \; \exists r > 0 \text{ such that } B(x, r) \subseteq U$ is the story told in the language of quantifiers. The $\forall$ is "every vendor without exception." The $\exists r > 0$ is "there is some bubble of positive radius." The $\subseteq U$ is "that bubble stays inside the market." The story and the formula are the same sentence.
+
+**The boundary of the market — the last row of stalls, the edge where market meets street — is $\partial A$, the boundary of the set.** Every point on that edge has the property that any bubble around it, no matter how small, contains both market points and non-market points. That is precisely the definition: $\forall r > 0, \; B(x, r) \cap A \neq \emptyset$ and $B(x, r) \cap A^c \neq \emptyset$. The boundary is the set of points that cannot commit to being inside or outside.
+
+**The market that claims its own boundary — the one where the last stall belongs to the market — is a closed set.** Formally, $F$ is closed when it contains all its limit points. The vendors standing exactly at the edge are the limit points — they are the limits of sequences of vendors walking toward the boundary from inside. A closed set says: if you can approach a point using a sequence entirely within me, that point belongs to me. The market does not let its boundary escape to the street.
+
+**The "clopen" whole neighborhood — the set that is both open and closed — is $X$ itself.** It is open because every point in $X$ has a bubble entirely within $X$ (trivially, since nothing is outside $X$). It is closed because its complement $X^c = \emptyset$ is open. The whole space and the empty set are always clopen in any metric space, without exception. This is not a special property of Asan — it is a universal fact baked into the axioms.
+
+**The half-open annulus — the region that is neither open nor closed — corresponds to a set like $[0, 1)$ on the real line.** The point at the inner edge (exactly 100 meters from center, or the point $0$ on the interval) has no bubble contained within the set, so the set is not open. The point at the outer edge (exactly 200 meters, or the point $1$) is a limit point not contained in the set, so the set is not closed. The door analogy breaks here, permanently and formally.
+
+---
+
+The connection to your existing coursework is direct. In MATH 213, every time you proved a sequence converged — every $\varepsilon$-$N$ argument you wrote — you were implicitly working inside the metric space $(\mathbb{R}, |\cdot|)$ with open balls that happened to be open intervals $(x - \varepsilon, x + \varepsilon)$. The definition of convergence you know, $|x_n - x| < \varepsilon$ for all $n > N$, is exactly the statement that the tail of the sequence eventually lives inside the open ball $B(x, \varepsilon)$. What you have now is the same machinery, but cut free from the real line. The $\varepsilon$-$N$ definition did not change — only the distance function changed from $|\cdot|$ to a general $d$.
+
+---
+
+**Looking forward, here is why this bridge matters for the roadmap.** In Phase 1, you will work with the Wasserstein distance — a metric on the space of probability distributions. That sentence only makes sense because you now know what a metric is. In Phase 3, you will ask whether a sequence of distributions converges, and whether the limit is inside the space or has escaped to some boundary. That question is exactly the open-and-closed-sets question, posed in a much stranger space. The vocabulary you built today — open ball, limit point, boundary, closed set — will travel with you all the way to the end of the roadmap.
+
+---
+---

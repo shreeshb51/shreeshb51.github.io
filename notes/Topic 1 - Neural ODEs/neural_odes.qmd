@@ -1,0 +1,468 @@
+# Topic 1 - Neural ODEs: Learning Continuous Transformations
+
+## Introduction
+
+Every deep neural network you have encountered in your mathematical training has been a discrete object. A multilayer perceptron with $L$ layers applies $L$ successive transformations: $x \mapsto \sigma(W_1 x + b_1) \mapsto \sigma(W_2(\cdots) + b_2) \mapsto \cdots \mapsto y$. A residual network adds skip connections: $x_{l+1} = x_l + f_\theta(x_l)$, where each block adds a small perturbation to the current representation. Both are finite compositions of functions — a discrete sequence of transformations indexed by the layer number $l \in \{1, 2, \ldots, L\}$.
+
+The neural ODE asks: what happens in the limit as the number of layers goes to infinity and the step size goes to zero? The residual update $x_{l+1} = x_l + f_\theta(x_l)$ becomes the Euler discretization of the ODE $\dot x_t = f_\theta(x_t, t)$, and in the continuous limit the discrete layer stack becomes a continuous flow. The neural network no longer maps input to output through a fixed number of discrete steps — it maps input to output through the solution of an ordinary differential equation, integrated from $t=0$ to $t=1$.
+
+This is not merely a mathematical curiosity. The continuous-depth network has properties that its discrete counterparts do not: it computes an exact probability flow (not an approximation), it trains with constant memory cost regardless of integration depth (through the adjoint method), and it provides exact log-likelihoods for generative modeling (through the instantaneous change of variables formula). The neural ODE is the foundational architecture of continuous normalizing flows — the family of generative models that Chapter 2 builds upon.
+
+The shift from discrete to continuous depth is the first of three conceptual moves that this topic makes, and it is worth dwelling on its mathematical content before proceeding.
+
+A standard residual block $x_{l+1} = x_l + \Delta t\, f_\theta(x_l, t_l)$ with step size $\Delta t = 1/L$ is the Euler method for the ODE $\dot x_t = f_\theta(x_t, t)$ with step size $1/L$. As $L\to\infty$ and $\Delta t\to 0$, the Euler approximation converges to the exact ODE solution — the flow map $\phi_t: x_0\mapsto x_t$ defined by $\frac{d}{dt}\phi_t(x_0) = f_\theta(\phi_t(x_0), t)$, $\phi_0(x_0) = x_0$. The neural ODE replaces the Euler approximation with the exact solution, using a numerical ODE solver — Runge-Kutta, Adams-Bashforth, or an adaptive solver — to integrate the dynamics. The number of function evaluations is determined by the solver's error tolerance, not by the architecture's depth, giving the neural ODE its flexibility: use a coarse solver for fast generation, a fine solver for exact likelihood computation.
+
+This topic develops the neural ODE framework across three components that build in strict logical order.
+
+The first component is **the neural ODE as a continuous normalizing flow and the instantaneous change of variables formula**. A normalizing flow is a generative model that learns an invertible transformation $T: \mathbb{R}^d\to\mathbb{R}^d$ mapping a simple base distribution (Gaussian) to the data distribution, with the log-likelihood of any data point computable via the change of variables formula $\log p_{\text{data}}(x) = \log p_{\text{base}}(T^{-1}(x)) - \log|\det\nabla T(x)|$. Classical normalizing flows use specific invertible architectures (affine coupling layers, autoregressive flows) that make the Jacobian determinant $\det\nabla T$ tractable. The neural ODE replaces the discrete invertible map with a continuous flow $\phi_1: x_0\mapsto x_1$, making every neural ODE a normalizing flow. The Jacobian determinant of the flow is computed not all at once but incrementally, through the **instantaneous change of variables formula**: $\frac{d}{dt}\log p(x_t) = -\nabla\cdot f_\theta(x_t, t)$, where $\nabla\cdot f_\theta$ is the divergence of the velocity field — the trace of its Jacobian. Integrating this ODE alongside the state $x_t$ gives the exact log-likelihood at any point, without computing the full $d\times d$ Jacobian matrix. This is the formula that connects the neural ODE to the continuity equation $\partial_t\rho_t + \nabla\cdot(\rho_t f_\theta) = 0$ of Chapter 1: the Fokker-Planck equation with $\sigma=0$ is exactly the continuity equation, and the instantaneous change of variables formula is its characteristic equation along flow trajectories.
+
+The second component is **the adjoint method for training**. Training a neural ODE requires computing gradients of a loss function with respect to the neural network parameters $\theta$. The loss depends on the ODE solution $x_1 = \phi_1(x_0; \theta)$, which is computed by a numerical solver that takes many intermediate steps. Naively backpropagating through every solver step — the standard automatic differentiation approach — requires storing all intermediate states in memory, with memory cost proportional to the number of solver steps. For a high-accuracy solver taking thousands of steps, this is prohibitive. The **adjoint sensitivity method** resolves this by computing gradients without storing intermediate states: instead of backpropagating forward through the solver, it solves a backward ODE for the adjoint state $a(t) = \partial\mathcal{L}/\partial x_t$ — the gradient of the loss with respect to the state at each time — and simultaneously accumulates the parameter gradient $\partial\mathcal{L}/\partial\theta$. The adjoint ODE runs backward in time from $t=1$ to $t=0$, requiring only the current state (recomputed by the forward solver running backward) and the current adjoint, never storing the full forward trajectory. The memory cost is $O(d)$ regardless of the number of solver steps — constant memory training for arbitrary-depth continuous networks.
+
+The third component is **the connection to optimal control and the relationship to score-based models**. The neural ODE training problem — find parameters $\theta$ that minimize a loss function over ODE trajectories — is an optimal control problem: minimize $\mathcal{L}(x_1)$ subject to $\dot x_t = f_\theta(x_t,t)$, $x_0 = x_{\text{init}}$. The adjoint method is Pontryagin's minimum principle applied to this control problem — the classical result from optimal control theory that characterizes the optimal control through the Hamiltonian and the adjoint (costate) equations. This connection is not merely formal: understanding the neural ODE as an optimal control problem clarifies what the training is doing geometrically — it is finding the velocity field $f_\theta$ that moves probability mass from the base distribution to the data distribution along paths that minimize the chosen loss. The relationship to score-based models is through the probability flow ODE of Chapter 1: the probability flow ODE $\dot x_t = b_t(x_t) - \frac{\sigma_t^2}{2}s_t(x_t)$ is a neural ODE with a specific velocity field determined by the learned score function. The neural ODE framework provides the general architecture; score matching provides one way to learn the specific velocity field that defines the correct probability flow.
+
+The connections to your curriculum are the most concrete of any topic in Phase 3.
+
+Your MATH 217 course on ODEs is the primary scaffold at the deepest level. The existence and uniqueness theorem (Picard-Lindelöf) from MATH 217 guarantees that the neural ODE $\dot x_t = f_\theta(x_t,t)$ has a unique solution for any initial condition when $f_\theta$ is Lipschitz — the same theorem that guarantees unique geodesics on Riemannian manifolds and unique solutions to the Fokker-Planck equation. The Euler method and Runge-Kutta methods from MATH 217's numerical ODE section are the specific solvers used inside the neural ODE's forward pass. Gronwall's inequality from MATH 217 — the key tool for bounding ODE solution errors — is what makes the adjoint method work: it bounds the error in the recomputed forward trajectory used during the backward pass.
+
+Your MATH 304 course on Computational Operations Research provides the Lagrangian duality framework underlying the adjoint method. The adjoint sensitivity method is identical in structure to the Lagrangian multiplier method from MATH 304: the adjoint variables $a(t)$ are the Lagrange multipliers enforcing the ODE constraint $\dot x_t = f_\theta(x_t,t)$, and the adjoint ODE $\dot a(t) = -a(t)^\top\nabla_x f_\theta(x_t,t)$ is the first-order optimality condition for the Lagrangian with respect to $x_t$. Pontryagin's minimum principle — the continuous-time analogue of the KKT conditions from MATH 304 — is the complete characterization of optimality for the neural ODE optimal control problem.
+
+Your MATH 201 course on Advanced Calculus provides the instantaneous change of variables formula through Liouville's theorem: the rate of change of the log-density along flow trajectories is $d\log p(x_t)/dt = -\text{tr}(\nabla_x f_\theta(x_t,t)) = -\nabla\cdot f_\theta$, where the trace of the Jacobian is the divergence computed using the chain rule from MATH 201. The change of variables formula for probability distributions — $p_1(x_1)|\det\nabla\phi_1(x_0)| = p_0(x_0)$ — uses the multivariate substitution theorem from MATH 201, with the Jacobian determinant of the flow measuring how much the transformation expands or contracts volume elements.
+
+By the end of this topic, the neural ODE will feel not like an exotic continuous-depth network but like the natural continuous limit of the residual networks that you already understand — the same architecture in the limit as depth goes to infinity and step size goes to zero. The adjoint method will feel not like a mysterious backpropagation trick but like Pontryagin's minimum principle applied to the optimal control problem of learning a probability flow. And the instantaneous change of variables formula will feel not like an ad hoc computational shortcut but like the characteristic equation of the continuity equation — the scalar ODE that tracks log-density along the trajectories of the probability flow. These three realizations together give you the complete mathematical picture of neural ODEs as a generative modeling architecture: the continuous flow as the generative model, the adjoint as the training algorithm, and the divergence as the likelihood computation.
+
+---
+
+## Layer 1 (Story)
+
+It is 2021. The International Centre for Integrated Mountain Development has commissioned a comprehensive hydrological mapping project of Nepal's river systems. Your team's specific assignment is the most technically demanding: map the complete flow field of the Gandaki river basin — the network of rivers, streams, and drainage channels that collectively carry meltwater from the Annapurna and Dhaulagiri massifs down through the gorges of the middle hills and into the Gangetic plain. The goal is not merely to record where the rivers are today but to learn the underlying flow field — the velocity vector at every point in the basin — so that the team can predict where water starting at any location will end up, how long it will take to arrive, and what path it will follow.
+
+The hydrological flow field is a function $f(x,t)$: at each geographic location $x$ in the basin and each season $t$, it gives the direction and speed of water flow. Learn $f$ from observations, and you can simulate any water particle's trajectory by solving the ODE $\dot x_t = f(x_t, t)$ — starting at any point $x_0$, integrate the flow field forward to find where the water goes.
+
+Your team has a problem. Direct measurement of the flow field at every point in the basin is impossible — the basin is 46,000 square kilometres, and you have seventeen researchers and four boats. What you can observe is where specific marked water particles end up: you release GPS-tagged buoys at various locations upstream, let them drift for a fixed time period, and record their final positions. From the start points and end points of many buoy trajectories, you must infer the flow field $f$ that produced those trajectories.
+
+This inverse problem — learn the velocity field $f$ from observations of where particles start and end up — is exactly the training problem of a neural ODE generative model.
+
+---
+
+**The discrete approximation: the expedition's first attempt.**
+
+Your team's junior hydrologist, Priya, tries the obvious approach. She divides the observation period into ten discrete time steps. At each step, she fits a local vector field — a function mapping current position to velocity — by interpolating between the observed buoy displacements. The result is ten separate vector fields, one per time step, stitched together to approximate the continuous flow.
+
+The approximation works reasonably well in the river channels, where the buoy density is high and the flow is predictable. It fails in the side valleys, where buoys are sparse and the interpolated field is unreliable. It fails at transitions between time steps, where the stitched vector fields jump discontinuously. Most importantly, it fails to generalize: the ten-step approximation is tuned to the specific observation interval and cannot be evaluated at intermediate times or integrated over longer or shorter intervals.
+
+Priya presents the results. The senior hydrologist, Ram Bahadur, examines the discontinuous jumps at time-step boundaries and says: the river does not have discontinuities. The flow field is continuous in time. We should fit a single continuous function $f(x,t)$ — parameterized by a neural network — and train it to reproduce the observed start-to-end displacements. The ten-step approximation is the Euler method for the ODE $\dot x_t = f(x_t,t)$; we should use the exact ODE solution.
+
+This is the neural ODE: replace the discrete ten-step approximation with a single neural network $f_\theta(x,t)$ and train it so that the ODE solution $\phi_1(x_0;\theta)$ matches the observed buoy endpoints $x_1$ for every start point $x_0$.
+
+---
+
+**The flow map: from velocity field to particle trajectory.**
+
+Ram Bahadur draws the key picture on the whiteboard. Given a velocity field $f_\theta(x,t)$, the trajectory of a buoy starting at position $x_0$ is the curve $x_t = \phi_t(x_0)$ satisfying:
+
+$$\dot x_t = f_\theta(x_t, t), \quad x_0 = \text{starting position}$$
+
+The function $\phi_t: x_0\mapsto x_t$ is the flow map — it takes any starting position and returns the position at time $t$. For $t=0$: $\phi_0 = \text{Id}$ (no movement yet). For $t=1$: $\phi_1(x_0)$ is the predicted endpoint of the buoy starting at $x_0$.
+
+The flow map has a critical property: it is invertible. If you know where a buoy ends up, you can run the ODE backward — integrate $\dot x_t = f_\theta(x_t,t)$ from $t=1$ back to $t=0$ — to find where it started. The neural ODE is therefore an invertible transformation: you can move forward from starting positions to endpoints, or backward from endpoints to starting positions. This invertibility is what makes the neural ODE a normalizing flow — a generative model that can both generate samples (run the ODE forward from noise) and evaluate likelihoods (run the ODE backward from data and apply the change of variables formula).
+
+The training objective is simple in principle: for each observed buoy $(x_0^{(i)}, x_1^{(i)})$ — start point and end point — minimize the loss:
+
+$$\mathcal{L}(\theta) = \frac{1}{n}\sum_{i=1}^n \|phi_1(x_0^{(i)};\theta) - x_1^{(i)}\|^2$$
+
+This is a mean squared error between predicted and observed endpoints. The predicted endpoint $\phi_1(x_0^{(i)};\theta)$ is computed by numerically integrating the neural network $f_\theta$ from $t=0$ to $t=1$ starting at $x_0^{(i)}$ — running an ODE solver with $f_\theta$ as the right-hand side.
+
+---
+
+**The memory problem: why naive backpropagation fails.**
+
+Priya implements the neural ODE and tries to train it using standard automatic differentiation. The ODE solver takes 500 steps to integrate $f_\theta$ from $t=0$ to $t=1$ with the required accuracy. At each step, the solver evaluates $f_\theta$ and computes the next position. Standard backpropagation requires storing all 500 intermediate positions to compute gradients — the backward pass walks backward through every solver step, using the stored intermediate states to compute the gradient of the loss with respect to the neural network parameters $\theta$.
+
+The memory cost is catastrophic: 500 stored intermediate states, each a $d$-dimensional vector, multiplied by the batch size and the model size. For a high-dimensional data space (images, molecular structures) with a large batch and a deep neural network, storing 500 intermediate states requires more GPU memory than is available.
+
+Ram Bahadur identifies the problem: we are trying to remember the entire river's history to compute where we went wrong. But we do not need to remember the entire history. The physics of the river gives us a shortcut.
+
+---
+
+**The adjoint method: the ghost buoy that runs backward.**
+
+Ram Bahadur proposes the following procedure. Instead of storing the forward trajectory, release a ghost buoy at the endpoint $x_1$ and let it drift backward through time under the reversed flow field $-f_\theta(x_t, t)$. As the ghost buoy drifts backward, simultaneously track two additional quantities: how sensitive the final loss is to the current position (the adjoint $a(t) = \partial\mathcal{L}/\partial x_t$), and how much each parameter contributed to the trajectory error (the parameter gradient $\partial\mathcal{L}/\partial\theta$).
+
+The ghost buoy's backward trajectory retraces the forward trajectory without storing it: the solver integrates backward from $t=1$ to $t=0$, recomputing the forward positions as needed (by running a short forward integration from the current backward position). The adjoint $a(t)$ evolves according to its own ODE — the adjoint equation — which involves the transpose of the Jacobian of $f_\theta$. The parameter gradient accumulates continuously as the backward integration proceeds.
+
+At the end of the backward integration, you have both $x_0$ (the reconstructed starting position) and $\partial\mathcal{L}/\partial\theta$ (the gradient needed for parameter update). No intermediate states were stored. The memory cost is $O(d)$ — just the current position and adjoint — regardless of how many solver steps the forward integration took.
+
+This is the adjoint sensitivity method: compute gradients through an ODE solver using a backward ODE for the adjoint state, without storing forward intermediate states. The memory cost is constant. The computational cost is approximately twice the forward pass (one forward integration to evaluate the loss, one backward integration to compute the gradient). The trade-off — constant memory at twice the compute — is the neural ODE's central efficiency innovation.
+
+---
+
+**The adjoint as a shadow measurement.**
+
+The ghost buoy analogy is worth developing. The adjoint $a(t) = \partial\mathcal{L}/\partial x_t$ measures how much a small perturbation to the buoy's position at time $t$ would change the final loss. At $t=1$ (the endpoint), $a(1) = \partial\mathcal{L}/\partial x_1$ — the gradient of the loss with respect to the observed endpoint, which is straightforward to compute from the MSE loss. At earlier times, $a(t)$ measures the sensitivity of the loss to earlier positions — how much a small push to the buoy at time $t$ would affect where it ends up.
+
+The adjoint evolves backward in time according to the equation $\dot a(t) = -a(t)^\top \nabla_x f_\theta(x_t, t)$ — a linear ODE driven by the transpose of the Jacobian of $f_\theta$. Intuitively: if the velocity field is strongly converging at some point (particles near that point are being squeezed together), then small perturbations to the position are damped out quickly — the adjoint decreases rapidly. If the velocity field is diverging (particles spreading apart), then small perturbations are amplified — the adjoint increases.
+
+The parameter gradient is the time integral of the adjoint times the gradient of $f_\theta$ with respect to parameters:
+
+$$\frac{\partial\mathcal{L}}{\partial\theta} = -\int_0^1 a(t)^\top \frac{\partial f_\theta(x_t,t)}{\partial\theta}\,dt$$
+
+The integrand $a(t)^\top\partial f_\theta/\partial\theta$ is the influence of parameter $\theta$ on the velocity at time $t$, weighted by the loss sensitivity $a(t)$ at that time. A parameter that affects the velocity heavily in a region where the adjoint is large contributes much to the loss; a parameter that only affects velocity in regions where the adjoint is small contributes little.
+
+---
+
+**The density tracking problem: how probability mass changes under the flow.**
+
+After mapping the flow field, the team's next task is density estimation. They know the flow field $f_\theta$. They want to know: if we release not one buoy but a cloud of buoys — a probability distribution $\rho_0$ of starting positions — how does the density $\rho_t$ of the buoy cloud evolve as the flow field carries it?
+
+From Chapter 1, you know the answer: the continuity equation $\partial_t\rho_t + \nabla\cdot(\rho_t f_\theta) = 0$. The density changes because the flow field carries mass around. But computing $\rho_t$ by directly solving the continuity equation is expensive — it requires evolving a full density function over the basin.
+
+The neural ODE offers a shortcut: instead of evolving the density, track how the density at a single point changes along the trajectory of that point. A buoy starting at $x_0$ follows the trajectory $x_t = \phi_t(x_0)$. The density at the buoy's current position $\rho_t(x_t)$ changes according to:
+
+$$\frac{d}{dt}\log\rho_t(x_t) = -\nabla\cdot f_\theta(x_t, t)$$
+
+The log-density decreases at a rate equal to the divergence of the velocity field at the current position. Positive divergence (the flow is spreading outward — the river is entering a wide floodplain) means density decreases (the buoys spread apart, each region gets fewer). Negative divergence (the flow is converging inward — the river is entering a narrow gorge) means density increases (the buoys pile up, concentration increases).
+
+This is the instantaneous change of variables formula. Integrating it along the trajectory from $t=0$ to $t=1$:
+
+$$\log\rho_1(x_1) = \log\rho_0(x_0) - \int_0^1\nabla\cdot f_\theta(x_t,t)\,dt$$
+
+The log-density at the endpoint equals the log-density at the start point minus the integrated divergence along the path. This gives exact log-likelihoods without computing a Jacobian determinant — the neural ODE's key advantage over discrete normalizing flows.
+
+---
+
+**The break moment: why the divergence trace is enough.**
+
+You might think: this formula replaces the Jacobian determinant $\log|\det\nabla\phi_1|$ with an integral of the divergence $\int\nabla\cdot f_\theta\,dt$. But computing $\nabla\cdot f_\theta = \text{tr}(\nabla_x f_\theta)$ still requires computing the Jacobian of $f_\theta$ — a $d\times d$ matrix — and taking its trace. For large $d$ (high-dimensional data), computing the full Jacobian costs $O(d^2)$ time and memory — just as expensive as the original Jacobian determinant.
+
+The naive assumption is that this formula has solved the computational problem. It breaks in high dimensions.
+
+The fix comes from Hutchinson's trace estimator: instead of computing $\text{tr}(J) = \sum_i e_i^\top J e_i$ by evaluating $J$ at all $d$ standard basis vectors, use a random vector $z\sim\mathcal{N}(0,I)$ and estimate $\text{tr}(J) \approx z^\top Jz$. Since $\mathbb{E}[z^\top Jz] = \text{tr}(J)$ for any matrix $J$ (by the trace identity $\text{tr}(J) = \mathbb{E}_z[z^\top Jz]$ for $z\sim\mathcal{N}(0,I)$), this gives an unbiased estimator of the divergence using only a single Jacobian-vector product $Jz = \nabla_x(f_\theta\cdot z)$ — computable in the same time as one gradient evaluation of $f_\theta$ using automatic differentiation. The full Jacobian never needs to be materialized.
+
+The Hutchinson estimator reduces the cost of the instantaneous change of variables formula from $O(d^2)$ to $O(d)$ per time step — making continuous normalizing flows computationally tractable in high dimensions. This stochastic trace estimation is the break moment's resolution: exact log-likelihoods, without the full Jacobian, using a single random vector per step.
+
+---
+
+**The generative model: from noise to data.**
+
+The complete generative model works as follows. The base distribution is the standard Gaussian $\rho_0 = \mathcal{N}(0,I)$ — easy to sample from, easy to evaluate. The neural ODE flow $\phi_1$ transforms Gaussian samples into data samples. Training minimizes the negative log-likelihood of the training data:
+
+$$\mathcal{L}(\theta) = -\frac{1}{n}\sum_{i=1}^n\log\rho_1(x_1^{(i)})$$
+
+where each $\log\rho_1(x_1^{(i)})$ is computed by running the ODE backward from $x_1^{(i)}$ to find $x_0^{(i)} = \phi_1^{-1}(x_1^{(i)})$ and integrating the divergence:
+
+$$\log\rho_1(x_1) = \log\rho_0(x_0) - \int_0^1\nabla\cdot f_\theta(x_t,t)\,dt$$
+
+$\log\rho_0(x_0)$ is the Gaussian log-density — analytically computable. The integral of the divergence is computed alongside the backward ODE integration using the Hutchinson estimator.
+
+Generation is the forward pass: sample $x_0\sim\mathcal{N}(0,I)$ and integrate the ODE forward from $t=0$ to $t=1$ to produce $x_1 = \phi_1(x_0)$ — a new sample from the learned data distribution.
+
+The Gandaki basin analogy: the base distribution is the Himalayan glaciers, distributed according to a Gaussian snow deposition pattern. The neural ODE flow is the river system — it takes each snowmelt droplet (Gaussian sample) and flows it through the basin (ODE integration) to its endpoint in the Terai (data sample). Training learns the river network (velocity field) so that the distribution of endpoints matches the data distribution. Generation releases a new Gaussian sample (a new snowmelt droplet) and flows it through the learned river network to produce a new data point.
+
+---
+
+**The connection to residual networks and depth.**
+
+Ram Bahadur draws the final picture. The standard ResNet with $L$ blocks is:
+
+$$x_{l+1} = x_l + \frac{1}{L}f_\theta(x_l, l/L)$$
+
+This is the Euler method for $\dot x_t = f_\theta(x_t,t)$ with step size $1/L$. As $L\to\infty$, the Euler approximation converges to the ODE solution — the neural ODE is the $L=\infty$ limit of the ResNet. The continuous-depth network does not need to choose how deep to make the network: depth is replaced by the ODE solver's error tolerance, which can be set adaptively depending on the required accuracy. A coarse tolerance gives a fast but approximate flow; a fine tolerance gives a slow but exact flow. The network architecture — the function $f_\theta(x,t)$ — is fixed; only the integration precision varies.
+
+This is the depth-accuracy trade-off of neural ODEs: more computation gives more accurate flow integration, without changing the neural network's parameters. At test time, you can use a high-accuracy solver for exact likelihoods or a low-accuracy solver for fast generation, using the same trained network. No other neural network architecture offers this flexibility.
+
+---
+
+**Three pictures to carry into the mathematics.**
+
+The first picture: the Gandaki basin flow field $f_\theta(x,t)$ — a vector at every location and time pointing in the direction of flow. Buoys follow ODE trajectories $\dot x_t = f_\theta(x_t,t)$, starting from Gaussian noise (Himalayan snowmelt) and ending at data samples (Terai endpoints). Training matches predicted endpoints to observed endpoints. Generation integrates the learned flow field forward from a fresh Gaussian sample.
+
+The second picture: the ghost buoy running backward — the adjoint state $a(t) = \partial\mathcal{L}/\partial x_t$ evolving under the adjoint ODE $\dot a = -a^\top\nabla_x f_\theta$, accumulating the parameter gradient $\partial\mathcal{L}/\partial\theta = -\int a^\top\partial f_\theta/\partial\theta\,dt$ without storing forward intermediate states. Constant memory, twice the compute, exact gradients.
+
+The third picture: the log-density tracking — $\frac{d}{dt}\log\rho_t(x_t) = -\nabla\cdot f_\theta(x_t,t)$, the instantaneous change of variables formula, integrating the divergence of the velocity field along each trajectory to compute exact log-likelihoods. The Hutchinson estimator $\text{tr}(J)\approx z^\top Jz$ for $z\sim\mathcal{N}(0,I)$ reduces this from $O(d^2)$ to $O(d)$ per step, making high-dimensional likelihood computation tractable.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the neural ODE as a continuous dynamical system and its well-posedness, the flow map and its properties, the instantaneous change of variables formula and continuous normalizing flows, the adjoint sensitivity method and its derivation from optimal control theory, the Hutchinson trace estimator and stochastic likelihood computation, and the connection to the probability flow ODE of Chapter 1.
+
+### Neural ODEs: Definition and Well-Posedness
+
+**Definition (Neural ODE).** A **neural ODE** is a continuous dynamical system:
+
+$$\frac{dx_t}{dt} = f_\theta(x_t, t), \quad x_0 = x_{\text{init}} \in \mathbb{R}^d$$
+
+where $f_\theta: \mathbb{R}^d \times [0,T] \to \mathbb{R}^d$ is a neural network with parameters $\theta \in \mathbb{R}^p$, and $t \in [0,T]$ is the continuous depth parameter.
+
+**Well-posedness (Picard-Lindelöf).** Under the conditions:
+- **Lipschitz in $x$:** $\|f_\theta(x,t) - f_\theta(y,t)\| \leq L\|x-y\|$ for all $x,y\in\mathbb{R}^d$, $t\in[0,T]$
+- **Continuity in $t$:** $t\mapsto f_\theta(x,t)$ continuous for each $x$
+
+there exists a unique solution $x: [0,T]\to\mathbb{R}^d$ with $x\in C^1([0,T];\mathbb{R}^d)$.
+
+**Relation to ResNets.** The ResNet update $x_{l+1} = x_l + \frac{1}{L}f_\theta(x_l, l/L)$ is the Euler method for $\dot x_t = f_\theta(x_t,t)$ with step size $h = 1/L$. By the global error bound for Euler's method from MATH 217:
+
+$$\max_{l}\|x_{t_l}^{\text{Euler}} - x_{t_l}^{\text{exact}}\| \leq \frac{hT}{2}\max_t\|\ddot x_t\| \cdot e^{LT} = O(h) = O(1/L)$$
+
+As $L\to\infty$, the ResNet converges to the neural ODE solution at rate $O(1/L)$.
+
+---
+
+### The Flow Map and Its Properties
+
+**Definition (Flow map).** The **flow map** $\phi: [0,T]\times\mathbb{R}^d \to \mathbb{R}^d$ of the neural ODE is:
+
+$$\phi_t(x_0) = x_0 + \int_0^t f_\theta(x_s, s)\,ds$$
+
+where $x_s = \phi_s(x_0)$ is the unique solution with initial condition $x_0$.
+
+**Properties of the flow map:**
+
+**Identity at zero:** $\phi_0 = \text{Id}_{\mathbb{R}^d}$.
+
+**Group property:** $\phi_t \circ \phi_s^{-1} = \phi_{t-s}$ for the autonomous case ($f_\theta$ independent of $t$); more generally, $\phi_t = \phi_{t,s}\circ\phi_{s,0}$ where $\phi_{t,s}$ is the flow from time $s$ to $t$.
+
+**Invertibility:** $\phi_t$ is a diffeomorphism for each $t$, with inverse $\phi_t^{-1} = \phi_{-t}$ (integrate backward). Specifically: $\frac{d}{dt}\phi_t^{-1}(x) = -f_\theta(\phi_t^{-1}(x), t)$.
+
+**Jacobian of the flow map.** Let $J_t(x_0) = \nabla_{x_0}\phi_t(x_0) \in \mathbb{R}^{d\times d}$ be the Jacobian of the flow map. It satisfies the **variational equation** (linearized ODE):
+
+$$\frac{d}{dt}J_t(x_0) = \nabla_x f_\theta(\phi_t(x_0), t)\cdot J_t(x_0), \quad J_0(x_0) = I_d$$
+
+**Liouville's formula.** The determinant of the Jacobian satisfies:
+
+$$\frac{d}{dt}\log|\det J_t(x_0)| = \text{tr}\!\left(\nabla_x f_\theta(\phi_t(x_0), t)\right) = \nabla_x\cdot f_\theta(\phi_t(x_0), t)$$
+
+**Proof.** By Jacobi's formula: $\frac{d}{dt}\det J = \det(J)\cdot\text{tr}(J^{-1}\dot J) = \det(J)\cdot\text{tr}(J^{-1}\nabla_x f\cdot J) = \det(J)\cdot\text{tr}(\nabla_x f)$. Dividing by $\det J$: $\frac{d}{dt}\log|\det J| = \text{tr}(\nabla_x f) = \nabla\cdot f_\theta$. $\square$
+
+---
+
+### Instantaneous Change of Variables and Continuous Normalizing Flows
+
+**Change of variables formula.** For a diffeomorphism $\phi_1: \mathbb{R}^d\to\mathbb{R}^d$ mapping base density $\rho_0$ to pushforward density $\rho_1 = (\phi_1)_\#\rho_0$:
+
+$$\rho_1(\phi_1(x_0)) = \frac{\rho_0(x_0)}{|\det\nabla_{x_0}\phi_1(x_0)|}$$
+
+equivalently: $\log\rho_1(\phi_1(x_0)) = \log\rho_0(x_0) - \log|\det\nabla_{x_0}\phi_1(x_0)|$
+
+**Theorem (Instantaneous change of variables — Chen et al. 2018).** Along the trajectory $x_t = \phi_t(x_0)$ of the neural ODE, the log-density satisfies:
+
+$$\frac{d}{dt}\log\rho_t(x_t) = -\nabla_x\cdot f_\theta(x_t, t)$$
+
+**Proof.** From Liouville's formula: $\frac{d}{dt}\log|\det J_t| = \nabla\cdot f_\theta(x_t,t)$. From the change of variables formula along the flow: $\log\rho_t(x_t) = \log\rho_0(x_0) - \log|\det J_t(x_0)|$. Differentiating: $\frac{d}{dt}\log\rho_t(x_t) = -\frac{d}{dt}\log|\det J_t(x_0)| = -\nabla\cdot f_\theta(x_t,t)$. $\square$
+
+**Integrated form.** The log-density at time $T$ is:
+
+$$\log\rho_T(x_T) = \log\rho_0(x_0) - \int_0^T \nabla_x\cdot f_\theta(x_t, t)\,dt$$
+
+**Definition (Continuous Normalizing Flow).** A **continuous normalizing flow (CNF)** is a generative model defined by:
+
+- **Base distribution:** $\rho_0 = \mathcal{N}(0, I_d)$
+- **Flow:** neural ODE $\dot x_t = f_\theta(x_t, t)$ mapping $x_0 \sim \rho_0$ to $x_1 \sim \rho_1 \approx p_{\text{data}}$
+- **Log-likelihood:** $\log p_{\text{data}}(x_1) \approx \log\rho_0(x_0) - \int_0^1\nabla\cdot f_\theta(x_t,t)\,dt$
+
+where $x_0 = \phi_1^{-1}(x_1)$ is found by integrating the ODE backward.
+
+**Training objective (maximum likelihood):**
+
+$$\mathcal{L}_{\text{MLE}}(\theta) = -\mathbb{E}_{x_1\sim p_{\text{data}}}\!\left[\log\rho_0(\phi_1^{-1}(x_1;\theta)) - \int_0^1\nabla\cdot f_\theta(x_t,t)\,dt\right]$$
+
+**Augmented ODE.** Compute $(x_t, \log\rho_t)$ jointly by solving the augmented system:
+
+$$\frac{d}{dt}\begin{pmatrix}x_t \\ \log\rho_t\end{pmatrix} = \begin{pmatrix}f_\theta(x_t,t) \\ -\nabla\cdot f_\theta(x_t,t)\end{pmatrix}, \quad \begin{pmatrix}x_0\\\log\rho_0\end{pmatrix} = \begin{pmatrix}x_{\text{init}}\\\log\rho_0(x_{\text{init}})\end{pmatrix}$$
+
+---
+
+### The Adjoint Sensitivity Method
+
+**Problem setup.** Given loss $\mathcal{L} = \ell(x_T)$ where $x_T = \phi_T(x_0;\theta)$ satisfies $\dot x_t = f_\theta(x_t,t)$, compute $\frac{d\mathcal{L}}{d\theta}$ and $\frac{d\mathcal{L}}{dx_0}$.
+
+**Definition (Adjoint state).** The **adjoint state** is:
+
+$$a(t) = \frac{\partial\mathcal{L}}{\partial x_t} \in \mathbb{R}^d$$
+
+the gradient of the loss with respect to the state at time $t$.
+
+**Theorem (Adjoint ODE — Pontryagin).** The adjoint satisfies the backward ODE:
+
+$$\frac{da}{dt} = -a(t)^\top \nabla_x f_\theta(x_t, t)$$
+
+with terminal condition $a(T) = \frac{\partial\ell}{\partial x_T}$.
+
+**Proof.** The loss depends on $x_T$, which depends on $x_t$ through the ODE. By the chain rule:
+
+$$a(t) = \frac{\partial\mathcal{L}}{\partial x_t} = \frac{\partial\mathcal{L}}{\partial x_T}\cdot\frac{\partial x_T}{\partial x_t} = a(T)\cdot J_{T,t}$$
+
+where $J_{T,t} = \nabla_{x_t}x_T$ is the Jacobian of $x_T$ with respect to $x_t$. Differentiating with respect to $t$:
+
+$$\frac{da}{dt} = a(T)\cdot\frac{dJ_{T,t}}{dt}$$
+
+From the variational equation: $\frac{d}{dt}J_{T,t} = -J_{T,t}\cdot\nabla_x f_\theta(x_t,t)$ (backward variational equation). Therefore:
+
+$$\frac{da}{dt} = -a(t)\cdot\nabla_x f_\theta(x_t,t) = -a(t)^\top\nabla_x f_\theta(x_t,t) \qquad \square$$
+
+**Parameter gradient.** Using the variational derivative with respect to $\theta$:
+
+$$\frac{d\mathcal{L}}{d\theta} = -\int_0^T a(t)^\top \frac{\partial f_\theta(x_t,t)}{\partial\theta}\,dt$$
+
+**Proof.** By the chain rule through the ODE: $\frac{d\mathcal{L}}{d\theta} = a(T)\cdot\frac{\partial x_T}{\partial\theta}$. The sensitivity $\frac{\partial x_T}{\partial\theta}$ satisfies: $\frac{d}{dt}\frac{\partial x_t}{\partial\theta} = \nabla_x f_\theta\cdot\frac{\partial x_t}{\partial\theta} + \frac{\partial f_\theta}{\partial\theta}$, with $\frac{\partial x_0}{\partial\theta} = 0$. Solving via variation of constants and substituting into $a(T)\cdot\frac{\partial x_T}{\partial\theta}$ gives the stated formula. $\square$
+
+**Algorithm (Adjoint method).**
+
+1. **Forward pass:** Solve $\dot x_t = f_\theta(x_t,t)$ from $t=0$ to $t=T$. Store only $x_T$.
+2. **Initialize adjoint:** $a(T) = \partial\ell/\partial x_T$.
+3. **Backward pass:** Solve the augmented backward ODE from $t=T$ to $t=0$:
+
+$$\frac{d}{dt}\begin{pmatrix}x_t \\ a(t) \\ g(t)\end{pmatrix} = \begin{pmatrix}-f_\theta(x_t,t) \\ -a(t)^\top\nabla_x f_\theta(x_t,t) \\ -a(t)^\top\frac{\partial f_\theta(x_t,t)}{\partial\theta}\end{pmatrix}$$
+
+with initial conditions $(x_T, a(T), 0)$ at $t=T$. The backward solver recomputes $x_t$ by integrating $-f_\theta$ backward (forward time corresponds to decreasing $t$ in the backward ODE).
+
+4. **Output:** $\frac{d\mathcal{L}}{dx_0} = a(0)$, $\frac{d\mathcal{L}}{d\theta} = g(0)$.
+
+**Memory complexity:** $O(d + p)$ — the state $x_t$, adjoint $a(t)$, and accumulated gradient $g(t)$, recomputed at each backward step without storing intermediate states.
+
+**Pontryagin's minimum principle connection.** The neural ODE training problem is:
+
+$$\min_\theta\ell(x_T) \quad \text{s.t.}\quad \dot x_t = f_\theta(x_t,t),\; x_0 = x_{\text{init}}$$
+
+This is an optimal control problem with state $x_t$, control $\theta$ (constant), and terminal cost $\ell(x_T)$. The **Hamiltonian** is:
+
+$$H(x,a,\theta,t) = a^\top f_\theta(x,t)$$
+
+Pontryagin's conditions: state equation $\dot x_t = \nabla_a H = f_\theta(x_t,t)$; adjoint equation $\dot a = -\nabla_x H = -a^\top\nabla_x f_\theta$; stationarity $\nabla_\theta H = a^\top\nabla_\theta f_\theta = 0$ at optimum. The adjoint ODE is exactly the costate equation of Pontryagin's minimum principle.
+
+---
+
+### Hutchinson's Trace Estimator
+
+**Problem.** Computing $\nabla\cdot f_\theta(x,t) = \text{tr}(\nabla_x f_\theta(x,t))$ requires $d$ Jacobian-vector products — one per standard basis vector $e_i$: $\text{tr}(J) = \sum_{i=1}^d e_i^\top J e_i$. Cost: $O(d)$ backward passes, total $O(d^2)$ or $O(dp)$ depending on implementation.
+
+**Hutchinson's estimator.** For $z\sim\mathcal{N}(0,I_d)$ (or any distribution with $\mathbb{E}[zz^\top] = I_d$):
+
+$$\mathbb{E}_z[z^\top J z] = \mathbb{E}_z[\text{tr}(zz^\top J)] = \text{tr}(\mathbb{E}_z[zz^\top]J) = \text{tr}(I_d J) = \text{tr}(J)$$
+
+**Proof.** $z^\top Jz = \sum_{i,j}z_iJ_{ij}z_j$. Taking expectation: $\mathbb{E}[z_iz_j] = \delta_{ij}$ for $z\sim\mathcal{N}(0,I)$. Therefore $\mathbb{E}[z^\top Jz] = \sum_i J_{ii} = \text{tr}(J)$. $\square$
+
+**Stochastic estimator:**
+
+$$\nabla\cdot f_\theta(x,t) \approx z^\top\nabla_x f_\theta(x,t)z = z^\top(Jz)$$
+
+where $Jz = \nabla_x(f_\theta(x,t)\cdot z)$ is computed by a single backward pass (JVP via reverse-mode autodiff): cost $O(p)$ — one gradient computation.
+
+**Variance.** For $z\sim\mathcal{N}(0,I)$: $\text{Var}(z^\top Jz) = \|J + J^\top\|_F^2/2 \leq 2\|J\|_F^2$.
+
+**Multi-sample estimator.** Using $K$ independent samples $z^{(1)},\ldots,z^{(K)}$:
+
+$$\nabla\cdot f_\theta(x,t) \approx \frac{1}{K}\sum_{k=1}^K z^{(k)\top}\nabla_x f_\theta(x,t)z^{(k)}$$
+
+with variance reduced by factor $K$. In practice $K=1$ is used during training; $K$ larger for evaluation.
+
+**Stochastic log-likelihood:**
+
+$$\log\rho_T(x_T) \approx \log\rho_0(x_0) - \int_0^T z^\top\nabla_x f_\theta(x_t,t)z\,dt$$
+
+where the integral is accumulated alongside the ODE integration at each solver step using the same random $z$ throughout (Skilling-Hutchinson estimator for the trace integral).
+
+---
+
+### FFJORD: Free-Form Jacobian of Reversible Dynamics
+
+**Definition (FFJORD — Grathwohl et al. 2018).** The **Free-Form Jacobian of Reversible Dynamics** model combines:
+
+- Neural ODE dynamics: $\dot x_t = f_\theta(x_t,t)$ with unconstrained $f_\theta$
+- Stochastic trace estimation: $\nabla\cdot f_\theta \approx z^\top\nabla_x f_\theta z$ via Hutchinson
+- Adjoint training: constant-memory backpropagation
+
+**Training:** Maximize the stochastic log-likelihood:
+
+$$\mathcal{L}_{\text{FFJORD}}(\theta) = \mathbb{E}_{x_1\sim p_{\text{data}},\, z\sim\mathcal{N}(0,I)}\!\left[\log\rho_0(x_0) - \int_0^1 z^\top\nabla_x f_\theta(x_t,t)z\,dt\right]$$
+
+**Generation:** Sample $x_0\sim\mathcal{N}(0,I)$, integrate $\dot x_t = f_\theta(x_t,t)$ forward to get $x_1\sim\hat p_{\text{data}}$.
+
+**Computational complexity per training step:**
+- Forward ODE: $O(N_{\text{steps}}\cdot p)$ where $N_{\text{steps}}$ is adaptive
+- Stochastic trace: $O(N_{\text{steps}}\cdot p)$ — one JVP per step
+- Backward adjoint: $O(N_{\text{steps}}\cdot p)$
+- Total: $O(N_{\text{steps}}\cdot p)$ — linear in $N_{\text{steps}}$ and model size
+
+---
+
+### Connection to Probability Flow ODE
+
+**Theorem.** The continuous normalizing flow trained by maximum likelihood is, at optimum, the probability flow ODE of the forward diffusion process.
+
+**Proof sketch.** At optimum, the CNF velocity field $f_\theta^*$ satisfies: $\frac{\partial\rho_t}{\partial t} = -\nabla\cdot(\rho_t f_\theta^*)$ (continuity equation). The probability flow ODE derived from the forward SDE $dX_t = b_t dt + \sigma_t dW_t$ has velocity field $v_t = b_t - \frac{\sigma_t^2}{2}\nabla\log\rho_t$. At optimum, $f_\theta^* = v_t$ — the learned velocity field equals the probability flow ODE velocity field. $\square$
+
+**Parameterization via score function.** The probability flow ODE velocity decomposes as:
+
+$$f_\theta(x,t) = b(x,t) - \frac{\sigma_t^2}{2}s_\theta(x,t)$$
+
+where $s_\theta \approx \nabla\log\rho_t$ is a learned score network. This connects neural ODEs (continuous normalizing flows) to score-based models (Topic 2): score matching learns $s_\theta$, which determines the probability flow ODE velocity field, which defines the CNF.
+
+**DDIM as a neural ODE.** The DDIM sampler (Song et al. 2020) is the Euler method for the probability flow ODE with the OU forward process:
+
+$$x_{t-1} = \sqrt{\bar\alpha_{t-1}}\underbrace{\frac{x_t - \sqrt{1-\bar\alpha_t}\epsilon_\theta(x_t,t)}{\sqrt{\bar\alpha_t}}}_{\text{predicted }x_0} + \sqrt{1-\bar\alpha_{t-1}}\epsilon_\theta(x_t,t)$$
+
+This is deterministic (no stochastic term) — the ODE version of DDPM's stochastic reverse SDE. Using higher-order solvers (DPM-Solver, DEIS) gives faster convergence with fewer function evaluations.
+
+---
+
+### WHY THIS MATTERS
+
+In **MATH 217 (ODEs and PDEs)**, the Picard-Lindelöf theorem guarantees unique solutions to $\dot x = f_\theta(x,t)$ under Lipschitz conditions — the same theorem applied to the geodesic equation in Phase 0 and the parallel transport equation in Phase 2. The Euler and Runge-Kutta methods from MATH 217's numerical section are the specific solvers used inside neural ODE forward and backward passes. Gronwall's inequality — bounding ODE solution errors by $e^{Lt}$ times the initial error — guarantees that the backward recomputation of $x_t$ in the adjoint method is accurate: the error in the recomputed trajectory is bounded by the solver tolerance times an exponential factor involving the Lipschitz constant $L$ of $f_\theta$. Liouville's formula $\frac{d}{dt}\log|\det J_t| = \text{tr}(\nabla_x f)$ is the trace formula for the time evolution of volume elements under an ODE flow — a standard result in the qualitative theory of ODEs from MATH 217, connecting the local expansion/contraction rate (divergence of $f$) to the global volume change rate (log Jacobian determinant).
+
+In **MATH 304 (Computational Operations Research)**, the adjoint method is Lagrangian duality applied to the optimal control problem $\min_\theta\ell(x_T)$ s.t. $\dot x = f_\theta(x,t)$. The Lagrangian is $\mathcal{L}(x,a,\theta) = \ell(x_T) + \int_0^T a(t)^\top(\dot x_t - f_\theta(x_t,t))dt$, with Lagrange multipliers $a(t)$ (the adjoint states) enforcing the ODE constraint. The first-order optimality conditions with respect to $x_t$ give the adjoint ODE $\dot a = -a^\top\nabla_x f_\theta$ — exactly Pontryagin's minimum principle, which is the continuous-time analogue of the KKT conditions from MATH 304. The stationarity condition with respect to $\theta$ gives the parameter gradient formula $d\mathcal{L}/d\theta = -\int a^\top\partial f_\theta/\partial\theta\,dt$. The Legendre-Fenchel transform from Phase 0 and MATH 304's duality theory connects the primal ODE problem (minimizing over trajectories) to the dual adjoint problem (solving the backward costate equation) — the neural ODE adjoint method is the computational implementation of this duality.
+
+In **MATH 201 (Advanced Calculus)**, the change of variables formula $\rho_1(\phi_1(x_0))|\det\nabla\phi_1(x_0)| = \rho_0(x_0)$ is the multivariate substitution theorem — the same theorem used in probability theory (MATH 208) for transformations of random variables. Jacobi's formula $d\det(J)/dt = \det(J)\cdot\text{tr}(J^{-1}\dot J)$ is the matrix differentiation result from MATH 201's treatment of matrix calculus. The divergence theorem $\int_\Omega\nabla\cdot v\,dx = \int_{\partial\Omega}v\cdot n\,dA$ from MATH 201 underlies the integration by parts used to derive the continuity equation from the ODE flow, and Hutchinson's identity $\mathbb{E}_z[z^\top Jz] = \text{tr}(J)$ for $z\sim\mathcal{N}(0,I)$ uses $\mathbb{E}[z_iz_j] = \delta_{ij}$ — the covariance identity of the standard Gaussian from MATH 208.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the ICIMOD Gandaki basin mapping story has a precise mathematical address. We walk through them completely — the GPS buoy trajectories, Ram Bahadur's continuous flow field, Priya's ten-step failure, the ghost buoy running backward, the density tracking through gorges and floodplains, the break moment of the full Jacobian, and the Hutchinson shadow measurement — until the story and the formalism are a single object seen from two angles.
+
+---
+
+**The GPS-tagged buoys drifting from upstream start points to downstream endpoints — observed pairs $(x_0^{(i)}, x_1^{(i)})$ of starting and ending positions — are the training data $\{(x_0^{(i)}, x_1^{(i)})\}_{i=1}^n$ of the continuous normalizing flow, where $x_0^{(i)}\in\mathbb{R}^d$ is the noise sample and $x_1^{(i)}\in\mathbb{R}^d$ is the data sample.** In the generative modeling context, the start points $x_0^{(i)}\sim\rho_0 = \mathcal{N}(0,I)$ are Gaussian noise samples and the endpoints $x_1^{(i)}\sim p_{\text{data}}$ are data points — images, molecular structures, or weather states. The training objective is to find the neural network parameters $\theta$ such that the ODE flow $\phi_1(\cdot;\theta)$ maps the Gaussian distribution to the data distribution. The mean squared error loss $\mathcal{L}(\theta) = \frac{1}{n}\sum_i\|\phi_1(x_0^{(i)};\theta) - x_1^{(i)}\|^2$ minimizes the discrepancy between predicted and observed endpoints — learning the river's flow field from observations of where buoys start and end.
+
+**The continuous flow field $f_\theta(x,t)$ — the velocity vector at each basin location $x$ and each season $t$ — is the neural network parameterizing the right-hand side of the neural ODE $\dot x_t = f_\theta(x_t,t)$, $x_0 = x_{\text{init}}$.** Ram Bahadur's insistence that the river has no discontinuities — that the flow field is continuous in time — is the mathematical statement that $f_\theta$ is a smooth function of both $x$ and $t$, satisfying the Lipschitz condition $\|f_\theta(x,t)-f_\theta(y,t)\|\leq L\|x-y\|$ that guarantees well-posedness by Picard-Lindelöf. The neural network architecture for $f_\theta$ is unconstrained — any sufficiently expressive architecture works — because the continuous normalizing flow framework (FFJORD) imposes no structural constraints on $f_\theta$ for invertibility, unlike discrete normalizing flows that require specific invertible architectures. The Lipschitz condition is ensured in practice by spectral normalization of the network's weight matrices, which bounds the Lipschitz constant by the product of spectral norms of the layers.
+
+---
+
+**Priya's ten-step approximation — ten discrete vector fields stitched together — is the Euler method for $\dot x = f_\theta(x,t)$ with step size $h = 1/10$, converging to the exact neural ODE solution at rate $O(h) = O(1/10)$ by the global error bound from MATH 217.** The discontinuities at time-step boundaries that Ram Bahadur objects to are the Euler method's $O(h^2)$ local truncation errors accumulating to $O(h)$ global errors — finite-difference artifacts absent from the exact ODE solution. The failure in sparse side valleys corresponds to the overfitting of the ten separate vector fields to the local training data, without the regularization that a single smooth continuous field $f_\theta(x,t)$ provides. The neural ODE's adaptive solver — choosing step sizes based on a local error estimate, using more steps in regions of high curvature and fewer in smooth regions — automatically allocates computation where the flow field requires it, unlike the uniform ten-step discretization. The ResNet convergence $\max_l\|x_{t_l}^{\text{Euler}} - x_{t_l}^{\text{exact}}\|\leq \frac{hT}{2}\max_t\|\ddot x_t\|\cdot e^{LT}$ quantifies exactly how far Priya's approximation is from Ram Bahadur's exact flow.
+
+---
+
+**The flow map $\phi_t(x_0) = x_0 + \int_0^t f_\theta(x_s,s)\,ds$ — the function mapping each buoy's starting position to its position at time $t$ — is the diffeomorphism whose invertibility makes the neural ODE a normalizing flow.** The group property $\phi_t = \phi_{t,s}\circ\phi_{s,0}$ is the statement that following the river's flow from $0$ to $s$ and then from $s$ to $t$ gives the same result as following it from $0$ to $t$ directly — the composition of partial flows is the total flow. The invertibility $\phi_t^{-1} = \phi_{-t}$ — integrating the ODE backward with $-f_\theta$ to find where each buoy started given where it ended — is the generative model's reverse pass: given a data point $x_1$, find the corresponding noise $x_0 = \phi_1^{-1}(x_1)$ by running the ODE backward. The variational equation $\dot J_t = \nabla_x f_\theta(\phi_t(x_0),t)\cdot J_t$ for the Jacobian $J_t = \nabla_{x_0}\phi_t(x_0)$ is the linearization of the flow around a trajectory — how a small cloud of buoys near $x_0$ deforms as the flow carries it forward, with the Jacobian matrix encoding the shape of the deformation at each time.
+
+**Liouville's formula $\frac{d}{dt}\log|\det J_t(x_0)| = \nabla\cdot f_\theta(\phi_t(x_0),t)$ — the rate of change of the log-Jacobian determinant equals the divergence of the velocity field — is the key identity connecting volume deformation to flow field divergence, proved by Jacobi's matrix differentiation formula from MATH 201.** The divergence $\nabla\cdot f_\theta(x,t) = \text{tr}(\nabla_x f_\theta(x,t))$ measures whether the flow field is locally expanding or contracting at each point: positive divergence in the wide floodplain (buoys spreading apart, volume expanding, density decreasing) and negative divergence in the narrow gorge (buoys converging, volume contracting, density increasing). The instantaneous change of variables formula $\frac{d}{dt}\log\rho_t(x_t) = -\nabla\cdot f_\theta(x_t,t)$ follows directly: differentiating $\log\rho_t(x_t) = \log\rho_0(x_0) - \log|\det J_t|$ with respect to $t$ and applying Liouville's formula gives $-\nabla\cdot f_\theta(x_t,t)$. The integrated form $\log\rho_T(x_T) = \log\rho_0(x_0) - \int_0^T\nabla\cdot f_\theta(x_t,t)\,dt$ says the log-density at the endpoint equals the log-density at the start minus the accumulated divergence along the trajectory — the total expansion or contraction experienced by the buoy cloud along its path.
+
+---
+
+**The memory catastrophe of naive backpropagation — storing all 500 intermediate buoy positions to compute gradients — is the $O(N_{\text{steps}}\cdot d)$ memory cost of reverse-mode automatic differentiation through an ODE solver, which becomes prohibitive for deep integration and high-dimensional state spaces.** Standard automatic differentiation builds a computational graph through every solver step, storing the intermediate activations needed for the backward pass. For $N_{\text{steps}} = 500$ solver steps each producing a $d$-dimensional state, the stored intermediate states require $500\cdot d$ memory — scaling linearly with both integration depth and state dimension. For high-dimensional data (images with $d = 256\times 256\times 3\approx 200{,}000$) and high-accuracy integration ($N_{\text{steps}} = 1000$), this is $2\times 10^8$ floats per sample — far exceeding GPU memory capacity for any reasonable batch size.
+
+**The adjoint state $a(t) = \partial\mathcal{L}/\partial x_t$ — the ghost buoy's sensitivity measurement, encoding how much a small perturbation to the buoy's position at time $t$ would change the final loss — satisfies the backward adjoint ODE $\dot a(t) = -a(t)^\top\nabla_x f_\theta(x_t,t)$ with terminal condition $a(T) = \partial\ell/\partial x_T$.** The terminal condition is the gradient of the loss with respect to the endpoint — easily computable from the MSE loss as $a(1) = 2(x_1 - x_1^{\text{observed}})$. The adjoint ODE is the backward linearized system driven by the transpose Jacobian $\nabla_x f_\theta^\top$ — the same Jacobian as in the forward variational equation, but transposed and with a sign flip. Intuitively: where $\nabla_x f_\theta$ is large (the flow is sensitive to position), the adjoint changes rapidly; where $\nabla_x f_\theta$ is small (the flow is smooth), the adjoint changes slowly. The proof by differentiating $a(t) = a(T)\cdot J_{T,t}$ and applying the backward variational equation $\dot J_{T,t} = -J_{T,t}\nabla_x f_\theta$ gives the adjoint ODE directly.
+
+**The parameter gradient $\frac{d\mathcal{L}}{d\theta} = -\int_0^T a(t)^\top\frac{\partial f_\theta(x_t,t)}{\partial\theta}\,dt$ — accumulated continuously as the ghost buoy drifts backward — is the time integral of the adjoint's inner product with the parameter sensitivity of the velocity field, the continuous-time version of the backpropagation chain rule.** The integrand $a(t)^\top\frac{\partial f_\theta}{\partial\theta}$ is the influence of each parameter on the velocity at time $t$, weighted by the loss sensitivity $a(t)$: a parameter that strongly affects the velocity in a region where $a(t)$ is large (high loss sensitivity) contributes much to the gradient; a parameter that only affects velocity where $a(t)\approx 0$ contributes little. This is the Pontryagin minimum principle applied to the neural ODE optimal control problem: the Hamiltonian $H = a^\top f_\theta(x,t)$ gives the adjoint equation $\dot a = -\nabla_x H = -a^\top\nabla_x f_\theta$ and the parameter gradient $\frac{d\mathcal{L}}{d\theta} = -\int\nabla_\theta H\,dt = -\int a^\top\frac{\partial f_\theta}{\partial\theta}\,dt$. The augmented backward ODE integrating $(x_t, a(t), g(t))$ simultaneously — with $g(t)$ accumulating the parameter gradient — requires $O(d+p)$ memory regardless of $N_{\text{steps}}$: the ghost buoy's current position, its sensitivity measurement, and the accumulated gradient, nothing more.
+
+**The Pontryagin minimum principle connection — the adjoint ODE is the costate equation of the optimal control problem $\min_\theta\ell(x_T)$ subject to $\dot x_t = f_\theta(x_t,t)$ — is the MATH 304 Lagrangian duality lifted to continuous time.** The Lagrangian $\mathcal{L}(x,a,\theta) = \ell(x_T) + \int_0^T a(t)^\top(\dot x_t - f_\theta(x_t,t))dt$ treats the adjoint $a(t)$ as the Lagrange multiplier enforcing the ODE constraint $\dot x_t = f_\theta(x_t,t)$ at every time $t$ simultaneously — the continuous-time analogue of the KKT multipliers enforcing equality constraints in MATH 304's constrained optimization. The first-order optimality condition $\delta\mathcal{L}/\delta x_t = 0$ (varying the Lagrangian with respect to the state trajectory) gives the adjoint equation; $\delta\mathcal{L}/\delta\theta = 0$ gives the parameter gradient; $\delta\mathcal{L}/\delta a(t) = 0$ recovers the ODE constraint $\dot x_t = f_\theta$. The KKT conditions of MATH 304 are the $T=0$ special case; Pontryagin is the $T > 0$ generalization.
+
+---
+
+**The break moment — the instantaneous change of variables formula still requiring $O(d^2)$ computation for the full Jacobian $\nabla_x f_\theta\in\mathbb{R}^{d\times d}$ — is the formal bottleneck of exact log-likelihood computation in high dimensions, resolved by the Hutchinson trace estimator $\text{tr}(J)\approx z^\top Jz$ for $z\sim\mathcal{N}(0,I)$.** Computing the full Jacobian $\nabla_x f_\theta$ requires $d$ backward passes — one per output dimension — costing $O(dp)$ where $p$ is the parameter count. For $d=200{,}000$ (high-resolution image) this is $2\times 10^5$ backward passes per sample per solver step — completely intractable. The Hutchinson estimator reduces this to a single Jacobian-vector product $Jz = \nabla_x(f_\theta\cdot z)$, computed by a single reverse-mode autodiff pass at cost $O(p)$. The proof $\mathbb{E}_z[z^\top Jz] = \text{tr}(J)$ for $z\sim\mathcal{N}(0,I)$ uses $\mathbb{E}[z_iz_j] = \delta_{ij}$: $\mathbb{E}[\sum_{i,j}z_iJ_{ij}z_j] = \sum_{i,j}J_{ij}\mathbb{E}[z_iz_j] = \sum_{i,j}J_{ij}\delta_{ij} = \sum_i J_{ii} = \text{tr}(J)$. The variance $\text{Var}(z^\top Jz) \leq 2\|J\|_F^2$ — proportional to the squared Frobenius norm of the Jacobian — means the estimator is accurate when the Jacobian is sparse or low-rank, which holds for well-trained smooth flows where most entries of $\nabla_x f_\theta$ are small.
+
+---
+
+**The FFJORD training loss $\mathcal{L}_{\text{FFJORD}} = \mathbb{E}_{x_1,z}[\log\rho_0(x_0) - \int_0^1 z^\top\nabla_x f_\theta(x_t,t)z\,dt]$ — the maximum likelihood objective with stochastic trace estimation — combines all three components: the neural ODE flow, the adjoint method for gradients, and the Hutchinson estimator for the log-density.** The term $\log\rho_0(x_0)$ is the Gaussian log-likelihood $-\frac{d}{2}\log(2\pi) - \frac{1}{2}\|x_0\|^2$, analytically computable. The integral $\int_0^1 z^\top\nabla_x f_\theta(x_t,t)z\,dt$ is accumulated alongside the ODE integration — at each solver step, evaluate $z^\top Jz$ using one JVP and add to the running integral. The outer expectation over $z\sim\mathcal{N}(0,I)$ means a fresh random vector $z$ is drawn each training step, making the log-likelihood estimator unbiased: the training objective is the true maximum likelihood objective in expectation, with variance decreasing as training proceeds and $f_\theta$ becomes smoother. The computational complexity $O(N_{\text{steps}}\cdot p)$ — linear in solver steps and model size — makes FFJORD tractable for the Gandaki basin problem and for high-dimensional generative modeling.
+
+**The probability flow ODE connection $f_\theta(x,t) = b_t(x) - \frac{\sigma_t^2}{2}s_\theta(x,t)$ — the trained CNF velocity field equals the probability flow ODE velocity of the forward diffusion process — closes the loop between neural ODEs (Topic 1), score matching (Topic 2), and the Fokker-Planck equation (Chapter 1, Topic 2).** At optimum, the CNF's velocity field produces the same marginals $\rho_t$ as the forward SDE, verified by the continuity equation: $\partial_t\rho_t = -\nabla\cdot(\rho_t f_\theta^*)$ must equal the Fokker-Planck marginal evolution $\partial_t\rho_t = -\nabla\cdot(\rho_t b_t) + \frac{\sigma_t^2}{2}\Delta\rho_t$, which after rewriting the diffusion term as $-\nabla\cdot(\rho_t(-\frac{\sigma_t^2}{2}s_t))$ gives $f_\theta^* = b_t - \frac{\sigma_t^2}{2}s_t$. The DDIM sampler — the Euler method for this probability flow ODE — is the neural ODE with $f_\theta = b_t - \frac{\sigma_t^2}{2}s_\theta$, discretized with step size $h = 1/N$: more steps gives more accurate flow integration; fewer steps gives faster generation at the cost of distributional accuracy, exactly the depth-accuracy trade-off that Ram Bahadur identified.
+
+---
+
+**The connection to MATH 217 is through Picard-Lindelöf, Euler's method, Liouville's formula, and Gronwall's inequality.** Picard-Lindelöf guarantees unique buoy trajectories from any start point when $f_\theta$ is Lipschitz — the same theorem that guaranteed unique geodesics in Phase 0 and unique SDE solutions in Chapter 1 Topic 2. The global Euler error bound $O(h) = O(1/L)$ quantifies Priya's approximation quality — the ten-step scheme's error relative to the exact neural ODE. Liouville's formula $\frac{d}{dt}\log|\det J_t| = \text{tr}(\nabla_x f_\theta)$ connects volume deformation (how the buoy cloud spreads) to the velocity field's divergence — the same formula from MATH 217's qualitative ODE theory. Gronwall's inequality bounds the backward recomputation error in the adjoint method — ensuring the ghost buoy's recomputed trajectory is accurate enough for the parameter gradient to be meaningful. **The connection to MATH 304 is through Pontryagin and Lagrangian duality.** The adjoint method is the KKT conditions of the continuous-time constrained optimization problem, with the adjoint $a(t)$ as the Lagrange multiplier for the ODE constraint at each $t$ — the infinite-dimensional generalization of MATH 304's Lagrange multipliers for finite equality constraints. The Hamiltonian $H = a^\top f_\theta$ and the Pontryagin conditions $\dot x = \nabla_a H$, $\dot a = -\nabla_x H$, $\nabla_\theta H = 0$ are the continuous-time KKT system. **The connection to MATH 201 is through the change of variables formula, Jacobi's formula, and Hutchinson's identity.** The multivariate substitution theorem $\rho_1(\phi_1(x_0))|\det\nabla\phi_1| = \rho_0(x_0)$ from MATH 201 is the static version of the instantaneous change of variables formula; Jacobi's matrix differentiation formula $d\det(J)/dt = \det(J)\text{tr}(J^{-1}\dot J)$ proves Liouville; and Hutchinson's identity $\mathbb{E}[z^\top Jz] = \text{tr}(J)$ for $z\sim\mathcal{N}(0,I)$ uses the second moment formula $\mathbb{E}[z_iz_j] = \delta_{ij}$ from MATH 208.
+
+---
+
+The ICIMOD Gandaki river expedition — the GPS buoys, Ram Bahadur's continuous flow field, Priya's ten-step failure, the flow map's invertibility, the log-density tracking through gorges and floodplains, the memory catastrophe, the ghost buoy running backward as the adjoint state, the parameter gradient accumulated as a time integral, the Pontryagin Hamiltonian, the Jacobian determinant bottleneck, and the Hutchinson shadow measurement — is now completely dissolved into its mathematical form. The buoy trajectories are ODE solutions $x_t = \phi_t(x_0)$. The continuous flow field is $f_\theta(x,t)$. The flow map is $\phi_t: x_0\mapsto x_t$. Liouville's formula is $\frac{d}{dt}\log|\det J_t| = \nabla\cdot f_\theta$. The instantaneous change of variables is $\frac{d}{dt}\log\rho_t(x_t) = -\nabla\cdot f_\theta(x_t,t)$. The log-likelihood is $\log\rho_1(x_1) = \log\rho_0(x_0) - \int_0^1\nabla\cdot f_\theta\,dt$. The adjoint is $a(t) = \partial\mathcal{L}/\partial x_t$ satisfying $\dot a = -a^\top\nabla_x f_\theta$. The parameter gradient is $d\mathcal{L}/d\theta = -\int a^\top\partial f_\theta/\partial\theta\,dt$. The Hutchinson estimator is $\text{tr}(J)\approx z^\top Jz$ for $z\sim\mathcal{N}(0,I)$. The FFJORD loss combines all three. The probability flow ODE velocity is $f_\theta^* = b_t - \frac{\sigma_t^2}{2}s_t$.
+
+---
+---

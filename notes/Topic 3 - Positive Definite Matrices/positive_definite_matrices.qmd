@@ -1,0 +1,426 @@
+# Topic 3 - Positive Definite Matrices: The Geometry of Ellipses and Covariance
+
+## Introduction
+
+You have now built the two main decomposition theorems of advanced linear algebra. The spectral theorem decomposed symmetric matrices into orthogonal eigenvectors and real eigenvalues, revealing the pure stretch structure in the natural coordinate system. The SVD decomposed arbitrary matrices into two orthogonal transformations and a diagonal stretch, revealing the preferred input and output directions and their associated stretching factors. Both theorems revealed matrices as geometric objects rather than arrays of numbers.
+
+The third topic of Chapter 4 is not another decomposition theorem. It is the study of a specific class of symmetric matrices — the positive definite matrices — whose geometric and algebraic properties are so pervasive throughout the roadmap that they deserve dedicated treatment. Positive definite matrices are not a curiosity. They are the matrices that appear everywhere: as Riemannian metrics, as covariance matrices, as Hessians of strictly convex functions, as Fisher information matrices, as the metric tensors of statistical manifolds, as the kernel matrices of kernel methods, and as the mass matrices and stiffness matrices of physical simulations. Understanding their geometry is not optional preparation for the roadmap — it is the direct prerequisite for understanding the spaces on which Optimal Transport, geometric deep learning, and generative AI operate.
+
+The roadmap names this topic with two precise descriptions: the geometry of ellipses and the geometry of covariance. Both are exact.
+
+The geometry of ellipses captures the shape of positive definite matrices. A symmetric positive definite matrix $A$ defines an ellipse — or more precisely an ellipsoid in $n$ dimensions — through its quadratic form: the set $\{v \in \mathbb{R}^n : v^TAv \leq 1\}$ is an ellipsoid whose principal axes are the eigenvectors of $A$ and whose axis half-lengths are the reciprocals of the square roots of the eigenvalues. Large eigenvalues produce short axes — the quadratic form grows quickly in those directions — and small eigenvalues produce long axes — the quadratic form grows slowly. The ellipsoid is the unit ball of the norm $\|v\|_A = \sqrt{v^TAv}$, and understanding positive definite matrices means understanding the geometry of these ellipsoidal norms. Every Riemannian metric is locally an ellipsoidal norm at each point. Every Mahalanobis distance is an ellipsoidal distance. Every confidence region of a multivariate Gaussian is an ellipsoid.
+
+The geometry of covariance captures the probabilistic meaning of positive definite matrices. The covariance matrix $\Sigma = \mathbb{E}[(X-\mu)(X-\mu)^T]$ of a random vector $X \in \mathbb{R}^n$ is always symmetric positive semidefinite — positive definite when no linear combination of the components is deterministic. The covariance matrix encodes the entire second-order statistical structure of the distribution: its eigenvectors are the principal directions of variation, its eigenvalues are the variances in those directions, and its inverse $\Sigma^{-1}$ is the precision matrix that appears in the Gaussian density $p(x) \propto e^{-\frac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)}$. The Mahalanobis distance $d_\Sigma(x,y) = \sqrt{(x-y)^T\Sigma^{-1}(x-y)}$ is the Riemannian distance defined by the precision matrix — the natural distance for a Gaussian distribution that accounts for the distribution's shape.
+
+The topic has three subtopics that develop the theory of positive definite matrices in logical order.
+
+The first subtopic is **the definition and characterization of positive definite matrices** — the four equivalent conditions for positive definiteness (all eigenvalues positive, all leading principal minors positive, the Cholesky decomposition exists, the matrix defines a valid inner product), and why each condition captures the same geometric reality from a different angle. The Cholesky decomposition $A = LL^T$ — the positive definite matrix's analogue of the square root — is particularly important: it is the computational tool for generating samples from multivariate Gaussians, for solving linear systems efficiently when the matrix is positive definite, and for parameterizing positive definite matrices in optimization.
+
+The second subtopic is **the cone of positive definite matrices** — the space $\mathbb{S}^n_{++}$ of all $n \times n$ positive definite matrices as a convex cone and as a Riemannian manifold. The space $\mathbb{S}^n_{++}$ is not a flat vector space — it is a curved manifold with a natural Riemannian metric, the affine-invariant metric $\langle \Delta_1, \Delta_2\rangle_A = \text{tr}(A^{-1}\Delta_1 A^{-1}\Delta_2)$. Its geodesics are matrix exponential curves, and the Fréchet mean of positive definite matrices — used in diffusion tensor imaging, in computing mean covariance matrices, and in geometric deep learning — is the geometric mean $(\prod_i A_i)^{1/n}$ computed via the matrix exponential and logarithm.
+
+The third subtopic is **covariance matrices and the multivariate Gaussian** — how the covariance matrix encodes the shape of the Gaussian distribution, how the Mahalanobis distance measures proximity relative to the distribution's shape, how the Fisher information metric of the Gaussian family is expressed in terms of the covariance matrix, and how the Wasserstein-2 distance between Gaussians has a closed-form expression in terms of the covariance matrices and their matrix square roots. This last result — the Bures metric formula $W_2^2(\mathcal{N}(\mu_1,\Sigma_1), \mathcal{N}(\mu_2,\Sigma_2)) = \|\mu_1-\mu_2\|_2^2 + \text{tr}(\Sigma_1 + \Sigma_2 - 2(\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})^{1/2})$ — connects the positive definite matrix geometry of this topic to the Optimal Transport geometry of Phase 1, making the bridge between Chapter 4 and Phase 1 fully explicit.
+
+By the end of this topic, Chapter 4 is complete and Phase 0 is nearly complete. The positive definite matrix is the common geometric object underlying the Riemannian metric (a positive definite matrix at each point), the covariance matrix (a positive definite summary of a distribution), the Hessian (a positive definite certificate of convexity), the Fisher information (a positive definite Riemannian metric on the statistical manifold), and the Wasserstein-2 distance between Gaussians (expressed through the matrix square root of the covariance). It is the thread that connects every chapter of Phase 0 into a coherent whole.
+
+**ALL THREE SUBTOPICS ARE TREATED AS A SINGLE TOPIC FOR EASY COMPREHENSION.**
+
+---
+
+## Layer 1 (Story)
+
+You are the head of the risk assessment division at a microfinance bank in Kathmandu, and you have been handed a portfolio of one hundred loan applicants. Each applicant is described by five financial indicators: monthly income, outstanding debt, years of employment, number of dependents, and credit history score. Your job is to understand the joint financial health of the portfolio — not just the average values of these five indicators, but how they relate to each other, how they vary together, and what the portfolio's most vulnerable directions of risk exposure are.
+
+Your chief data analyst places two objects on your desk. The first is a simple table of averages: the mean monthly income across all applicants, the mean outstanding debt, the mean years of employment, and so on. This is the portfolio's center — where the average applicant sits in the five-dimensional space of financial indicators.
+
+The second object is a $5 \times 5$ matrix. It has entries on the diagonal measuring how much each indicator varies across applicants — the variance of monthly income, the variance of debt, and so on. And it has off-diagonal entries measuring how each pair of indicators varies together — when income is high, does debt tend to be low? When employment years are long, does credit score tend to be high? This matrix is the **covariance matrix** $\Sigma$ of the portfolio, and it is the complete second-order description of the portfolio's financial risk structure.
+
+Your analyst tells you that this matrix has a remarkable property. Every number of the form $v^T\Sigma v$ is non-negative for any nonzero vector $v \in \mathbb{R}^5$. She calls this property **positive semidefiniteness**, and when the inequality is strict — when $v^T\Sigma v > 0$ for every nonzero $v$ — the matrix is **positive definite**. She says this property is not a coincidence or a special feature of your particular portfolio. It is a theorem: covariance matrices are always positive semidefinite, and they are positive definite whenever no financial indicator is an exact linear combination of the others.
+
+You ask her to explain why this property matters. She draws you three pictures.
+
+---
+
+**The first picture: the ellipsoid of equal Mahalanobis distance**
+
+Your analyst takes the covariance matrix $\Sigma$ and draws the set of all applicant profiles $v \in \mathbb{R}^5$ that are equidistant from the portfolio average in the metric defined by $\Sigma^{-1}$: the set $\{v : (v-\mu)^T\Sigma^{-1}(v-\mu) = 1\}$. This is the level set of the **Mahalanobis distance** at value 1.
+
+In two dimensions — simplifying to just income and debt — this set is an ellipse. The ellipse is not a circle: it is stretched in the directions where the portfolio has high variance and compressed in the directions where the portfolio has low variance. If income varies a lot but debt varies a little, the ellipse is wide in the income direction and narrow in the debt direction. If income and debt are strongly positively correlated — borrowers with high income tend to have high debt — the ellipse is tilted, with its long axis running diagonally in the direction of the correlation.
+
+The axes of this ellipse are the eigenvectors of $\Sigma$, and the half-lengths of the axes are the square roots of the eigenvalues. The first eigenvector points in the direction of maximum portfolio variance — the direction along which applicants differ most from each other. The last eigenvector points in the direction of minimum portfolio variance — the direction along which applicants are most similar.
+
+This ellipse is the portfolio's natural shape. It is the curved shape that the covariance matrix imposes on the applicant space — replacing the round circles of Euclidean distance with the elongated, tilted ellipses of Mahalanobis distance. And it is the precise geometric content of the positive definite matrix: the condition $v^T\Sigma v > 0$ for all nonzero $v$ is exactly the condition that the matrix $\Sigma$ defines a valid, non-degenerate ellipsoid. If $\Sigma$ were only positive semidefinite — if some eigenvalue were zero — the ellipsoid would be infinitely thin in the zero-eigenvalue direction, collapsing to a lower-dimensional ellipsoid in a hyperplane.
+
+**The second picture: the Cholesky decomposition**
+
+Your analyst now says: the covariance matrix $\Sigma$ can be written as $\Sigma = LL^T$ where $L$ is a lower triangular matrix with positive diagonal entries. This is the **Cholesky decomposition** — the positive definite matrix's version of the square root.
+
+The Cholesky decomposition has an immediate financial interpretation. The matrix $L$ is a linear transformation that converts a vector of independent standard risks — uncorrelated random variables each with variance 1 — into the portfolio's actual joint risk structure. If $Z \in \mathbb{R}^5$ is a vector of five independent standard normal random variables, then $X = LZ + \mu$ is a random vector with mean $\mu$ and covariance $\mathbb{E}[(X-\mu)(X-\mu)^T] = L\mathbb{E}[ZZ^T]L^T = LIL^T = LL^T = \Sigma$. The Cholesky factor $L$ is the machine that takes simple, uncorrelated risks and generates the portfolio's actual correlated financial risks.
+
+This is how you generate realistic simulated loan portfolios: compute the Cholesky factor once, then multiply random standard normal vectors by $L$ and shift by $\mu$. The positive definiteness of $\Sigma$ is the condition that guarantees the Cholesky decomposition exists and is unique — that the lower triangular factor $L$ with positive diagonal entries can always be found. If $\Sigma$ were only positive semidefinite, some diagonal entry of $L$ would be zero, meaning some component of the risk is a deterministic function of the others, and the simulated portfolio would lie in a lower-dimensional subspace.
+
+**The third picture: the four equivalent conditions**
+
+Your analyst now lists four different ways of checking whether a symmetric matrix is positive definite, each illuminating a different aspect of the same geometric reality.
+
+The first condition is eigenvalue-based: $\Sigma$ is positive definite if and only if all its eigenvalues are strictly positive — $\lambda_i > 0$ for all $i$. This is the spectral theorem's perspective: the matrix is a pure stretch in the eigenvector directions, and all stretches are positive.
+
+The second condition is determinant-based: $\Sigma$ is positive definite if and only if all its leading principal minors are strictly positive — the $1\times 1$ submatrix $\sigma_{11} > 0$, the $2\times 2$ submatrix $\begin{vmatrix}\sigma_{11}&\sigma_{12}\\\sigma_{21}&\sigma_{22}\end{vmatrix} > 0$, and so on. This is the Sylvester criterion — a computational test that checks positive definiteness by checking the signs of nested determinants.
+
+The third condition is factorization-based: $\Sigma$ is positive definite if and only if it has a Cholesky decomposition $\Sigma = LL^T$ with $L$ lower triangular and all diagonal entries of $L$ strictly positive. This is the constructive condition — positive definiteness is equivalent to the existence of the square root decomposition.
+
+The fourth condition is inner product-based: $\Sigma$ is positive definite if and only if $\langle u, v\rangle_\Sigma = u^T\Sigma v$ defines a valid inner product on $\mathbb{R}^n$. This is the geometric condition — the matrix defines an ellipsoidal norm $\|v\|_\Sigma = \sqrt{v^T\Sigma v}$, and positive definiteness is the condition that this norm is nondegenerate.
+
+All four conditions are equivalent, and each one is useful in different contexts.
+
+---
+
+**The space of all positive definite matrices**
+
+Your analyst now tells you something surprising. The set of all $5 \times 5$ positive definite matrices — let us call it $\mathbb{S}^5_{++}$ — is not a flat vector space. You cannot simply add two positive definite matrices and guarantee the result is positive definite with the same interpretation. More precisely: $\mathbb{S}^5_{++}$ is a convex cone — if $A$ and $B$ are positive definite and $\lambda > 0$, then $\lambda A + (1-\lambda)B$ is positive definite for all $\lambda \in (0,1)$. But it is also a curved manifold — it has nontrivial curvature, and the straight-line interpolation between two positive definite matrices is not the geometrically natural one.
+
+The natural interpolation between two covariance matrices $\Sigma_1$ and $\Sigma_2$ — the one that is invariant under coordinate changes, that treats the two matrices symmetrically, and that stays on the manifold of positive definite matrices — is the **geometric mean**:
+
+$$\Sigma_1 \#_t \Sigma_2 = \Sigma_1^{1/2}\left(\Sigma_1^{-1/2}\Sigma_2\Sigma_1^{-1/2}\right)^t \Sigma_1^{1/2}$$
+
+At $t=0$ this gives $\Sigma_1$, at $t=1$ this gives $\Sigma_2$, and at $t=1/2$ it gives the geometric mean $\Sigma_1 \# \Sigma_2$. This interpolation is the geodesic on the Riemannian manifold $\mathbb{S}^5_{++}$ equipped with the affine-invariant metric. The straight-line interpolation $(1-t)\Sigma_1 + t\Sigma_2$ — the arithmetic mean — is not the geodesic on this manifold. The geometric mean is.
+
+Your analyst uses this to explain something you have seen in practice but never understood theoretically: when you average covariance matrices from different time periods to estimate a stable long-run covariance, the arithmetic average often produces a matrix with larger eigenvalues than either of the inputs — the averaging swells the matrix. The geometric average does not have this problem: it stays close to the original matrices in the correct Riemannian sense, respecting the curved geometry of the positive definite cone.
+
+---
+
+**The Wasserstein distance between Gaussians**
+
+Your analyst now reveals the connection that ties everything together. You want to measure how different two loan portfolios are — not just their averages, but their full distributional shapes. If portfolio 1 has Gaussian distribution $\mathcal{N}(\mu_1, \Sigma_1)$ and portfolio 2 has $\mathcal{N}(\mu_2, \Sigma_2)$, what is the natural distance between them?
+
+The Euclidean distance between the mean vectors is $\|\mu_1 - \mu_2\|_2$ — it captures how far apart the portfolio centers are. But it ignores the covariance structure entirely.
+
+The correct distance, she says, is the Wasserstein-2 distance between the two Gaussian distributions. And it has a beautiful closed form:
+
+$$W_2^2(\mathcal{N}(\mu_1,\Sigma_1), \mathcal{N}(\mu_2,\Sigma_2)) = \|\mu_1-\mu_2\|_2^2 + \text{tr}\!\left(\Sigma_1 + \Sigma_2 - 2(\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})^{1/2}\right)$$
+
+The first term is the squared Euclidean distance between the means — how far apart the portfolio centers are. The second term is the **Bures distance** between the covariance matrices — it measures how different the portfolio shapes are, accounting for both the eigenvalue structure (the size of each risk direction) and the eigenvector alignment (the orientation of each risk direction). The matrix square root $\Sigma_1^{1/2}$ and the expression $(\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})^{1/2}$ are the functional calculus of the spectral theorem applied to positive definite matrices.
+
+This formula is the bridge between Chapter 4 and Phase 1. The Wasserstein distance between two probability distributions — the foundational object of Optimal Transport — has a completely explicit, computable form when the distributions are Gaussian, and that form is entirely expressed in terms of the positive definite covariance matrices and their matrix square roots. Phase 1's abstract theory of Optimal Transport produces this concrete formula when restricted to the Gaussian family, and the positive definite matrix geometry of this topic is what makes the formula tractable.
+
+---
+
+Here is the break moment. The naive assumption is that the average of two covariance matrices — the arithmetic mean $\frac{1}{2}(\Sigma_1 + \Sigma_2)$ — is the natural midpoint between them, in the same way that the arithmetic mean of two numbers is the natural midpoint on the number line.
+
+This breaks in a specific and illuminating way. Consider two covariance matrices that represent the same underlying distribution viewed in two different coordinate systems. A coordinate change by an invertible matrix $C$ transforms $\Sigma \mapsto C\Sigma C^T$. The arithmetic mean of $C\Sigma_1 C^T$ and $C\Sigma_2 C^T$ is $C\frac{\Sigma_1+\Sigma_2}{2}C^T$ — the arithmetic mean in the transformed coordinates equals the transformation of the arithmetic mean in the original coordinates. So far, arithmetic mean seems coordinate-invariant.
+
+But consider what happens to the eigenvalues. If $\Sigma_1 = \begin{pmatrix}2&0\\0&\frac{1}{2}\end{pmatrix}$ and $\Sigma_2 = \begin{pmatrix}\frac{1}{2}&0\\0&2\end{pmatrix}$ — two covariance matrices that are inverses of each other, representing distributions of the same total variance but with the variance in opposite directions — the arithmetic mean is $\frac{\Sigma_1+\Sigma_2}{2} = \frac{5}{4}I$, a scalar multiple of the identity with eigenvalue $\frac{5}{4}$. The geometric mean is $(\Sigma_1\Sigma_2)^{1/2} = (I)^{1/2} = I$, the identity with eigenvalue $1$.
+
+The arithmetic mean has a larger eigenvalue than either input — it swells. The geometric mean has eigenvalue $1$, exactly halfway between the eigenvalues $2$ and $\frac{1}{2}$ on the logarithmic scale, which is the correct notion of halfway for positive quantities. The arithmetic mean violates the intuition that the midpoint of two equal-variance distributions should also have equal variance. The geometric mean respects it. The curvature of the positive definite cone — the fact that $\mathbb{S}^n_{++}$ is not a flat vector space — is the reason arithmetic averaging is wrong, and the geodesic geometric mean is right.
+
+---
+
+Hold four pictures simultaneously.
+
+The portfolio's ellipse: the set $\{v : v^T\Sigma^{-1}v = 1\}$ traced by the covariance matrix, with principal axes aligned to the eigenvectors of $\Sigma$ and axis half-lengths equal to the square roots of the eigenvalues — the geometric fingerprint of positive definiteness.
+
+The Cholesky decomposition $\Sigma = LL^T$: the factorization into a lower triangular matrix that converts independent risks into correlated risks, the existence of which is equivalent to positive definiteness.
+
+The positive definite cone $\mathbb{S}^n_{++}$ as a curved Riemannian manifold: arithmetic mean swells eigenvalues, geometric mean stays on the geodesic, and the correct interpolation respects the manifold's curvature.
+
+The Bures-Wasserstein formula: the Wasserstein-2 distance between Gaussians expressed through the matrix square root of covariance matrices, bridging positive definite matrix geometry to Optimal Transport.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the precise definitions and equivalent characterizations, the Cholesky decomposition, the cone $\mathbb{S}^n_{++}$ as a Riemannian manifold, the Mahalanobis distance and its geometry, the multivariate Gaussian and Fisher information, and the Bures-Wasserstein metric connecting to Phase 1.
+
+### Definitions and Equivalent Characterizations
+
+A symmetric matrix $A \in \mathbb{R}^{n \times n}$ is **positive semidefinite** (written $A \succeq 0$) if:
+
+$$v^T A v \geq 0 \quad \forall v \in \mathbb{R}^n$$
+
+It is **positive definite** (written $A \succ 0$) if:
+
+$$v^T A v > 0 \quad \forall v \neq 0$$
+
+The following conditions are equivalent for a symmetric $A$:
+
+**Theorem (Equivalent characterizations of positive definiteness).** For $A \in \mathbb{R}^{n \times n}$ symmetric, the following are equivalent:
+
+$$\text{(i) } A \succ 0 \quad \text{(positive definite)}$$
+$$\text{(ii) All eigenvalues of } A \text{ are strictly positive: } \lambda_i(A) > 0 \; \forall i$$
+$$\text{(iii) All leading principal minors are positive: } \det(A_k) > 0 \; \text{for } k = 1,\ldots,n$$
+$$\text{(iv) } A = LL^T \text{ for a unique lower triangular } L \text{ with positive diagonal entries}$$
+$$\text{(v) } A \text{ defines a valid inner product: } \langle u,v\rangle_A = u^TAv \text{ satisfies all inner product axioms}$$
+
+**Proof of (i) $\iff$ (ii).** By the spectral theorem $A = Q\Lambda Q^T$, so $v^TAv = (Q^Tv)^T\Lambda(Q^Tv) = \sum_i \lambda_i w_i^2$ where $w = Q^Tv$. This is positive for all nonzero $v$ iff $\lambda_i > 0$ for all $i$. $\square$
+
+**Proof of (ii) $\implies$ (iv).** Existence follows by induction using the Schur complement, proved below. Uniqueness follows because if $A = LL^T = MM^T$ with both lower triangular and positive diagonal, then $M^{-1}L$ is both lower triangular and orthogonal, forcing $M^{-1}L = I$. $\square$
+
+---
+
+### The Schur Complement
+
+The **Schur complement** is a fundamental tool for positive definiteness of block matrices. For a block symmetric matrix:
+
+$$M = \begin{pmatrix} A & B \\ B^T & C \end{pmatrix}$$
+
+with $A \succ 0$, the **Schur complement** of $A$ in $M$ is:
+
+$$M/A = C - B^T A^{-1} B$$
+
+**Theorem.** $M \succ 0$ if and only if $A \succ 0$ and $M/A \succ 0$.
+
+**Proof.** Factor: $M = \begin{pmatrix}I & 0 \\ B^TA^{-1} & I\end{pmatrix}\begin{pmatrix}A & 0 \\ 0 & M/A\end{pmatrix}\begin{pmatrix}I & A^{-1}B \\ 0 & I\end{pmatrix}$. Since the outer factors are invertible, $M \succ 0 \iff \begin{pmatrix}A & 0 \\ 0 & M/A\end{pmatrix} \succ 0 \iff A \succ 0$ and $M/A \succ 0$. $\square$
+
+The Schur complement drives the Cholesky algorithm and appears in Gaussian conditioning: if $(X,Y)$ is jointly Gaussian with covariance $\begin{pmatrix}\Sigma_{XX} & \Sigma_{XY}\\\Sigma_{YX}&\Sigma_{YY}\end{pmatrix}$, the conditional covariance of $X|Y$ is $\Sigma_{XX} - \Sigma_{XY}\Sigma_{YY}^{-1}\Sigma_{YX}$ — the Schur complement of $\Sigma_{YY}$.
+
+---
+
+### The Cholesky Decomposition
+
+**Theorem (Cholesky).** Every symmetric positive definite matrix $A \in \mathbb{R}^{n\times n}$ has a unique factorization $A = LL^T$ where $L$ is lower triangular with strictly positive diagonal entries.
+
+**Algorithm.** For $j = 1,\ldots,n$:
+
+$$l_{jj} = \sqrt{a_{jj} - \sum_{k=1}^{j-1} l_{jk}^2}$$
+
+$$l_{ij} = \frac{1}{l_{jj}}\left(a_{ij} - \sum_{k=1}^{j-1} l_{ik}l_{jk}\right), \quad i > j$$
+
+The algorithm succeeds (all square roots are of positive numbers) if and only if $A \succ 0$.
+
+**Computational complexity.** The Cholesky decomposition costs $O(n^3/3)$ operations — half the cost of general LU decomposition — and is numerically stable without pivoting when $A \succ 0$. It is the preferred algorithm for solving linear systems $Ax = b$ when $A$ is known to be positive definite.
+
+**Applications:**
+
+Solving $Ax = b$: compute $A = LL^T$, then solve $Ly = b$ (forward substitution) and $L^Tx = y$ (back substitution), each costing $O(n^2)$.
+
+Sampling from $\mathcal{N}(\mu, \Sigma)$: generate $z \sim \mathcal{N}(0,I_n)$, then return $x = Lz + \mu$ where $\Sigma = LL^T$.
+
+Checking positive definiteness: attempt Cholesky factorization; it succeeds iff $A \succ 0$.
+
+---
+
+### The Cone $\mathbb{S}^n_{++}$ as a Convex Cone
+
+The set of $n \times n$ symmetric positive definite matrices:
+
+$$\mathbb{S}^n_{++} = \{A \in \mathbb{R}^{n \times n} : A = A^T, A \succ 0\}$$
+
+is an open convex cone in the vector space $\mathbb{S}^n$ of symmetric matrices (dimension $\frac{n(n+1)}{2}$).
+
+**Convexity.** For $A, B \succ 0$ and $\lambda \in (0,1)$: $v^T(\lambda A + (1-\lambda)B)v = \lambda v^TAv + (1-\lambda)v^TBv > 0$ for all $v \neq 0$.
+
+**Cone property.** For $A \succ 0$ and $\alpha > 0$: $\alpha A \succ 0$.
+
+**Openness.** The condition $\lambda_{\min}(A) > 0$ is an open condition — small perturbations of $A$ preserve positive definiteness.
+
+The boundary $\partial\mathbb{S}^n_{++} = \mathbb{S}^n_+ \setminus \mathbb{S}^n_{++}$ consists of positive semidefinite matrices with at least one zero eigenvalue — the degenerate cases.
+
+---
+
+### The Riemannian Geometry of $\mathbb{S}^n_{++}$
+
+The **affine-invariant metric** on $\mathbb{S}^n_{++}$ is the Riemannian metric defined at $A \in \mathbb{S}^n_{++}$ for tangent vectors $\Delta_1, \Delta_2 \in T_A\mathbb{S}^n_{++} \cong \mathbb{S}^n$ by:
+
+$$\langle \Delta_1, \Delta_2\rangle_A = \text{tr}(A^{-1}\Delta_1 A^{-1}\Delta_2)$$
+
+This metric is invariant under congruence transformations: for any invertible $C$, the map $A \mapsto CAC^T$ is an isometry of $(\mathbb{S}^n_{++}, g)$.
+
+**Geodesics.** The geodesic starting at $A$ in direction $\Delta \in \mathbb{S}^n$ is:
+
+$$\gamma(t) = A^{1/2}\exp(tA^{-1/2}\Delta A^{-1/2})A^{1/2}$$
+
+The geodesic from $A$ to $B$ is:
+
+$$\gamma_{A,B}(t) = A^{1/2}(A^{-1/2}BA^{-1/2})^t A^{1/2}$$
+
+At $t=0$: $\gamma(0) = A$. At $t=1$: $\gamma(1) = B$. The midpoint $t=1/2$ is the **geometric mean** $A \# B = A^{1/2}(A^{-1/2}BA^{-1/2})^{1/2}A^{1/2}$.
+
+**Geodesic distance.** The Riemannian distance between $A$ and $B$ under the affine-invariant metric is:
+
+$$d(A,B) = \left\|\log(A^{-1/2}BA^{-1/2})\right\|_F = \sqrt{\sum_{i=1}^n \log^2(\lambda_i(A^{-1}B))}$$
+
+where $\lambda_i(A^{-1}B)$ are the generalized eigenvalues of the pencil $(B,A)$.
+
+**Fréchet mean.** The Fréchet mean of positive definite matrices $A_1,\ldots,A_k$ under the affine-invariant metric is the unique minimizer of $\sum_i d(A_i, X)^2$ — the matrix geometric mean, computed via the fixed-point iteration:
+
+$$X_{t+1} = X_t^{1/2}\exp\!\left(\frac{1}{k}\sum_i \log(X_t^{-1/2}A_iX_t^{-1/2})\right)X_t^{1/2}$$
+
+converging to the geometric mean $G = \#_i A_i$.
+
+---
+
+### The Mahalanobis Distance
+
+For $A \succ 0$, the **$A$-norm** on $\mathbb{R}^n$ is:
+
+$$\|v\|_A = \sqrt{v^TAv}$$
+
+and the **Mahalanobis distance** with precision matrix $A$ is:
+
+$$d_A(x,y) = \|x-y\|_A = \sqrt{(x-y)^TA(x-y)}$$
+
+For a distribution with covariance $\Sigma \succ 0$, the Mahalanobis distance uses $A = \Sigma^{-1}$:
+
+$$d_\Sigma(x,y) = \sqrt{(x-y)^T\Sigma^{-1}(x-y)}$$
+
+**Geometric interpretation.** The level set $\{x : d_\Sigma(x,\mu) = 1\}$ is an ellipsoid centered at $\mu$ with principal axes given by the eigenvectors $q_i$ of $\Sigma$ and half-lengths $\sqrt{\lambda_i(\Sigma)}$. In the eigenvector coordinate system (via $z = Q^T\Sigma^{-1/2}(x-\mu)$), the ellipsoid becomes the unit sphere.
+
+**Whitening transformation.** The map $x \mapsto \Sigma^{-1/2}x$ converts Mahalanobis distance to Euclidean distance: $d_\Sigma(x,y) = \|\Sigma^{-1/2}(x-y)\|_2$. The whitened variables $z = \Sigma^{-1/2}(x-\mu)$ have identity covariance: $\mathbb{E}[zz^T] = \Sigma^{-1/2}\Sigma\Sigma^{-1/2} = I$.
+
+---
+
+### The Multivariate Gaussian and Fisher Information
+
+The **multivariate Gaussian** $\mathcal{N}(\mu, \Sigma)$ with mean $\mu \in \mathbb{R}^n$ and covariance $\Sigma \succ 0$ has density:
+
+$$p(x; \mu, \Sigma) = \frac{1}{(2\pi)^{n/2}\det(\Sigma)^{1/2}}\exp\!\left(-\frac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)$$
+
+The exponent is the squared Mahalanobis distance from $x$ to $\mu$ — the density is constant on ellipsoids of constant Mahalanobis distance.
+
+**Fisher information matrix.** For the Gaussian family parameterized by $(\mu, \Sigma)$, the Fisher information has block structure. The Fisher information for the mean parameter $\mu$ alone (fixing $\Sigma$) is:
+
+$$I_\mu = \Sigma^{-1}$$
+
+The precision matrix $\Sigma^{-1}$ is the Fisher information for the mean — it measures how informative observations are about the mean, accounting for the distribution's shape. The natural gradient for mean estimation is:
+
+$$\tilde\nabla_\mu \mathcal{L} = I_\mu^{-1}\nabla_\mu\mathcal{L} = \Sigma\nabla_\mu\mathcal{L}$$
+
+**Full Fisher information.** For the full parameter $\theta = (\mu, \text{vech}(\Sigma))$ (where $\text{vech}$ vectorizes the upper triangle), the Fisher information matrix is block diagonal with blocks $\Sigma^{-1}$ (for $\mu$) and $\frac{1}{2}D_n^T(\Sigma^{-1}\otimes\Sigma^{-1})D_n$ (for $\Sigma$, where $D_n$ is the duplication matrix). The positive definiteness of $\Sigma$ is precisely what makes the Fisher information nondegenerate.
+
+---
+
+### The Log-Determinant Barrier
+
+The function $f: \mathbb{S}^n_{++} \to \mathbb{R}$ defined by:
+
+$$f(A) = -\log\det(A) = -\sum_{i=1}^n \log\lambda_i(A)$$
+
+is strictly convex on $\mathbb{S}^n_{++}$, with gradient and Hessian:
+
+$$\nabla f(A) = -A^{-1} \quad \text{(as a symmetric matrix)}$$
+
+$$\nabla^2 f(A)[\Delta, \Delta] = \text{tr}(A^{-1}\Delta A^{-1}\Delta) = \langle\Delta,\Delta\rangle_A$$
+
+The Hessian of $-\log\det$ is exactly the affine-invariant Riemannian metric on $\mathbb{S}^n_{++}$. The log-determinant barrier is a **self-concordant barrier** for the positive semidefinite cone — the foundational object of interior point methods for semidefinite programming (SDP). The SDP feasibility condition $A \succ 0$ is maintained throughout the optimization by the barrier, which diverges to $+\infty$ as $A$ approaches the boundary $\partial\mathbb{S}^n_{++}$.
+
+The log-determinant also appears in the Gaussian log-likelihood:
+
+$$\log p(x;\mu,\Sigma) = -\frac{n}{2}\log(2\pi) - \frac{1}{2}\log\det(\Sigma) - \frac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)$$
+
+Maximizing the Gaussian log-likelihood over $\Sigma$ requires maximizing $-\frac{1}{2}\log\det(\Sigma) - \frac{1}{2}\text{tr}(\Sigma^{-1}S)$ where $S = \frac{1}{N}\sum_i(x_i-\hat\mu)(x_i-\hat\mu)^T$ is the sample covariance. The maximum likelihood estimator $\hat\Sigma = S$ is the sample covariance matrix — derived by differentiating the log-determinant.
+
+---
+
+### The Bures-Wasserstein Metric
+
+For Gaussian distributions $\mathcal{N}(\mu_1,\Sigma_1)$ and $\mathcal{N}(\mu_2,\Sigma_2)$, the Wasserstein-2 distance has the closed-form **Bures-Wasserstein formula**:
+
+$$W_2^2(\mathcal{N}(\mu_1,\Sigma_1),\mathcal{N}(\mu_2,\Sigma_2)) = \|\mu_1-\mu_2\|_2^2 + \mathcal{B}(\Sigma_1,\Sigma_2)^2$$
+
+where the **Bures metric** between positive definite matrices is:
+
+$$\mathcal{B}(\Sigma_1,\Sigma_2)^2 = \text{tr}(\Sigma_1) + \text{tr}(\Sigma_2) - 2\text{tr}\!\left((\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})^{1/2}\right)$$
+
+The term $\text{tr}((\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})^{1/2})$ uses the matrix square root from the functional calculus of the spectral theorem. Equivalently:
+
+$$\mathcal{B}(\Sigma_1,\Sigma_2)^2 = \text{tr}(\Sigma_1+\Sigma_2) - 2\sum_{i=1}^n \sqrt{\lambda_i(\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})}$$
+
+where $\lambda_i(\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})$ are the eigenvalues of the positive semidefinite matrix $\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2}$.
+
+**Proof sketch.** The optimal transport map from $\mathcal{N}(\mu_1,\Sigma_1)$ to $\mathcal{N}(\mu_2,\Sigma_2)$ is the affine map $T(x) = \mu_2 + A(x-\mu_1)$ where $A = \Sigma_1^{-1/2}(\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})^{1/2}\Sigma_1^{-1/2}$ — the symmetric positive definite matrix solving $A\Sigma_1 A = \Sigma_2$ (the Gaussian Brenier map). Computing $W_2^2 = \mathbb{E}[\|T(X)-X\|_2^2]$ gives the Bures formula. $\square$
+
+**Properties of the Bures metric:**
+
+The Bures metric $\mathcal{B}$ is a genuine distance on $\mathbb{S}^n_{++}$: symmetric, satisfies triangle inequality, and $\mathcal{B}(\Sigma_1,\Sigma_2) = 0 \iff \Sigma_1 = \Sigma_2$.
+
+For diagonal $\Sigma_1 = \text{diag}(\sigma_i^2)$ and $\Sigma_2 = \text{diag}(\tau_i^2)$: $\mathcal{B}^2 = \sum_i(\sigma_i-\tau_i)^2$ — the squared $\ell_2$ distance between the vectors of standard deviations.
+
+The Bures metric is a lower bound for the Riemannian distance on $\mathbb{S}^n_{++}$ under the affine-invariant metric.
+
+---
+
+### Semidefinite Programming
+
+A **semidefinite program (SDP)** is an optimization problem of the form:
+
+$$\min_{X \in \mathbb{S}^n} \langle C, X\rangle \quad \text{subject to} \quad \langle A_i, X\rangle = b_i \; \forall i, \quad X \succeq 0$$
+
+where $\langle A, B\rangle = \text{tr}(A^TB)$ is the Frobenius inner product. SDPs generalize linear programs (which have $X$ diagonal) and second-order cone programs. They are solved efficiently by interior point methods using the log-determinant barrier, with the positive semidefinite cone $\mathbb{S}^n_+$ playing the role of the non-negative orthant in LP.
+
+SDPs appear throughout the roadmap in the following forms:
+
+The **Goemans-Williamson relaxation** for graph MAX-CUT approximation is an SDP whose solution uses the spectral structure of the graph Laplacian.
+
+The **SOS (sum of squares) relaxation** converts polynomial optimization problems into SDPs by requiring the objective to be expressible as a sum of squares — a condition equivalent to a positive semidefinite moment matrix.
+
+The **nuclear norm minimization** problem for matrix completion — $\min_X \|X\|_*$ subject to linear constraints — is an SDP, because $\|X\|_* = \min_{A,B \succeq 0, X = AB} \frac{1}{2}(\text{tr}(A)+\text{tr}(B))$.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 103 (Linear Algebra), you tested positive definiteness using the eigenvalue criterion and computed Gram matrices $G_{ij} = \langle e_i,e_j\rangle$ for inner products — both are special cases of the positive definite theory. The Gram matrix of any set of linearly independent vectors is positive definite, and positive definiteness of the Gram matrix is equivalent to the vectors being linearly independent. In MATH 208 (Statistics and Probability), the covariance matrix $\Sigma = \mathbb{E}[(X-\mu)(X-\mu)^T]$ is positive semidefinite by definition and positive definite when the components of $X$ are not perfectly linearly correlated — you used this in computing multivariate Gaussian densities and in the $\chi^2$ distribution of the Mahalanobis distance. In MATH 302 (Matrix Theory), you studied congruence transformations $A \mapsto PAP^T$ — the positive definite cone is invariant under congruence by any invertible $P$: if $A \succ 0$ then $PAP^T \succ 0$. Sylvester's law of inertia for congruence transformations — the number of positive, negative, and zero eigenvalues is preserved — is the classification theorem for quadratic forms that underlies the second-order conditions for constrained optimization.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the microfinance portfolio story has a precise mathematical address. Let us walk through them one by one, until the loan applicants, the covariance matrix, the risk ellipse, and the full formal apparatus are completely fused into a single picture.
+
+---
+
+**The portfolio of one hundred loan applicants described by five financial indicators — the raw material of the risk assessment — is the data matrix $X \in \mathbb{R}^{100 \times 5}$, and the portfolio's financial structure is encoded in the covariance matrix $\Sigma \in \mathbb{S}^5_{++}$.** Each row of $X$ is one applicant's five-dimensional financial profile. The mean $\mu = \frac{1}{100}\sum_i x_i \in \mathbb{R}^5$ is the average applicant — the portfolio's center. The covariance matrix $\Sigma = \frac{1}{99}\sum_i (x_i-\mu)(x_i-\mu)^T$ is the outer product average of the centered profiles — it measures how each pair of financial indicators varies jointly across the portfolio. Every diagonal entry $\Sigma_{kk}$ is the variance of the $k$-th indicator — how much it spreads. Every off-diagonal entry $\Sigma_{kl}$ is the covariance between indicators $k$ and $l$ — how they move together. The covariance matrix is positive semidefinite by construction: $v^T\Sigma v = \frac{1}{99}\sum_i (v^T(x_i-\mu))^2 \geq 0$ for all $v$. It is positive definite whenever no nontrivial linear combination of the five indicators is constant across all applicants — the generic condition for real-world financial data.
+
+**The analyst's claim that $v^T\Sigma v > 0$ for all nonzero $v$ is not a coincidence but a theorem — the positive definiteness of the sample covariance matrix — is the equivalence of all five characterizations simultaneously.** The eigenvalue characterization: all eigenvalues of $\Sigma$ are strictly positive, because $v^T\Sigma v = \sum_i \lambda_i (q_i^Tv)^2$ is a strictly positive convex combination of eigenvalues for any nonzero $v$, which forces all $\lambda_i > 0$. The Sylvester criterion: all leading principal minors of $\Sigma$ are positive, testable by checking the $1\times 1$, $2\times 2$, $3\times 3$, $4\times 4$, and $5\times 5$ determinants in turn. The Cholesky criterion: the Cholesky factorization $\Sigma = LL^T$ succeeds with positive diagonal entries in $L$, which is the computational test used in practice. The inner product criterion: $\langle u,v\rangle_\Sigma = u^T\Sigma v$ is a valid inner product on $\mathbb{R}^5$, with the positive definiteness condition ensuring nondegeneracy. All five conditions say the same geometric thing: the covariance matrix defines a non-degenerate ellipsoidal geometry on the five-dimensional financial indicator space.
+
+---
+
+**The risk ellipse — the set $\{v : (v-\mu)^T\Sigma^{-1}(v-\mu) = 1\}$ of applicant profiles at unit Mahalanobis distance from the mean — is the ellipsoid whose geometry completely encodes the portfolio's risk structure.** The level set of the Mahalanobis distance at value 1 is an ellipsoid in $\mathbb{R}^5$. Its principal axes are the eigenvectors $q_1,\ldots,q_5$ of $\Sigma$ — the directions of maximum and minimum financial variation. Its axis half-lengths are $\sqrt{\lambda_1(\Sigma)},\ldots,\sqrt{\lambda_5(\Sigma)}$ — the standard deviations along each principal direction. The eigenvector with the largest eigenvalue is the direction of greatest portfolio variability — the direction in the five-dimensional financial space along which applicants differ most. The eigenvector with the smallest eigenvalue is the direction of least variability — the direction along which applicants are most similar. The ellipse is wide in the high-variance directions and narrow in the low-variance directions, and tilted whenever two indicators are strongly correlated, with the tilt angle determined by the off-diagonal entries of $\Sigma$.
+
+**The Mahalanobis distance $d_\Sigma(x,y) = \sqrt{(x-y)^T\Sigma^{-1}(x-y)}$ — the portfolio's natural notion of distance between applicant profiles — is the $\Sigma^{-1}$-norm, the ellipsoidal norm induced by the precision matrix.** Two applicant profiles are close in Mahalanobis distance if they differ little in the high-variance directions (where small differences are statistically unremarkable) and do not differ at all in the low-variance directions (where even small differences are statistically significant). The Euclidean distance $\|x-y\|_2$ ignores the portfolio's covariance structure entirely — it treats a difference of 1 unit in monthly income (high variance) as equally significant as a difference of 1 unit in credit score (possibly very low variance). The Mahalanobis distance corrects for this: it measures distance in units of standard deviations in each principal direction, giving the statistically correct notion of proximity. The whitening transformation $x \mapsto \Sigma^{-1/2}x$ converts Mahalanobis distance to Euclidean distance: $d_\Sigma(x,y) = \|\Sigma^{-1/2}(x-y)\|_2$ — the whitened applicant profiles have identity covariance and are uniformly distributed in Euclidean distance.
+
+**The Cholesky decomposition $\Sigma = LL^T$ — the factorization into lower triangular $L$ with positive diagonal — is the risk machine that generates correlated financial profiles from independent risks.** The factor $L$ is the matrix that converts a vector of five independent standard normal risks $Z \sim \mathcal{N}(0,I)$ into the portfolio's actual correlated risks: $X = LZ + \mu \sim \mathcal{N}(\mu,\Sigma)$. The first column of $L$ determines how the first risk affects all five financial indicators. The second column of $L$ — starting from the second entry, since $L$ is lower triangular — determines how the second risk affects indicators 2 through 5, given that the first risk's contribution has been removed. The Cholesky decomposition is a sequential orthogonalization of the financial risks: it finds five independent risk factors, each affecting only the indicators below it, that together generate the portfolio's full correlation structure. The positive diagonal of $L$ is the positivity of each risk factor's variance — the condition that no risk factor is a deterministic function of the previous ones, equivalent to positive definiteness of $\Sigma$.
+
+---
+
+**The Schur complement $\Sigma_{11} - \Sigma_{12}\Sigma_{22}^{-1}\Sigma_{21}$ — the conditional covariance of the first indicator given all others — is the positive definiteness condition that ensures the conditioning leaves a nondegenerate distribution.** For the block covariance matrix $\Sigma = \begin{pmatrix}\Sigma_{11}&\Sigma_{12}\\\Sigma_{21}&\Sigma_{22}\end{pmatrix}$, the conditional covariance of $X_1|X_2$ is the Schur complement of $\Sigma_{22}$. The positive definiteness of $\Sigma$ is equivalent to both $\Sigma_{22} \succ 0$ and the Schur complement $\Sigma_{11} - \Sigma_{12}\Sigma_{22}^{-1}\Sigma_{21} \succ 0$ — the conditional covariance is positive definite. This is the formal statement that conditioning on some financial indicators does not reduce the other indicators to deterministic functions — there is always genuine residual uncertainty even after conditioning.
+
+**The log-determinant barrier $f(\Sigma) = -\log\det(\Sigma) = -\sum_i\log\lambda_i(\Sigma)$ — the sum of negative log-eigenvalues — is the self-concordant barrier for the positive definite cone, diverging to $+\infty$ at the boundary $\partial\mathbb{S}^5_{++}$.** As any eigenvalue approaches zero — as the portfolio approaches a degenerate configuration where some indicator becomes an exact linear combination of others — $-\log\lambda_i \to +\infty$, pushing the barrier to infinity. The Hessian of the log-determinant is $\nabla^2(-\log\det)(A)[\Delta,\Delta] = \text{tr}(A^{-1}\Delta A^{-1}\Delta) = \langle\Delta,\Delta\rangle_A$ — exactly the affine-invariant Riemannian metric on $\mathbb{S}^n_{++}$. The log-determinant is not just a barrier function — it is the Riemannian distance squared from the identity, and its Hessian is the metric tensor. The portfolio's log-determinant measures the total logarithmic volume of the risk ellipsoid — large $\log\det(\Sigma)$ means a large, spread-out portfolio, small $\log\det(\Sigma)$ means a concentrated, near-degenerate portfolio.
+
+---
+
+**The break moment — the arithmetic mean of two covariance matrices swelling eigenvalues while the geometric mean does not — is the manifestation of the positive definite cone's curvature.** The specific example: $\Sigma_1 = \begin{pmatrix}2&0\\0&\frac{1}{2}\end{pmatrix}$ (high income variance, low debt variance) and $\Sigma_2 = \begin{pmatrix}\frac{1}{2}&0\\0&2\end{pmatrix}$ (low income variance, high debt variance). The arithmetic mean $\frac{\Sigma_1+\Sigma_2}{2} = \frac{5}{4}I$ has eigenvalue $\frac{5}{4} > 1$ — larger than either input's eigenvalues $2$ and $\frac{1}{2}$ on average, because $\frac{2+1/2}{2} = \frac{5}{4}$. The geometric mean $\Sigma_1\#\Sigma_2 = (\Sigma_1\Sigma_2)^{1/2} = I$ has eigenvalue $1 = \sqrt{2 \cdot \frac{1}{2}}$ — the geometric mean of the eigenvalues, exactly halfway between $2$ and $\frac{1}{2}$ on the logarithmic scale. The arithmetic mean lies outside the geodesic on the manifold $\mathbb{S}^n_{++}$ and inflates the eigenvalues. The geometric mean follows the geodesic $\gamma_{\Sigma_1,\Sigma_2}(1/2) = \Sigma_1^{1/2}(\Sigma_1^{-1/2}\Sigma_2\Sigma_1^{-1/2})^{1/2}\Sigma_1^{1/2}$ and preserves the geometric midpoint of the eigenvalues. The swell of the arithmetic mean is the curvature of the positive definite cone — a direct consequence of the nonzero sectional curvature of $(\mathbb{S}^n_{++}, g)$.
+
+**The geodesic on $\mathbb{S}^n_{++}$ from $\Sigma_1$ to $\Sigma_2$ — the curve $\gamma(t) = \Sigma_1^{1/2}(\Sigma_1^{-1/2}\Sigma_2\Sigma_1^{-1/2})^t\Sigma_1^{1/2}$ — is the matrix exponential curve connecting two covariance matrices through the correct curved geometry.** At $t=0$: $\gamma(0) = \Sigma_1$. At $t=1$: $\gamma(1) = \Sigma_2$. At $t=1/2$: $\gamma(1/2) = \Sigma_1\#\Sigma_2$, the geometric mean. The geodesic stays in $\mathbb{S}^n_{++}$ — it never passes through a degenerate matrix with zero eigenvalue — because the matrix $\Sigma_1^{-1/2}\Sigma_2\Sigma_1^{-1/2}$ is positive definite, its eigenvalues are positive, and raising them to the power $t$ keeps them positive for all $t \in [0,1]$. The geodesic distance $d(\Sigma_1,\Sigma_2) = \|\log(\Sigma_1^{-1/2}\Sigma_2\Sigma_1^{-1/2})\|_F = \sqrt{\sum_i \log^2\lambda_i(\Sigma_1^{-1}\Sigma_2)}$ is the Riemannian length of this geodesic, measuring how different the two portfolios are in the correct geometric sense. For the example above: $d = \sqrt{\log^2(\frac{2}{1/2}) + \log^2(\frac{1/2}{2})} = \sqrt{2}\log 4$, while the Euclidean distance is $\|\Sigma_1-\Sigma_2\|_F = \sqrt{2}\cdot\frac{3}{2}$ — different numbers encoding different geometric notions of proximity.
+
+**The Fréchet mean — the geometric mean of multiple covariance matrices computed by the fixed-point iteration $X_{t+1} = X_t^{1/2}\exp(\frac{1}{k}\sum_i\log(X_t^{-1/2}A_iX_t^{-1/2}))X_t^{1/2}$ — is the portfolio's stable long-run covariance.** When averaging covariance matrices across different time periods or different sub-portfolios, the Fréchet mean gives the correct answer: the positive definite matrix minimizing the sum of squared geodesic distances to all inputs. Unlike the arithmetic mean, the Fréchet mean respects the manifold's geometry — it does not inflate eigenvalues, it is invariant under congruence transformations, and it lies on the geodesic connecting the input matrices in a sense that generalizes the scalar geometric mean $(\prod_i a_i)^{1/k}$. The fixed-point iteration is the Riemannian gradient descent on $\mathbb{S}^n_{++}$ for the Fréchet mean problem — gradient descent on the curved manifold converging to the unique global minimum by geodesic convexity of the sum-of-squared-distances functional.
+
+---
+
+**The multivariate Gaussian density $p(x;\mu,\Sigma) = \frac{1}{(2\pi)^{n/2}\det(\Sigma)^{1/2}}\exp(-\frac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu))$ is the distribution whose level sets are the Mahalanobis ellipsoids.** The exponent $-\frac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)$ is the negative squared Mahalanobis distance from $x$ to the mean — the density is highest at the mean and decays along ellipsoidal level sets whose shape is determined by $\Sigma^{-1}$. The normalizing constant $\det(\Sigma)^{1/2}$ is the square root of the determinant of $\Sigma$ — proportional to the volume of the Mahalanobis ellipsoid. The maximum likelihood estimator $\hat\Sigma = S$ (sample covariance) is found by differentiating $\log\det(\Sigma) + \text{tr}(\Sigma^{-1}S)$ with respect to $\Sigma$ and setting to zero using the identities $\nabla_\Sigma\log\det\Sigma = \Sigma^{-T} = \Sigma^{-1}$ and $\nabla_\Sigma\text{tr}(\Sigma^{-1}S) = -\Sigma^{-1}S\Sigma^{-1}$ — a direct application of the matrix calculus of the log-determinant.
+
+**The Fisher information matrix $I_\mu = \Sigma^{-1}$ — the precision matrix — is the Riemannian metric on the mean parameter space of the Gaussian family.** The natural gradient $\tilde\nabla_\mu\mathcal{L} = \Sigma\nabla_\mu\mathcal{L}$ is the gradient covector converted to a tangent vector using the Fisher metric. In the portfolio context: the Fisher information $\Sigma^{-1}$ measures how informative an observation is about the mean — high precision in a direction (small ellipsoid axis) means each observation is very informative about the mean in that direction. The natural gradient corrects the ordinary gradient by the inverse Fisher information, scaling the gradient in high-precision directions down and scaling it in low-precision directions up, producing updates that are uniform in statistical information rather than uniform in parameter space.
+
+---
+
+**The Bures-Wasserstein formula $W_2^2(\mathcal{N}(\mu_1,\Sigma_1),\mathcal{N}(\mu_2,\Sigma_2)) = \|\mu_1-\mu_2\|_2^2 + \text{tr}(\Sigma_1+\Sigma_2-2(\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})^{1/2})$ is the bridge between positive definite matrix geometry and Optimal Transport.** The first term $\|\mu_1-\mu_2\|_2^2$ measures the squared distance between the portfolio centers — how far apart the average applicants are. The second term $\mathcal{B}(\Sigma_1,\Sigma_2)^2 = \text{tr}(\Sigma_1+\Sigma_2) - 2\text{tr}((\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})^{1/2})$ measures the Bures distance between the covariance structures — how different the portfolio shapes are, accounting for both eigenvalue sizes and eigenvector orientations.
+
+**The matrix $(\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})^{1/2}$ — the symmetric matrix square root of the sandwiched covariance — is the functional calculus of the spectral theorem applied to positive definite matrices in service of Optimal Transport.** Compute $\Sigma_1^{1/2}$ (the matrix square root from the functional calculus, the unique positive definite symmetric square root). Compute the product $\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2}$ — a positive definite matrix by congruence. Compute its matrix square root. Take the trace. This four-step computation is entirely an application of the spectral theorem's functional calculus to positive definite matrices. The trace of the result measures the geometric overlap between the two covariance structures — how much the principal directions of $\Sigma_1$ align with those of $\Sigma_2$ and how well-matched the associated variances are.
+
+**The optimal transport map from $\mathcal{N}(\mu_1,\Sigma_1)$ to $\mathcal{N}(\mu_2,\Sigma_2)$ — the affine map $T(x) = \mu_2 + A(x-\mu_1)$ with $A = \Sigma_1^{-1/2}(\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})^{1/2}\Sigma_1^{-1/2}$ — is the Brenier map for Gaussians, expressed entirely through positive definite matrix operations.** The matrix $A$ is the unique symmetric positive definite solution to the Riccati equation $A\Sigma_1 A = \Sigma_2$ — it is the matrix that deforms the covariance $\Sigma_1$ into $\Sigma_2$ most efficiently, minimizing the total squared transport cost. Computing $A$ requires the matrix square root (spectral theorem functional calculus) and the matrix inverse (spectral theorem applied to the inverse), both of which require the positive definiteness of $\Sigma_1$.
+
+---
+
+**The connection to MATH 103 (Linear Algebra) is now complete in both directions.** The Gram matrix $G_{ij} = \langle e_i, e_j\rangle$ of an inner product is a positive definite matrix — the matrix representation of the inner product in a basis. The Cholesky decomposition $G = LL^T$ is the Gram-Schmidt orthogonalization of the basis: the columns of $L^{-1}$ are the orthonormal basis vectors obtained by Gram-Schmidt, and the entries of $L$ encode the original basis vectors' components in the orthonormal basis. The positive definiteness of the Gram matrix is the linear independence of the original basis vectors — the condition that Gram-Schmidt succeeds without producing zero-norm vectors. Every inner product computation in MATH 103 was implicitly working with a positive definite Gram matrix, and the Cholesky decomposition was the implicit data structure behind the Gram-Schmidt algorithm.
+
+**The connection to MATH 208 (Statistics and Probability) closes through the multivariate Gaussian, the Mahalanobis distance, and the Cramér-Rao bound.** The confidence ellipses you drew around multivariate Gaussian samples in MATH 208 are the level sets of the Mahalanobis distance — ellipsoids with axes aligned to the eigenvectors of $\Sigma$ and half-lengths proportional to $\sqrt{\lambda_i(\Sigma)}$. The $\chi^2$ distribution of the Mahalanobis distance $D^2 = (X-\mu)^T\Sigma^{-1}(X-\mu) \sim \chi^2_n$ for $X \sim \mathcal{N}(\mu,\Sigma)$ is the distribution of the squared Euclidean norm of the whitened variable $\Sigma^{-1/2}(X-\mu) \sim \mathcal{N}(0,I)$. The Cramér-Rao bound $\text{Cov}(\hat\theta) \succeq I(\theta)^{-1} = \Sigma$ for estimating the mean of a Gaussian is the positive semidefinite ordering on the cone $\mathbb{S}^n_+$ — the covariance of any estimator dominates the Fisher information inverse in the positive semidefinite sense.
+
+**The connection to MATH 302 (Matrix Theory) runs through Sylvester's law of inertia and congruence invariance.** The inertia of a symmetric matrix — the triple $(n_+, n_-, n_0)$ of positive, negative, and zero eigenvalues — is invariant under congruence transformations $A \mapsto PAP^T$ for invertible $P$. Positive definiteness ($n_- = n_0 = 0$, $n_+ = n$) is a congruence invariant: if $\Sigma \succ 0$ and $C$ is invertible, then $C\Sigma C^T \succ 0$. This is the geometric statement that positive definiteness describes an intrinsic property of the quadratic form, not a property of any particular basis. The affine-invariant Riemannian metric on $\mathbb{S}^n_{++}$ is congruence-invariant by construction, which is the precise statement that the metric respects the intrinsic geometry of positive definite matrices rather than the extrinsic geometry inherited from the ambient vector space $\mathbb{S}^n$.
+
+---
+
+**Looking forward across the roadmap**, positive definite matrices are the unifying thread connecting every chapter to every phase. In Phase 1, the Wasserstein-2 distance between Gaussians is the Bures metric on positive definite covariance matrices — the entire geometry of Optimal Transport for Gaussian distributions reduces to matrix square roots and trace computations. The Sinkhorn algorithm's kernel matrix $K_{ij} = e^{-c_{ij}/\varepsilon}$ is positive definite when the cost matrix satisfies certain conditions, and the convergence analysis uses the spectral properties of this positive definite kernel matrix. In Phase 2, the graph Laplacian $L = D-W$ is symmetric positive semidefinite, and its spectral gap $\lambda_2$ — the smallest nonzero eigenvalue — controls both the convergence of diffusion processes on the graph and the quality of spectral graph embeddings. The feature covariance matrices of equivariant graph neural networks are positive definite, and their spectral structures determine the networks' discriminative power. In Phase 3, the score function's covariance — the Fisher information of the score-based model — is a positive definite operator on function space whose inverse governs natural gradient descent for score matching. The Fokker-Planck equation's diffusion coefficient is a positive definite matrix governing the spreading of the distribution during forward diffusion, and the backward SDE's drift depends on this matrix through the score function. The Riemannian metric on the Wasserstein manifold at each distribution $\mu$ is a positive definite operator on the tangent space $T_\mu\mathcal{P}_2$ — the JKO scheme's gradient computation requires this operator and its inverse at every step.
+
+The risk ellipse in the microfinance office — the geometric fingerprint of the portfolio's covariance structure, the Mahalanobis distance's level set, the ellipsoid whose axes are eigenvectors and whose half-lengths are standard deviations — is not a visualization tool layered on top of the mathematics. It is the mathematics. The positive definite matrix is the ellipse, and the ellipse is the positive definite matrix.
+
+---
+---

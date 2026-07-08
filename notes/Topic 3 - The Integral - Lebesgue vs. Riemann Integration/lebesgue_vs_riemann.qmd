@@ -1,0 +1,308 @@
+# Topic 3 - The Integral
+
+## Introduction
+
+You have now built the full scaffolding for integration. You know which subsets of a space are allowed to have a size — the Borel sets. You know how to assign sizes to them consistently — the Lebesgue measure. What remains is the payoff: using that size assignment to define a coherent, powerful notion of integration that goes strictly beyond what you learned in MATH 201.
+
+The integral is the machine that turns a measure and a function into a number. It answers the question: if mass is distributed across a space according to the measure $\mu$, and the function $f$ assigns a value to each point, what is the total weighted mass? This question is so fundamental that it appears in every corner of the roadmap — as an expectation, as a cost functional, as a score matching objective, as a transport plan evaluation. Every one of those objects is an integral, and the framework you choose for defining that integral determines what you can and cannot prove rigorously.
+
+This topic has exactly one subtopic — Lebesgue vs. Riemann integration — and its purpose is to make the distinction between the two frameworks completely explicit. Not just the technical difference, but the philosophical one: why the Riemann framework, which served you well through all of MATH 201, is genuinely insufficient for the mathematics of probability and generative AI, and why the Lebesgue framework resolves every one of its failures.
+
+---
+
+# Subtopic - Lebesgue vs. Riemann Integration
+
+## Layer 1 (Story)
+
+You are the head of the national census bureau of Nepal, and your task is to compute the total income of the entire population of Kathmandu valley. Every resident has an income — a non-negative real number — and you want to sum them all up in a way that gives a meaningful, consistent total. You have two junior statisticians on your team, and you assign them the same task independently, asking them to report back with their methodology and their answer.
+
+The first statistician — call him Riemann — comes back with the following approach. He divides the valley into a grid of small geographical blocks: Thamel block, Asan block, Patan block, and so on. Within each block, he picks a representative resident, records that resident's income, and multiplies it by the number of residents in the block. He sums these products across all blocks to get the total. If the blocks are small enough and the income distribution is smooth enough — if nearby residents tend to have similar incomes — this approximation gets better and better as the blocks get finer, and in the limit it converges to the true total. Riemann's method works beautifully when the income landscape is smooth and well-behaved.
+
+The second statistician — call her Lebesgue — comes back with a completely different approach. Instead of dividing the valley into geographical blocks, she divides the income axis into income brackets: residents earning between 0 and 10,000 rupees per month, between 10,000 and 20,000, between 20,000 and 30,000, and so on. For each bracket, she counts the number of residents whose income falls within it — not by geography, but by income level — and multiplies the bracket's representative income by that count. She sums these products across all brackets to get the total. Her method does not care at all about where residents live. It only cares about how many people earn each level of income.
+
+---
+
+Both methods seem reasonable. For a smoothly distributed population — one where income varies gradually across geography — they produce essentially the same answer. Riemann's geographical blocks and Lebesgue's income brackets are both valid approximation schemes, and both converge to the true total as the partitions get finer.
+
+But now the census bureau encounters three problem cases, one after another, and the difference between the two methods becomes stark.
+
+---
+
+**Problem Case 1: The Segregated City.**
+
+Imagine that Kathmandu has become perfectly economically segregated. Every resident of Thamel earns exactly 100,000 rupees per month. Every resident of Patan earns exactly 30,000. Every resident of Bhaktapur earns exactly 15,000. The income function is piecewise constant — it jumps discontinuously at the boundary between neighborhoods, but within each neighborhood it is perfectly flat.
+
+Riemann handles this fine. His geographical blocks eventually align with the neighborhood boundaries, and the piecewise constant income function is Riemann integrable. No problem here.
+
+Lebesgue handles it even more elegantly. She simply identifies three income brackets — 100,000, 30,000, and 15,000 — multiplies each by the population of the corresponding neighborhood, and sums. She does not need fine blocks at all. Her method handles piecewise constant functions in a single step.
+
+Both methods agree. Neither struggles. The segregated city is an easy case.
+
+---
+
+**Problem Case 2: The Fractal Neighborhood.**
+
+Now imagine a far stranger situation. A city planner with an unusual sense of humor has designed a new district whose residents are indexed by the rational numbers in $[0,1]$ — an infinite, dense, but countable population scattered throughout the interval. Every rational-indexed resident earns 1,000 rupees. Every irrational-indexed resident earns 0 rupees. The income function is the indicator of the rationals — exactly the plot $Q$ from the previous subtopic.
+
+Riemann is immediately paralyzed. In every geographical block, no matter how small, there are both rational-indexed residents earning 1,000 and irrational-indexed residents earning 0. His upper sum — using the maximum income in each block — always gives a total proportional to 1,000 times the full population. His lower sum — using the minimum — always gives zero. The upper and lower sums never converge, no matter how fine the grid. Riemann cannot compute a total income for this district. His method breaks down completely.
+
+Lebesgue is unbothered. She looks at her income brackets. The bracket for 1,000 rupees contains exactly the rational-indexed residents — a countable set. She knows from the previous subtopic that a countable set has Lebesgue measure zero. So the number of residents in this bracket is, in the measure-theoretic sense, zero. The bracket for 0 rupees contains all the irrational-indexed residents — an uncountable set of full measure. The total income is $1000 \times 0 + 0 \times 1 = 0$. Lebesgue computes the answer instantly, correctly, and without any ambiguity. The fractal neighborhood that paralyzed Riemann is trivial for Lebesgue, because her method operates on the income axis rather than the geography.
+
+---
+
+**Problem Case 3: The Limit of Smooth Surveys.**
+
+Now imagine the census bureau needs to compute total income not from a single survey, but as the limit of a sequence of approximating surveys. Each year, a new survey $f_n$ is conducted — a smooth, well-behaved income function — and as $n \to \infty$, the surveys converge pointwise to the true income function $f$. You want to conclude that the total income computed from the approximate surveys converges to the true total income — that $\lim_{n \to \infty} \int f_n \, d\mu = \int f \, d\mu$.
+
+Riemann can guarantee this only under a very strong condition: the convergence must be uniform. The survey functions $f_n$ must converge to $f$ at the same rate everywhere in the valley simultaneously. If the convergence is non-uniform — if some pockets of the valley converge slowly while others converge quickly — Riemann's method gives no guarantee that the limit of the totals equals the total of the limit. The two operations — limit and integral — cannot generally be exchanged under Riemann's framework.
+
+Lebesgue can guarantee this under a far weaker condition: the Dominated Convergence Theorem. As long as all the survey functions $f_n$ fit under a single integrable envelope — as long as no survey ever assigns any resident an income larger than some fixed integrable bound — the limit passes through the integral automatically, regardless of whether convergence is uniform. Non-uniform convergence, pointwise convergence, convergence almost everywhere — all of these suffice. The Lebesgue framework makes the exchange of limits and integrals legitimate under conditions that arise naturally in probability and analysis, where uniform convergence is almost never available.
+
+---
+
+Here is the break moment. The naive assumption — and it is a deeply natural one, shared by most students who have only seen Riemann integration — is that the two frameworks are essentially equivalent, differing only in technical details that never matter in practice. After all, they agree on every continuous function. They agree on every piecewise smooth function. For the functions that arise in physics and engineering, they give the same number. Why learn a new framework?
+
+The break is this: the functions that arise in probability theory and machine learning are almost never continuous. A probability density is defined only up to a set of measure zero — it is an equivalence class of functions, not a single function, and two densities that agree almost everywhere are the same density regardless of their pointwise differences. A score function $\nabla \log p(x)$ may fail to exist on a null set. A neural network's activation function — the ReLU — is not differentiable at zero, which is a single point, a null set. The Lebesgue framework handles all of these without hesitation, because it operates on equivalence classes of functions and ignores null sets by design. The Riemann framework does not have this flexibility. It is sensitive to the values of a function at individual points, which makes it the wrong tool for a mathematical universe where individual points have measure zero and therefore do not matter.
+
+More fundamentally: the Lebesgue framework is the one that makes $L^p$ spaces into Banach and Hilbert spaces. The Riemann framework cannot do this. The completion of the space of Riemann-integrable functions under the $L^2$ norm produces functions that are not Riemann-integrable — the completion process forces you out of the Riemann world and into the Lebesgue world. The Hilbert space $L^2$ that houses all the probability densities, score functions, and neural network outputs of the roadmap is a Lebesgue construction, not a Riemann one. There is no way to build it without Lebesgue integration.
+
+---
+
+Hold this picture in your mind. Two statisticians, same task, completely different philosophies. Riemann slices geography and asks about local income levels. Lebesgue slices income levels and asks about the geography of each level. For smooth, well-behaved populations they agree. For fractal neighborhoods, limit operations, and the equivalence-class structure of probability densities, only Lebesgue's method produces consistent, powerful, correct results. The census bureau that wants to handle every possible income distribution — including the ones that real-world probability theory generates — must hire Lebesgue, not Riemann.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in five stages: the precise construction of the Riemann integral, its exact failure conditions, the Lebesgue integral restated in full formal detail, the theorems that make Lebesgue integration superior for analysis, and finally the $L^p$ space structure that only the Lebesgue framework can produce.
+
+### The Riemann Integral
+
+Let $f: [a,b] \to \mathbb{R}$ be a bounded function. A **partition** of $[a,b]$ is a finite collection of points:
+
+$$P = \{a = x_0 < x_1 < x_2 < \cdots < x_n = b\}$$
+
+The **mesh** of the partition is $\|P\| = \max_{1 \leq k \leq n} (x_k - x_{k-1})$ — the width of the widest subinterval. For each subinterval $[x_{k-1}, x_k]$, define the supremum and infimum of $f$ on that subinterval:
+
+$$M_k = \sup_{x \in [x_{k-1}, x_k]} f(x), \qquad m_k = \inf_{x \in [x_{k-1}, x_k]} f(x)$$
+
+The **upper Darboux sum** and **lower Darboux sum** are:
+
+$$U(f, P) = \sum_{k=1}^{n} M_k (x_k - x_{k-1}), \qquad L(f, P) = \sum_{k=1}^{n} m_k (x_k - x_{k-1})$$
+
+The **upper Riemann integral** and **lower Riemann integral** are:
+
+$$\overline{\int_a^b} f \, dx = \inf_P U(f,P), \qquad \underline{\int_a^b} f \, dx = \sup_P L(f,P)$$
+
+The function $f$ is **Riemann integrable** on $[a,b]$ if and only if the upper and lower Riemann integrals agree:
+
+$$\overline{\int_a^b} f \, dx = \underline{\int_a^b} f \, dx$$
+
+and the common value is the **Riemann integral** $\int_a^b f \, dx$.
+
+---
+
+### The Riemann-Lebesgue Characterization Theorem
+
+The precise condition under which a bounded function is Riemann integrable is given by the following theorem, which is the formal statement of exactly where Riemann integration succeeds and fails:
+
+**Theorem (Lebesgue's Characterization of Riemann Integrability).** A bounded function $f: [a,b] \to \mathbb{R}$ is Riemann integrable if and only if the set of its discontinuities has Lebesgue measure zero:
+
+$$f \text{ is Riemann integrable} \iff \lambda(\{x \in [a,b] : f \text{ is discontinuous at } x\}) = 0$$
+
+This theorem — proved by Lebesgue himself — is the precise diagnosis of the Riemann framework's limitation. Riemann integration works exactly on functions that are continuous almost everywhere. The moment discontinuities accumulate on a set of positive measure, Riemann integration fails. The indicator function $\mathbf{1}_\mathbb{Q}$ of the rationals is discontinuous everywhere on $[0,1]$ — its discontinuity set is all of $[0,1]$, which has measure 1 — so it is not Riemann integrable. This is not a deficiency of the particular function. It is a structural limitation of the approximation scheme.
+
+---
+
+### Oscillation and the Failure Mechanism
+
+The failure of Riemann integration can be made even more explicit using the concept of **oscillation**. The oscillation of $f$ at a point $x$ is:
+
+$$\text{osc}(f, x) = \lim_{r \to 0} \sup_{y,z \in B(x,r)} |f(y) - f(z)|$$
+
+It measures how wildly $f$ fluctuates near $x$. The function $f$ is continuous at $x$ if and only if $\text{osc}(f,x) = 0$. The connection to Riemann integrability is direct: the upper and lower Darboux sums differ by exactly:
+
+$$U(f,P) - L(f,P) = \sum_{k=1}^n \text{osc}(f, [x_{k-1}, x_k]) \cdot (x_k - x_{k-1})$$
+
+where $\text{osc}(f, [x_{k-1},x_k]) = M_k - m_k$ is the oscillation over the subinterval. For $f$ to be Riemann integrable, this difference must converge to zero as $\|P\| \to 0$. This happens if and only if the total length of subintervals where the oscillation exceeds any fixed $\varepsilon > 0$ goes to zero — which is precisely the condition that discontinuities form a null set.
+
+For $\mathbf{1}_\mathbb{Q}$, the oscillation at every point of $[0,1]$ is exactly 1 — there is no point where the function settles down — so $U(f,P) - L(f,P) = 1$ for every partition $P$, regardless of mesh size. The gap never closes.
+
+---
+
+### The Lebesgue Integral — Full Formal Construction
+
+The Lebesgue integral was introduced in the previous subtopic, but we now state it in complete formal detail and contrast it step by step with the Riemann construction.
+
+Let $(\Omega, \mathcal{F}, \mu)$ be a measure space and let $f: \Omega \to \mathbb{R}$ be a measurable function.
+
+**Step 1 — Simple Functions.** A measurable function $\phi: \Omega \to \mathbb{R}$ is **simple** if it takes only finitely many distinct values $c_1, \ldots, c_n \in \mathbb{R}$. Writing $A_k = \phi^{-1}(\{c_k\}) = \{\omega : \phi(\omega) = c_k\}$, the canonical representation is:
+
+$$\phi = \sum_{k=1}^n c_k \mathbf{1}_{A_k}$$
+
+where $A_1, \ldots, A_n$ are disjoint measurable sets with $\bigcup_k A_k = \Omega$. The Lebesgue integral of a non-negative simple function is:
+
+$$\int_\Omega \phi \, d\mu = \sum_{k=1}^n c_k \mu(A_k)$$
+
+with the convention $0 \cdot \infty = 0$. This is the formal version of Lebesgue's level-set idea: weight each output level $c_k$ by the measure of the set of inputs that produce it.
+
+**Step 2 — Non-negative Measurable Functions.** For $f \geq 0$ measurable, define:
+
+$$\int_\Omega f \, d\mu = \sup\left\{ \int_\Omega \phi \, d\mu : \phi \text{ simple}, \; 0 \leq \phi \leq f \right\}$$
+
+The supremum is over all simple functions lying below $f$. This is the formal analogue of the lower Riemann sum, but with two critical differences: the partition is of the range, not the domain, and the approximating functions are measurable rather than step functions on intervals.
+
+**Step 3 — General Measurable Functions.** Decompose $f = f^+ - f^-$ where:
+
+$$f^+(x) = \max(f(x), 0), \qquad f^- (x) = \max(-f(x), 0)$$
+
+Both $f^+$ and $f^-$ are non-negative measurable functions. Then:
+
+$$\int_\Omega f \, d\mu = \int_\Omega f^+ \, d\mu - \int_\Omega f^- \, d\mu$$
+
+provided at least one of the two integrals is finite. The function $f$ is **Lebesgue integrable** — written $f \in L^1(\mu)$ — if both integrals are finite, equivalently if $\int_\Omega |f| \, d\mu < \infty$.
+
+---
+
+### The Three Convergence Theorems
+
+The superiority of Lebesgue integration over Riemann integration is most visible in the three convergence theorems — results that tell you when you can exchange a limit and an integral. These theorems have no satisfactory Riemann analogues.
+
+**Theorem 1 — Monotone Convergence Theorem (MCT).** Let $(f_n)$ be a sequence of non-negative measurable functions satisfying $f_n \leq f_{n+1}$ pointwise almost everywhere, and let $f = \lim_{n \to \infty} f_n$ pointwise. Then:
+
+$$\lim_{n \to \infty} \int_\Omega f_n \, d\mu = \int_\Omega f \, d\mu$$
+
+No boundedness condition is required — the result holds even if $\int f \, d\mu = +\infty$. The proof uses the definition of the Lebesgue integral as a supremum over simple functions and the monotonicity of the approximation.
+
+**Theorem 2 — Fatou's Lemma.** For any sequence of non-negative measurable functions $(f_n)$:
+
+$$\int_\Omega \liminf_{n \to \infty} f_n \, d\mu \leq \liminf_{n \to \infty} \int_\Omega f_n \, d\mu$$
+
+This is the weaker but more general companion to the MCT. It requires no monotonicity and no convergence — only non-negativity. The inequality rather than equality reflects the fact that mass can escape to infinity in the limit, making the left side smaller than the right.
+
+**Theorem 3 — Dominated Convergence Theorem (DCT).** Let $(f_n)$ be a sequence of measurable functions converging pointwise almost everywhere to $f$. Suppose there exists an integrable dominating function $g \in L^1(\mu)$ satisfying $|f_n| \leq g$ almost everywhere for all $n$. Then $f \in L^1(\mu)$ and:
+
+$$\lim_{n \to \infty} \int_\Omega f_n \, d\mu = \int_\Omega f \, d\mu$$
+
+equivalently:
+
+$$\lim_{n \to \infty} \int_\Omega |f_n - f| \, d\mu = 0$$
+
+The dominating function $g$ is the envelope from the story — it prevents mass from escaping. Under Riemann integration, the corresponding result requires uniform convergence: $\sup_x |f_n(x) - f(x)| \to 0$. Uniform convergence is a drastically stronger condition than dominated pointwise convergence, and it fails in almost every situation where the DCT is needed. The DCT is the reason Lebesgue integration is the correct framework for probability theory and machine learning.
+
+---
+
+### The Precise Comparison
+
+The relationship between Riemann and Lebesgue integration can now be stated exactly:
+
+$$f \text{ Riemann integrable on } [a,b] \implies f \text{ Lebesgue integrable on } [a,b] \text{ and } \int_a^b f \, dx = \int_{[a,b]} f \, d\lambda$$
+
+The converse is false. The Lebesgue integral is a strict extension of the Riemann integral: it agrees with Riemann wherever Riemann is defined, and it extends beyond. The extension is not a matter of degree — it is a matter of kind. The Lebesgue integral operates on a fundamentally different object: not a function evaluated pointwise, but an equivalence class of functions modulo null sets.
+
+---
+
+### The $L^p$ Spaces as the Payoff
+
+The deepest reason to prefer Lebesgue integration is not any single theorem but the entire structure it generates. For $1 \leq p < \infty$, the **$L^p$ space** with respect to a measure $\mu$ on $(\Omega, \mathcal{F})$ is:
+
+$$L^p(\Omega, \mathcal{F}, \mu) = \left\{ f: \Omega \to \mathbb{R} \text{ measurable} : \int_\Omega |f|^p \, d\mu < \infty \right\} \Big/ \sim$$
+
+where $f \sim g$ if and only if $f = g$ $\mu$-almost everywhere. The equivalence classes under $\sim$ are the elements of $L^p$. The $L^p$ norm is:
+
+$$\|f\|_{L^p} = \left( \int_\Omega |f|^p \, d\mu \right)^{1/p}$$
+
+Three foundational inequalities govern these spaces. **Hölder's inequality** states that for conjugate exponents $p$ and $q$ satisfying $\frac{1}{p} + \frac{1}{q} = 1$:
+
+$$\int_\Omega |fg| \, d\mu \leq \|f\|_{L^p} \|g\|_{L^q}$$
+
+**Minkowski's inequality** states that the $L^p$ norm satisfies the triangle inequality:
+
+$$\|f + g\|_{L^p} \leq \|f\|_{L^p} + \|g\|_{L^p}$$
+
+which confirms that $\|\cdot\|_{L^p}$ is indeed a norm. The **Riesz-Fischer Theorem** — the deepest of the three — states that $L^p(\mu)$ is complete with respect to the $L^p$ norm for all $1 \leq p \leq \infty$:
+
+$$L^p(\mu) \text{ is a Banach space for all } 1 \leq p \leq \infty$$
+
+and for $p = 2$ specifically:
+
+$$L^2(\mu) \text{ is a Hilbert space with inner product } \langle f, g \rangle = \int_\Omega fg \, d\mu$$
+
+This is the formal proof that the Hilbert space structure of $L^2$ — which houses all probability densities, score functions, and neural network outputs — requires the Lebesgue integral. The Riemann framework cannot produce a complete normed space, because the completion of the Riemann-integrable functions under the $L^2$ norm contains functions that are not Riemann integrable. Completeness forces you into the Lebesgue world. There is no escape.
+
+---
+
+### The Change of Variables Formula
+
+One final result deserves explicit statement because it appears constantly in probability and generative modeling. If $T: \mathbb{R}^n \to \mathbb{R}^n$ is a diffeomorphism — a smooth, invertible map with smooth inverse — and $\mu$ is the Lebesgue measure on $\mathbb{R}^n$, then for any non-negative measurable function $f$:
+
+$$\int_{\mathbb{R}^n} f(y) \, d\lambda(y) = \int_{\mathbb{R}^n} f(T(x)) |\det J_T(x)| \, d\lambda(x)$$
+
+where $J_T(x)$ is the Jacobian matrix of $T$ at $x$ and $|\det J_T(x)|$ is the absolute value of its determinant. This is the change of variables formula — the formal statement of how a transformation $T$ distorts volume elements. In generative modeling, $T$ is the generator — the map that transforms a simple noise distribution into a complex data distribution — and $|\det J_T|$ is the volume distortion factor that appears in the change-of-variables formula for probability densities:
+
+$$p_X(x) = p_Z(T^{-1}(x)) \cdot |\det J_{T^{-1}}(x)|$$
+
+This formula is the mathematical heart of normalizing flows, which are a class of generative models in Phase 3. It is a Lebesgue integral identity — it requires the full machinery of Lebesgue integration and the push-forward measure to state and prove correctly. The Riemann framework can handle it only for smooth, well-behaved maps, but the Lebesgue framework handles it in full generality.
+
+---
+
+### WHY THIS MATTERS
+
+In MATH 201 (Advanced Calculus), you proved the Fundamental Theorem of Calculus for Riemann integrals and computed integrals of continuous and piecewise smooth functions. Every one of those computations is valid within the Lebesgue framework — they agree numerically, and the Lebesgue integral subsumes them. In MATH 217 (ODEs and PDEs), the solution formulas you derived — Green's functions, convolution integrals, Fourier series — are Lebesgue integrals, and their convergence properties rely on the DCT rather than uniform convergence. In MATH 208, every expectation, variance, and moment is a Lebesgue integral against a probability measure, and the DCT is what makes it legitimate to differentiate under the integral sign when computing moment generating functions — a step that MATH 208 likely took without justification.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the census bureau story has a precise mathematical address. Let us walk through them one by one, until the two statisticians, the three problem cases, and the full formal apparatus are completely fused into a single picture.
+
+---
+
+**The census bureau's task — computing total income across the entire population — is integration itself.** The population is the measure space $(\Omega, \mathcal{F}, \mu)$. Each resident is a point $\omega \in \Omega$. The income function assigning a value to each resident is the measurable function $f: \Omega \to \mathbb{R}$. The total income is the integral $\int_\Omega f \, d\mu$. Every component of the story maps onto every component of the integral — the space, the measure, the function, and the number the integral produces.
+
+**Riemann's geographical block method is the upper and lower Darboux sum construction.** Dividing the valley into geographical blocks is partitioning the domain $[a,b]$ into subintervals $[x_{k-1}, x_k]$. Picking the maximum income in each block is computing $M_k = \sup_{x \in [x_{k-1},x_k]} f(x)$. Picking the minimum is computing $m_k = \inf_{x \in [x_{k-1},x_k]} f(x)$. Multiplying by block size and summing is forming the upper sum $U(f,P) = \sum_k M_k(x_k - x_{k-1})$ and lower sum $L(f,P) = \sum_k m_k(x_k - x_{k-1})$. The requirement that upper and lower sums converge to the same value as the mesh $\|P\| \to 0$ is Riemann integrability. When they do not converge — when the gap $U(f,P) - L(f,P)$ never closes — the Riemann integral does not exist.
+
+**Lebesgue's income bracket method is the simple function approximation from below.** Dividing the income axis into brackets is partitioning the range of $f$ into levels $c_1, \ldots, c_n$. Counting the number of residents whose income falls within each bracket is computing $\mu(A_k)$ where $A_k = f^{-1}([c_k, c_{k+1}))$ is the preimage of the bracket — a measurable set because $f$ is measurable. Multiplying the bracket level by the resident count and summing is computing $\int \phi \, d\mu = \sum_k c_k \mu(A_k)$ for the simple function $\phi = \sum_k c_k \mathbf{1}_{A_k}$ that approximates $f$ from below. Taking the supremum over all such simple functions is the Lebesgue integral $\int f \, d\mu = \sup\{\int \phi \, d\mu : \phi \text{ simple}, 0 \leq \phi \leq f\}$. The two statisticians are the two definitions — and their philosophical difference is exactly the difference between partitioning the domain and partitioning the range.
+
+---
+
+**The segregated city — piecewise constant income, smooth handling by both methods — is the case where both Riemann and Lebesgue integrals exist and agree.** A piecewise constant function has discontinuities only at finitely many boundary points — a finite set, which has Lebesgue measure zero. The Lebesgue characterization theorem therefore guarantees Riemann integrability: $\lambda(\{\text{discontinuities}\}) = 0$ implies Riemann integrable. Both integrals produce the same number. The segregated city is the regime where Riemann works perfectly — and the Lebesgue framework, being a strict extension, agrees with it there.
+
+**The fractal neighborhood — the indicator of the rationals — is the case where the oscillation never closes.** The oscillation of $\mathbf{1}_\mathbb{Q}$ at every point of $[0,1]$ is exactly 1, because every open ball around any real number contains both rationals and irrationals. Therefore $U(f,P) - L(f,P) = \sum_k \text{osc}(f,[x_{k-1},x_k]) \cdot (x_k - x_{k-1}) = 1 \cdot 1 = 1$ for every partition $P$ regardless of mesh size. The gap is permanently 1. The set of discontinuities is all of $[0,1]$, which has Lebesgue measure 1, not 0 — so the characterization theorem confirms non-integrability. Riemann is paralyzed because his approximation scheme operates on the domain, where rationals and irrationals are inseparable at every scale.
+
+**Lebesgue's answer of zero for the fractal neighborhood is the simple function computation $1 \cdot \lambda(\mathbb{Q} \cap [0,1]) + 0 \cdot \lambda(\mathbb{R} \setminus \mathbb{Q} \cap [0,1]) = 1 \cdot 0 + 0 \cdot 1 = 0$.** The simple function decomposition of $\mathbf{1}_\mathbb{Q}$ is $\phi = 1 \cdot \mathbf{1}_{\mathbb{Q}} + 0 \cdot \mathbf{1}_{\mathbb{Q}^c}$, which is itself the function — no approximation needed, it is already simple. The measure of the rational-income bracket is $\mu(\mathbb{Q} \cap [0,1]) = 0$ because the rationals are countable and every countable set has Lebesgue measure zero. The level-set philosophy instantly sees what the geographical philosophy cannot: the rational-indexed residents form a null set, contributing nothing to the total. The income bracket for 1,000 rupees has zero population in the measure-theoretic sense.
+
+---
+
+**The limit of smooth surveys — the third problem case — is the DCT versus uniform convergence comparison.** The sequence of survey functions $(f_n)$ converging pointwise to $f$ is a sequence of measurable functions converging almost everywhere. The requirement that all surveys fit under a single integrable envelope $g$ — meaning $|f_n| \leq g$ almost everywhere for all $n$ — is the domination condition $|f_n| \leq g \in L^1(\mu)$. The conclusion $\lim_{n\to\infty} \int f_n \, d\mu = \int f \, d\mu$ is the DCT. Riemann's requirement of uniform convergence — $\sup_x |f_n(x) - f(x)| \to 0$ — is the condition that every pocket of the valley converges at the same rate simultaneously. This is the strong condition from the story, and it fails in almost every probabilistic setting because convergence in probability and convergence in distribution are both weaker than uniform convergence.
+
+**The Monotone Convergence Theorem is the special case where the surveys form an increasing sequence.** If each new survey $f_{n+1}$ reports incomes at least as high as the previous survey $f_n$ at every point, the total incomes $\int f_n \, d\mu$ increase monotonically and converge to $\int f \, d\mu$ without any envelope condition. This is continuity from below applied to integrals rather than sets — the measure-theoretic and integral-theoretic continuity properties are both instances of the same underlying principle: monotone sequences of well-behaved objects have limits that behave as expected.
+
+**Fatou's Lemma is the honest budget estimate when the surveys are chaotic.** Even without monotonicity and without a dominating envelope, the total income of the limiting survey is at most the limit inferior of the total incomes of the approximate surveys: $\int \liminf_n f_n \, d\mu \leq \liminf_n \int f_n \, d\mu$. The inequality rather than equality reflects the fact that some income mass may escape to infinity in the approximating surveys — residents whose reported incomes go to infinity along a subsequence but contribute nothing in the limit. Fatou's Lemma is the safety net below the DCT: weaker hypotheses, weaker conclusion, but always valid.
+
+---
+
+**The break moment — the false equivalence between Riemann and Lebesgue — finds its formal refutation in the Riesz-Fischer theorem.** The claim that the two frameworks are essentially equivalent for practical purposes collapses the moment you try to build a complete normed space. The completion of the Riemann-integrable functions on $[0,1]$ under the $L^2$ norm — the process of filling in the holes, exactly as $\mathbb{R}$ fills in the holes of $\mathbb{Q}$ — produces functions that are not Riemann integrable. The completion forces you out of the Riemann world. The Riesz-Fischer theorem states that $L^2(\mu)$ is complete — that the completion process stays within the Lebesgue world. Lebesgue integration is not a more convenient version of Riemann integration. It is the version that produces complete spaces. Riemann integration is the version that does not.
+
+**The equivalence classes in $L^p$ — functions identified when they agree almost everywhere — are the formal version of the registry's almost everywhere language.** Two survey functions $f$ and $g$ that report the same income for every resident except a null set of measure-zero residents are the same element of $L^p$. Their $L^p$ norms are equal: $\|f - g\|_{L^p} = (\int |f-g|^p \, d\mu)^{1/p} = 0$. The probability densities of Phase 3 are elements of $L^1$ — equivalence classes of integrable functions — not individual functions. A density $p(x)$ is only defined up to a null set, and the score function $\nabla \log p(x)$ is only defined almost everywhere. The almost everywhere language is not a technicality. It is the correct notion of equality for the objects the roadmap works with.
+
+---
+
+**The change of variables formula — $p_X(x) = p_Z(T^{-1}(x)) \cdot |\det J_{T^{-1}}(x)|$ — is the census bureau's income redistribution formula.** The generator $T$ is the map that redistributes the population from a simple noise distribution $p_Z$ to a complex data distribution $p_X$. The Jacobian determinant $|\det J_{T^{-1}}(x)|$ is the local distortion factor — how much volume the map $T$ stretches or compresses near the point $x$. The formula says: the income density at output location $x$ equals the income density at the input location $T^{-1}(x)$, scaled by how much the map distorts area near that point. This is the mathematical foundation of normalizing flows in Phase 3 — generative models that learn the map $T$ explicitly and use this formula to compute exact likelihoods.
+
+**Hölder's inequality connecting $L^p$ and $L^q$ spaces is the census bureau's budget constraint.** The inequality $\int |fg| \, d\mu \leq \|f\|_{L^p} \|g\|_{L^q}$ for conjugate exponents $\frac{1}{p} + \frac{1}{q} = 1$ says that the total income weighted by any $L^q$ weighting scheme is bounded by the product of the $L^p$ norm of the income distribution and the $L^q$ norm of the weighting scheme. The special case $p = q = 2$ is the Cauchy-Schwarz inequality in $L^2$: $\int |fg| \, d\mu \leq \|f\|_{L^2} \|g\|_{L^2}$, which is the continuous analogue of the dot product inequality $|x \cdot y| \leq \|x\|_2 \|y\|_2$ from MATH 103.
+
+---
+
+**The connection to MATH 201 (Advanced Calculus) is now complete in both directions.** Every Riemann integral you computed — every area under a curve, every volume of revolution, every improper integral — is also a Lebesgue integral producing the same number. The Fundamental Theorem of Calculus holds in the Lebesgue framework as well, in a strengthened form: if $f \in L^1([a,b])$, then $F(x) = \int_a^x f(t) \, dt$ is absolutely continuous and $F'(x) = f(x)$ almost everywhere. The "almost everywhere" qualification is necessary and correct — the derivative need not exist on a null set, and the Lebesgue framework handles this without discomfort. The Riemann version of the theorem requires stronger conditions on $f$ to guarantee the same conclusion.
+
+**The connection to MATH 217 (ODEs and PDEs) is equally direct.** Every solution formula you derived — Fourier series, convolution with Green's functions, integral transforms — is a Lebesgue integral. The convergence of Fourier series in $L^2$ is a consequence of the Riesz-Fischer theorem and the completeness of $L^2$: the Fourier coefficients of an $L^2$ function form a sequence in $\ell^2$, and the Parseval identity $\|f\|_{L^2}^2 = \sum_n |\hat{f}_n|^2$ is the statement that the Fourier transform is an isometry from $L^2$ to $\ell^2$. This connection — between $L^2$ functions and their Fourier representations — is a Hilbert space statement that requires the Lebesgue framework to state and prove correctly.
+
+---
+
+**Looking forward across the roadmap**, the Lebesgue integral is the universal computational engine. In Phase 1, the Wasserstein distance between two distributions $\mu$ and $\nu$ is defined as $W_p(\mu,\nu) = (\inf_\pi \int c(x,y) \, d\pi(x,y))^{1/p}$, where the infimum is over all couplings $\pi$ and the integral is a Lebesgue integral against the coupling measure. The Kantorovich duality expresses this as a supremum of Lebesgue integrals of potential functions. The Sinkhorn algorithm converges in $L^1$ norm — a Lebesgue convergence statement whose justification uses the DCT. In Phase 2, the graph Laplacian eigenmaps are defined by minimizing a Lebesgue integral of gradient squared over a manifold. In Phase 3, the score matching objective is $\mathbb{E}[\|\nabla \log p_\theta(x) - \nabla \log p(x)\|^2] = \int \|\nabla \log p_\theta(x) - \nabla \log p(x)\|^2 p(x) \, d\lambda(x)$ — a Lebesgue integral in $L^2(p)$, the weighted $L^2$ space with measure $p \, d\lambda$. The DCT is what makes it legitimate to differentiate this objective with respect to $\theta$ by passing the derivative through the integral.
+
+Every limit exchange in the roadmap is justified by the DCT. Every density function lives in $L^1$. Every score function lives in $L^2$. Every convergence proof uses the Riesz-Fischer completeness of $L^p$ spaces. The two statisticians — Riemann with his geographical blocks and Lebesgue with her income brackets — made a choice at the beginning that determined everything that came after. The roadmap lives entirely in Lebesgue's world.
+
+---
+---

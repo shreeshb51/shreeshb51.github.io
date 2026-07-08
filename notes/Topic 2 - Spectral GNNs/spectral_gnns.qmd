@@ -1,0 +1,473 @@
+# Topic 2 - Spectral GNNs: Convolution via the Graph Laplacian
+
+## Introduction
+
+Topic 1 gave you the spatial view of graph neural networks — the operational, hands-on framework where messages travel along edges, accumulate at nodes, and update representations round by round. The spatial framework is intuitive, flexible, and computationally efficient. It is also, in a precise sense, incomplete as a mathematical theory. It tells you what to compute but not why the specific operations work, what their frequency-domain interpretation is, or how they connect to the broader mathematical landscape of harmonic analysis and differential geometry that Phase 0 built and that Chapter 3 will require. The spatial framework is the engineering answer. The spectral framework is the mathematical foundation beneath it.
+
+The gap that the spectral framework fills is this. In signal processing, convolution is defined on grids — sequences, images, volumes — and its mathematical justification comes from the Fourier transform. The Fourier transform decomposes a signal into its frequency components, which are the eigenfunctions of the Laplace operator $\Delta = -\nabla^2$ on the grid. Convolution in the spatial domain becomes pointwise multiplication in the frequency domain — the convolution theorem. The convolutional neural network exploits this structure: a convolutional filter is a learned function in the frequency domain, applied by pointwise multiplication to the Fourier coefficients of the input signal and then transformed back to the spatial domain. The filter's spatial locality corresponds to its smoothness in the frequency domain, and the filter's translation equivariance is a direct consequence of the Fourier convolution theorem.
+
+Now you have a graph. The graph has no grid structure, no translation symmetry, no canonical Fourier transform. How do you define convolution on a graph? The answer begins with a single observation: the Laplace operator $\Delta$ on the grid has a direct analogue on the graph. The graph Laplacian $L = D - A$ is the discrete counterpart of the continuous Laplace operator, in a precise and non-metaphorical sense that you will see made exact in the mathematics layer. Just as the continuous Fourier transform is defined through the eigenfunctions of $\Delta$, the graph Fourier transform is defined through the eigenvectors of $L$. And just as convolution on the grid is pointwise multiplication in the Fourier domain, convolution on the graph is pointwise multiplication of graph Fourier coefficients. This is the spectral approach to graph convolution — mathematically rigorous, grounded in the same harmonic analysis that underlies classical signal processing, and directly connected to the differential geometry of manifolds that Chapter 3 requires.
+
+The spectral framework rests on three pillars that this topic develops in sequence.
+
+The first pillar is **the Graph Laplacian and its spectral decomposition**. The graph Laplacian $L = D - A$ is a positive semidefinite matrix — a fact you can prove using your knowledge of quadratic forms from MATH 302 (Matrix Theory). Because $L$ is real symmetric and positive semidefinite, the spectral theorem guarantees an orthonormal eigendecomposition $L = U \Lambda U^\top$, where the columns of $U \in \mathbb{R}^{n \times n}$ are the graph Fourier basis vectors and $\Lambda = \text{diag}(\lambda_1, \ldots, \lambda_n)$ with $0 = \lambda_1 \leq \lambda_2 \leq \ldots \leq \lambda_n$ are the graph frequencies. The smallest eigenvalue $\lambda_1 = 0$ — with eigenvector $\mathbf{1}/\sqrt{n}$, the constant signal — corresponds to the zero frequency. The larger eigenvalues correspond to higher graph frequencies — signals that vary rapidly across the graph. The graph Fourier transform of a node signal $f \in \mathbb{R}^n$ is $\hat{f} = U^\top f$, and the inverse transform is $f = U\hat{f}$. This is the complete analogue of the discrete Fourier transform, with the graph Laplacian eigenvectors playing the role of the Fourier basis functions $e^{i\omega t}$.
+
+The second pillar is **spectral graph convolution and its polynomial approximation via ChebNet**. With the graph Fourier transform in hand, convolution on the graph is defined as pointwise multiplication in the Fourier domain: $(f \star g)_G = U((\hat{f}) \odot (\hat{g})) = U \text{diag}(\hat{g}) U^\top f$, where $\hat{g} = U^\top g$ is the Fourier transform of the filter $g$. A learned spectral filter parameterizes $\hat{g}$ directly — a diagonal matrix of $n$ learnable parameters, one per graph frequency. This is mathematically clean but computationally catastrophic: every forward pass requires the full eigendecomposition of $L$, which costs $O(n^3)$ and must be recomputed for every new graph. The ChebNet approximation of Defferrard, Bresson, and Vandergheynst resolves this by approximating the spectral filter as a polynomial in the graph Laplacian: $g_\theta(L) = \sum_{k=0}^{K} \theta_k T_k(\tilde{L})$, where $T_k$ are Chebyshev polynomials and $\tilde{L} = 2L/\lambda_{\max} - I$ is the rescaled Laplacian. Because computing $L^k f$ requires only $k$ sparse matrix-vector products, ChebNet reduces the cost from $O(n^3)$ to $O(K|E|)$ — linear in the number of edges, the same asymptotic cost as the spatial GNN from Topic 1. The ChebNet approximation is simultaneously a spectral construction (it defines a filter in the frequency domain as a polynomial) and a spatial one (the degree-$K$ polynomial localizes the filter to the $K$-hop neighborhood). This duality — spectral definition, spatial computation — is the bridge between Topic 1 and Topic 2.
+
+The third pillar is **the connection to the GCN and the path forward to manifolds**. The GCN of Kipf and Welling is a first-order special case of ChebNet — a degree-1 Chebyshev approximation with a single symmetric normalization. Viewed spectrally, the GCN is a low-pass filter: it attenuates high-frequency (rapidly varying) components of the node signal and amplifies low-frequency (smoothly varying) components. This is why deep GCNs over-smooth — they are iterative applications of a low-pass filter, which in the limit projects the signal onto the zero-frequency eigenvector $\mathbf{1}$, destroying all variation. Over-smoothing is not a mysterious empirical phenomenon; it is the inevitable consequence of applying a low-pass filter repeatedly, a fact that the spectral view makes immediately transparent. The graph Laplacian $L$ is also the discrete approximation of the Laplace-Beltrami operator $\Delta_\mathcal{M}$ on a smooth manifold — the operator whose eigenfunctions are the Laplacian eigenmaps that Chapter 3 uses to embed high-dimensional manifold data into low-dimensional Euclidean space. The spectral framework is the mathematical thread that connects graph convolution in Chapter 2 to manifold learning in Chapter 3, and both to the harmonic analysis on $S^2$ — the sphere — that underlies the $SO(3)$-equivariant molecular networks of Chapter 1's group theory.
+
+The connection to your curriculum here is the most direct of any topic in Phase 2. Your MATH 302 course on Matrix Theory is the primary scaffold: the spectral theorem for symmetric matrices, eigendecomposition, positive semidefinite matrices, and the geometric interpretation of eigenvalues as stretching factors are all from MATH 302, and they are all exactly what you need to understand the graph Laplacian and its spectral decomposition. Your MATH 213 and MATH 325 courses on Analysis I and II introduced the Fourier series on $[-\pi, \pi]$ as the expansion of a function in eigenfunctions of the Laplacian $d^2/dx^2$ — the graph Fourier transform is the discrete finite-dimensional analogue of exactly this construction, with the graph Laplacian eigenvectors replacing the continuous Fourier basis. Your COMP 323 course on Graph Theory introduced the Laplacian matrix, its eigenvalues, the Fiedler value, and the connection between spectral properties and graph connectivity — every one of those results appears here, now in the context of signal processing rather than combinatorics. The spectral framework is the intersection of your three strongest mathematical courses applied to the same object: the graph Laplacian.
+
+By the end of this topic, the GCN will no longer appear to be an architecture that someone cleverly designed and empirically validated. It will be the inevitable first-order approximation of a mathematically principled spectral filter on the graph, derived from the same harmonic analysis that underlies the Fourier transform, the spherical harmonics of Topic 1's group theory, and the Laplacian eigenmaps of Chapter 3. The spectral and spatial views of graph convolution will feel not like two different theories but like two windows into the same mathematical structure — one looking from the frequency domain inward, the other looking from the spatial domain outward, both revealing the same object: the graph Laplacian and its eigenvectors, the natural harmonic analysis of graph-structured data.
+
+---
+
+## Layer 1 (Story)
+
+Imagine it is 1995. Nepal Telecom has just been commissioned to design the country's first national radio broadcast network. The goal is not telephone communication — that is the postal system you built in Topic 1. This is something different. You are not trying to send a specific message from one village to another. You are trying to understand the natural frequencies at which information resonates across the entire national geography — the modes at which the whole network vibrates simultaneously, the patterns of signal variation that are stable and coherent across the landscape.
+
+Think of it this way. You stretch a drumhead across the Kathmandu Valley. When you strike it, it vibrates. But it does not vibrate randomly — it vibrates in specific patterns called normal modes. The first mode is the simplest: the entire drumhead moves up and down together, one unified pulse. The second mode splits the drumhead into two halves, one rising while the other falls. The higher modes produce increasingly fine-grained patterns of oscillation, with more and more regions alternating between peaks and troughs. Each mode is a natural frequency of the drumhead — determined entirely by the shape and tension of the membrane, not by how you strike it.
+
+Your radio broadcast network is the same idea, but instead of a continuous drumhead, you have a discrete graph of transmitter stations. The stations are the nodes. The transmission cables connecting them are the edges. And the question you want to answer is: what are the natural frequencies of this network? What are the patterns of signal values across the stations that are geometrically coherent — that vary smoothly across well-connected stations and sharply across poorly connected ones?
+
+---
+
+**The problem of signal variation on a graph.**
+
+Nepal Telecom hands you a signal: a real number assigned to each transmitter station, representing the current broadcast power level. Some stations are broadcasting at high power, some at low power. The signal is a vector $f \in \mathbb{R}^n$ — one number per station.
+
+Your first question is: how much does this signal vary across the network? Not in an absolute sense, but in a geometric sense — how much do neighboring stations differ from each other? A signal that assigns the same power level to every station varies not at all. A signal that alternates between maximum and minimum power at every adjacent pair of stations varies as much as possible. A signal that varies smoothly — where stations connected by a cable have similar power levels — is a low-frequency signal. A signal that varies rapidly — where connected stations frequently have very different power levels — is a high-frequency signal.
+
+You need a mathematical object that measures this variation. The natural measure is the sum of squared differences across all edges:
+
+For every cable connecting station $i$ to station $j$, you compute $(f_i - f_j)^2$ — the squared difference in power levels at the two endpoints. You sum this over all cables in the network. The result is a single number that measures the total variation of the signal $f$ across the graph. If this number is small, the signal is smooth — it varies little between connected stations. If it is large, the signal is rough — it oscillates rapidly across connections.
+
+This quantity is called the Dirichlet energy of the signal on the graph. And the object that computes it as a quadratic form — the matrix $L$ such that $f^\top L f$ equals the sum of squared differences — is the graph Laplacian.
+
+---
+
+**Building the graph Laplacian from physical intuition.**
+
+You are an engineer, so you think physically. Each cable between stations $i$ and $j$ exerts a restoring force on the signal values, like a spring: if station $i$ has a higher signal value than station $j$, the cable pulls $f_i$ down and pushes $f_j$ up, trying to equalize them. The net force on station $i$ from all its cables is:
+
+$$(\text{net force on } i) = \sum_{j \in \mathcal{N}(i)} (f_j - f_i) = \sum_{j \in \mathcal{N}(i)} f_j - \deg(i) \cdot f_i$$
+
+This is the discrete Laplacian of the signal at station $i$ — the difference between the average of neighboring values and the value at $i$ itself, scaled by the degree. In matrix form, the net force vector across all stations is:
+
+$$(Af - Df) = -(D - A)f = -Lf$$
+
+where $A$ is the adjacency matrix, $D$ is the degree matrix, and $L = D - A$ is the graph Laplacian. The graph Laplacian $L$ is the operator that computes the restoring force — the discrete version of the continuous Laplacian $\Delta = -\nabla^2$ that measures how much a function differs from its local average.
+
+The continuous Laplacian $\Delta f = -\nabla^2 f$ at a point $x$ measures how much $f(x)$ differs from the average of $f$ in a small ball around $x$. The discrete graph Laplacian $(Lf)_i = \deg(i) f_i - \sum_{j \in \mathcal{N}(i)} f_j$ measures how much $f_i$ differs from the sum of neighboring values. The analogy is exact and not metaphorical — you will see in the mathematics layer that the graph Laplacian converges to the continuous Laplacian as the graph becomes a denser and denser sampling of a smooth manifold.
+
+---
+
+**The natural frequencies of the network: eigenvectors of the Laplacian.**
+
+You want to find the signals that are in equilibrium — the signals for which the restoring forces do not change the signal's shape, only its magnitude. These are the eigenvectors of $L$: signals $u$ satisfying $Lu = \lambda u$, where $\lambda$ is the eigenvalue measuring how much the signal varies across the graph.
+
+The first eigenvector, with eigenvalue $\lambda_1 = 0$, is the constant signal: $u_1 = \mathbf{1}/\sqrt{n}$, every station at the same power level. This signal has zero variation across the graph — no cable exerts any restoring force because all connected stations are equal. The Dirichlet energy $u_1^\top L u_1 = 0$ confirms this. The zero eigenvalue always exists for a connected graph and corresponds to the zero-frequency mode — the DC component in electrical engineering terms, the uniform mode of the drumhead.
+
+The second eigenvector $u_2$, with eigenvalue $\lambda_2 > 0$ (the Fiedler vector from your Graph Theory course), is the smoothest non-constant signal on the graph — the signal that varies as little as possible while being orthogonal to the constant. It splits the network into two groups: stations with positive $u_2$ values and stations with negative $u_2$ values, with the cut between groups following the sparsest connections in the network. This is the graph's fundamental mode — its lowest non-trivial frequency. The Fiedler value $\lambda_2$ measures the strength of this mode: a large $\lambda_2$ means the network is well-connected and the fundamental mode is highly constrained; a small $\lambda_2$ means the network is nearly disconnected at some bottleneck, and the fundamental mode exploits that bottleneck to achieve low variation.
+
+The higher eigenvectors $u_3, u_4, \ldots, u_n$ correspond to progressively higher frequencies — signals that oscillate more and more rapidly across the graph. The last eigenvector $u_n$, with the largest eigenvalue $\lambda_n$, is the most rapidly varying signal — it alternates as sharply as possible between connected stations, like a checkerboard pattern on the graph. Its Dirichlet energy $u_n^\top L u_n = \lambda_n$ is the maximum possible variation.
+
+These $n$ eigenvectors form a complete orthonormal basis for $\mathbb{R}^n$ — the graph Fourier basis. Just as any periodic signal can be decomposed into sine and cosine waves of different frequencies, any signal on the graph can be decomposed into a linear combination of these eigenvectors, each with a coefficient measuring how much that frequency is present in the signal.
+
+---
+
+**The graph Fourier transform.**
+
+Any signal $f \in \mathbb{R}^n$ on the network can be written as:
+
+$$f = \sum_{k=1}^{n} \hat{f}_k u_k$$
+
+where $\hat{f}_k = u_k^\top f$ is the $k$-th graph Fourier coefficient — how much of the $k$-th frequency mode is present in the signal $f$. The collection of coefficients $\hat{f} = U^\top f \in \mathbb{R}^n$ is the graph Fourier transform of $f$, where $U = [u_1 | u_2 | \cdots | u_n]$ is the matrix of eigenvectors.
+
+In Kathmandu's radio network: the graph Fourier transform decomposes the power level distribution across stations into its constituent frequency modes. The coefficient $\hat{f}_1 = u_1^\top f = \mathbf{1}^\top f / \sqrt{n}$ is the average power level across all stations — the DC component. The coefficient $\hat{f}_2 = u_2^\top f$ measures how much the power distribution follows the fundamental network split identified by the Fiedler vector. The higher coefficients measure the presence of increasingly fine-grained oscillation patterns in the signal.
+
+This is the graph Fourier transform — and it is not an analogy to the classical Fourier transform. It is the same mathematical construction, with the graph Laplacian eigenvectors playing the role of the complex exponentials $e^{i\omega t}$, which are themselves eigenfunctions of the continuous Laplacian $-d^2/dx^2$ on the circle.
+
+---
+
+**Filtering: the heart of the matter.**
+
+Now you understand frequency decomposition. What can you do with it?
+
+A filter is an operation that modifies the frequency content of a signal. A low-pass filter retains the low-frequency components and attenuates the high-frequency ones — it smooths the signal, making neighboring stations more similar. A high-pass filter does the opposite — it retains the rapid variations and removes the smooth baseline. A band-pass filter retains only a specific range of frequencies.
+
+In the graph Fourier domain, filtering is straightforward: multiply each Fourier coefficient $\hat{f}_k$ by a scalar $\hat{g}(\lambda_k)$ that specifies how much to amplify or attenuate that frequency. The filtered signal is:
+
+$$f_{\text{filtered}} = U \, \text{diag}(\hat{g}(\lambda_1), \ldots, \hat{g}(\lambda_n)) \, U^\top f$$
+
+where $\hat{g}: \mathbb{R} \to \mathbb{R}$ is the filter function evaluated at each graph frequency $\lambda_k$. A learned spectral GNN parameterizes $\hat{g}$ as a learnable function — it learns which frequencies to amplify and which to attenuate for the task at hand.
+
+This is graph convolution. In the spatial domain, the filtered signal at station $i$ is a weighted combination of the signal values at all other stations, with weights determined by the filter function. In the frequency domain, it is pointwise multiplication of Fourier coefficients. These two descriptions are exactly the same operation — the graph convolution theorem, the analogue of the classical convolution theorem.
+
+---
+
+**The problem with full spectral filtering: a naive assumption that breaks.**
+
+Your filter design seems complete. For each of the $n$ frequency modes, you learn one scalar parameter $\hat{g}(\lambda_k)$. You transform the input signal to the Fourier domain, multiply by your $n$ learned parameters, and transform back. The learned filter adapts to the task.
+
+Here is the naive assumption: this is a good neural network layer.
+
+It breaks, badly, in three ways.
+
+**Break One: Computational cost.** Computing the graph Fourier transform requires the full eigendecomposition of $L$: $L = U\Lambda U^\top$. For a graph with $n$ nodes, eigendecomposition costs $O(n^3)$ operations and $O(n^2)$ memory. For the Nepal Telecom network with hundreds of stations, this is manageable. For a molecular graph with thousands of atoms, a social network with millions of users, or a protein interaction network with tens of thousands of nodes, $O(n^3)$ is completely intractable.
+
+**Break Two: No generalization across graphs.** You have $n$ learnable parameters — one per eigenvalue. But eigenvalues are properties of a specific graph. If you train the filter on the Nepal Telecom network and then try to apply it to a different network — say, the India Telecom network with a different number of stations and a completely different Laplacian spectrum — the learned parameters have no meaning. They were tuned to the specific frequencies $\lambda_1, \ldots, \lambda_n$ of the training graph and cannot transfer to a graph with different frequencies. A spectral GNN with $n$ free parameters per layer cannot generalize across graphs with different sizes and structures.
+
+**Break Three: Non-locality.** In the spatial domain, the full spectral filter combines the signal values at all $n$ stations to compute the filtered value at each station — it is a global operation, not a local one. But meaningful graph signals are often locally structured: whether a particular transmitter station is malfunctioning depends on its local neighborhood, not on the power levels of stations on the other side of the country. A filter that aggregates globally wastes computational resources and ignores the inductive bias of locality.
+
+All three breaks point to the same fix: instead of parameterizing the filter freely with $n$ parameters in the spectral domain, parameterize it as a polynomial in the graph Laplacian. Polynomials in $L$ are local — a degree-$K$ polynomial in $L$ combines only $K$-hop neighborhood information. Polynomials transfer across graphs — the same polynomial coefficients can be applied to any graph, regardless of its size. And polynomials can be computed without eigendecomposition — evaluating $p(L)f = \sum_{k=0}^{K}\theta_k L^k f$ requires only $K$ sparse matrix-vector products, costing $O(K|E|)$.
+
+---
+
+**ChebNet: the polynomial approximation.**
+
+The ChebNet architecture of Defferrard, Bresson, and Vandergheynst replaces the free spectral filter with a degree-$K$ Chebyshev polynomial approximation. The Chebyshev polynomials $T_k: [-1,1] \to [-1,1]$ are the optimal polynomial basis for approximating smooth functions on $[-1,1]$ in the minimax sense — they minimize the maximum approximation error over the interval, and they are numerically stable because they are bounded between $-1$ and $+1$.
+
+The filter is:
+
+$$g_\theta(\tilde{L}) = \sum_{k=0}^{K} \theta_k T_k(\tilde{L})$$
+
+where $\tilde{L} = 2L/\lambda_{\max} - I$ rescales the Laplacian so its eigenvalues lie in $[-1,1]$, $T_k$ is the $k$-th Chebyshev polynomial applied to the matrix $\tilde{L}$, and $\theta = (\theta_0, \ldots, \theta_K) \in \mathbb{R}^{K+1}$ are the learnable filter parameters. The filtered signal is $g_\theta(\tilde{L})f$, computed by the recurrence $T_0(\tilde{L})f = f$, $T_1(\tilde{L})f = \tilde{L}f$, $T_k(\tilde{L})f = 2\tilde{L}T_{k-1}(\tilde{L})f - T_{k-2}(\tilde{L})f$ — each step requiring one sparse matrix-vector multiplication.
+
+The degree-$K$ Chebyshev filter is exactly $K$-hop local: the filtered value at station $i$ depends only on signal values within $K$ hops of station $i$ in the graph. This is the spectral explanation for why the spatial GNN from Topic 1 is local: spatial locality and spectral polynomial filtering are two descriptions of the same constraint.
+
+---
+
+**The GCN as a first-order special case.**
+
+Kipf and Welling observe that for many practical tasks, a $K=1$ Chebyshev approximation — two learnable parameters $\theta_0$ and $\theta_1$ — is sufficient, and further simplifications improve generalization. Setting $K=1$, approximating $\lambda_{\max} \approx 2$ (so $\tilde{L} \approx L - I$), and constraining $\theta_0 = -\theta_1 = \theta$ to reduce overfitting gives a filter of the form:
+
+$$g_\theta(L)f \approx \theta(I + D^{-1/2}AD^{-1/2})f$$
+
+Applying the renormalization trick $I + D^{-1/2}AD^{-1/2} \to \tilde{D}^{-1/2}\tilde{A}\tilde{D}^{-1/2}$ (where $\tilde{A} = A + I$) for numerical stability gives exactly the GCN propagation rule $H^{(k)} = \sigma(\hat{\tilde{A}}H^{(k-1)}W^{(k)})$ from Topic 1.
+
+The GCN is not an architecture someone designed by intuition. It is the first-order Chebyshev polynomial approximation to a spectral graph filter, with a renormalization trick for numerical stability. Its spatial locality, its degree normalization, and its low-pass filtering behavior are all spectral facts, visible immediately once you understand the graph Fourier transform.
+
+---
+
+**Over-smoothing, finally explained.**
+
+In Topic 1, you were told that deep GCNs over-smooth — that repeated application of the GCN propagation drives all node representations toward the same vector. Now you can see exactly why, from the spectral perspective.
+
+The GCN propagation matrix $\hat{\tilde{A}} = \tilde{D}^{-1/2}\tilde{A}\tilde{D}^{-1/2}$ is a low-pass filter: it has eigenvalue $1$ for the zero-frequency mode (the constant signal $\mathbf{1}$) and eigenvalues strictly less than $1$ for all higher-frequency modes. Applying this filter $K$ times multiplies each frequency component by $\lambda_k^K$. For $\lambda_k < 1$, the quantity $\lambda_k^K \to 0$ as $K \to \infty$. For $\lambda_1 = 1$, the zero-frequency component is preserved. In the limit, only the zero-frequency component survives — the signal collapses to its projection onto the constant eigenvector $\mathbf{1}$, which is the same for every node. This is over-smoothing: it is iterative low-pass filtering, and it is the inevitable consequence of using a filter whose frequency response is below $1$ at all non-zero frequencies.
+
+The spectral view makes the remedy equally clear: use a filter that does not exclusively attenuate high frequencies. Residual connections add a term with eigenvalue $1$ at all frequencies — they prevent the complete collapse of high-frequency components. Jumping knowledge connections concatenate representations from all layers — they combine signals at all stages of the low-pass filtering process. Graph transformers use attention over all pairs of nodes rather than local aggregation — they implement a learned frequency-domain filter that is not constrained to be low-pass.
+
+---
+
+**The bridge to manifolds: why this topic is the gateway to Chapter 3.**
+
+Hold one thought clearly as you move to the mathematics. The graph Laplacian $L$ is the discrete approximation of the Laplace-Beltrami operator $\Delta_\mathcal{M}$ on a smooth Riemannian manifold. If your graph is a dense sampling of points on a smooth manifold — the manifold hypothesis of geometric deep learning — then the eigenvectors of $L$ converge to the eigenfunctions of $\Delta_\mathcal{M}$ as the sampling becomes denser. The graph Fourier basis converges to the manifold harmonic basis. The spectral graph convolution converges to the spectral manifold convolution. The Laplacian eigenmaps of Chapter 3 — the method that embeds manifold-valued data into low-dimensional Euclidean space — are exactly the low-frequency eigenvectors of the graph Laplacian, used as a coordinate system for the manifold. Topic 2's spectral framework is not an isolated chapter in the GNN story. It is the mathematical bridge between the discrete graph world of Chapter 2 and the continuous manifold world of Chapter 3, and the connection runs through the single object that governs both: the Laplacian and its spectrum.
+
+---
+
+## Layer 2 (Mathematics)
+
+We build the formalism in six stages: the graph Laplacian and its algebraic properties, the spectral decomposition and graph Fourier transform, spectral graph convolution, the Chebyshev polynomial approximation and ChebNet, the first-order approximation recovering GCN, and the normalized Laplacian's connection to the continuous Laplace-Beltrami operator.
+
+### The Graph Laplacian — Definition and Algebraic Properties
+
+**Definition.** Let $G = (V, E)$ be an undirected graph with $n$ nodes and $m$ edges, adjacency matrix $A \in \{0,1\}^{n \times n}$, and degree matrix $D = \text{diag}(d_1, \ldots, d_n)$ where $d_i = \sum_j A_{ij}$. The **combinatorial graph Laplacian** is:
+
+$$L = D - A \in \mathbb{R}^{n \times n}$$
+
+with entries:
+
+$$L_{ij} = \begin{cases} d_i & \text{if } i = j \\ -1 & \text{if } (i,j) \in E \\ 0 & \text{otherwise} \end{cases}$$
+
+**Theorem (Positive Semidefiniteness).** $L$ is symmetric positive semidefinite: $f^\top L f \geq 0$ for all $f \in \mathbb{R}^n$.
+
+**Proof.**
+
+$$f^\top L f = f^\top (D - A) f = \sum_i d_i f_i^2 - \sum_{(i,j) \in E} 2f_i f_j = \sum_{(i,j) \in E} (f_i - f_j)^2 \geq 0$$
+
+The last equality uses $\sum_i d_i f_i^2 = \sum_{(i,j)\in E}(f_i^2 + f_j^2)$ for undirected graphs. The expression $\sum_{(i,j)\in E}(f_i - f_j)^2$ is the **Dirichlet energy** of signal $f$ on $G$ — the total squared variation across all edges. $\square$
+
+**Corollary.** All eigenvalues of $L$ are non-negative: $0 = \lambda_1 \leq \lambda_2 \leq \cdots \leq \lambda_n$.
+
+**Theorem (Zero eigenvalue and connectivity).** $\lambda_1 = 0$ with eigenvector $\mathbf{1} = (1,\ldots,1)^\top$. The multiplicity of eigenvalue $0$ equals the number of connected components of $G$.
+
+**Proof.** $L\mathbf{1} = D\mathbf{1} - A\mathbf{1} = \mathbf{d} - \mathbf{d} = \mathbf{0}$. For a connected graph: $f^\top Lf = 0 \Rightarrow f_i = f_j$ for all $(i,j)\in E \Rightarrow f$ is constant on each connected component $\Rightarrow$ for a single connected component, $f \in \text{span}(\mathbf{1})$. $\square$
+
+**The normalized Laplacian.** The **symmetric normalized Laplacian** is:
+
+$$\mathcal{L} = D^{-1/2}LD^{-1/2} = I - D^{-1/2}AD^{-1/2} = I - \hat{A}$$
+
+with eigenvalues $\mu_k = 1 - \lambda_k^{\hat{A}}$ where $\lambda_k^{\hat{A}}$ are eigenvalues of $\hat{A} = D^{-1/2}AD^{-1/2}$. The normalized Laplacian has spectrum in $[0, 2]$ for any graph, with $\mu_1 = 0$ and $\mu_n \leq 2$ (with equality iff $G$ is bipartite).
+
+**The random walk Laplacian** is $L_{\text{rw}} = D^{-1}L = I - D^{-1}A$, with $D^{-1}A$ being the random walk transition matrix.
+
+---
+
+### Spectral Decomposition and the Graph Fourier Transform
+
+**Spectral Theorem (applied to $L$).** Since $L$ is real symmetric positive semidefinite, it admits the eigendecomposition:
+
+$$L = U \Lambda U^\top$$
+
+where $U = [u_1 | u_2 | \cdots | u_n] \in \mathbb{R}^{n \times n}$ is orthogonal ($U^\top U = UU^\top = I$) with columns $u_k$ the orthonormal eigenvectors, and $\Lambda = \text{diag}(\lambda_1, \ldots, \lambda_n)$ with $0 = \lambda_1 \leq \lambda_2 \leq \cdots \leq \lambda_n$.
+
+**Definition (Graph Fourier Transform).** The **graph Fourier transform** of a signal $f \in \mathbb{R}^n$ is:
+
+$$\hat{f} = U^\top f \in \mathbb{R}^n, \quad \hat{f}_k = u_k^\top f = \langle f, u_k \rangle$$
+
+The **inverse graph Fourier transform** is:
+
+$$f = U\hat{f} = \sum_{k=1}^{n} \hat{f}_k u_k$$
+
+**Parseval's identity.** Since $U$ is orthogonal:
+
+$$\|f\|^2 = f^\top f = f^\top UU^\top f = \hat{f}^\top \hat{f} = \|\hat{f}\|^2$$
+
+Energy is preserved under the graph Fourier transform.
+
+**Dirichlet energy in the Fourier domain.**
+
+$$f^\top L f = f^\top U\Lambda U^\top f = \hat{f}^\top \Lambda \hat{f} = \sum_{k=1}^{n} \lambda_k \hat{f}_k^2$$
+
+The Dirichlet energy is a weighted sum of squared Fourier coefficients, with graph frequencies $\lambda_k$ as weights. Signals concentrated at low frequencies ($\hat{f}_k$ large for small $\lambda_k$) have low Dirichlet energy — they are smooth on the graph. Signals with energy at high frequencies have large Dirichlet energy — they vary rapidly across edges.
+
+**Spectral interpretation of Laplacian eigenvectors.** The $k$-th eigenvector $u_k$ is the signal of frequency $\lambda_k$ — it minimizes the Dirichlet energy subject to being orthogonal to all eigenvectors of lower frequency:
+
+$$u_k = \arg\min_{f: \|f\|=1,\, f \perp u_1,\ldots,u_{k-1}} f^\top L f = \arg\min_{f:\|f\|=1,\, f\perp u_1,\ldots,u_{k-1}} \sum_{(i,j)\in E}(f_i-f_j)^2$$
+
+This is the variational characterization of eigenvectors via the Courant-Fischer minimax theorem — a result from MATH 302.
+
+---
+
+### Spectral Graph Convolution
+
+**Classical convolution theorem (discrete).** For signals $f, g$ on a cycle graph (equivalently, periodic discrete signals), the discrete Fourier transform satisfies:
+
+$$(f \star g)[n] = \sum_k f[k]g[n-k] \quad \Longleftrightarrow \quad \widehat{f \star g} = \hat{f} \odot \hat{g}$$
+
+Convolution in the spatial domain equals pointwise multiplication in the frequency domain.
+
+**Definition (Spectral graph convolution).** The **spectral convolution** of signal $f \in \mathbb{R}^n$ with filter $g \in \mathbb{R}^n$ on graph $G$ is defined via the graph Fourier transform:
+
+$$(f \star_G g) = U(\hat{f} \odot \hat{g}) = U \, \text{diag}(\hat{g}) \, U^\top f$$
+
+where $\hat{g} = U^\top g$ is the graph Fourier transform of the filter and $\odot$ denotes pointwise multiplication.
+
+**Filter as a function of the Laplacian.** Since $\hat{g} = (\hat{g}(\lambda_1), \ldots, \hat{g}(\lambda_n))^\top$ and the Laplacian acts as $Lu_k = \lambda_k u_k$, the spectral convolution is equivalently:
+
+$$(f \star_G g) = g_\theta(L) f, \quad g_\theta(L) = U \, \text{diag}(g_\theta(\lambda_1), \ldots, g_\theta(\lambda_n)) \, U^\top$$
+
+where $g_\theta: \mathbb{R} \to \mathbb{R}$ is the **spectral transfer function** of the filter, parameterized by $\theta$.
+
+**Learned spectral filter (non-parametric).** The most general learned spectral filter has $n$ free parameters $\theta = (\theta_1, \ldots, \theta_n)$:
+
+$$g_\theta(L) = U \, \text{diag}(\theta_1, \ldots, \theta_n) \, U^\top$$
+
+**Computational complexity:** Eigendecomposition $O(n^3)$, matrix-vector product $O(n^2)$ per signal. **Non-transferable:** $\theta$ is tied to the specific eigenvalues $\lambda_1, \ldots, \lambda_n$ of the training graph. **Non-local:** the filter couples all pairs of nodes.
+
+---
+
+### Polynomial Filters and ChebNet
+
+**Key insight.** If $g_\theta$ is a polynomial of degree $K$:
+
+$$g_\theta(\lambda) = \sum_{k=0}^{K} \theta_k \lambda^k$$
+
+then:
+
+$$g_\theta(L) = \sum_{k=0}^{K} \theta_k L^k$$
+
+**Locality of polynomial filters.**
+
+**Theorem.** $(L^k)_{ij} = 0$ whenever $\text{dist}_G(i,j) > k$, where $\text{dist}_G(i,j)$ is the shortest-path distance between nodes $i$ and $j$ in $G$.
+
+**Proof.** By induction. $(L^1)_{ij} = L_{ij} \neq 0$ only if $i=j$ or $(i,j)\in E$, i.e., $\text{dist}_G(i,j)\leq 1$. If $(L^{k-1})_{ij}=0$ for $\text{dist}_G(i,j)>k-1$, then $(L^k)_{ij} = \sum_l L_{il}(L^{k-1})_{lj}$. Since $L_{il}\neq 0$ only for $\text{dist}_G(i,l)\leq 1$, and $(L^{k-1})_{lj}\neq 0$ only for $\text{dist}_G(l,j)\leq k-1$, by the triangle inequality $\text{dist}_G(i,j)\leq \text{dist}_G(i,l)+\text{dist}_G(l,j)\leq k$. $\square$
+
+**Corollary.** A degree-$K$ polynomial filter $g_\theta(L)f$ at node $i$ depends only on signal values $f_j$ with $\text{dist}_G(i,j)\leq K$ — the $K$-hop neighborhood of $i$.
+
+**Computational complexity of polynomial filters.** Evaluating $g_\theta(L)f$ via Horner's method or the three-term recurrence requires $K$ sparse matrix-vector multiplications, each costing $O(m)$ for a graph with $m$ edges. Total cost: $O(Km)$. No eigendecomposition required.
+
+**Chebyshev polynomials.** The Chebyshev polynomials of the first kind $T_k: [-1,1]\to[-1,1]$ are defined by:
+
+$$T_0(x) = 1, \quad T_1(x) = x, \quad T_k(x) = 2xT_{k-1}(x) - T_{k-2}(x)$$
+
+They satisfy $T_k(\cos\theta) = \cos(k\theta)$ and are the unique polynomials minimizing $\max_{x\in[-1,1]}|p(x)|$ among monic polynomials of degree $k$. They form an orthogonal basis for $L^2([-1,1], (1-x^2)^{-1/2}dx)$:
+
+$$\int_{-1}^{1} T_j(x) T_k(x) \frac{dx}{\sqrt{1-x^2}} = \begin{cases} 0 & j \neq k \\ \pi/2 & j = k \geq 1 \\ \pi & j = k = 0 \end{cases}$$
+
+**ChebNet (Defferrard, Bresson, Vandergheynst 2016).** Rescale the Laplacian to $[-1,1]$:
+
+$$\tilde{L} = \frac{2}{\lambda_{\max}} L - I$$
+
+with eigenvalues $\tilde{\lambda}_k = 2\lambda_k/\lambda_{\max} - 1 \in [-1,1]$. The ChebNet filter is:
+
+$$g_\theta(\tilde{L}) = \sum_{k=0}^{K} \theta_k T_k(\tilde{L})$$
+
+Applied to a signal $f$, computed via the recurrence:
+
+$$\bar{f}^{(0)} = f, \quad \bar{f}^{(1)} = \tilde{L}f, \quad \bar{f}^{(k)} = 2\tilde{L}\bar{f}^{(k-1)} - \bar{f}^{(k-2)}$$
+
+$$g_\theta(\tilde{L})f = \sum_{k=0}^{K} \theta_k \bar{f}^{(k)}$$
+
+**ChebNet layer (multi-channel).** For input feature matrix $H \in \mathbb{R}^{n \times d_{\text{in}}}$ and $d_{\text{out}}$ output channels:
+
+$$H^{\text{out}} = \sigma\!\left(\sum_{k=0}^{K} \bar{H}^{(k)} \Theta_k\right)$$
+
+where $\bar{H}^{(k)} \in \mathbb{R}^{n \times d_{\text{in}}}$ is the $k$-th Chebyshev recurrence applied column-wise to $H$, $\Theta_k \in \mathbb{R}^{d_{\text{in}} \times d_{\text{out}}}$ is the learnable weight matrix for the $k$-th Chebyshev order, and $\sigma$ is a pointwise nonlinearity.
+
+**Parameter count:** $(K+1) \times d_{\text{in}} \times d_{\text{out}}$ — independent of the number of nodes $n$, enabling transfer across graphs.
+
+---
+
+### First-Order Approximation: Recovering GCN
+
+**Step 1: Set $K=1$.** The ChebNet filter becomes:
+
+$$g_\theta(\tilde{L})f = \theta_0 T_0(\tilde{L})f + \theta_1 T_1(\tilde{L})f = \theta_0 f + \theta_1 \tilde{L}f$$
+
+With $\lambda_{\max} \approx 2$ (approximation used by Kipf-Welling): $\tilde{L} \approx L - I = -\hat{A}$ where $\hat{A} = D^{-1/2}AD^{-1/2}$. So:
+
+$$g_\theta(\tilde{L})f \approx \theta_0 f - \theta_1 \hat{A} f$$
+
+**Step 2: Constrain $\theta_0 = -\theta_1 = \theta$.** Setting $\theta_0 = -\theta_1 = \theta$ to reduce the number of parameters and mitigate overfitting:
+
+$$g_\theta f = \theta(I + \hat{A})f = \theta(I + D^{-1/2}AD^{-1/2})f$$
+
+**Step 3: Renormalization trick.** The matrix $I + D^{-1/2}AD^{-1/2}$ has eigenvalues in $[0,2]$, which can cause numerical instability (exploding/vanishing gradients) when stacking layers. Apply the renormalization:
+
+$$I + D^{-1/2}AD^{-1/2} \to \tilde{D}^{-1/2}\tilde{A}\tilde{D}^{-1/2}$$
+
+where $\tilde{A} = A + I$ (add self-loops) and $\tilde{D}_{ii} = \sum_j \tilde{A}_{ij} = d_i + 1$. This maps the eigenvalue range from $[0,2]$ to $[0,1]$, stabilizing training.
+
+**GCN layer (Kipf and Welling 2017).**
+
+$$H^{(k)} = \sigma\!\left(\hat{\tilde{A}} H^{(k-1)} W^{(k)}\right), \quad \hat{\tilde{A}} = \tilde{D}^{-1/2}\tilde{A}\tilde{D}^{-1/2}$$
+
+This is the first-order Chebyshev spectral filter with the renormalization trick applied. The weight matrix $W^{(k)} \in \mathbb{R}^{d_{k-1} \times d_k}$ combines the channel mixing (the learnable part) with the fixed spectral filtering (the $\hat{\tilde{A}}$ multiplication).
+
+**Spectral interpretation of $\hat{\tilde{A}}$ as a low-pass filter.**
+
+The eigenvalues of $\hat{\tilde{A}}$ lie in $(0,1]$ for a connected non-bipartite graph. In the graph Fourier basis:
+
+$$\hat{\tilde{A}} = U_{\tilde{A}} \Lambda_{\tilde{A}} U_{\tilde{A}}^\top, \quad (\Lambda_{\tilde{A}})_{kk} = \tilde{\lambda}_k \in (0,1]$$
+
+Repeated application $\hat{\tilde{A}}^K$ multiplies each Fourier coefficient by $\tilde{\lambda}_k^K$. Since $\tilde{\lambda}_1 = 1$ (the zero-frequency mode) and $\tilde{\lambda}_k < 1$ for $k > 1$:
+
+$$\lim_{K\to\infty} \hat{\tilde{A}}^K H = \mathbf{d}\,\mathbf{d}^\top H / \|\mathbf{d}\|^2$$
+
+confirming the over-smoothing analysis from Topic 1, now with the spectral mechanism fully explicit: all non-zero frequencies are attenuated to zero, leaving only the projection onto the dominant eigenvector.
+
+---
+
+### The Normalized Laplacian and the Laplace-Beltrami Operator
+
+**Discrete-to-continuous convergence.** Let $\mathcal{M}$ be a compact Riemannian manifold and let $\{x_1,\ldots,x_n\} \subset \mathcal{M}$ be $n$ points sampled i.i.d. from a distribution with density $p$ on $\mathcal{M}$. Construct the graph $G_n$ with Gaussian kernel weights:
+
+$$W_{ij} = \exp\!\left(-\frac{\|x_i - x_j\|^2}{2\sigma^2}\right)$$
+
+and degree $d_i = \sum_j W_{ij}$.
+
+**Theorem (Belkin-Niyogi, 2003; Coifman-Lafon, 2006).** Under appropriate conditions on $\sigma = \sigma(n)$ (specifically $\sigma \to 0$ and $n\sigma^{d+2} \to \infty$ where $d = \dim\mathcal{M}$), the normalized graph Laplacian $\mathcal{L}_n$ converges pointwise to the Laplace-Beltrami operator $\Delta_\mathcal{M}$:
+
+$$\frac{1}{\sigma^2}\mathcal{L}_n f(x_i) \xrightarrow{n\to\infty} \Delta_\mathcal{M} f(x_i)$$
+
+**Corollary.** The eigenvectors of the graph Laplacian $\mathcal{L}_n$ converge to the eigenfunctions of $\Delta_\mathcal{M}$, and the eigenvalues $\lambda_k^{(n)}/\sigma^2$ converge to the eigenvalues of $\Delta_\mathcal{M}$.
+
+**The Laplace-Beltrami operator.** On a Riemannian manifold $(\mathcal{M}, g)$, the Laplace-Beltrami operator is:
+
+$$\Delta_\mathcal{M} f = \text{div}(\text{grad}\, f) = \frac{1}{\sqrt{|g|}} \sum_{i,j} \partial_i\!\left(\sqrt{|g|}\, g^{ij} \partial_j f\right)$$
+
+where $g^{ij}$ are the components of the inverse metric tensor and $|g| = \det(g_{ij})$. On flat Euclidean space $\mathbb{R}^d$ with $g_{ij} = \delta_{ij}$, this reduces to $\Delta f = \sum_i \partial^2 f/\partial x_i^2$, the standard Laplacian.
+
+**Eigenfunctions of $\Delta_\mathcal{M}$:**
+- On the circle $S^1$: eigenfunctions $e^{in\theta}$, eigenvalues $n^2$ — the Fourier basis.
+- On the sphere $S^2$: eigenfunctions $Y_\ell^m$, eigenvalues $\ell(\ell+1)$ — the spherical harmonics from Chapter 1.
+- On $\mathbb{R}^d$: eigenfunctions $e^{i\omega \cdot x}$, eigenvalues $\|\omega\|^2$ — the continuous Fourier basis.
+
+The graph Fourier transform is the discrete, finite-dimensional instance of this general spectral theory. All cases are special instances of the same mathematical structure: spectral analysis of the Laplacian operator on the relevant geometric space.
+
+---
+
+### Laplacian Eigenmaps — Preview of Chapter 3
+
+**Definition (Laplacian Eigenmap, Belkin-Niyogi 2003).** Given a graph $G$ constructed from high-dimensional data points $\{x_1,\ldots,x_n\} \subset \mathbb{R}^D$, the **Laplacian eigenmap** embedding into $\mathbb{R}^d$ ($d \ll D$) is:
+
+$$\Phi: x_i \mapsto (u_2(i), u_3(i), \ldots, u_{d+1}(i)) \in \mathbb{R}^d$$
+
+using the $d$ eigenvectors of smallest nonzero eigenvalue of the graph Laplacian.
+
+**Optimization problem.** The Laplacian eigenmap minimizes:
+
+$$\min_{Y \in \mathbb{R}^{n\times d},\, Y^\top D Y = I} \text{tr}(Y^\top L Y) = \min_{Y^\top D Y = I} \sum_{(i,j)\in E} W_{ij} \|y_i - y_j\|^2$$
+
+The constraint $Y^\top DY = I$ (degree-weighted orthonormality) prevents the trivial solution $Y=0$ and removes the arbitrary scaling and rotation of the embedding. The solution is given by the $d$ eigenvectors of the generalized eigenvalue problem $Lu = \lambda Du$, corresponding to the $d$ smallest nonzero eigenvalues — equivalently, the $d$ smallest nonzero eigenvalues of the normalized Laplacian $\mathcal{L} = D^{-1/2}LD^{-1/2}$.
+
+---
+
+### WHY THIS MATTERS
+
+In **MATH 302 (Matrix Theory)**, the spectral theorem for symmetric matrices — eigendecomposition $L = U\Lambda U^\top$ with orthogonal $U$ and real diagonal $\Lambda$ — is the foundational result that makes the entire graph Fourier transform well-defined. The Courant-Fischer minimax theorem from MATH 302 characterizes the $k$-th eigenvalue as $\lambda_k = \min_{\dim S = k}\max_{f\in S, \|f\|=1} f^\top Lf$, giving the variational interpretation of graph frequencies: the $k$-th graph frequency is the minimum achievable Dirichlet energy for a signal constrained to be orthogonal to the first $k-1$ eigenvectors. The positive semidefiniteness proof $f^\top Lf = \sum_{(i,j)\in E}(f_i-f_j)^2 \geq 0$ is a direct application of the quadratic form analysis from MATH 302 — the Cholesky decomposition of $L$ exists because $L$ is PSD, and the incidence matrix $B \in \mathbb{R}^{m\times n}$ (one row per edge, $B_{e,i}=1$ and $B_{e,j}=-1$ for edge $e=(i,j)$) gives $L = B^\top B$, factoring the Laplacian as a Gram matrix.
+
+In **MATH 213 and MATH 325 (Analysis I and II)**, the Fourier series on $[-\pi,\pi]$ — expanding $f$ in eigenfunctions $e^{in\theta}$ of $-d^2/dx^2$ — is the one-dimensional continuous instance of the same spectral decomposition. The graph Fourier transform $\hat{f} = U^\top f$ is the discrete analogue: $U$ plays the role of the Fourier matrix, $\Lambda$ plays the role of the frequency-squared diagonal, and Parseval's identity $\|f\|^2 = \|\hat{f}\|^2$ is the discrete analogue of the Parseval-Plancherel theorem from Analysis. The Belkin-Niyogi convergence theorem — graph Laplacian eigenvectors converging to Laplace-Beltrami eigenfunctions — is an instance of the operator convergence results from functional analysis, where the spectral theory of self-adjoint operators on $L^2(\mathcal{M})$ (studied in the continuous setting in Analysis II) is recovered as a limit of finite-dimensional matrix spectral theory.
+
+In **COMP 323 (Graph Theory)**, the Fiedler value $\lambda_2$ — the algebraic connectivity measuring the graph's bottleneck width — appears here as the frequency of the graph's fundamental mode. The Cheeger inequality from spectral graph theory, $h(G)^2/2 \leq \lambda_2 \leq 2h(G)$ where $h(G) = \min_{S\subset V}|E(S,\bar{S})|/\min(\text{vol}(S),\text{vol}(\bar{S}))$ is the edge expansion ratio, connects the spectral gap to the graph's combinatorial connectivity — a result from COMP 323 that now has a direct interpretation in terms of GNN expressive power: graphs with small spectral gap (poor connectivity, small $\lambda_2$) over-smooth slowly and allow deep GNNs; graphs with large spectral gap (well-connected, large $\lambda_2$) over-smooth rapidly and require shallow GNNs or residual connections.
+
+---
+
+## Layer 3 (Bridge)
+
+Every element of the Nepal Telecom radio broadcast story has a precise mathematical address. We walk through them completely — the signal variation across stations, the restoring force analogy, the drumhead normal modes, the graph Fourier decomposition, the three breaks of naive spectral filtering, the Chebyshev polynomial fix, the GCN as first-order approximation, the over-smoothing explanation, and the bridge to manifolds — until the story and the formalism are a single object seen from two angles.
+
+---
+
+**The power level assigned to each transmitter station — a real number per node — is the signal $f \in \mathbb{R}^n$, one component per station, the fundamental object of graph signal processing.** The vector $f \in \mathbb{R}^n$ with $f_i \in \mathbb{R}$ being the broadcast power level of station $i$ is the node signal on the graph — the discrete analogue of a function $f: \mathcal{M} \to \mathbb{R}$ on a continuous manifold. In the GNN context, the columns of the node feature matrix $H \in \mathbb{R}^{n \times d}$ are $d$ such signals simultaneously — one per feature channel — and every spectral operation acts on each column independently before the learned weight matrix $W$ mixes the channels. The graph is the domain; the signal is the function defined on that domain; the graph Fourier transform is the harmonic analysis of that function.
+
+**The sum of squared differences across all cables — the total variation of the signal across the network — is the Dirichlet energy $f^\top Lf = \sum_{(i,j)\in E}(f_i - f_j)^2$, and the matrix that computes it as a quadratic form is the graph Laplacian $L = D - A$.** The physical intuition of the story — add up the squared power difference across every cable — is the algebraic proof of positive semidefiniteness: $f^\top Lf = f^\top(D-A)f = \sum_i d_i f_i^2 - 2\sum_{(i,j)\in E}f_if_j = \sum_{(i,j)\in E}(f_i-f_j)^2 \geq 0$. The inequality holds because every term is a squared real number. This proof, which you can reconstruct in three lines using the quadratic form analysis from MATH 302, establishes that $L$ is positive semidefinite — that all its eigenvalues are non-negative — which is the foundational property that makes the graph Fourier transform well-defined as a frequency decomposition, with low eigenvalues corresponding to smooth signals and high eigenvalues corresponding to rapidly varying ones.
+
+**The restoring force that each cable exerts on the signal — pulling $f_i$ toward the average of its neighbors — is the action of the graph Laplacian operator $(Lf)_i = d_i f_i - \sum_{j\in\mathcal{N}(i)} f_j$, the discrete analogue of the continuous Laplacian $\Delta f = -\nabla^2 f$.** The net force on station $i$ in the story is $\sum_{j\in\mathcal{N}(i)}(f_j - f_i) = -( d_i f_i - \sum_{j\in\mathcal{N}(i)} f_j) = -(Lf)_i$. The minus sign is conventional: the graph Laplacian $L$ is positive semidefinite, so $Lf$ points in the direction of increasing variation, while the restoring force $-Lf$ points toward the smooth equilibrium. The continuous Laplacian $\Delta f(x) = \lim_{r\to 0} \frac{2d}{r^2}\left(\frac{1}{|B_r(x)|}\int_{B_r(x)} f(y)dy - f(x)\right)$ measures how much $f(x)$ differs from its local spherical average — exactly the continuous analogue of how much $f_i$ differs from its neighborhood average $(1/d_i)\sum_{j\in\mathcal{N}(i)}f_j$. The Belkin-Niyogi convergence theorem formalizes this analogy: as the graph becomes a denser sampling of the manifold, $\mathcal{L}_n f(x_i)/\sigma^2 \to \Delta_\mathcal{M} f(x_i)$ pointwise. The graph Laplacian is not a metaphor for the continuous Laplacian — it is its discrete approximation, converging to it in the limit of dense sampling.
+
+---
+
+**The drumhead's normal modes — the natural vibration patterns of the membrane, determined entirely by its shape — are the eigenvectors $u_1, u_2, \ldots, u_n$ of the graph Laplacian, with eigenvalues $\lambda_1 \leq \lambda_2 \leq \cdots \leq \lambda_n$ measuring the frequency of each mode.** The eigenvector $u_k$ satisfying $Lu_k = \lambda_k u_k$ is the $k$-th natural frequency mode of the network: it is the signal shape that the Laplacian merely scales, not rotates. The eigenvalue $\lambda_k = u_k^\top L u_k = \sum_{(i,j)\in E}(u_k(i) - u_k(j))^2$ is the Dirichlet energy of the $k$-th mode — the total variation of that mode across all edges. The variational characterization from the Courant-Fischer theorem makes this precise: $u_k$ is the signal of unit norm, orthogonal to all lower modes, that minimizes variation across the graph. The lowest-frequency mode $u_1 = \mathbf{1}/\sqrt{n}$ with $\lambda_1 = 0$ is the constant signal — the drumhead moving uniformly, with zero variation across any edge. The highest-frequency mode $u_n$ with $\lambda_n = \max_{\|f\|=1} f^\top Lf$ is the most rapidly varying signal — the drumhead alternating as sharply as possible between adjacent nodes. Every signal on the network is a superposition of these modes, exactly as every drumhead vibration is a superposition of normal modes.
+
+**The constant signal $u_1 = \mathbf{1}/\sqrt{n}$ with eigenvalue $\lambda_1 = 0$ — every station at the same power level — corresponds to the zero-frequency DC component in electrical engineering, the proof that $L\mathbf{1} = \mathbf{0}$ following from $D\mathbf{1} = \mathbf{d}$ and $A\mathbf{1} = \mathbf{d}$.** The proof is one line: $(L\mathbf{1})_i = d_i \cdot 1 - \sum_{j\in\mathcal{N}(i)} 1 = d_i - d_i = 0$. The multiplicity of $\lambda_1 = 0$ — the dimension of the null space of $L$ — equals the number of connected components of the graph. For a connected graph the null space is one-dimensional, spanned by $\mathbf{1}$: the only signals with zero variation across all edges are the constant signals. For a disconnected graph with $c$ components, the null space is $c$-dimensional, spanned by the indicator vectors of the components — each component can have a different constant value with no variation across any edge, because no edges cross components. This is the algebraic connectivity result from your COMP 323 Graph Theory course, now embedded in the spectral theory of the graph Fourier transform.
+
+**The Fiedler vector $u_2$ with eigenvalue $\lambda_2 > 0$ — the smoothest non-constant signal, splitting the network into two groups — is the graph's fundamental mode, and $\lambda_2$ is the algebraic connectivity measuring the network's bottleneck width.** The Fiedler vector minimizes $\sum_{(i,j)\in E}(f_i-f_j)^2$ subject to $\|f\|=1$ and $f\perp\mathbf{1}$. Its sign pattern — positive values on one side of the graph's sparsest cut, negative values on the other — identifies the two communities that the spectral clustering algorithm uses. The Fiedler value $\lambda_2$ measures how much variation is unavoidable for any non-constant signal orthogonal to $\mathbf{1}$: a large $\lambda_2$ means the graph is well-connected and even the smoothest non-constant signal must vary substantially across some edges; a small $\lambda_2$ means the graph has a bottleneck and the Fiedler vector can place very similar values on both sides of that bottleneck while varying significantly only across the few bottleneck edges. In the GNN context, $\lambda_2$ governs the over-smoothing rate: a large spectral gap $1-|\tilde{\lambda}_2|$ means the GCN's low-pass filter attenuates the second frequency mode rapidly, causing fast over-smoothing; a small spectral gap means slow over-smoothing and the possibility of using deeper GNNs before information collapse.
+
+---
+
+**The graph Fourier transform $\hat{f} = U^\top f$ — decomposing the signal into its frequency components $\hat{f}_k = u_k^\top f = \langle f, u_k\rangle$ — is the inner product of the signal with each eigenvector, measuring how much of the $k$-th frequency mode is present in the signal $f$.** The coefficient $\hat{f}_k = \langle f, u_k\rangle$ in the story is the projection of the power distribution $f$ onto the $k$-th normal mode $u_k$ — how much the power distribution resembles the $k$-th vibration pattern. The average power $\hat{f}_1 = \langle f, \mathbf{1}/\sqrt{n}\rangle = \|f\|_1/\sqrt{n}$ is the DC component. The Fiedler coefficient $\hat{f}_2 = \langle f, u_2\rangle$ measures how much the power distribution follows the fundamental network split. The inverse transform $f = \sum_k \hat{f}_k u_k = U\hat{f}$ reconstructs the signal from its frequency components — the eigenvectors form a complete orthonormal basis for $\mathbb{R}^n$, so every signal is uniquely expressible as a superposition of frequency modes. Parseval's identity $\|f\|^2 = \|\hat{f}\|^2$ — energy is preserved under the graph Fourier transform — is the statement that $U$ is an orthogonal matrix, so the transform is an isometry. In the story: the total power in the network is the same whether measured in the spatial domain (sum of squared station power levels) or the frequency domain (sum of squared Fourier coefficients). The Dirichlet energy in the Fourier domain $f^\top Lf = \sum_k \lambda_k \hat{f}_k^2$ is the weighted sum of squared Fourier coefficients with graph frequencies as weights — low-frequency components contribute little to the total variation; high-frequency components contribute proportionally more.
+
+**Spectral graph convolution $(f\star_G g) = U(\hat{f}\odot\hat{g}) = U\,\text{diag}(\hat{g})\,U^\top f = g_\theta(L)f$ — pointwise multiplication of Fourier coefficients — is the graph convolution theorem, the discrete analogue of the classical convolution theorem on the circle.** The filter $g_\theta$ in the story is the postmaster's frequency-domain instruction manual: for each frequency mode, it specifies a scalar amplification factor $\hat{g}(\lambda_k)$ that scales that mode's contribution to the filtered signal. A low-pass filter sets $\hat{g}(\lambda_k)$ close to $1$ for small $\lambda_k$ and close to $0$ for large $\lambda_k$ — it retains the smooth components and attenuates the rapidly varying ones, making neighboring stations more similar. A high-pass filter does the opposite. The GCN's propagation matrix $\hat{\tilde{A}}$ with eigenvalues in $(0,1]$ is a low-pass filter in this sense: $\hat{g}(\lambda_k) = \tilde{\lambda}_k \in (0,1]$, attenuating every non-zero frequency while preserving the zero-frequency mode exactly. This is the spectral fact that makes the spatial intuition of the GCN precise: the GCN smooths the node features across the graph, retaining the globally consistent (low-frequency) components and attenuating the locally idiosyncratic (high-frequency) components.
+
+---
+
+**The three breaks of naive spectral filtering — $O(n^3)$ eigendecomposition, non-transferability across graphs, and non-locality — are three independent failures of the free spectral filter $g_\theta(L) = U\,\text{diag}(\theta_1,\ldots,\theta_n)\,U^\top$, each requiring the polynomial filter restriction to resolve.** The first break — eigendecomposition costs $O(n^3)$ — is resolved by the polynomial filter $g_\theta(L) = \sum_{k=0}^K \theta_k L^k$, which evaluates as $K$ sparse matrix-vector products at cost $O(Km)$. The second break — $n$ free parameters tied to specific eigenvalues of the training graph — is resolved by parameterizing $\hat{g}$ as a function of $\lambda$ rather than a free value per eigenvalue: the same polynomial coefficients $\theta_0,\ldots,\theta_K$ can be evaluated at any graph's eigenvalues, giving a transferable filter. The third break — global coupling of all nodes — is resolved by the locality theorem: $(L^k)_{ij} = 0$ for $\text{dist}_G(i,j) > k$, so a degree-$K$ polynomial filter computes a $K$-hop local operation. The locality theorem's proof by induction — $L^k$ has nonzero $(i,j)$ entry only if there is a path of length at most $k$ from $i$ to $j$, by the triangle inequality on shortest-path distances — is the precise spectral explanation for why the spatial GNN from Topic 1 is local. Spatial locality and spectral polynomial filtering are the same constraint, described from two different mathematical viewpoints.
+
+**The Chebyshev polynomial basis $T_k$ — optimal for approximating smooth functions on $[-1,1]$ in the minimax sense — is the choice of polynomial basis that minimizes the maximum approximation error for any smooth spectral filter $\hat{g}: [-1,1]\to\mathbb{R}$.** The rescaling $\tilde{L} = 2L/\lambda_{\max} - I$ maps the Laplacian's eigenvalues from $[0,\lambda_{\max}]$ to $[-1,1]$, placing them in the domain where the Chebyshev polynomials are optimal. The recurrence $T_k(\tilde{L})f = 2\tilde{L}T_{k-1}(\tilde{L})f - T_{k-2}(\tilde{L})f$ — applied with $T_0(\tilde{L})f = f$ and $T_1(\tilde{L})f = \tilde{L}f$ — computes the Chebyshev-filtered signal using only sparse matrix-vector multiplications, with no eigendecomposition. The $K+1$ learnable parameters $\theta_0,\ldots,\theta_K$ are the Chebyshev expansion coefficients of the learned filter — the discrete analogue of the Fourier coefficients that represent a periodic function as a sum of harmonics, now representing a spectral filter as a sum of Chebyshev polynomials. The orthogonality of Chebyshev polynomials under the weight $(1-x^2)^{-1/2}$ ensures that the learned coefficients are independent — tuning $\theta_k$ adjusts the filter at frequency scale $k$ without disturbing the other scales, giving the optimization landscape a diagonal Hessian structure in the Chebyshev basis.
+
+---
+
+**The three steps recovering GCN from ChebNet — setting $K=1$, constraining $\theta_0 = -\theta_1 = \theta$, applying the renormalization trick — are three successive approximations that trade expressive power for computational efficiency and numerical stability.** Setting $K=1$ restricts the filter to one-hop locality: the filtered value at station $i$ depends only on $i$ itself and its direct neighbors, not on two-hop or further nodes. This is the most aggressive spatial localization possible — a single message passing step. Constraining $\theta_0 = -\theta_1 = \theta$ halves the parameter count from two to one: the filter becomes $\theta(I + \hat{A})f$, a self-weight and neighbor-aggregation combined in a single scalar. This is exactly the two-parameter family $h_i \mapsto \alpha h_i + \beta\sum_{j\in\mathcal{N}(i)} h_j$ from Chapter 1's Schur's lemma derivation, now with the additional constraint $\alpha = \beta = \theta$ imposed by the spectral approximation. The renormalization trick $I + \hat{A} \to \hat{\tilde{A}}$ — adding self-loops and renormalizing — maps eigenvalues from $[0,2]$ to $(0,1]$, ensuring that the GCN propagation matrix is a contraction: no eigenvalue exceeds $1$, preventing the exponential growth of activations across layers. The renormalization is numerically necessary but spectrally consequential: it shifts the filter's passband slightly, making the GCN's low-pass behavior more pronounced. The GCN layer $H^{(k)} = \sigma(\hat{\tilde{A}}H^{(k-1)}W^{(k)})$ is the unique neural network layer that results from applying all three approximations to the principled spectral convolution framework — it is derived, not designed.
+
+---
+
+**The over-smoothing phenomenon — node representations converging to $\mathbf{d}\mathbf{d}^\top H/\|\mathbf{d}\|^2$ as depth increases — is iterative low-pass filtering, inevitable for any filter whose spectral transfer function satisfies $|\hat{g}(\lambda_k)| < 1$ for all $\lambda_k > 0$.** The eigenvalues of $\hat{\tilde{A}}$ lie in $(0,1]$, with $\tilde{\lambda}_1 = 1$ for the zero-frequency mode $\mathbf{d}/\|\mathbf{d}\|$ and $\tilde{\lambda}_k < 1$ for all $k > 1$. Applying $\hat{\tilde{A}}$ repeatedly multiplies each Fourier coefficient $\hat{h}_k$ by $\tilde{\lambda}_k^K$. As $K\to\infty$, $\tilde{\lambda}_k^K \to 0$ for all $k > 1$, while $\tilde{\lambda}_1^K = 1$ is preserved. The signal collapses to its zero-frequency projection — the degree-weighted average of all node features — losing all structural information. In the story: after infinitely many rounds of letter exchange with the smoothing postmaster (who always averages toward neighbors), every station's profile converges to the same degree-weighted national average, and no station retains any local identity. The spectral gap $1 - \tilde{\lambda}_2$ is the rate of this collapse: it governs how quickly the second frequency mode — the one carrying the most structural information after the constant — is attenuated. Residual connections $h_i^{(k)} = h_i^{(k-1)} + \text{AGG}(\cdot)$ add a term with eigenvalue $1$ at all frequencies — spectrally, they add the identity filter $g(L) = I$ (all frequencies preserved with unit gain) to the low-pass filter, creating a filter with $\hat{g}(\lambda_k) = 1 + \tilde{\lambda}_k > 1$ for non-zero frequencies, which prevents the collapse. Jumping knowledge connections preserve the intermediate representations from all layers, concatenating signals at every stage of the low-pass filtering process and retaining the high-frequency information that early layers still carry before it is attenuated away.
+
+---
+
+**The Laplace-Beltrami operator $\Delta_\mathcal{M} = \text{div}(\text{grad}\,f)$ — the generalization of the Euclidean Laplacian to curved Riemannian manifolds — is the object that the graph Laplacian approximates, and its eigenfunctions are the manifold analogues of the graph Fourier basis vectors.** On the circle $S^1$, $\Delta_{S^1}$ has eigenfunctions $e^{in\theta}$ with eigenvalues $n^2$ — these are the Fourier basis functions of classical signal processing. On the sphere $S^2$, $\Delta_{S^2}$ has eigenfunctions $Y_\ell^m$ with eigenvalues $\ell(\ell+1)$ — these are the spherical harmonics of Chapter 1's $SO(3)$ representation theory. On a general manifold, $\Delta_\mathcal{M}$ has eigenfunctions that form the manifold Fourier basis — the natural frequency decomposition of signals defined on that manifold. The Belkin-Niyogi convergence theorem $\mathcal{L}_n f(x_i)/\sigma^2 \to \Delta_\mathcal{M}f(x_i)$ is the mathematical bridge between discrete and continuous: it says that the graph Laplacian built from a dense point cloud sampling of a manifold converges to the Laplace-Beltrami operator of that manifold, so the graph Fourier transform converges to the manifold Fourier transform, and graph convolution converges to manifold convolution. This convergence is not merely theoretical — it is the justification for using graph-based methods on manifold-valued data, and it is the foundation of the Laplacian eigenmaps algorithm that Chapter 3 builds on.
+
+**The Laplacian eigenmap $\Phi: x_i \mapsto (u_2(i), u_3(i), \ldots, u_{d+1}(i))$ — embedding high-dimensional data into $\mathbb{R}^d$ using the $d$ lowest-frequency eigenvectors of the graph Laplacian — is the spectral solution to the manifold learning problem: find a low-dimensional representation that preserves the graph's local geometric structure.** The optimization $\min_{Y^\top DY = I}\sum_{(i,j)\in E}W_{ij}\|y_i-y_j\|^2 = \min_{Y^\top DY=I}\text{tr}(Y^\top LY)$ is solved by the $d$ eigenvectors of smallest nonzero eigenvalue — the $d$ smoothest non-constant signals on the graph, which change as little as possible across nearby data points. The embedding coordinates are the graph Fourier coefficients of the data points — the extent to which each point participates in each low-frequency mode. The constraint $Y^\top DY = I$ is the degree-weighted orthonormality that prevents the trivial collapsed solution and fixes the arbitrary scale and rotation of the embedding. Chapter 3 will build on exactly this construction, extending it from the static embedding setting to the dynamic setting where the manifold structure is learned jointly with the neural network's feature representations.
+
+---
+
+**The connection to MATH 302 is complete.** The positive semidefiniteness proof $f^\top Lf = \sum_{(i,j)\in E}(f_i-f_j)^2 \geq 0$ is a direct application of quadratic form analysis — the Cholesky factorization $L = B^\top B$ (incidence matrix) is the explicit PSD factorization from MATH 302. The spectral theorem $L = U\Lambda U^\top$ is the eigendecomposition of a real symmetric matrix — the central result of MATH 302. The Courant-Fischer characterization of eigenvalues as minimax of the Rayleigh quotient $\lambda_k = \min_{\dim S=k}\max_{f\in S,\|f\|=1}f^\top Lf/\|f\|^2$ is the variational result from MATH 302 that gives the frequency interpretation of eigenvalues. **The connection to MATH 213 and MATH 325 is equally complete.** The graph Fourier transform $\hat{f} = U^\top f$ is the finite-dimensional analogue of the Fourier series projection $\hat{f}_n = \langle f, e^{in\theta}\rangle_{L^2}$ from Analysis — both decompose a function into eigenfunctions of the Laplacian on the relevant domain. Parseval's identity is the same theorem in both settings. The Belkin-Niyogi convergence is operator convergence in the sense of functional analysis from Analysis II. **The connection to COMP 323 is equally direct.** The Fiedler value $\lambda_2$, the Cheeger inequality $h(G)^2/2 \leq \lambda_2 \leq 2h(G)$, and the spectral clustering algorithm are all from Graph Theory — now embedded in the GNN framework as the quantities governing over-smoothing rate and the information content of graph frequency modes.
+
+---
+
+The Nepal Telecom radio network — its stations, cables, power levels, frequency modes, Fourier decomposition, polynomial filters, and Chebyshev approximation — is now completely dissolved into its mathematical form. The station power levels are $f \in \mathbb{R}^n$. The total variation is $f^\top Lf$. The Laplacian is $L = D-A$. The normal modes are eigenvectors $u_k$ with frequencies $\lambda_k$. The graph Fourier transform is $\hat{f} = U^\top f$. Spectral convolution is $g_\theta(L)f$. The three breaks demand polynomial filters. Chebyshev polynomials give ChebNet. First-order approximation plus renormalization gives GCN. Over-smoothing is iterative low-pass filtering. The graph Laplacian converges to the Laplace-Beltrami operator. The Laplacian eigenmaps are the low-frequency eigenvectors used as manifold coordinates.
+
+---
+---
