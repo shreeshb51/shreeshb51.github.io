@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>monge_problem – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#topic-1---the-monge-problem-the-search-for-a-deterministic-map" id="toc-topic-1---the-monge-problem-the-search-for-a-deterministic-map" class="nav-link active" data-scroll-target="#topic-1---the-monge-problem-the-search-for-a-deterministic-map">Topic 1 - The Monge Problem: The Search for a Deterministic Map</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#layer-1-story" id="toc-layer-1-story" class="nav-link" data-scroll-target="#layer-1-story">Layer 1 (Story)</a></li>
+  <li><a href="#layer-2-mathematics" id="toc-layer-2-mathematics" class="nav-link" data-scroll-target="#layer-2-mathematics">Layer 2 (Mathematics)</a></li>
+  <li><a href="#layer-3-bridge" id="toc-layer-3-bridge" class="nav-link" data-scroll-target="#layer-3-bridge">Layer 3 (Bridge)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<section id="topic-1---the-monge-problem-the-search-for-a-deterministic-map" class="level1">
+<h1>Topic 1 - The Monge Problem: The Search for a Deterministic Map</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>You have spent all of Phase 0 building the mathematical language for probability distributions — how to assign them sizes, how to integrate against them, how to compare them, how to move them through transformations. Every tool you built was, in some sense, preparation for the question you are now ready to ask in full generality: given two probability distributions <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> on the same space, what is the most efficient way to transform one into the other?</p>
+<p>The Monge problem is the original, deterministic answer to this question. It asks for a single function — a transport map <span class="math inline">\(T\)</span> — that moves every grain of mass from its starting location to a destination, such that the resulting rearrangement of mass exactly matches the target distribution, and such that the total cost of all these individual movements is as small as possible.</p>
+<p>The elegance of the Monge formulation is that it asks for something geometrically concrete and physically intuitive: a deterministic assignment, one destination per source, moving mass as efficiently as possible. The difficulty of the Monge formulation is that this concreteness makes the problem hard. The push-forward constraint <span class="math inline">\(T_\#\mu = \nu\)</span> — the requirement that applying <span class="math inline">\(T\)</span> to every grain of mass in <span class="math inline">\(\mu\)</span> produces exactly the distribution <span class="math inline">\(\nu\)</span> — is a nonlinear, infinite-dimensional constraint on the map <span class="math inline">\(T\)</span>. The optimization is non-convex. Standard convex optimization tools from Chapter 2 of Phase 0 do not directly apply. And in many cases, no Monge map exists at all — for instance, if <span class="math inline">\(\mu\)</span> is a single point mass and <span class="math inline">\(\nu\)</span> is spread over two locations, there is no single function that can split the mass at the source.</p>
+<p>Despite these difficulties, the Monge problem has a beautiful and complete solution in the most important special case — the quadratic cost <span class="math inline">\(c(x,y) = \|x-y\|_2^2\)</span> when <span class="math inline">\(\mu\)</span> is absolutely continuous. This is the <strong>Brenier theorem</strong>, and it is one of the deepest results in all of Optimal Transport. Brenier proved that when the cost is quadratic and the source measure is absolutely continuous, the unique optimal Monge map is the gradient of a convex function: <span class="math inline">\(T = \nabla\phi\)</span> for some convex <span class="math inline">\(\phi: \mathbb{R}^n \to \mathbb{R}\)</span>. The transport map does not just minimize cost — it is geometrically canonical, arising from the gradient of a single scalar convex potential. This connection between optimal transport and convex analysis — between the cheapest way to move mass and the gradient of a convex function — is the thread that runs from the Monge problem all the way to the Rectified Flows of Phase 3.</p>
+<p>This topic has three subtopics that develop the Monge problem from the ground up.</p>
+<p>The first subtopic is <strong>the Monge formulation</strong> — the precise mathematical statement of the problem, the push-forward constraint and what it means geometrically, the class of admissible transport maps, and the basic existence questions. Why does a Monge map exist in some cases and not others? What is the relationship between the existence of a Monge map and the absolute continuity of the source measure? These questions motivate the Kantorovich relaxation of the next topic, but they also reveal the geometric content of the Monge problem before any relaxation.</p>
+<p>The second subtopic is the <strong>Brenier theorem</strong> — the characterization of the optimal Monge map for quadratic cost as the gradient of a convex function. The Brenier map <span class="math inline">\(T = \nabla\phi\)</span> is not just optimal — it is the unique optimal coupling that is a deterministic map, and it is symmetric: the map from <span class="math inline">\(\nu\)</span> to <span class="math inline">\(\mu\)</span> is <span class="math inline">\((\nabla\phi)^{-1} = \nabla\phi^*\)</span>, the gradient of the Legendre-Fenchel conjugate. The Brenier theorem connects Optimal Transport to convex analysis through the deepest possible link: the optimal map is a subdifferential of a convex function, and the Legendre-Fenchel transform exchanges the roles of source and target.</p>
+<p>The third subtopic is <strong>the polar factorization theorem</strong> — Brenier’s deeper result that every sufficiently regular vector field <span class="math inline">\(u: \mathbb{R}^n \to \mathbb{R}^n\)</span> can be uniquely factored as <span class="math inline">\(u = \nabla\phi \circ s\)</span>, where <span class="math inline">\(\nabla\phi\)</span> is the gradient of a convex function (the Brenier map from the push-forward of the Lebesgue measure under <span class="math inline">\(u\)</span> back to the Lebesgue measure) and <span class="math inline">\(s\)</span> is a measure-preserving map. This is the vector field analogue of the polar decomposition of matrices — gradient of convex function plays the role of positive definite symmetric matrix, and measure-preserving map plays the role of orthogonal matrix. The polar factorization theorem is the geometric foundation of fluid dynamics on the diffeomorphism group and appears in the formulation of incompressible fluid mechanics as geodesics on the group of volume-preserving diffeomorphisms.</p>
+<p>By the end of this topic, when you see the neural network generator of a normalizing flow or a flow matching model, you will recognize it as an approximation to a Monge map — a deterministic transport map pushing a noise distribution to a data distribution. When the generator is trained to minimize the squared distance cost <span class="math inline">\(\mathbb{E}[\|T(Z) - X\|_2^2]\)</span> subject to <span class="math inline">\(T_\#\mu_Z = \mu_X\)</span>, the optimal generator is the Brenier map — the gradient of a convex potential. The Monge problem is not history — it is the geometric ideal that every deterministic generative model is approximating.</p>
+<p><strong>ALL THREE SUBTOPICS ARE TREATED AS A SINGLE TOPIC FOR EASY COMPREHENSION.</strong></p>
+<hr>
+</section>
+<section id="layer-1-story" class="level2">
+<h2 class="anchored" data-anchor-id="layer-1-story">Layer 1 (Story)</h2>
+<p>You are the logistics director for the Nepal Food Corporation, and the monsoon has just ended badly. Drought has struck the eastern hill districts — Taplejung, Panchthar, Ilam — leaving their grain storage facilities nearly empty. Meanwhile, an unusually productive harvest in the western Terai districts — Kanchanpur, Kailali, Bardiya — has overfilled those storage facilities to capacity. The national food security mandate is clear: move grain from the western surplus to the eastern deficit, ensuring every district receives exactly the grain it needs.</p>
+<p>You have a fleet of trucks, a road network, and a detailed map showing exactly how much surplus grain sits at each western storage facility and exactly how much deficit grain each eastern district needs. The total surplus equals the total deficit — no grain will be created or destroyed, only moved. Your job is to design the transportation plan that moves all the grain from surplus to deficit locations at minimum total transportation cost, where cost is measured as tonnes of grain times kilometres traveled.</p>
+<p>This is the Monge problem. And before you begin solving it, you need to understand exactly what kind of answer you are looking for.</p>
+<hr>
+<p><strong>The deterministic assignment requirement</strong></p>
+<p>Your first instinct is to draw arrows on the map — one arrow from each surplus location to some deficit location, specifying exactly where that location’s grain goes. The plan must be deterministic: every grain stored at Kanchanpur must go to a single specific destination. You cannot split the Kanchanpur grain between Taplejung and Panchthar simultaneously, sending half to each. Either Kanchanpur’s grain goes to Taplejung, or it goes to Panchthar — but not both.</p>
+<p>This deterministic requirement is the defining feature of the Monge formulation. You are looking for a function <span class="math inline">\(T\)</span> — a transport map — that assigns to every surplus location <span class="math inline">\(x\)</span> a single deficit destination <span class="math inline">\(T(x)\)</span>. The map is a genuine function in the mathematical sense: each input has exactly one output.</p>
+<p>The transportation cost of a specific assignment <span class="math inline">\(T\)</span> is the total cost across all surplus locations: you take the amount of grain at each location <span class="math inline">\(x\)</span>, multiply by the distance from <span class="math inline">\(x\)</span> to its assigned destination <span class="math inline">\(T(x)\)</span>, and sum over all surplus locations. You want the assignment <span class="math inline">\(T\)</span> that minimizes this total cost while satisfying the fundamental constraint: the amount of grain arriving at each deficit location must exactly equal that location’s need.</p>
+<p>This constraint — that the resulting distribution of grain across deficit locations exactly matches the demand distribution — is the push-forward constraint <span class="math inline">\(T_\#\mu = \nu\)</span>. The source distribution <span class="math inline">\(\mu\)</span> describes how the surplus is distributed across western locations. The target distribution <span class="math inline">\(\nu\)</span> describes how the deficit is distributed across eastern locations. The push-forward condition says: if you apply the transport map <span class="math inline">\(T\)</span> to every grain particle in <span class="math inline">\(\mu\)</span>, the resulting distribution of those particles exactly equals <span class="math inline">\(\nu\)</span>.</p>
+<hr>
+<p><strong>The first difficulty: when does a Monge map exist?</strong></p>
+<p>You begin designing your plan with a small example. Suppose you have exactly two surplus locations — Kanchanpur with 500 tonnes and Kailali with 500 tonnes — and two deficit locations — Taplejung needing 700 tonnes and Panchthar needing 300 tonnes.</p>
+<p>You need to assign each surplus location to a single deficit location. There are only two options. Option A: Kanchanpur goes to Taplejung and Kailali goes to Panchthar. Option B: Kanchanpur goes to Panchthar and Kailali goes to Taplejung.</p>
+<p>But wait. Kanchanpur has 500 tonnes and Taplejung needs 700 tonnes. If you send Kanchanpur’s 500 tonnes to Taplejung, Taplejung still needs 200 more tonnes from somewhere — but Kailali is supposed to be going to Panchthar. There is no way to satisfy the demand with a deterministic Monge map in this discrete example, because no single assignment of surplus locations to deficit locations can simultaneously match all the demands when the individual surpluses and deficits do not align perfectly.</p>
+<p>This reveals the first fundamental difficulty of the Monge problem: a deterministic transport map that satisfies the push-forward constraint <span class="math inline">\(T_\#\mu = \nu\)</span> may not exist, or may be highly constrained in ways that prevent genuine cost optimization.</p>
+<p>In the continuous case — where the surplus is a continuous distribution of grain spread across the western Terai, not concentrated at discrete facilities — this difficulty largely disappears. A continuous source distribution can be mapped to any target distribution by a deterministic map, because you can split continuous regions of surplus mass arbitrarily finely and assign each infinitesimally thin sliver to a different destination. When <span class="math inline">\(\mu\)</span> is absolutely continuous — when it has a density function <span class="math inline">\(f\)</span> with respect to the Lebesgue measure, spreading mass continuously across the source region — a Monge map always exists for any target distribution <span class="math inline">\(\nu\)</span>. The absolute continuity of <span class="math inline">\(\mu\)</span> is the mathematical condition that prevents the mass-splitting problem: an absolutely continuous measure assigns zero mass to every single point, so there is no discrete concentration of mass at a single location that would need to be split.</p>
+<hr>
+<p><strong>The second difficulty: which Monge map is optimal?</strong></p>
+<p>Even when the Monge map exists, finding the optimal one is genuinely hard. The space of all valid transport maps is enormous — any bijection from the source region to the target region that satisfies the push-forward constraint is a candidate — and the cost function is non-convex over this space. There is no guarantee that gradient descent finds the global minimum, and no easy certificate of optimality.</p>
+<p>Your logistics team debates two natural heuristics. The first is the greedy nearest-neighbor assignment: for each surplus location, assign it to the closest deficit location with remaining capacity. The second is the balanced assignment: try to distribute the transport work evenly, never sending grain much farther than necessary.</p>
+<p>Neither heuristic is guaranteed to be optimal. And remarkably, the optimal assignment has a structure that neither heuristic captures: it is the plan that never crosses its own transport routes. If you draw the optimal transport plan on a map, the arrows from surplus to deficit never intersect.</p>
+<hr>
+<p><strong>The no-crossing principle</strong></p>
+<p>Your senior logistics consultant — a mathematician who consults for the Food Corporation — explains this non-crossing property with a compelling argument.</p>
+<p>Suppose your current plan has two crossings: grain from location <span class="math inline">\(x_1\)</span> is going to <span class="math inline">\(y_2\)</span>, and grain from location <span class="math inline">\(x_2\)</span> is going to <span class="math inline">\(y_1\)</span>, with the paths crossing at some point in the middle. Consider what happens if you swap the destinations: send <span class="math inline">\(x_1\)</span>’s grain to <span class="math inline">\(y_1\)</span> and <span class="math inline">\(x_2\)</span>’s grain to <span class="math inline">\(y_2\)</span> instead.</p>
+<p>The total transport cost of the original plan is proportional to <span class="math inline">\(d(x_1, y_2) + d(x_2, y_1)\)</span>. The cost of the swapped plan is proportional to <span class="math inline">\(d(x_1, y_1) + d(x_2, y_2)\)</span>. By the triangle inequality and the geometry of crossing paths, the swapped plan is never more expensive and is generically cheaper: <span class="math inline">\(d(x_1, y_1) + d(x_2, y_2) \leq d(x_1, y_2) + d(x_2, y_1)\)</span> whenever the paths cross. Crossing paths are suboptimal — the optimal plan uncrosses them.</p>
+<p>This no-crossing principle — that the optimal transport map never has two source-destination pairs whose paths intersect — is the geometric heart of optimal transport in one dimension. In one dimension, it means the optimal map is monotone: the grain from the leftmost surplus location goes to the leftmost deficit location, the grain from the second-leftmost goes to the second-leftmost deficit location, and so on. The optimal Monge map in one dimension is completely determined by this monotone rearrangement, and it can be computed in closed form using the quantile functions of the two distributions.</p>
+<p>In higher dimensions, the non-crossing principle takes a more subtle form — but it retains the same geometric content. The optimal transport map never wastes effort by sending mass in conflicting directions. Every grain takes the most direct possible path, given the constraints imposed by all the other grains’ paths.</p>
+<hr>
+<p><strong>The Brenier theorem: the optimal map is a gradient</strong></p>
+<p>Your consultant now reveals the deep mathematical structure of the no-crossing principle in multiple dimensions.</p>
+<p>Consider the case where the transportation cost is the squared Euclidean distance: moving grain from location <span class="math inline">\(x\)</span> to location <span class="math inline">\(T(x)\)</span> costs <span class="math inline">\(\|x - T(x)\|_2^2\)</span> — the square of the distance traveled. This quadratic cost penalizes long journeys disproportionately, strongly preferring short local movements over long cross-country hauls.</p>
+<p>For this quadratic cost, the no-crossing principle takes a remarkably clean form. The optimal Monge map <span class="math inline">\(T\)</span> must satisfy the condition that for any two source locations <span class="math inline">\(x_1\)</span> and <span class="math inline">\(x_2\)</span>:</p>
+<p><span class="math display">\[\langle x_1 - x_2, T(x_1) - T(x_2)\rangle \geq 0\]</span></p>
+<p>The destinations <span class="math inline">\(T(x_1)\)</span> and <span class="math inline">\(T(x_2)\)</span> must move in the same direction as the sources <span class="math inline">\(x_1\)</span> and <span class="math inline">\(x_2\)</span> — the map is monotone in the sense that points that are far apart in the source go to points that are far apart in the destination. This monotonicity condition in multiple dimensions is equivalent to the map being the gradient of a convex function.</p>
+<p>A map <span class="math inline">\(T: \mathbb{R}^n \to \mathbb{R}^n\)</span> is monotone in this sense if and only if <span class="math inline">\(T = \nabla\phi\)</span> for some convex function <span class="math inline">\(\phi: \mathbb{R}^n \to \mathbb{R}\)</span>. The gradient of a convex function always points from less-convex to more-convex regions, and this directional consistency is exactly the multi-dimensional version of the no-crossing principle.</p>
+<p>Your consultant states the Brenier theorem: when the cost is quadratic and the source distribution <span class="math inline">\(\mu\)</span> is absolutely continuous, the unique optimal Monge map is <span class="math inline">\(T = \nabla\phi\)</span> for a convex function <span class="math inline">\(\phi\)</span> — the Brenier potential. There is no other optimal map. The optimal plan is uniquely determined by a single scalar function <span class="math inline">\(\phi\)</span>, whose gradient field <span class="math inline">\(\nabla\phi\)</span> describes where every grain of source mass must go.</p>
+<hr>
+<p><strong>The Brenier potential and the Legendre-Fenchel connection</strong></p>
+<p>The Brenier potential <span class="math inline">\(\phi\)</span> and its Legendre-Fenchel conjugate <span class="math inline">\(\phi^*\)</span> are not just analytically convenient — they encode the entire transport structure. The optimal map from <span class="math inline">\(\mu\)</span> to <span class="math inline">\(\nu\)</span> is <span class="math inline">\(T = \nabla\phi\)</span>. The optimal inverse map from <span class="math inline">\(\nu\)</span> back to <span class="math inline">\(\mu\)</span> is <span class="math inline">\(T^{-1} = \nabla\phi^*\)</span> — the gradient of the conjugate potential. The two potentials are related by the Legendre-Fenchel duality from Chapter 3 of Phase 0: <span class="math inline">\(\phi^*(y) = \sup_x\{\langle x,y\rangle - \phi(x)\}\)</span>.</p>
+<p>In the logistics story: the Brenier potential <span class="math inline">\(\phi\)</span> is the value function that assigns to each western surplus location <span class="math inline">\(x\)</span> a scalar measure of its “transport value” — how much it costs, in terms of the optimal transport plan, to access that location’s grain. The gradient <span class="math inline">\(\nabla\phi(x)\)</span> is the destination for that location’s grain. The conjugate potential <span class="math inline">\(\phi^*\)</span> assigns to each eastern deficit location <span class="math inline">\(y\)</span> a scalar measure of its “demand value” — the dual price of receiving grain at that location. The gradient <span class="math inline">\(\nabla\phi^*(y)\)</span> is the source location from which that deficit’s grain should come.</p>
+<p>The Legendre-Fenchel duality between <span class="math inline">\(\phi\)</span> and <span class="math inline">\(\phi^*\)</span> is the mathematical expression of the buyer-seller duality in the grain market: the value of grain at source locations and the value of grain at deficit locations are dual to each other, related by the transport cost structure.</p>
+<hr>
+<p><strong>The polar factorization: the deep generalization</strong></p>
+<p>Your consultant now gestures toward a deeper result. Any assignment of trucks to routes — any vector field on the map describing which direction each truck travels — can be decomposed into two independent components. The first component is the optimal transport part: the part that actually moves grain from surplus to deficit, described by a Brenier map. The second component is the circulation part: the part that moves trucks around without changing the net distribution of grain, described by a measure-preserving rearrangement.</p>
+<p>This decomposition — the polar factorization of a vector field into a gradient-of-convex-function part and a volume-preserving part — is the Brenier polar factorization theorem. It is the vector field version of the matrix polar decomposition you encountered in Chapter 4 of Phase 0: just as any matrix decomposes into a positive definite part (pure stretch) and an orthogonal part (pure rotation), any vector field decomposes into a gradient-of-convex part (optimal transport, the “stretch”) and a volume-preserving part (circulation, the “rotation”). The Brenier map plays the role of the positive definite symmetric matrix. The measure-preserving rearrangement plays the role of the orthogonal matrix.</p>
+<hr>
+<p>Here is the break moment. The naive assumption is that the optimal Monge map for any cost function must be the gradient of a convex function — that the Brenier structure is universal, not special to the quadratic cost.</p>
+<p>This breaks immediately for other cost functions. For the linear cost <span class="math inline">\(c(x,y) = \|x-y\|_1\)</span> — the <span class="math inline">\(L_1\)</span> distance — the optimal transport map is not generally the gradient of a convex function. The <span class="math inline">\(L_1\)</span> optimal map has a very different geometric structure: it transports mass along axis-aligned directions, never mixing coordinates. For the cost <span class="math inline">\(c(x,y) = \mathbf{1}[x \neq y]\)</span> — the zero-one cost that penalizes any movement — the optimal map is the identity whenever possible. For costs that are not convex functions of <span class="math inline">\(x-y\)</span>, the optimal map can be highly non-unique, multivalued, and geometrically irregular.</p>
+<p>The Brenier theorem is a special property of the quadratic cost — it is the cost that makes the optimal map a gradient field, connecting Optimal Transport to convex analysis. The quadratic cost’s special role is not a coincidence: it is the cost that makes the Wasserstein-2 distance the Riemannian distance on the Wasserstein manifold, whose geodesics are the displacement interpolations of Phase 1’s third chapter. The quadratic cost is the cost that makes the geometry work out cleanly, and the Brenier theorem is the precise statement of that clean geometry.</p>
+<hr>
+<p>Hold three pictures simultaneously.</p>
+<p>The grain transport on the Nepal map: surplus locations in the west, deficit locations in the east, arrows showing where each location’s grain goes, with the optimal plan never crossing its own arrows — the Monge map as a deterministic assignment with the no-crossing property.</p>
+<p>The Brenier potential <span class="math inline">\(\phi\)</span> and its gradient field <span class="math inline">\(\nabla\phi\)</span>: a single convex scalar function defined over the western Terai, whose gradient at each point gives the optimal destination for the grain at that point — the Brenier theorem as the reduction of the transport map to a single convex function.</p>
+<p>The polar factorization: any truck routing plan decomposed into the optimal transport part (gradient of convex function, the “positive definite stretch”) and the circulation part (volume-preserving rearrangement, the “orthogonal rotation”) — the Brenier polar factorization as the vector-field analogue of the matrix polar decomposition.</p>
+<hr>
+</section>
+<section id="layer-2-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="layer-2-mathematics">Layer 2 (Mathematics)</h2>
+<p>We build the formalism in six stages: the precise statement of the Monge problem, the existence and non-existence of Monge maps, the Brenier theorem and its proof strategy, the polar factorization theorem, the connection to the Monge-Ampère equation, and the relationship between the Monge problem and the Kantorovich relaxation that motivates the next topic.</p>
+<section id="the-monge-problem-precise-statement" class="level3">
+<h3 class="anchored" data-anchor-id="the-monge-problem-precise-statement">The Monge Problem — Precise Statement</h3>
+<p>Let <span class="math inline">\((\mathcal{X}, d)\)</span> and <span class="math inline">\((\mathcal{Y}, d)\)</span> be Polish metric spaces (complete separable metric spaces) and let <span class="math inline">\(\mu \in \mathcal{P}(\mathcal{X})\)</span> and <span class="math inline">\(\nu \in \mathcal{P}(\mathcal{Y})\)</span> be Borel probability measures. Let <span class="math inline">\(c: \mathcal{X} \times \mathcal{Y} \to [0,\infty]\)</span> be a lower semicontinuous cost function.</p>
+<p>The <strong>Monge problem</strong> is:</p>
+<p><span class="math display">\[\inf_{T: T_\#\mu = \nu} \int_\mathcal{X} c(x, T(x)) \, d\mu(x)\]</span></p>
+<p>where the infimum is over all Borel measurable maps <span class="math inline">\(T: \mathcal{X} \to \mathcal{Y}\)</span> satisfying the <strong>push-forward constraint</strong>:</p>
+<p><span class="math display">\[T_\#\mu = \nu \iff \mu(T^{-1}(B)) = \nu(B) \quad \forall B \in \mathcal{B}(\mathcal{Y})\]</span></p>
+<p>The push-forward constraint says: the proportion of <span class="math inline">\(\mu\)</span>-mass sent to any target region <span class="math inline">\(B\)</span> equals <span class="math inline">\(\nu(B)\)</span>. A map <span class="math inline">\(T\)</span> satisfying <span class="math inline">\(T_\#\mu = \nu\)</span> is called a <strong>transport map</strong> from <span class="math inline">\(\mu\)</span> to <span class="math inline">\(\nu\)</span>.</p>
+<p>The infimum in the Monge problem is taken over the set:</p>
+<p><span class="math display">\[\mathcal{T}(\mu,\nu) = \{T: \mathcal{X} \to \mathcal{Y} \text{ Borel measurable} : T_\#\mu = \nu\}\]</span></p>
+<p>When <span class="math inline">\(\mathcal{T}(\mu,\nu)\)</span> is empty — when no transport map exists — the Monge problem is infeasible and the infimum is <span class="math inline">\(+\infty\)</span> by convention.</p>
+<hr>
+</section>
+<section id="existence-and-non-existence-of-monge-maps" class="level3">
+<h3 class="anchored" data-anchor-id="existence-and-non-existence-of-monge-maps">Existence and Non-Existence of Monge Maps</h3>
+<p><strong>Non-existence for discrete measures.</strong> If <span class="math inline">\(\mu = \delta_{x_0}\)</span> (a Dirac mass at a single point) and <span class="math inline">\(\nu = \frac{1}{2}\delta_{y_1} + \frac{1}{2}\delta_{y_2}\)</span> with <span class="math inline">\(y_1 \neq y_2\)</span>, then <span class="math inline">\(\mathcal{T}(\mu,\nu) = \emptyset\)</span>. Any map <span class="math inline">\(T\)</span> with <span class="math inline">\(T_\#\delta_{x_0} = \delta_{T(x_0)}\)</span> is a Dirac mass at a single point, which cannot equal <span class="math inline">\(\nu\)</span>.</p>
+<p>More generally, if <span class="math inline">\(\mu\)</span> has an atom — a point <span class="math inline">\(x_0\)</span> with <span class="math inline">\(\mu(\{x_0\}) &gt; 0\)</span> — and <span class="math inline">\(\nu\)</span> does not have an atom of the same mass at any single point, then no Monge map exists.</p>
+<p><strong>Existence for absolutely continuous measures.</strong> When <span class="math inline">\(\mu \ll \lambda^n\)</span> (absolutely continuous with respect to Lebesgue measure on <span class="math inline">\(\mathbb{R}^n\)</span>), <span class="math inline">\(\mu\)</span> assigns zero measure to every set of Lebesgue measure zero, and in particular to every singleton: <span class="math inline">\(\mu(\{x\}) = 0\)</span> for all <span class="math inline">\(x\)</span>. In this case, transport maps exist in abundance — for any target measure <span class="math inline">\(\nu\)</span>, one can construct explicit transport maps (e.g., the Knothe-Rosenblatt rearrangement using conditional quantile functions).</p>
+<p><strong>Theorem (Existence of Transport Maps).</strong> If <span class="math inline">\(\mu \ll \lambda^n\)</span>, then <span class="math inline">\(\mathcal{T}(\mu,\nu) \neq \emptyset\)</span> for any <span class="math inline">\(\nu \in \mathcal{P}(\mathbb{R}^n)\)</span>.</p>
+<p>The proof constructs the Knothe-Rosenblatt map: transport <span class="math inline">\(\mu\)</span> to <span class="math inline">\(\nu\)</span> coordinate by coordinate using conditional quantile functions. The resulting map is measurable and satisfies <span class="math inline">\(T_\#\mu = \nu\)</span>.</p>
+<hr>
+</section>
+<section id="the-brenier-theorem" class="level3">
+<h3 class="anchored" data-anchor-id="the-brenier-theorem">The Brenier Theorem</h3>
+<p>The Brenier theorem is the central result of the Monge problem for quadratic cost. It says that when the source is absolutely continuous, the optimal transport map is unique and has a specific algebraic structure.</p>
+<p><strong>Theorem (Brenier, 1991).</strong> Let <span class="math inline">\(\mu, \nu \in \mathcal{P}_2(\mathbb{R}^n)\)</span> (probability measures with finite second moment) and suppose <span class="math inline">\(\mu \ll \lambda^n\)</span>. Then:</p>
+<p><span class="math display">\[\text{(i)} \quad \inf_{T_\#\mu = \nu} \int \|x-T(x)\|_2^2 \, d\mu(x) = \min_{\pi \in \Pi(\mu,\nu)} \int \|x-y\|_2^2 \, d\pi(x,y)\]</span></p>
+<p>The Monge infimum equals the Kantorovich minimum.</p>
+<p><span class="math display">\[\text{(ii)} \quad \text{There exists a unique optimal transport map } T^* \in \mathcal{T}(\mu,\nu).\]</span></p>
+<p><span class="math display">\[\text{(iii)} \quad T^* = \nabla\phi \quad \mu\text{-almost everywhere}\]</span></p>
+<p>for a convex function <span class="math inline">\(\phi: \mathbb{R}^n \to \mathbb{R} \cup \{+\infty\}\)</span> (the <strong>Brenier potential</strong>).</p>
+<p><span class="math display">\[\text{(iv)} \quad T^* \text{ is the } \mu\text{-a.e. unique optimal transport map.}\]</span></p>
+<p><strong>Proof strategy.</strong> The proof proceeds in three steps.</p>
+<p><strong>Step 1 — Kantorovich duality.</strong> By the Kantorovich duality theorem (Topic 4 of this chapter), for quadratic cost:</p>
+<p><span class="math display">\[\min_{\pi \in \Pi(\mu,\nu)} \int \|x-y\|_2^2 \, d\pi = \max_{\phi,\psi: \phi(x)+\psi(y) \leq \|x-y\|_2^2} \left\{\int\phi\,d\mu + \int\psi\,d\nu\right\}\]</span></p>
+<p>The optimal dual potentials <span class="math inline">\((\phi^*, \psi^*)\)</span> exist (by compactness of the dual feasible set under appropriate conditions).</p>
+<p><strong>Step 2 — Complementary slackness.</strong> By KKT complementary slackness, the optimal coupling <span class="math inline">\(\pi^*\)</span> is supported on the set <span class="math inline">\(\{(x,y): \phi^*(x) + \psi^*(y) = \|x-y\|_2^2\}\)</span>. For any <span class="math inline">\((x,y)\)</span> in the support of <span class="math inline">\(\pi^*\)</span>, the point <span class="math inline">\(y\)</span> maximizes <span class="math inline">\(\langle x, y\rangle - \frac{1}{2}\|y\|^2 - \psi^*(y)\)</span> over <span class="math inline">\(y\)</span> (after completing the square: <span class="math inline">\(\|x-y\|^2 = \|x\|^2 - 2\langle x,y\rangle + \|y\|^2\)</span>). Setting <span class="math inline">\(\tilde\phi(x) = \frac{1}{2}\|x\|^2 - \frac{1}{2}\phi^*(x)\)</span> (a convex function), the optimality condition becomes: <span class="math inline">\(y \in \partial\tilde\phi(x)\)</span> — the subdifferential of a convex function.</p>
+<p><strong>Step 3 — From subdifferential to gradient.</strong> Since <span class="math inline">\(\mu \ll \lambda^n\)</span>, the convex function <span class="math inline">\(\tilde\phi\)</span> is differentiable <span class="math inline">\(\mu\)</span>-almost everywhere (by Alexandrov’s theorem: convex functions are twice differentiable almost everywhere). At differentiability points, the subdifferential is a singleton: <span class="math inline">\(\partial\tilde\phi(x) = \{\nabla\tilde\phi(x)\}\)</span>. Therefore the optimal coupling <span class="math inline">\(\pi^*\)</span> is concentrated on <span class="math inline">\(\{(x, \nabla\tilde\phi(x))\}\)</span> — it is the graph of the gradient map <span class="math inline">\(T^* = \nabla\tilde\phi\)</span>. Setting <span class="math inline">\(\phi = \tilde\phi\)</span> gives <span class="math inline">\(T^* = \nabla\phi\)</span>. <span class="math inline">\(\square\)</span></p>
+<hr>
+</section>
+<section id="the-brenier-map-convexity-and-monotonicity" class="level3">
+<h3 class="anchored" data-anchor-id="the-brenier-map-convexity-and-monotonicity">The Brenier Map — Convexity and Monotonicity</h3>
+<p>The key algebraic property of the Brenier map <span class="math inline">\(T = \nabla\phi\)</span> is <strong>cyclical monotonicity</strong>: for any finite collection of points <span class="math inline">\(x_1, \ldots, x_k \in \mathbb{R}^n\)</span>:</p>
+<p><span class="math display">\[\sum_{i=1}^k \langle x_i, T(x_i)\rangle \geq \sum_{i=1}^k \langle x_i, T(x_{i+1})\rangle\]</span></p>
+<p>(indices mod <span class="math inline">\(k\)</span>). The optimal map does better than any cyclic permutation of its destinations. In particular, for <span class="math inline">\(k=2\)</span>:</p>
+<p><span class="math display">\[\langle x_1 - x_2, T(x_1) - T(x_2)\rangle \geq 0\]</span></p>
+<p>This is the <strong>monotonicity</strong> condition — the map does not cross: points that are farther apart in the source are mapped to points that are at least as far apart in the destination (in the inner product sense).</p>
+<p><strong>Theorem.</strong> A Borel map <span class="math inline">\(T: \mathbb{R}^n \to \mathbb{R}^n\)</span> is the gradient of a convex function if and only if it is cyclically monotone.</p>
+<p>This is the characterization of Brenier maps: optimal transport maps for quadratic cost are exactly the cyclically monotone maps, and these are exactly the gradients of convex functions. The no-crossing property of the story is the <span class="math inline">\(k=2\)</span> case of cyclical monotonicity.</p>
+<hr>
+</section>
+<section id="the-brenier-potential-and-the-legendre-fenchel-transform" class="level3">
+<h3 class="anchored" data-anchor-id="the-brenier-potential-and-the-legendre-fenchel-transform">The Brenier Potential and the Legendre-Fenchel Transform</h3>
+<p>The Brenier potential <span class="math inline">\(\phi\)</span> and its Legendre-Fenchel conjugate <span class="math inline">\(\phi^*\)</span> satisfy the <strong>dual transport equations</strong>:</p>
+<p><span class="math display">\[T = \nabla\phi: \mathbb{R}^n \to \mathbb{R}^n, \quad T_\#\mu = \nu\]</span> <span class="math display">\[T^{-1} = \nabla\phi^*: \mathbb{R}^n \to \mathbb{R}^n, \quad (T^{-1})_\#\nu = \mu\]</span></p>
+<p>The inverse of the Brenier map from <span class="math inline">\(\mu\)</span> to <span class="math inline">\(\nu\)</span> is the Brenier map from <span class="math inline">\(\nu\)</span> to <span class="math inline">\(\mu\)</span>, given by the gradient of the conjugate potential. This follows from the Fenchel equality condition: <span class="math inline">\(y = \nabla\phi(x) \iff x = \nabla\phi^*(y)\)</span>.</p>
+<p>The Brenier potential satisfies the <strong>Monge-Ampère equation</strong> — a fully nonlinear PDE connecting <span class="math inline">\(\phi\)</span> to the densities <span class="math inline">\(f = d\mu/d\lambda\)</span> and <span class="math inline">\(g = d\nu/d\lambda\)</span>:</p>
+<p><span class="math display">\[\det(\nabla^2\phi(x)) = \frac{f(x)}{g(\nabla\phi(x))}\]</span></p>
+<p>This equation says: the Jacobian determinant of the transport map <span class="math inline">\(T = \nabla\phi\)</span> — which equals <span class="math inline">\(\det(\nabla^2\phi)\)</span>, the determinant of the Hessian of <span class="math inline">\(\phi\)</span> — equals the ratio of the source density to the target density at the transported point. This is the change-of-variables formula for the push-forward: if <span class="math inline">\(T_\#\mu = \nu\)</span>, then the density transforms as <span class="math inline">\(f(x) = g(T(x)) |\det DT(x)|\)</span> (from the push-forward density formula of Chapter 1 of Phase 0). For <span class="math inline">\(T = \nabla\phi\)</span>, the Jacobian is the Hessian <span class="math inline">\(\nabla^2\phi\)</span>, giving the Monge-Ampère equation.</p>
+<p>The Monge-Ampère equation is one of the central PDEs of geometric analysis. Its solutions are convex functions, and their regularity theory — when is <span class="math inline">\(\phi\)</span> smooth, how smooth is it — is a deep area of mathematics developed by Caffarelli, Urbas, and others. For the roadmap, the key point is that the Brenier potential satisfies a well-posed PDE that can in principle be solved numerically, connecting Optimal Transport to computational PDE methods.</p>
+<hr>
+</section>
+<section id="the-one-dimensional-case" class="level3">
+<h3 class="anchored" data-anchor-id="the-one-dimensional-case">The One-Dimensional Case</h3>
+<p>In one dimension (<span class="math inline">\(n=1\)</span>), the Monge problem has an explicit solution for any cost function of the form <span class="math inline">\(c(x,y) = h(|x-y|)\)</span> with <span class="math inline">\(h\)</span> strictly convex.</p>
+<p><strong>Theorem.</strong> For <span class="math inline">\(\mu, \nu \in \mathcal{P}(\mathbb{R})\)</span> with cumulative distribution functions <span class="math inline">\(F_\mu\)</span> and <span class="math inline">\(F_\nu\)</span>, and any strictly convex cost <span class="math inline">\(h\)</span>, the unique optimal Monge map is the <strong>monotone rearrangement</strong>:</p>
+<p><span class="math display">\[T^* = F_\nu^{-1} \circ F_\mu\]</span></p>
+<p>where <span class="math inline">\(F_\nu^{-1}(t) = \inf\{y : F_\nu(y) \geq t\}\)</span> is the quantile function of <span class="math inline">\(\nu\)</span>.</p>
+<p><strong>Proof.</strong> The monotone map <span class="math inline">\(T^* = F_\nu^{-1} \circ F_\mu\)</span> satisfies <span class="math inline">\(T_\#^*\mu = \nu\)</span> (by the quantile transform). By the rearrangement inequality for strictly convex costs, any non-monotone map has strictly higher cost than the monotone rearrangement — the no-crossing argument of the story made precise. <span class="math inline">\(\square\)</span></p>
+<p>The one-dimensional Wasserstein-2 distance is therefore:</p>
+<p><span class="math display">\[W_2^2(\mu,\nu) = \int_0^1 |F_\mu^{-1}(t) - F_\nu^{-1}(t)|^2 \, dt\]</span></p>
+<p>the <span class="math inline">\(L^2\)</span> distance between the quantile functions. This is one of the few cases where the Wasserstein distance has a completely explicit formula.</p>
+<hr>
+</section>
+<section id="the-polar-factorization-theorem" class="level3">
+<h3 class="anchored" data-anchor-id="the-polar-factorization-theorem">The Polar Factorization Theorem</h3>
+<p>The Brenier polar factorization theorem generalizes the matrix polar decomposition to infinite-dimensional maps.</p>
+<p><strong>Theorem (Brenier Polar Factorization).</strong> Let <span class="math inline">\(\lambda\)</span> be the Lebesgue measure on a bounded domain <span class="math inline">\(\Omega \subseteq \mathbb{R}^n\)</span> (normalized to a probability measure). For any <span class="math inline">\(u \in L^2(\Omega, \mathbb{R}^n)\)</span> with <span class="math inline">\(u_\#\lambda \ll \lambda\)</span> (the push-forward of Lebesgue measure under <span class="math inline">\(u\)</span> is absolutely continuous), there exists a unique decomposition:</p>
+<p><span class="math display">\[u = \nabla\phi \circ s \quad \lambda\text{-a.e.}\]</span></p>
+<p>where: - <span class="math inline">\(\phi: \Omega \to \mathbb{R}\)</span> is a convex function (the <strong>convex potential</strong>) - <span class="math inline">\(s: \Omega \to \Omega\)</span> is a measure-preserving map (<span class="math inline">\(s_\#\lambda = \lambda\)</span>) - <span class="math inline">\(\nabla\phi: \Omega \to \mathbb{R}^n\)</span> is the Brenier map from <span class="math inline">\(\lambda\)</span> to <span class="math inline">\(u_\#\lambda\)</span></p>
+<p>The decomposition is unique: <span class="math inline">\(\phi\)</span> is uniquely determined (up to constants) and <span class="math inline">\(s = (\nabla\phi)^{-1} \circ u\)</span> is uniquely determined <span class="math inline">\(\lambda\)</span>-a.e.</p>
+<p><strong>Comparison with matrix polar decomposition.</strong> For a matrix <span class="math inline">\(A \in \mathbb{R}^{n\times n}\)</span>, the polar decomposition is <span class="math inline">\(A = QS\)</span> with <span class="math inline">\(Q\)</span> orthogonal and <span class="math inline">\(S \succ 0\)</span> symmetric. The Brenier polar factorization replaces: <span class="math inline">\(Q\)</span> (orthogonal, measure-preserving on spheres) with <span class="math inline">\(s\)</span> (measure-preserving map), and <span class="math inline">\(S\)</span> (positive definite symmetric, gradient of a quadratic convex function) with <span class="math inline">\(\nabla\phi\)</span> (gradient of a general convex function). Both decompositions factor a general linear/nonlinear map into a “rotation” (measure-preserving) component and a “stretch” (gradient-of-convex) component.</p>
+<p><strong>Application to fluid dynamics.</strong> The group <span class="math inline">\(\text{SDiff}(\Omega)\)</span> of volume-preserving diffeomorphisms of <span class="math inline">\(\Omega\)</span> is the configuration space of an incompressible fluid — each element <span class="math inline">\(s \in \text{SDiff}(\Omega)\)</span> describes the current position of each fluid particle. Arnold showed that ideal incompressible fluid flow is the geodesic on <span class="math inline">\(\text{SDiff}(\Omega)\)</span> equipped with the <span class="math inline">\(L^2\)</span> metric. The Brenier polar factorization projects any diffeomorphism onto the nearest element of <span class="math inline">\(\text{SDiff}(\Omega)\)</span> (the measure-preserving part <span class="math inline">\(s\)</span>) and the nearest gradient-of-convex map (the transport part <span class="math inline">\(\nabla\phi\)</span>). The fluid dynamics interpretation is: <span class="math inline">\(\nabla\phi\)</span> is the irrotational (potential flow) component and <span class="math inline">\(s\)</span> is the rotational (solenoidal) component of the velocity field.</p>
+<hr>
+</section>
+<section id="the-knothe-rosenblatt-rearrangement" class="level3">
+<h3 class="anchored" data-anchor-id="the-knothe-rosenblatt-rearrangement">The Knothe-Rosenblatt Rearrangement</h3>
+<p>An important alternative to the Brenier map — less optimal but easier to compute — is the <strong>Knothe-Rosenblatt rearrangement</strong>, which transports <span class="math inline">\(\mu\)</span> to <span class="math inline">\(\nu\)</span> coordinate by coordinate using conditional quantile functions.</p>
+<p>For measures <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> on <span class="math inline">\(\mathbb{R}^n\)</span> with densities <span class="math inline">\(f\)</span> and <span class="math inline">\(g\)</span>, define:</p>
+<p><span class="math display">\[T_1(x_1) = F_{\nu_1}^{-1}(F_{\mu_1}(x_1))\]</span> <span class="math display">\[T_2(x_1,x_2) = F_{\nu_2|\nu_1(T_1(x_1))}^{-1}(F_{\mu_2|\mu_1(x_1)}(x_2))\]</span> <span class="math display">\[\vdots\]</span> <span class="math display">\[T_n(x_1,\ldots,x_n) = F_{\nu_n|\nu_1(T_1),\ldots,\nu_{n-1}(T_{n-1})}^{-1}(F_{\mu_n|\mu_1,\ldots,\mu_{n-1}}(x_n))\]</span></p>
+<p>Each component is a one-dimensional quantile transport of the conditional distribution. The resulting map <span class="math inline">\(T = (T_1,\ldots,T_n)\)</span> satisfies <span class="math inline">\(T_\#\mu = \nu\)</span> and is lower triangular — each component depends only on earlier coordinates. The Knothe-Rosenblatt map is the basis of triangular flows in normalizing flow models and of the transport map used in sequential Monte Carlo methods.</p>
+<hr>
+</section>
+<section id="from-monge-to-kantorovich-motivating-the-relaxation" class="level3">
+<h3 class="anchored" data-anchor-id="from-monge-to-kantorovich-motivating-the-relaxation">From Monge to Kantorovich — Motivating the Relaxation</h3>
+<p>The Monge problem’s infimum <span class="math inline">\(\inf_{T_\#\mu=\nu}\int c\,dT\)</span> and the Kantorovich problem’s minimum <span class="math inline">\(\min_{\pi\in\Pi(\mu,\nu)}\int c\,d\pi\)</span> satisfy:</p>
+<p><span class="math display">\[\inf_{T_\#\mu=\nu}\int_\mathcal{X} c(x,T(x))\,d\mu(x) \geq \min_{\pi\in\Pi(\mu,\nu)}\int_{\mathcal{X}\times\mathcal{Y}} c(x,y)\,d\pi(x,y)\]</span></p>
+<p>The Kantorovich minimum is always at most the Monge infimum. This follows because every transport map <span class="math inline">\(T\)</span> induces a coupling <span class="math inline">\(\pi_T = (\text{id},T)_\#\mu\)</span> — the joint distribution concentrated on the graph <span class="math inline">\(\{(x,T(x))\}\)</span> — and <span class="math inline">\(\int c(x,T(x))\,d\mu = \int c\,d\pi_T \geq \min_\pi\int c\,d\pi\)</span>.</p>
+<p>The Brenier theorem says that for quadratic cost with <span class="math inline">\(\mu \ll \lambda^n\)</span>, equality holds: the Monge infimum equals the Kantorovich minimum, and the optimal Kantorovich coupling is induced by the Brenier map. In general, the Kantorovich problem is easier to analyze (convex linear program) and provides a lower bound for the Monge problem. This relationship motivates studying the Kantorovich problem first — which is Topic 2 of this chapter.</p>
+<hr>
+</section>
+<section id="why-this-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-matters">WHY THIS MATTERS</h3>
+<p>In MATH 201 (Advanced Calculus), the change-of-variables formula <span class="math inline">\(\int_B f(T(x))|\det DT(x)|\,dx = \int_{T(B)} f(y)\,dy\)</span> is the push-forward formula for absolutely continuous measures — it is the condition <span class="math inline">\(T_\#(f\,d\lambda) = g\,d\lambda\)</span> where <span class="math inline">\(g(y) = f(T^{-1}(y))/|\det DT(T^{-1}(y))|\)</span>. The Monge-Ampère equation <span class="math inline">\(\det(\nabla^2\phi) = f/g\circ\nabla\phi\)</span> is this change-of-variables formula applied to the Brenier map <span class="math inline">\(T = \nabla\phi\)</span>, with <span class="math inline">\(DT = \nabla^2\phi\)</span>. In MATH 217 (ODEs and PDEs), the Monge-Ampère equation <span class="math inline">\(\det(D^2u) = f\)</span> is a fully nonlinear second-order PDE — its theory uses the viscosity solution framework and the regularity theory of convex functions. In MATH 304 (Computational Operations Research), the discrete Monge problem — assigning <span class="math inline">\(n\)</span> supply points to <span class="math inline">\(n\)</span> demand points to minimize total cost — is the assignment problem, solvable in <span class="math inline">\(O(n^3)\)</span> by the Hungarian algorithm. The Kantorovich relaxation of the assignment problem is a linear program with <span class="math inline">\(n^2\)</span> variables and <span class="math inline">\(2n\)</span> constraints — exactly the structure of the discrete Kantorovich problem of Topic 2.</p>
+<hr>
+</section>
+</section>
+<section id="layer-3-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="layer-3-bridge">Layer 3 (Bridge)</h2>
+<p>Every element of the Nepal Food Corporation grain transport story has a precise mathematical address. Let us walk through them one by one, until the trucks, the routes, the no-crossing principle, and the Brenier potential are completely fused with the formalism.</p>
+<hr>
+<p><strong>The Nepal Food Corporation’s grain transport problem — surplus in the western Terai, deficit in the eastern hills, move grain from one to the other at minimum cost — is the Monge problem <span class="math inline">\(\inf_{T_\#\mu=\nu}\int c(x,T(x))\,d\mu(x)\)</span>.</strong> The source distribution <span class="math inline">\(\mu \in \mathcal{P}(\mathbb{R}^2)\)</span> is the spatial distribution of surplus grain across the western Terai — how many tonnes sit at each geographic location. The target distribution <span class="math inline">\(\nu \in \mathcal{P}(\mathbb{R}^2)\)</span> is the spatial distribution of grain deficit across the eastern hills — how many tonnes each location needs. The cost function <span class="math inline">\(c(x,T(x))\)</span> is the transportation cost of moving one tonne of grain from location <span class="math inline">\(x\)</span> to location <span class="math inline">\(T(x)\)</span> — for the quadratic cost, this is <span class="math inline">\(\|x-T(x)\|_2^2\)</span>, the squared distance. The Monge problem minimizes the total cost <span class="math inline">\(\int c(x,T(x))\,d\mu(x)\)</span> — the integral of the cost per particle over all source mass — subject to the push-forward constraint <span class="math inline">\(T_\#\mu = \nu\)</span>.</p>
+<p><strong>The deterministic assignment — one destination per source location, no splitting of grain between multiple destinations — is the requirement that <span class="math inline">\(T\)</span> be a function, not a relation.</strong> The transport map <span class="math inline">\(T: \mathcal{X} \to \mathcal{Y}\)</span> is a genuine function in the mathematical sense: each input <span class="math inline">\(x\)</span> has exactly one output <span class="math inline">\(T(x)\)</span>. The grain at location <span class="math inline">\(x\)</span> goes to a single specific destination <span class="math inline">\(T(x)\)</span>, not distributed across multiple destinations. This is the defining feature of the Monge formulation and what distinguishes it from the Kantorovich relaxation of the next topic. The set <span class="math inline">\(\mathcal{T}(\mu,\nu) = \{T: T_\#\mu = \nu\}\)</span> of all valid transport maps is the feasible set of the Monge problem, and the infimum is over this set.</p>
+<p><strong>The push-forward constraint <span class="math inline">\(T_\#\mu = \nu\)</span> — the requirement that the resulting distribution of grain at the destinations exactly matches the deficit distribution <span class="math inline">\(\nu\)</span> — is the mathematical statement of mass conservation.</strong> The condition <span class="math inline">\(\mu(T^{-1}(B)) = \nu(B)\)</span> for all Borel sets <span class="math inline">\(B\)</span> says: the amount of grain sent to any target region <span class="math inline">\(B\)</span> (which is <span class="math inline">\(\mu(T^{-1}(B))\)</span>, the source mass at all locations mapped into <span class="math inline">\(B\)</span>) equals the deficit at region <span class="math inline">\(B\)</span> (which is <span class="math inline">\(\nu(B)\)</span>). No grain is created. No deficit goes unmet. The push-forward constraint is the bookkeeping equation of the grain transport, and the Chapter 1 of Phase 0 topic on push-forward measures (<span class="math inline">\(T_\#\mu\)</span>) was built precisely to formalize this constraint.</p>
+<hr>
+<p><strong>The non-existence of a Monge map for discrete distributions — the example with Kanchanpur and Kailali sending grain to Taplejung and Panchthar — is the formal theorem that transport maps do not exist when <span class="math inline">\(\mu\)</span> has atoms and <span class="math inline">\(\nu\)</span> does not have matching atoms.</strong> If <span class="math inline">\(\mu = 500\delta_{x_1} + 500\delta_{x_2}\)</span> (500 tonnes at each of two locations) and <span class="math inline">\(\nu = 700\delta_{y_1} + 300\delta_{y_2}\)</span> (700 tonnes needed at one location, 300 at another), then any transport map <span class="math inline">\(T\)</span> must send all of <span class="math inline">\(x_1\)</span>’s 500 tonnes to a single destination and all of <span class="math inline">\(x_2\)</span>’s 500 tonnes to a single destination — producing a distribution of the form <span class="math inline">\(500\delta_{T(x_1)} + 500\delta_{T(x_2)}\)</span>, which can never equal <span class="math inline">\(\nu = 700\delta_{y_1} + 300\delta_{y_2}\)</span> because the atom sizes are wrong. The mass-splitting required to satisfy <span class="math inline">\(T_\#\mu = \nu\)</span> cannot be achieved by any function. The Monge problem is infeasible for discrete sources with non-matching atom sizes — this is the mathematical reason why the Kantorovich relaxation (allowing splitting) is necessary.</p>
+<p><strong>The absolute continuity condition <span class="math inline">\(\mu \ll \lambda^n\)</span> — the requirement that the source distribution is a continuous density spread across the western Terai, not concentrated at discrete storage facilities — is the condition that guarantees transport maps exist and that the Brenier theorem applies.</strong> When <span class="math inline">\(\mu\)</span> has a density <span class="math inline">\(f = d\mu/d\lambda\)</span> — a non-negative integrable function satisfying <span class="math inline">\(\mu(A) = \int_A f(x)\,dx\)</span> — the measure assigns zero mass to every single point: <span class="math inline">\(\mu(\{x\}) = \int_{\{x\}} f\,d\lambda = 0\)</span>. This prevents the mass-splitting problem: no single location carries a finite atom of mass that would need to go to a single destination, so infinitesimally thin slivers of mass can be freely distributed to different destinations. The absolute continuity of <span class="math inline">\(\mu\)</span> is the mathematical condition that makes the grain spatially continuous — a density rather than discrete lumps — and this is what makes optimal transport maps both exist and be uniquely determined by the Brenier theorem.</p>
+<hr>
+<p><strong>The no-crossing principle — the optimal transport plan never has two routes that cross — is the geometric expression of the cyclical monotonicity condition <span class="math inline">\(\langle x_1-x_2, T(x_1)-T(x_2)\rangle \geq 0\)</span> for the <span class="math inline">\(k=2\)</span> case.</strong> The proof in the story: if grain from <span class="math inline">\(x_1\)</span> goes to <span class="math inline">\(T(x_2)\)</span> and grain from <span class="math inline">\(x_2\)</span> goes to <span class="math inline">\(T(x_1)\)</span> — the crossing plan — while the uncrossed plan sends <span class="math inline">\(x_1\)</span> to <span class="math inline">\(T(x_1)\)</span> and <span class="math inline">\(x_2\)</span> to <span class="math inline">\(T(x_2)\)</span>, then the cost of uncrossing is <span class="math inline">\(\|x_1-T(x_1)\|_2^2 + \|x_2-T(x_2)\|_2^2\)</span> and the cost of crossing is <span class="math inline">\(\|x_1-T(x_2)\|_2^2 + \|x_2-T(x_1)\|_2^2\)</span>. Expanding: the uncrossed cost minus the crossed cost equals <span class="math inline">\(2\langle x_1-x_2, T(x_1)-T(x_2)\rangle\)</span>. For the quadratic cost, uncrossing saves cost whenever <span class="math inline">\(\langle x_1-x_2, T(x_1)-T(x_2)\rangle &gt; 0\)</span> — whenever the map is monotone in the inner product sense. The optimal plan maximizes this monotonicity, which is exactly the cyclical monotonicity condition. The no-crossing principle is the story’s geometric picture of the algebraic condition that characterizes gradients of convex functions.</p>
+<p><strong>The monotone rearrangement in one dimension <span class="math inline">\(T^* = F_\nu^{-1} \circ F_\mu\)</span> — sending the <span class="math inline">\(t\)</span>-th quantile of <span class="math inline">\(\mu\)</span> to the <span class="math inline">\(t\)</span>-th quantile of <span class="math inline">\(\nu\)</span> — is the unique optimal Monge map in one dimension.</strong> In the grain transport story restricted to a one-dimensional road from west to east: the monotone rearrangement sends the leftmost (westernmost) surplus to the leftmost (easternmost) deficit, the second-leftmost surplus to the second-leftmost deficit, and so on. This is the most efficient plan because any non-monotone assignment creates crossings, and uncrossing always saves cost. The one-dimensional Wasserstein-2 distance <span class="math inline">\(W_2^2(\mu,\nu) = \int_0^1 |F_\mu^{-1}(t) - F_\nu^{-1}(t)|^2\,dt\)</span> is the squared <span class="math inline">\(L^2\)</span> distance between the quantile functions — the total squared distance traveled by each percentile of the grain distribution. This formula is one of the few closed-form expressions for the Wasserstein distance, and it makes the one-dimensional Optimal Transport problem completely tractable.</p>
+<hr>
+<p><strong>The Brenier potential <span class="math inline">\(\phi\)</span> — the scalar convex function whose gradient field <span class="math inline">\(\nabla\phi\)</span> gives the optimal destination for each source location — is the grain transport’s value function.</strong> The Brenier theorem says: for the quadratic cost with absolutely continuous <span class="math inline">\(\mu\)</span>, there exists a unique convex function <span class="math inline">\(\phi: \mathbb{R}^n \to \mathbb{R}\)</span> such that <span class="math inline">\(T^* = \nabla\phi\)</span> is the unique optimal Monge map. In the grain story: <span class="math inline">\(\phi(x)\)</span> is the “convex value” of location <span class="math inline">\(x\)</span> as a grain source — a scalar summary of the optimal routing decision. The gradient <span class="math inline">\(\nabla\phi(x)\)</span> is the optimal destination for the grain at <span class="math inline">\(x\)</span>. The convexity of <span class="math inline">\(\phi\)</span> is the mathematical expression of the no-crossing principle: a convex function’s gradient is monotone, and a monotone map does not cross.</p>
+<p><strong>The proof strategy — Kantorovich duality gives dual potentials, complementary slackness concentrates the coupling on the subdifferential, absolute continuity collapses the subdifferential to a singleton gradient — is the three-step argument that forces the optimal coupling to be a deterministic map.</strong> Step 1: The Kantorovich dual gives optimal potentials <span class="math inline">\(\phi^*\)</span> and <span class="math inline">\(\psi^*\)</span> satisfying <span class="math inline">\(\phi^*(x) + \psi^*(y) \leq \|x-y\|_2^2\)</span> for all <span class="math inline">\(x,y\)</span>. Step 2: KKT complementary slackness (from Chapter 2 of Phase 0) says the optimal coupling <span class="math inline">\(\pi^*\)</span> concentrates on <span class="math inline">\(\{(x,y): \phi^*(x)+\psi^*(y) = \|x-y\|_2^2\}\)</span>, equivalently on <span class="math inline">\(\{(x,y): y \in \partial\tilde\phi(x)\}\)</span> where <span class="math inline">\(\tilde\phi\)</span> is the modified potential. Step 3: Since <span class="math inline">\(\mu \ll \lambda^n\)</span>, the convex function <span class="math inline">\(\tilde\phi\)</span> is differentiable <span class="math inline">\(\mu\)</span>-almost everywhere (Alexandrov’s theorem), so <span class="math inline">\(\partial\tilde\phi(x) = \{\nabla\tilde\phi(x)\}\)</span> is a singleton at <span class="math inline">\(\mu\)</span>-almost every <span class="math inline">\(x\)</span>. The coupling is concentrated on a graph — it is a deterministic map. The Kantorovich duality, KKT conditions, and Radon-Nikodym theorem from Phase 0 combine to prove the Brenier theorem.</p>
+<p><strong>The Monge-Ampère equation <span class="math inline">\(\det(\nabla^2\phi(x)) = f(x)/g(\nabla\phi(x))\)</span> — the PDE that the Brenier potential must satisfy — is the push-forward density formula from Chapter 1 of Phase 0 applied to the Brenier map.</strong> The push-forward density formula says: if <span class="math inline">\(T_\#\mu = \nu\)</span> with densities <span class="math inline">\(f\)</span> and <span class="math inline">\(g\)</span>, then <span class="math inline">\(f(x) = g(T(x))|\det DT(x)|\)</span>. For the Brenier map <span class="math inline">\(T = \nabla\phi\)</span>, the Jacobian is <span class="math inline">\(DT = \nabla^2\phi\)</span> — the Hessian matrix of the potential. The Monge-Ampère equation is this identity with <span class="math inline">\(DT = \nabla^2\phi\)</span>: the ratio of the source density to the transported target density equals the Jacobian determinant of the Hessian of the potential. This equation governs the regularity of the Brenier map — how smooth the optimal transport map is — and its theory is a deep area connecting Optimal Transport to geometric PDE.</p>
+<hr>
+<p><strong>The Legendre-Fenchel connection — the inverse Brenier map from <span class="math inline">\(\nu\)</span> to <span class="math inline">\(\mu\)</span> is <span class="math inline">\(T^{-1} = \nabla\phi^*\)</span>, the gradient of the conjugate potential — is the Legendre-Fenchel transform from Chapter 2 of Phase 0 incarnated as a transport map.</strong> The Fenchel equality condition <span class="math inline">\(y = \nabla\phi(x) \iff x = \nabla\phi^*(y)\)</span> says: if the optimal grain routing sends <span class="math inline">\(x\)</span> to <span class="math inline">\(T^*(x) = \nabla\phi(x) = y\)</span>, then the optimal reverse routing sends <span class="math inline">\(y\)</span> to <span class="math inline">\(T^{*-1}(y) = \nabla\phi^*(y) = x\)</span>. The Legendre-Fenchel transform exchanges the roles of source and target: the Brenier potential for routing from <span class="math inline">\(\mu\)</span> to <span class="math inline">\(\nu\)</span> is <span class="math inline">\(\phi\)</span>, and the Brenier potential for routing from <span class="math inline">\(\nu\)</span> to <span class="math inline">\(\mu\)</span> is <span class="math inline">\(\phi^*\)</span>. The Fenchel-Young inequality <span class="math inline">\(\phi(x) + \phi^*(y) \geq \langle x,y\rangle\)</span> — the fundamental inequality of the Legendre-Fenchel transform — is the dual feasibility condition of the Kantorovich problem: for the quadratic cost with the substitution <span class="math inline">\(\phi(x) \to \frac{1}{2}\|x\|^2 - \phi(x)\)</span>, this inequality becomes the potential constraint <span class="math inline">\(\phi(x) + \psi(y) \leq \|x-y\|_2^2\)</span> of the Kantorovich dual. The Legendre-Fenchel transform is not just related to the Brenier potential — it is the Brenier potential from the other direction.</p>
+<hr>
+<p><strong>The polar factorization theorem — any truck routing plan <span class="math inline">\(u\)</span> decomposes as <span class="math inline">\(u = \nabla\phi \circ s\)</span> with <span class="math inline">\(\nabla\phi\)</span> the optimal transport component and <span class="math inline">\(s\)</span> the measure-preserving circulation component — is the Brenier generalization of the matrix polar decomposition from Chapter 4 of Phase 0.</strong> In the grain story: the full truck routing <span class="math inline">\(u\)</span> assigns to each location <span class="math inline">\(x\)</span> a direction of travel <span class="math inline">\(u(x)\)</span>. Some of this routing is efficiently transporting grain from surplus to deficit — this is the <span class="math inline">\(\nabla\phi\)</span> component, the Brenier map that optimally moves mass from <span class="math inline">\(u_\#\lambda\)</span> to <span class="math inline">\(\lambda\)</span>. The rest is trucks moving around in circles — rerouting grain locally without changing the net distribution — this is the <span class="math inline">\(s\)</span> component, the measure-preserving rearrangement that circulates mass without changing its distribution. The matrix polar decomposition <span class="math inline">\(A = QS\)</span> (orthogonal times positive definite symmetric) is the linear special case: if <span class="math inline">\(u(x) = Ax\)</span>, then <span class="math inline">\(\nabla\phi(x) = Sx\)</span> (gradient of the quadratic convex function <span class="math inline">\(\phi(x) = \frac{1}{2}x^TSx\)</span>) and <span class="math inline">\(s(x) = Qx\)</span> (orthogonal map, which is measure-preserving for the Gaussian measure).</p>
+<p><strong>The Knothe-Rosenblatt rearrangement — transporting <span class="math inline">\(\mu\)</span> to <span class="math inline">\(\nu\)</span> coordinate by coordinate using conditional quantile functions — is the triangular lower-triangular alternative to the Brenier map, the mathematical foundation of triangular normalizing flows.</strong> In the grain story: instead of optimally routing all grain simultaneously (the Brenier map), the Knothe-Rosenblatt map routes grain one coordinate at a time — first routing the east-west component of the surplus to match the east-west component of the deficit, then routing the north-south component conditional on the east-west routing already done. The resulting map is lower triangular in the coordinate structure, making its Jacobian a lower triangular matrix with diagonal entries equal to the one-dimensional conditional transport derivatives — easy to compute and invert. Normalizing flows that use lower triangular architectures (RealNVP, NICE, Neural Autoregressive Flows) are computational implementations of the Knothe-Rosenblatt idea: build a transport map coordinate by coordinate, keeping the Jacobian triangular for tractable likelihood computation.</p>
+<hr>
+<p><strong>The connection to MATH 201 (Advanced Calculus) is total and explicit.</strong> The change-of-variables formula you applied to compute integrals by substitution — <span class="math inline">\(\int_B f(T(x))|\det DT(x)|\,dx = \int_{T(B)} f(y)\,dy\)</span> — is the push-forward density formula applied to the Monge map. The condition <span class="math inline">\(T_\#(f\,d\lambda) = g\,d\lambda\)</span> is the change-of-variables identity with <span class="math inline">\(g(y) = f(T^{-1}(y))/|\det DT(T^{-1}(y))|\)</span>. For the Brenier map <span class="math inline">\(T = \nabla\phi\)</span>, <span class="math inline">\(DT = \nabla^2\phi\)</span> and the identity becomes the Monge-Ampère equation. Every change-of-variables computation in MATH 201 was a transport map computation, and the Monge-Ampère equation is the PDE version of the change-of-variables formula applied to the optimal transport map.</p>
+<p><strong>The connection to MATH 304 (Computational Operations Research) closes through the assignment problem.</strong> The discrete Monge problem — assigning <span class="math inline">\(n\)</span> surplus locations to <span class="math inline">\(n\)</span> deficit locations (one-to-one) at minimum total cost — is the assignment problem, solvable by the Hungarian algorithm in <span class="math inline">\(O(n^3)\)</span> operations. The Hungarian algorithm finds the optimal deterministic assignment, which is the discrete analogue of the Brenier map. The optimality conditions of the Hungarian algorithm — that no pair of assignments can be profitably swapped — is the discrete cyclical monotonicity condition: the optimal assignment is cyclically monotone, exactly as the Brenier map is cyclically monotone in the continuous case. Every LP duality argument you made in MATH 304 applies directly to the discrete Monge problem, and the Kantorovich relaxation is the continuous LP generalization of the assignment problem.</p>
+<hr>
+<p><strong>Looking forward across the roadmap</strong>, the Monge problem and the Brenier theorem are the geometric foundations of every deterministic generative model. In Phase 1’s remaining topics, the Kantorovich relaxation converts the Monge problem to a tractable linear program (Topic 2), the Wasserstein distance is defined as the Kantorovich minimum (Topic 3), and the Kantorovich dual gives the potential functions that certify optimality (Topic 4). In Phase 3, the Rectified Flow algorithm — which trains a flow matching model to follow straight-line paths from noise to data — converges to the Brenier map as the number of training iterations increases: the learned flow approaches the gradient of a convex potential, the optimal transport map for the quadratic cost. Score-based models learn the score function <span class="math inline">\(\nabla\log p_t(x)\)</span>, which is related to the Brenier potential through the Fokker-Planck equation. The entire architecture of Phase 3’s generative models can be understood as computational approximations to the Monge map, with the Brenier theorem providing the theoretical optimality guarantee.</p>
+<p>The no-crossing arrows on the Nepal map — the grain routes that never intersect, the optimal assignment where every surplus location sends its grain directly to the destination that makes the total cost minimal — are the Brenier map <span class="math inline">\(T^* = \nabla\phi\)</span> made visible. The convex potential <span class="math inline">\(\phi\)</span> is the invisible organizing principle behind the optimal routing, and the Legendre-Fenchel transform connecting <span class="math inline">\(\phi\)</span> to <span class="math inline">\(\phi^*\)</span> is the duality between the source’s routing problem and the destination’s receiving problem.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

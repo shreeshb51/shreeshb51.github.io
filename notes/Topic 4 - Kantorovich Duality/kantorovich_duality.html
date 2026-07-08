@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>kantorovich_duality – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#topic-4---kantorovich-duality-the-dual-soul-of-optimal-transport" id="toc-topic-4---kantorovich-duality-the-dual-soul-of-optimal-transport" class="nav-link active" data-scroll-target="#topic-4---kantorovich-duality-the-dual-soul-of-optimal-transport">Topic 4 - Kantorovich Duality: The Dual Soul of Optimal Transport</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#layer-1-story" id="toc-layer-1-story" class="nav-link" data-scroll-target="#layer-1-story">Layer 1 (Story)</a></li>
+  <li><a href="#layer-2-mathematics" id="toc-layer-2-mathematics" class="nav-link" data-scroll-target="#layer-2-mathematics">Layer 2 (Mathematics)</a></li>
+  <li><a href="#layer-3-bridge" id="toc-layer-3-bridge" class="nav-link" data-scroll-target="#layer-3-bridge">Layer 3 (Bridge)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<section id="topic-4---kantorovich-duality-the-dual-soul-of-optimal-transport" class="level1">
+<h1>Topic 4 - Kantorovich Duality: The Dual Soul of Optimal Transport</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>You have now seen three faces of the same problem. The Monge problem asked for the optimal deterministic map — the single function that moves every grain of mass from source to destination at minimum cost. The Kantorovich relaxation replaced that function with a coupling — a joint distribution over source-destination pairs — and converted the non-convex Monge problem into a linear program over the convex set of all valid couplings. The Wasserstein distance emerged as the value of that linear program: the minimum total cost over all couplings.</p>
+<p>But the Kantorovich linear program is still a primal problem. It asks for the optimal coupling <span class="math inline">\(\pi^*\)</span> — the actual transportation plan, the full joint distribution over pairs <span class="math inline">\((x, y)\)</span>. In high dimensions and continuous spaces, this is an enormous object. A coupling over <span class="math inline">\(\mathbb{R}^n \times \mathbb{R}^n\)</span> is a measure on a <span class="math inline">\(2n\)</span>-dimensional space. Computing it directly is expensive. Storing it is expensive. Even verifying that a given coupling is optimal is non-trivial.</p>
+<p>The Kantorovich dual turns this around completely. Instead of asking “what is the optimal way to move mass?” it asks a different question: “what is the optimal way to price the mass?” Instead of optimizing over transportation plans — objects living on the product space <span class="math inline">\(\mathcal{X} \times \mathcal{Y}\)</span> — the dual optimizes over pairs of potential functions <span class="math inline">\((\phi, \psi)\)</span>, each living on the original spaces <span class="math inline">\(\mathcal{X}\)</span> and <span class="math inline">\(\mathcal{Y}\)</span> separately. The dual problem is lower-dimensional, more interpretable, and in many ways more computationally tractable than the primal.</p>
+<p>The duality is exact — strong duality holds, the duality gap is zero — meaning the optimal value of the dual equals the optimal value of the primal. The Wasserstein distance can be computed either as the minimum cost of the optimal coupling, or as the maximum dual value of the optimal potential pair. These are two completely different representations of the same number, and the choice between them is a matter of computational and theoretical convenience.</p>
+<p>This topic has four components that build the complete picture of Kantorovich duality.</p>
+<p>The first is <strong>the economic interpretation of the dual</strong> — understanding what the potential functions <span class="math inline">\(\phi\)</span> and <span class="math inline">\(\psi\)</span> mean, why the dual constraint <span class="math inline">\(\phi(x) + \psi(y) \leq c(x,y)\)</span> is a no-arbitrage condition, and why maximizing <span class="math inline">\(\int \phi \, d\mu + \int \psi \, d\nu\)</span> is the correct dual objective. The dual has a clean economic reading as a competitive pricing problem, and this reading is the story through which the mathematics becomes inevitable.</p>
+<p>The second is <strong>the <span class="math inline">\(c\)</span>-transform</strong> — the operation that, given one dual potential <span class="math inline">\(\phi\)</span>, produces the best possible partner potential <span class="math inline">\(\psi\)</span> via <span class="math inline">\(\psi(y) = \inf_x \{c(x,y) - \phi(x)\}\)</span>. The <span class="math inline">\(c\)</span>-transform is the Optimal Transport generalization of the Legendre-Fenchel transform from Chapter 2 of Phase 0. For the quadratic cost <span class="math inline">\(c(x,y) = \|x-y\|^2\)</span>, the <span class="math inline">\(c\)</span>-transform reduces exactly to the Legendre-Fenchel conjugate. The <span class="math inline">\(c\)</span>-transform is the operation that enforces the dual constraint tightly — it finds the sharpest possible bound on <span class="math inline">\(\psi\)</span> given <span class="math inline">\(\phi\)</span>.</p>
+<p>The third is <strong>the complementary slackness condition</strong> — the KKT condition that characterizes the optimal coupling through its relationship with the optimal potentials. The optimal coupling <span class="math inline">\(\pi^*\)</span> concentrates precisely on the set where the dual constraint is tight: <span class="math inline">\(\{(x,y) : \phi(x) + \psi(y) = c(x,y)\}\)</span>. This contact set is the geometric locus of optimal transport — the pairs <span class="math inline">\((x, y)\)</span> that actually appear in the optimal plan are exactly those where the potentials exactly exhaust the cost. Mass is only transported along routes where the pricing is perfectly efficient.</p>
+<p>The fourth is <strong>the Kantorovich-Rubinstein formula</strong> — the special case of the duality for the <span class="math inline">\(W_1\)</span> distance and the cost <span class="math inline">\(c(x,y) = d(x,y)\)</span>, where the dual simplifies to a supremum over Lipschitz-1 functions: <span class="math inline">\(W_1(\mu,\nu) = \sup_{\text{Lip}(f) \leq 1} \int f \, d(\mu - \nu)\)</span>. This formula is the foundation of the Wasserstein GAN — the machine learning architecture that uses the Kantorovich-Rubinstein duality to estimate the <span class="math inline">\(W_1\)</span> distance between the real data distribution and the generator distribution by training a neural network to approximate the optimal Lipschitz potential. The theoretical basis of an entire class of generative models reduces to this one formula.</p>
+<p>By the end of this topic, duality in Optimal Transport will not feel like an abstract algebraic trick. It will feel like the only natural way to think about the problem — the primal asks how to move mass, the dual asks how to price it, and the fact that these two questions have the same answer is the content of strong duality. Every subsequent topic in Phase 1 — Sinkhorn, displacement interpolation, barycenters — uses Kantorovich duality either directly or through the <span class="math inline">\(c\)</span>-transform structure it introduces. And in Phase 3, the connection between the dual potentials and the score function of a diffusion model will make the path from Kantorovich duality to state-of-the-art generative AI completely explicit.</p>
+<hr>
+</section>
+<section id="layer-1-story" class="level2">
+<h2 class="anchored" data-anchor-id="layer-1-story">Layer 1 (Story)</h2>
+<p>You are the owner of a grain trading company in Kathmandu, and you have just been handed a contract that will define your career. The Nepal Food Corporation — the same organization from the previous topic — has decided not to manage the grain transport itself this time. Instead, it has announced an open market. Any private logistics company can bid to move grain from the western surplus districts to the eastern deficit districts. The contract goes to whoever can move all the grain at the lowest total cost.</p>
+<p>But your company is not a logistics company. You do not own trucks. You do not manage routes. What you own is a pricing desk — a team of economists who are extraordinarily good at setting prices. And your senior economist walks into your office with an unexpected proposal: we do not need to solve the transportation problem directly. We can solve its mirror image instead, and get the exact same answer.</p>
+<hr>
+<p><strong>The pricing desk’s proposal</strong></p>
+<p>Your economist lays out the idea. Instead of asking “what is the cheapest way to move the grain?”, ask a different question: “what is the right price to charge for grain at each location?”</p>
+<p>Specifically, imagine two price lists. The first is a list of prices <span class="math inline">\(\phi(x)\)</span> — one price for every western surplus location <span class="math inline">\(x\)</span>. This is the price at which your company will buy grain from that location. The second is a list of prices <span class="math inline">\(\psi(y)\)</span> — one price for every eastern deficit location <span class="math inline">\(y\)</span>. This is the price at which your company will sell grain to that location.</p>
+<p>Your company’s profit on a single tonne of grain bought at location <span class="math inline">\(x\)</span> and sold at location <span class="math inline">\(y\)</span> is <span class="math inline">\(\phi(x) + \psi(y)\)</span> — the buying price plus the selling price, where by convention we treat buying as a positive receipt and the net profit as the sum. Actually, let us be more careful: <span class="math inline">\(\phi(x)\)</span> is what you pay the western farmer per tonne, and <span class="math inline">\(\psi(y)\)</span> is what you charge the eastern buyer per tonne. Your revenue from moving one tonne from <span class="math inline">\(x\)</span> to <span class="math inline">\(y\)</span> is <span class="math inline">\(\phi(x) + \psi(y)\)</span> minus the transportation cost <span class="math inline">\(c(x,y)\)</span>. You make a profit on this route if and only if <span class="math inline">\(\phi(x) + \psi(y) &gt; c(x,y)\)</span>.</p>
+<hr>
+<p><strong>The no-arbitrage constraint</strong></p>
+<p>Now here is the critical observation your economist makes. If your price list ever has a pair of locations <span class="math inline">\((x, y)\)</span> where <span class="math inline">\(\phi(x) + \psi(y) &gt; c(x,y)\)</span> — where the sum of your buying and selling prices exceeds the actual transportation cost — then any logistics company can make a profit by simply undercutting you. They buy grain at <span class="math inline">\(x\)</span> for slightly less than <span class="math inline">\(\phi(x)\)</span>, transport it to <span class="math inline">\(y\)</span> for cost <span class="math inline">\(c(x,y)\)</span>, and sell it at <span class="math inline">\(y\)</span> for slightly more than <span class="math inline">\(\psi(y)\)</span>, pocketing the difference. Your pricing scheme is exploitable — there is an arbitrage opportunity.</p>
+<p>A price list that has no arbitrage opportunities must satisfy, for every possible pair of locations <span class="math inline">\((x, y)\)</span>:</p>
+<p><span class="math display">\[\phi(x) + \psi(y) \leq c(x,y)\]</span></p>
+<p>This is the no-arbitrage constraint. It says: the sum of what you pay at the source and what you charge at the destination can never exceed the actual cost of transportation between those two points. If it did, someone would exploit the gap.</p>
+<p>Your economist points out that this constraint must hold for every pair <span class="math inline">\((x, y)\)</span> — not just the pairs that appear in your actual transport plan, but all possible pairs. The pricing must be globally consistent with the cost structure.</p>
+<hr>
+<p><strong>The pricing company’s objective</strong></p>
+<p>Your company’s total revenue from buying all the grain in the west and selling it all in the east is:</p>
+<p><span class="math display">\[\int \phi(x) \, d\mu(x) + \int \psi(y) \, d\nu(y)\]</span></p>
+<p>The first term is the total amount you pay to western farmers — you buy <span class="math inline">\(d\mu(x)\)</span> tonnes at each location <span class="math inline">\(x\)</span> at price <span class="math inline">\(\phi(x)\)</span>. The second term is the total amount you receive from eastern buyers — you sell <span class="math inline">\(d\nu(y)\)</span> tonnes at each location <span class="math inline">\(y\)</span> at price <span class="math inline">\(\psi(y)\)</span>.</p>
+<p>Your company wants to maximize this total revenue, subject to the no-arbitrage constraint <span class="math inline">\(\phi(x) + \psi(y) \leq c(x,y)\)</span> for all <span class="math inline">\((x,y)\)</span>.</p>
+<p>This is the Kantorovich dual problem.</p>
+<hr>
+<p><strong>Why maximizing revenue gives the Wasserstein distance</strong></p>
+<p>Your economist now makes the claim that will seem impossible until you see why it is true: the maximum revenue your pricing company can extract — the highest value of <span class="math inline">\(\int \phi \, d\mu + \int \psi \, d\nu\)</span> subject to the no-arbitrage constraint — is exactly equal to the minimum transportation cost of the optimal logistics company.</p>
+<p>Two completely different optimization problems. One minimizes over transportation plans. The other maximizes over price lists. They have the same optimal value.</p>
+<p>To see why this must be true, consider the relationship between any valid price list <span class="math inline">\((\phi, \psi)\)</span> and any valid transportation plan <span class="math inline">\(\pi\)</span>. The no-arbitrage constraint says <span class="math inline">\(\phi(x) + \psi(y) \leq c(x,y)\)</span> for all <span class="math inline">\((x,y)\)</span>. Integrate both sides against the coupling <span class="math inline">\(\pi\)</span>:</p>
+<p><span class="math display">\[\int \phi(x) \, d\pi(x,y) + \int \psi(y) \, d\pi(x,y) \leq \int c(x,y) \, d\pi(x,y)\]</span></p>
+<p>The left side, using the marginal constraints <span class="math inline">\(\pi_x = \mu\)</span> and <span class="math inline">\(\pi_y = \nu\)</span>, simplifies to <span class="math inline">\(\int \phi \, d\mu + \int \psi \, d\nu\)</span>. The right side is the transportation cost of the plan <span class="math inline">\(\pi\)</span>. So for any valid price list and any valid transportation plan:</p>
+<p><span class="math display">\[\text{(pricing company's revenue)} \leq \text{(logistics company's cost)}\]</span></p>
+<p>Any revenue the pricing company can extract is a lower bound on what the logistics company must spend. The pricing company cannot extract more than the transportation is genuinely worth. This is weak duality — the dual value never exceeds the primal value.</p>
+<p>Strong duality says the gap closes: there exist an optimal price list and an optimal transportation plan such that the revenue exactly equals the cost. This is not obvious — it is a theorem, proved using the minimax theorem and the compactness of the coupling set — but its economic interpretation is clean. At optimality, the pricing company has set prices so tightly that the logistics company can find no cheaper alternative: the price list exactly reflects the true cost of optimal transport.</p>
+<hr>
+<p><strong>The break moment</strong></p>
+<p>Here is the naive assumption that breaks.</p>
+<p>You might think: the no-arbitrage constraint <span class="math inline">\(\phi(x) + \psi(y) \leq c(x,y)\)</span> must be tight everywhere in the optimal solution — that at optimality, the inequality becomes an equality for all <span class="math inline">\((x,y)\)</span>, not just the pairs in the transport plan. After all, if you are maximizing <span class="math inline">\(\int \phi \, d\mu + \int \psi \, d\nu\)</span>, why would you ever leave slack in the constraint? Tighter prices mean higher revenue, so the optimal prices must saturate the constraint everywhere.</p>
+<p>This breaks immediately. Suppose you have three locations in the west — <span class="math inline">\(x_1\)</span>, <span class="math inline">\(x_2\)</span>, <span class="math inline">\(x_3\)</span> — and three locations in the east — <span class="math inline">\(y_1\)</span>, <span class="math inline">\(y_2\)</span>, <span class="math inline">\(y_3\)</span> — and the optimal transport plan sends <span class="math inline">\(x_1\)</span> to <span class="math inline">\(y_1\)</span>, <span class="math inline">\(x_2\)</span> to <span class="math inline">\(y_2\)</span>, and <span class="math inline">\(x_3\)</span> to <span class="math inline">\(y_3\)</span>. The no-arbitrage constraint must be tight on the pairs <span class="math inline">\((x_1, y_1)\)</span>, <span class="math inline">\((x_2, y_2)\)</span>, <span class="math inline">\((x_3, y_3)\)</span> that appear in the optimal plan. But the constraint on the off-diagonal pairs — <span class="math inline">\((x_1, y_2)\)</span>, <span class="math inline">\((x_1, y_3)\)</span>, <span class="math inline">\((x_2, y_1)\)</span>, and so on — need not be tight. In fact, if you tried to force the constraint to be tight everywhere simultaneously, you would be demanding that <span class="math inline">\(\phi(x) + \psi(y) = c(x,y)\)</span> for all nine pairs, which would over-determine the system and generally have no solution.</p>
+<p>The correct statement is the complementary slackness condition: the optimal coupling <span class="math inline">\(\pi^*\)</span> concentrates precisely on the pairs where the constraint is tight. Mass is only transported along routes where <span class="math inline">\(\phi(x) + \psi(y) = c(x,y)\)</span>. On the off-diagonal pairs — the routes not used in the optimal plan — the constraint can be strictly slack: <span class="math inline">\(\phi(x) + \psi(y) &lt; c(x,y)\)</span>. The pricing is tight exactly where transport happens, and loose everywhere else. This is not a failure of optimality — it is the precise characterization of which routes are used.</p>
+<hr>
+<p><strong>The <span class="math inline">\(c\)</span>-transform: finding the best partner price</strong></p>
+<p>Suppose your pricing desk has already fixed the buying prices <span class="math inline">\(\phi(x)\)</span> for all western locations. What is the highest selling price <span class="math inline">\(\psi(y)\)</span> you can set at each eastern location <span class="math inline">\(y\)</span> without violating the no-arbitrage constraint for any source location <span class="math inline">\(x\)</span>?</p>
+<p>The no-arbitrage constraint <span class="math inline">\(\phi(x) + \psi(y) \leq c(x,y)\)</span> must hold for all <span class="math inline">\(x\)</span>. So the highest valid selling price at <span class="math inline">\(y\)</span> is:</p>
+<p><span class="math display">\[\psi(y) = \inf_x \{c(x,y) - \phi(x)\}\]</span></p>
+<p>This operation — given <span class="math inline">\(\phi\)</span>, produce the tightest valid <span class="math inline">\(\psi\)</span> — is the <span class="math inline">\(c\)</span>-transform of <span class="math inline">\(\phi\)</span>. It is written <span class="math inline">\(\psi = \phi^c\)</span>. The <span class="math inline">\(c\)</span>-transform finds the best possible partner potential: given the buying prices, it sets the selling prices as high as possible without creating any arbitrage opportunity.</p>
+<p>For the quadratic cost <span class="math inline">\(c(x,y) = \|x-y\|^2\)</span>, the <span class="math inline">\(c\)</span>-transform becomes:</p>
+<p><span class="math display">\[\phi^c(y) = \inf_x\{\|x-y\|^2 - \phi(x)\}\]</span></p>
+<p>Expanding <span class="math inline">\(\|x-y\|^2 = \|x\|^2 - 2\langle x,y\rangle + \|y\|^2\)</span> and rearranging, this is:</p>
+<p><span class="math display">\[\phi^c(y) = \|y\|^2 + \inf_x\{-2\langle x,y\rangle + \|x\|^2 - \phi(x)\} = \|y\|^2 - \sup_x\{2\langle x,y\rangle - \|x\|^2 + \phi(x)\}\]</span></p>
+<p>which is precisely the Legendre-Fenchel conjugate of a modified version of <span class="math inline">\(\phi\)</span>. The <span class="math inline">\(c\)</span>-transform for the quadratic cost is the Legendre-Fenchel transform in disguise. The pricing operation your economist invented is the Optimal Transport generalization of the convex conjugate from Chapter 2 of Phase 0.</p>
+<hr>
+<p><strong>The Kantorovich-Rubinstein formula: the <span class="math inline">\(W_1\)</span> case</strong></p>
+<p>For the <span class="math inline">\(W_1\)</span> distance — the cost <span class="math inline">\(c(x,y) = d(x,y)\)</span>, the actual geographic distance — the dual simplifies dramatically. The no-arbitrage constraint <span class="math inline">\(\phi(x) + \psi(y) \leq d(x,y)\)</span> for all <span class="math inline">\(x,y\)</span> is equivalent, when <span class="math inline">\(\psi = -\phi\)</span> (and this is the optimal choice in the symmetric case <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> on the same space), to:</p>
+<p><span class="math display">\[\phi(x) - \phi(y) \leq d(x,y) \quad \text{for all } x, y\]</span></p>
+<p>This is exactly the Lipschitz-1 condition on <span class="math inline">\(\phi\)</span>: the function <span class="math inline">\(\phi\)</span> cannot change faster than the distance between its arguments. The dual problem becomes:</p>
+<p><span class="math display">\[W_1(\mu,\nu) = \sup_{\text{Lip}(\phi) \leq 1} \int \phi \, d(\mu - \nu)\]</span></p>
+<p>This is the Kantorovich-Rubinstein formula. The <span class="math inline">\(W_1\)</span> distance between two distributions is the maximum difference in expected value of any Lipschitz-1 function. In the grain market: the <span class="math inline">\(W_1\)</span> distance is determined by the most discriminating price function — the function <span class="math inline">\(\phi\)</span> that extracts the maximum revenue difference between the two distributions while never varying faster than the geographic distance.</p>
+<p>This formula is the theoretical foundation of the Wasserstein GAN. The discriminator network in a Wasserstein GAN is trained to approximate the optimal Lipschitz-1 function <span class="math inline">\(\phi^*\)</span> — the function that maximally distinguishes the real data distribution from the generator distribution in the <span class="math inline">\(W_1\)</span> sense. The generator is trained to minimize this distance. The entire adversarial training loop of the Wasserstein GAN is the Kantorovich-Rubinstein formula made computational: the discriminator solves the dual, the generator updates the primal.</p>
+<hr>
+<p>Hold four pictures simultaneously as you move to the mathematics.</p>
+<p>The pricing desk in Kathmandu: two price lists, one for western buying locations and one for eastern selling locations, subject to the no-arbitrage constraint that their sum never exceeds the transportation cost — this is the Kantorovich dual problem.</p>
+<p>The complementary slackness condition: the constraint is tight precisely on the routes that appear in the optimal transport plan, and slack on all unused routes — mass flows only where pricing is perfectly efficient.</p>
+<p>The <span class="math inline">\(c\)</span>-transform: given one potential, find its sharpest valid partner by taking the infimum of cost minus potential — the Optimal Transport generalization of the Legendre-Fenchel conjugate.</p>
+<p>The Kantorovich-Rubinstein formula: the <span class="math inline">\(W_1\)</span> distance is a supremum over Lipschitz-1 functions, and this supremum is the discriminator objective of the Wasserstein GAN.</p>
+<hr>
+</section>
+<section id="layer-2-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="layer-2-mathematics">Layer 2 (Mathematics)</h2>
+<p>We build the formalism in five stages: the precise statement of the Kantorovich dual problem, the <span class="math inline">\(c\)</span>-transform and <span class="math inline">\(c\)</span>-concavity, the strong duality theorem and its proof strategy, the complementary slackness condition, and the Kantorovich-Rubinstein formula for <span class="math inline">\(W_1\)</span>.</p>
+<section id="the-kantorovich-primal-recap" class="level3">
+<h3 class="anchored" data-anchor-id="the-kantorovich-primal-recap">The Kantorovich Primal — Recap</h3>
+<p>Let <span class="math inline">\(\mu \in \mathcal{P}(\mathcal{X})\)</span> and <span class="math inline">\(\nu \in \mathcal{P}(\mathcal{Y})\)</span> be Borel probability measures on Polish spaces, and let <span class="math inline">\(c: \mathcal{X} \times \mathcal{Y} \to [0,\infty]\)</span> be a lower semicontinuous cost function. The Kantorovich primal problem is:</p>
+<p><span class="math display">\[\mathcal{K}(\mu,\nu) = \inf_{\pi \in \Pi(\mu,\nu)} \int_{\mathcal{X}\times\mathcal{Y}} c(x,y) \, d\pi(x,y)\]</span></p>
+<p>where <span class="math inline">\(\Pi(\mu,\nu) = \{\pi \in \mathcal{P}(\mathcal{X}\times\mathcal{Y}) : (\text{proj}_x)_\#\pi = \mu, \, (\text{proj}_y)_\#\pi = \nu\}\)</span> is the set of couplings with marginals <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span>.</p>
+<hr>
+</section>
+<section id="the-kantorovich-dual-problem-precise-statement" class="level3">
+<h3 class="anchored" data-anchor-id="the-kantorovich-dual-problem-precise-statement">The Kantorovich Dual Problem — Precise Statement</h3>
+<p>Define the set of <strong>dual feasible potentials</strong>:</p>
+<p><span class="math display">\[\Phi_c = \{(\phi,\psi) \in L^1(\mu) \times L^1(\nu) : \phi(x) + \psi(y) \leq c(x,y) \text{ for } \mu\text{-a.e. } x, \nu\text{-a.e. } y\}\]</span></p>
+<p>The <strong>Kantorovich dual problem</strong> is:</p>
+<p><span class="math display">\[\mathcal{D}(\mu,\nu) = \sup_{(\phi,\psi) \in \Phi_c} \left\{ \int_\mathcal{X} \phi(x) \, d\mu(x) + \int_\mathcal{Y} \psi(y) \, d\nu(y) \right\}\]</span></p>
+<p>The dual variables <span class="math inline">\(\phi: \mathcal{X} \to \mathbb{R}\)</span> and <span class="math inline">\(\psi: \mathcal{Y} \to \mathbb{R}\)</span> are called <strong>Kantorovich potentials</strong>. The constraint <span class="math inline">\(\phi(x) + \psi(y) \leq c(x,y)\)</span> must hold for all pairs <span class="math inline">\((x,y)\)</span> — not just the pairs in the support of the optimal coupling, but universally.</p>
+<p><strong>Weak duality</strong> holds immediately: for any <span class="math inline">\((\phi,\psi) \in \Phi_c\)</span> and any <span class="math inline">\(\pi \in \Pi(\mu,\nu)\)</span>:</p>
+<p><span class="math display">\[\int \phi \, d\mu + \int \psi \, d\nu = \int [\phi(x) + \psi(y)] \, d\pi(x,y) \leq \int c(x,y) \, d\pi(x,y)\]</span></p>
+<p>where the equality uses the marginal constraints on <span class="math inline">\(\pi\)</span>, and the inequality uses dual feasibility. Therefore <span class="math inline">\(\mathcal{D}(\mu,\nu) \leq \mathcal{K}(\mu,\nu)\)</span>.</p>
+<hr>
+</section>
+<section id="the-c-transform-and-c-concavity" class="level3">
+<h3 class="anchored" data-anchor-id="the-c-transform-and-c-concavity">The <span class="math inline">\(c\)</span>-Transform and <span class="math inline">\(c\)</span>-Concavity</h3>
+<p><strong>Definition (<span class="math inline">\(c\)</span>-transform).</strong> For a function <span class="math inline">\(\phi: \mathcal{X} \to \mathbb{R} \cup \{-\infty\}\)</span>, its <strong><span class="math inline">\(c\)</span>-transform</strong> is:</p>
+<p><span class="math display">\[\phi^c(y) = \inf_{x \in \mathcal{X}} \{c(x,y) - \phi(x)\}, \quad y \in \mathcal{Y}\]</span></p>
+<p>For a function <span class="math inline">\(\psi: \mathcal{Y} \to \mathbb{R} \cup \{-\infty\}\)</span>, its <strong><span class="math inline">\(\bar{c}\)</span>-transform</strong> is:</p>
+<p><span class="math display">\[\psi^{\bar{c}}(x) = \inf_{y \in \mathcal{Y}} \{c(x,y) - \psi(y)\}, \quad x \in \mathcal{X}\]</span></p>
+<p><strong>Key properties:</strong></p>
+<ol type="1">
+<li><span class="math inline">\(\phi^c\)</span> is the largest function satisfying <span class="math inline">\(\phi(x) + \phi^c(y) \leq c(x,y)\)</span> for all <span class="math inline">\(x,y\)</span>, given <span class="math inline">\(\phi\)</span>.</li>
+<li><span class="math inline">\((\phi^c)^{\bar{c}} \geq \phi\)</span> always, with equality if and only if <span class="math inline">\(\phi\)</span> is <span class="math inline">\(c\)</span>-concave.</li>
+<li>For any <span class="math inline">\((\phi,\psi) \in \Phi_c\)</span>: <span class="math inline">\(\psi \leq \phi^c\)</span> pointwise, so <span class="math inline">\(\int \psi \, d\nu \leq \int \phi^c \, d\nu\)</span>.</li>
+</ol>
+<p>Property 3 means that in the dual supremum, we can always replace <span class="math inline">\(\psi\)</span> with <span class="math inline">\(\phi^c\)</span> without decreasing the objective. Therefore:</p>
+<p><span class="math display">\[\mathcal{D}(\mu,\nu) = \sup_{\phi \in L^1(\mu)} \left\{ \int_\mathcal{X} \phi \, d\mu + \int_\mathcal{Y} \phi^c \, d\nu \right\}\]</span></p>
+<p>The dual reduces to a single-function optimization over <span class="math inline">\(\phi\)</span> alone — once <span class="math inline">\(\phi\)</span> is fixed, the optimal partner is always <span class="math inline">\(\psi = \phi^c\)</span>.</p>
+<p><strong>Definition (<span class="math inline">\(c\)</span>-concavity).</strong> A function <span class="math inline">\(\phi: \mathcal{X} \to \mathbb{R} \cup \{-\infty\}\)</span> is <strong><span class="math inline">\(c\)</span>-concave</strong> if <span class="math inline">\(\phi = \psi^{\bar{c}}\)</span> for some <span class="math inline">\(\psi: \mathcal{Y} \to \mathbb{R} \cup \{-\infty\}\)</span>, equivalently if <span class="math inline">\((\phi^c)^{\bar{c}} = \phi\)</span>. The <span class="math inline">\(c\)</span>-concave functions are precisely the functions that arise as optimal Kantorovich potentials.</p>
+<p><strong>The quadratic cost case.</strong> For <span class="math inline">\(c(x,y) = \|x-y\|_2^2 = \|x\|^2 - 2\langle x,y\rangle + \|y\|^2\)</span>, write <span class="math inline">\(\tilde\phi(x) = \frac{1}{2}\|x\|^2 - \frac{1}{2}\phi(x)\)</span>. Then:</p>
+<p><span class="math display">\[\phi^c(y) = \inf_x\{\|x-y\|^2 - \phi(x)\} = \|y\|^2 - \sup_x\{2\langle x,y\rangle - \|x\|^2 + \phi(x)\} = \|y\|^2 - 2\tilde\phi^*(y)\]</span></p>
+<p>where <span class="math inline">\(\tilde\phi^*(y) = \sup_x\{\langle x,y\rangle - \tilde\phi(x)\}\)</span> is the <strong>Legendre-Fenchel conjugate</strong> of <span class="math inline">\(\tilde\phi\)</span> from Chapter 2 of Phase 0. The <span class="math inline">\(c\)</span>-transform for quadratic cost is the Legendre-Fenchel transform applied to a modified potential. <span class="math inline">\(c\)</span>-concavity for quadratic cost reduces to convexity of <span class="math inline">\(\tilde\phi\)</span> — the <span class="math inline">\(c\)</span>-concave potentials for quadratic cost are precisely the functions of the form <span class="math inline">\(\frac{1}{2}\|x\|^2 - \phi(x)\)</span> with <span class="math inline">\(\phi\)</span> convex.</p>
+<hr>
+</section>
+<section id="the-strong-duality-theorem" class="level3">
+<h3 class="anchored" data-anchor-id="the-strong-duality-theorem">The Strong Duality Theorem</h3>
+<p><strong>Theorem (Kantorovich Duality).</strong> Let <span class="math inline">\(\mu \in \mathcal{P}(\mathcal{X})\)</span>, <span class="math inline">\(\nu \in \mathcal{P}(\mathcal{Y})\)</span>, and <span class="math inline">\(c: \mathcal{X}\times\mathcal{Y} \to [0,\infty]\)</span> lower semicontinuous with <span class="math inline">\(\mathcal{K}(\mu,\nu) &lt; \infty\)</span>. Then:</p>
+<p><span class="math display">\[\inf_{\pi \in \Pi(\mu,\nu)} \int c \, d\pi = \sup_{(\phi,\psi) \in \Phi_c} \left\{\int \phi \, d\mu + \int \psi \, d\nu\right\}\]</span></p>
+<p>The infimum on the left is attained by an optimal coupling <span class="math inline">\(\pi^*\)</span>. The supremum on the right is attained by a <span class="math inline">\(c\)</span>-concave potential <span class="math inline">\(\phi^*\)</span> and its <span class="math inline">\(c\)</span>-transform <span class="math inline">\(\psi^* = (\phi^*)^c\)</span>.</p>
+<p><strong>Proof strategy.</strong> The proof uses the minimax theorem (a consequence of the Hahn-Banach separation theorem from functional analysis). The Kantorovich problem can be written as:</p>
+<p><span class="math display">\[\mathcal{K}(\mu,\nu) = \inf_{\pi \geq 0} \sup_{(\phi,\psi)} \left\{ \int c \, d\pi + \int \phi \, d\mu + \int \psi \, d\nu - \int [\phi(x)+\psi(y)] \, d\pi \right\}\]</span></p>
+<p>where the supremum enforces the marginal constraints via Lagrange multipliers <span class="math inline">\(\phi\)</span> and <span class="math inline">\(\psi\)</span>. The minimax theorem allows exchanging inf and sup when the feasible sets are convex and compact (using tightness of the coupling set in the weak topology), giving:</p>
+<p><span class="math display">\[\mathcal{K}(\mu,\nu) = \sup_{(\phi,\psi)} \inf_{\pi \geq 0} \left\{ \int [c(x,y) - \phi(x) - \psi(y)] \, d\pi + \int \phi \, d\mu + \int \psi \, d\nu \right\}\]</span></p>
+<p>The inner infimum over <span class="math inline">\(\pi \geq 0\)</span> equals <span class="math inline">\(-\infty\)</span> unless <span class="math inline">\(c(x,y) - \phi(x) - \psi(y) \geq 0\)</span> for all <span class="math inline">\((x,y)\)</span> — the dual feasibility constraint. When feasibility holds, the inner infimum is <span class="math inline">\(0\)</span> (attained at <span class="math inline">\(\pi = 0\)</span>), giving <span class="math inline">\(\mathcal{D}(\mu,\nu)\)</span>. Therefore <span class="math inline">\(\mathcal{K}(\mu,\nu) = \mathcal{D}(\mu,\nu)\)</span>. <span class="math inline">\(\square\)</span></p>
+<hr>
+</section>
+<section id="complementary-slackness-and-the-contact-set" class="level3">
+<h3 class="anchored" data-anchor-id="complementary-slackness-and-the-contact-set">Complementary Slackness and the Contact Set</h3>
+<p><strong>Theorem (Complementary Slackness).</strong> Let <span class="math inline">\(\pi^*\)</span> be an optimal coupling and <span class="math inline">\((\phi^*, \psi^*)\)</span> be optimal dual potentials. Then:</p>
+<p><span class="math display">\[\pi^*\text{-almost surely}: \quad \phi^*(x) + \psi^*(y) = c(x,y)\]</span></p>
+<p>The optimal coupling is supported on the <strong>contact set</strong>:</p>
+<p><span class="math display">\[\Gamma^* = \{(x,y) \in \mathcal{X}\times\mathcal{Y} : \phi^*(x) + \psi^*(y) = c(x,y)\}\]</span></p>
+<p><strong>Proof.</strong> From weak duality:</p>
+<p><span class="math display">\[\int c \, d\pi^* \geq \int \phi^* \, d\mu + \int \psi^* \, d\nu = \int [\phi^*(x) + \psi^*(y)] \, d\pi^*\]</span></p>
+<p>By strong duality, the left side equals the right side. Therefore:</p>
+<p><span class="math display">\[\int [c(x,y) - \phi^*(x) - \psi^*(y)] \, d\pi^* = 0\]</span></p>
+<p>Since <span class="math inline">\(c(x,y) - \phi^*(x) - \psi^*(y) \geq 0\)</span> everywhere (dual feasibility) and the integral is zero, the integrand must be zero <span class="math inline">\(\pi^*\)</span>-almost surely. <span class="math inline">\(\square\)</span></p>
+<p><strong>Geometric interpretation.</strong> The contact set <span class="math inline">\(\Gamma^*\)</span> is <span class="math inline">\(c\)</span>-cyclically monotone: for any finite collection <span class="math inline">\((x_1,y_1),\ldots,(x_k,y_k) \in \Gamma^*\)</span> and any permutation <span class="math inline">\(\sigma\)</span>:</p>
+<p><span class="math display">\[\sum_{i=1}^k c(x_i, y_i) \leq \sum_{i=1}^k c(x_i, y_{\sigma(i)})\]</span></p>
+<p>The optimal coupling cannot be improved by any cyclic permutation of destinations — this is the Optimal Transport analogue of cyclical monotonicity from Topic 1, now derived from duality rather than assumed.</p>
+<p><strong>Connection to the Brenier theorem.</strong> For quadratic cost with <span class="math inline">\(\mu \ll \lambda^n\)</span>, the contact set is <span class="math inline">\(\Gamma^* = \{(x, \nabla\phi^*(x))\}\)</span> — the graph of the Brenier map. The complementary slackness condition forces the optimal coupling to concentrate on this graph, which (by absolute continuity of <span class="math inline">\(\mu\)</span>) is the graph of a function. This is the duality-based proof of the Brenier theorem sketched in Topic 1.</p>
+<hr>
+</section>
+<section id="the-kantorovich-rubinstein-formula-for-w_1" class="level3">
+<h3 class="anchored" data-anchor-id="the-kantorovich-rubinstein-formula-for-w_1">The Kantorovich-Rubinstein Formula for <span class="math inline">\(W_1\)</span></h3>
+<p>For the <span class="math inline">\(1\)</span>-Wasserstein distance with cost <span class="math inline">\(c(x,y) = d(x,y)\)</span> (the metric on <span class="math inline">\(\mathcal{X}\)</span>), the dual simplifies substantially.</p>
+<p><strong>Theorem (Kantorovich-Rubinstein).</strong> For <span class="math inline">\(\mu, \nu \in \mathcal{P}(\mathcal{X})\)</span> with <span class="math inline">\(\mathcal{X}\)</span> a Polish metric space:</p>
+<p><span class="math display">\[W_1(\mu,\nu) = \sup \left\{ \int f \, d\mu - \int f \, d\nu : \text{Lip}(f) \leq 1 \right\} = \sup_{\text{Lip}(f)\leq 1} \int f \, d(\mu - \nu)\]</span></p>
+<p>where <span class="math inline">\(\text{Lip}(f) = \sup_{x \neq y} |f(x)-f(y)|/d(x,y)\)</span> is the Lipschitz constant of <span class="math inline">\(f\)</span>.</p>
+<p><strong>Proof.</strong> For <span class="math inline">\(c(x,y) = d(x,y)\)</span>, the dual constraint <span class="math inline">\(\phi(x) + \psi(y) \leq d(x,y)\)</span> with the optimal choice <span class="math inline">\(\psi = -\phi\)</span> (valid when <span class="math inline">\(\mathcal{X} = \mathcal{Y}\)</span> and <span class="math inline">\(c\)</span> is symmetric) becomes:</p>
+<p><span class="math display">\[\phi(x) - \phi(y) \leq d(x,y) \quad \forall x,y\]</span></p>
+<p>This is exactly <span class="math inline">\(\text{Lip}(\phi) \leq 1\)</span>. With <span class="math inline">\(\psi = -\phi\)</span>, the dual objective becomes <span class="math inline">\(\int \phi \, d\mu + \int (-\phi) \, d\nu = \int \phi \, d(\mu-\nu)\)</span>. Taking the supremum over all Lipschitz-1 functions <span class="math inline">\(\phi\)</span> gives the Kantorovich-Rubinstein formula. <span class="math inline">\(\square\)</span></p>
+<p><strong>The 1-Lipschitz constraint as <span class="math inline">\(c\)</span>-concavity.</strong> For <span class="math inline">\(c(x,y) = d(x,y)\)</span>, a function is <span class="math inline">\(c\)</span>-concave if and only if it is <span class="math inline">\(1\)</span>-Lipschitz. The <span class="math inline">\(c\)</span>-transform of <span class="math inline">\(\phi\)</span> is <span class="math inline">\(\phi^c(y) = \inf_x\{d(x,y) - \phi(x)\}\)</span>, the largest <span class="math inline">\(1\)</span>-Lipschitz function below <span class="math inline">\(-\phi\)</span> (shifted). The <span class="math inline">\(c\)</span>-concave potentials for the <span class="math inline">\(W_1\)</span> problem are precisely the <span class="math inline">\(1\)</span>-Lipschitz functions.</p>
+<p><strong>Wasserstein GAN connection.</strong> In the Wasserstein GAN (Arjovsky et al., 2017), the discriminator <span class="math inline">\(f_\theta: \mathcal{X} \to \mathbb{R}\)</span> is a neural network trained to maximize <span class="math inline">\(\mathbb{E}_{x \sim \mu}[f_\theta(x)] - \mathbb{E}_{x \sim \nu_\theta}[f_\theta(x)]\)</span> subject to <span class="math inline">\(\text{Lip}(f_\theta) \leq 1\)</span>, where <span class="math inline">\(\mu\)</span> is the real data distribution and <span class="math inline">\(\nu_\theta\)</span> is the generator distribution. By the Kantorovich-Rubinstein formula, this objective equals <span class="math inline">\(W_1(\mu, \nu_\theta)\)</span> when <span class="math inline">\(f_\theta\)</span> achieves the supremum. The Lipschitz constraint is enforced approximately via weight clipping or gradient penalty (<span class="math inline">\(\|\nabla f_\theta\|_2 \leq 1\)</span> almost everywhere). The generator minimizes <span class="math inline">\(W_1(\mu,\nu_\theta)\)</span> by gradient descent through the discriminator.</p>
+<hr>
+</section>
+<section id="the-dual-problem-in-discrete-settings" class="level3">
+<h3 class="anchored" data-anchor-id="the-dual-problem-in-discrete-settings">The Dual Problem in Discrete Settings</h3>
+<p>When <span class="math inline">\(\mu = \sum_{i=1}^m a_i \delta_{x_i}\)</span> and <span class="math inline">\(\nu = \sum_{j=1}^n b_j \delta_{y_j}\)</span> are discrete measures, the Kantorovich dual becomes a finite-dimensional linear program. The coupling <span class="math inline">\(\pi\)</span> is a matrix <span class="math inline">\(P \in \mathbb{R}^{m \times n}_+\)</span> with row sums <span class="math inline">\(a\)</span> and column sums <span class="math inline">\(b\)</span>, and the dual variables <span class="math inline">\(\phi \in \mathbb{R}^m\)</span> and <span class="math inline">\(\psi \in \mathbb{R}^n\)</span> are finite-dimensional vectors. The dual problem is:</p>
+<p><span class="math display">\[\max_{\phi \in \mathbb{R}^m, \psi \in \mathbb{R}^n} \left\{ \sum_i a_i \phi_i + \sum_j b_j \psi_j : \phi_i + \psi_j \leq C_{ij} \; \forall i,j \right\}\]</span></p>
+<p>where <span class="math inline">\(C \in \mathbb{R}^{m\times n}\)</span> is the cost matrix with <span class="math inline">\(C_{ij} = c(x_i, y_j)\)</span>. This is the LP dual of the discrete Kantorovich problem, with <span class="math inline">\(mn\)</span> dual constraints (one per entry of <span class="math inline">\(C\)</span>) and <span class="math inline">\(m+n\)</span> dual variables. The complementary slackness condition says the optimal coupling <span class="math inline">\(P^*\)</span> satisfies <span class="math inline">\(P^*_{ij} &gt; 0 \Rightarrow \phi_i + \psi_j = C_{ij}\)</span>: mass is only transported on routes where the dual constraint is tight. This is the LP complementary slackness condition from Chapter 2 of Phase 0 (KKT conditions), specialized to the transportation LP.</p>
+<hr>
+</section>
+<section id="why-this-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-matters">WHY THIS MATTERS</h3>
+<p>In MATH 213 and MATH 325 (Analysis I and II), the Hahn-Banach theorem and its geometric form (the separation theorem for convex sets) are the foundational results. The minimax theorem used to prove strong duality is a consequence of Hahn-Banach: the primal and dual feasible sets are separated by the optimal hyperplane when the duality gap is zero. The entire proof of the Kantorovich duality theorem is functional analysis applied to infinite-dimensional linear programming, and the tools are the same ones developed in your analysis sequence.</p>
+<p>In MATH 304 (Computational Operations Research), the LP duality theorem says that for any linear program in standard form, the dual has the same optimal value as the primal when both are feasible (strong duality for LPs). The Kantorovich duality theorem is the infinite-dimensional generalization: the Kantorovich problem is an LP over the infinite-dimensional space of measures, and strong duality holds by the same minimax argument. The complementary slackness conditions from MATH 304 — primal constraint active whenever the dual variable is nonzero — are exactly the condition <span class="math inline">\(\phi^*(x) + \psi^*(y) = c(x,y)\)</span> on the support of <span class="math inline">\(\pi^*\)</span>.</p>
+<p>In MATH 213 (Analysis I), the study of continuous linear functionals on function spaces is the foundation of the dual space. The Kantorovich potentials <span class="math inline">\(\phi \in L^1(\mu)\)</span> and <span class="math inline">\(\psi \in L^1(\nu)\)</span> are elements of the dual spaces of the function spaces appearing in the primal — the duality between <span class="math inline">\(L^1\)</span> and <span class="math inline">\(L^\infty\)</span>, and between <span class="math inline">\(C_b(\mathcal{X})\)</span> and the space of Borel measures, is the functional analytic content of the Kantorovich duality theorem.</p>
+<hr>
+</section>
+</section>
+<section id="layer-3-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="layer-3-bridge">Layer 3 (Bridge)</h2>
+<p>Every element of the Kathmandu pricing desk story has a precise mathematical address. Let us walk through them one by one until the price lists, the no-arbitrage constraint, the <span class="math inline">\(c\)</span>-transform, and the contact set are completely fused with the formalism.</p>
+<hr>
+<p><strong>The pricing desk’s two price lists — buying prices <span class="math inline">\(\phi(x)\)</span> for western surplus locations and selling prices <span class="math inline">\(\psi(y)\)</span> for eastern deficit locations — are the Kantorovich potentials <span class="math inline">\(\phi \in L^1(\mu)\)</span> and <span class="math inline">\(\psi \in L^1(\nu)\)</span>.</strong> The potential <span class="math inline">\(\phi: \mathcal{X} \to \mathbb{R}\)</span> is a measurable function on the source space, integrable against <span class="math inline">\(\mu\)</span>. The potential <span class="math inline">\(\psi: \mathcal{Y} \to \mathbb{R}\)</span> is a measurable function on the target space, integrable against <span class="math inline">\(\nu\)</span>. They are not transport plans — they carry no information about which specific grain goes where. They are pricing functions: scalar values assigned to locations, not to pairs of locations. This is the fundamental dimensional reduction of the dual: from objects on <span class="math inline">\(\mathcal{X} \times \mathcal{Y}\)</span> (couplings, living in a <span class="math inline">\(2n\)</span>-dimensional product space) to objects on <span class="math inline">\(\mathcal{X}\)</span> and <span class="math inline">\(\mathcal{Y}\)</span> separately (potentials, living in <span class="math inline">\(n\)</span>-dimensional spaces).</p>
+<p><strong>The no-arbitrage constraint — the sum of buying price and selling price must never exceed the actual transportation cost — is the dual feasibility constraint <span class="math inline">\(\phi(x) + \psi(y) \leq c(x,y)\)</span> for all <span class="math inline">\((x,y)\)</span>.</strong> The constraint must hold universally, not just on the pairs that appear in the optimal transport plan. Any violation creates an exploitable gap: a logistics company could buy at <span class="math inline">\(x\)</span>, transport to <span class="math inline">\(y\)</span>, and sell at <span class="math inline">\(y\)</span> for a net profit of <span class="math inline">\(\phi(x) + \psi(y) - c(x,y) &gt; 0\)</span>. The dual feasibility set <span class="math inline">\(\Phi_c = \{(\phi,\psi) : \phi(x) + \psi(y) \leq c(x,y) \; \forall x,y\}\)</span> is the set of all non-exploitable price lists. Every element of <span class="math inline">\(\Phi_c\)</span> is an arbitrage-free pricing scheme, and the Kantorovich dual maximizes revenue over this entire set.</p>
+<p><strong>The pricing company’s total revenue — the integral of buying prices against the surplus distribution plus the integral of selling prices against the deficit distribution — is the dual objective <span class="math inline">\(\int \phi \, d\mu + \int \psi \, d\nu\)</span>.</strong> The term <span class="math inline">\(\int \phi \, d\mu\)</span> is the total amount paid to western farmers: at each location <span class="math inline">\(x\)</span>, you pay the price <span class="math inline">\(\phi(x)\)</span> for <span class="math inline">\(d\mu(x)\)</span> tonnes of grain. The term <span class="math inline">\(\int \psi \, d\nu\)</span> is the total amount received from eastern buyers: at each location <span class="math inline">\(y\)</span>, you receive <span class="math inline">\(\psi(y)\)</span> for <span class="math inline">\(d\nu(y)\)</span> tonnes. The dual problem maximizes this revenue subject to the no-arbitrage constraint. The fact that revenue is an integral of <span class="math inline">\(\phi\)</span> against <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\psi\)</span> against <span class="math inline">\(\nu\)</span> — not against the joint coupling <span class="math inline">\(\pi\)</span> — is precisely why the dual lives on <span class="math inline">\(\mathcal{X}\)</span> and <span class="math inline">\(\mathcal{Y}\)</span> separately rather than on <span class="math inline">\(\mathcal{X} \times \mathcal{Y}\)</span>.</p>
+<hr>
+<p><strong>The weak duality argument — any revenue the pricing company can extract is a lower bound on what the logistics company must spend — is the inequality <span class="math inline">\(\mathcal{D}(\mu,\nu) \leq \mathcal{K}(\mu,\nu)\)</span> derived by integrating the dual constraint against any coupling.</strong> The proof in the story: integrate <span class="math inline">\(\phi(x) + \psi(y) \leq c(x,y)\)</span> against any valid coupling <span class="math inline">\(\pi \in \Pi(\mu,\nu)\)</span>. The left side becomes <span class="math inline">\(\int \phi \, d\mu + \int \psi \, d\nu\)</span> using the marginal constraints <span class="math inline">\((\text{proj}_x)_\#\pi = \mu\)</span> and <span class="math inline">\((\text{proj}_y)_\#\pi = \nu\)</span>. The right side is the transportation cost <span class="math inline">\(\int c \, d\pi\)</span>. So every dual feasible pair <span class="math inline">\((\phi,\psi)\)</span> gives a lower bound on every primal feasible coupling’s cost, and therefore on the primal minimum. The weak duality inequality is the formal content of the story’s observation that the pricing company cannot extract more than the transport is genuinely worth.</p>
+<p><strong>Strong duality — the revenue maximum equals the cost minimum, with zero gap — is the Kantorovich duality theorem <span class="math inline">\(\mathcal{K}(\mu,\nu) = \mathcal{D}(\mu,\nu)\)</span>, proved by the minimax theorem via Hahn-Banach separation.</strong> The minimax theorem exchanges the order of inf and sup over the joint saddle-point problem: <span class="math inline">\(\inf_\pi \sup_{(\phi,\psi)} = \sup_{(\phi,\psi)} \inf_\pi\)</span>. The exchange is justified by the convexity and compactness of the coupling set <span class="math inline">\(\Pi(\mu,\nu)\)</span> in the weak topology — precisely the tightness and weak compactness results from measure theory. In the story: at optimality, the pricing company has set prices so tightly that the logistics company cannot find any transportation plan cheaper than the pricing company’s revenue. The optimal price list is a certificate of optimality for the optimal transport plan. This is the Hahn-Banach separation theorem made economic: the optimal potentials are the separating hyperplane between the primal and dual feasible sets.</p>
+<hr>
+<p><strong>The break moment — the naive assumption that the dual constraint must be tight everywhere at optimality, not just on the routes used — is the confusion between primal feasibility and complementary slackness.</strong> The correct statement is the complementary slackness theorem: <span class="math inline">\(\phi^*(x) + \psi^*(y) = c(x,y)\)</span> holds <span class="math inline">\(\pi^*\)</span>-almost surely, not everywhere. The proof is the story’s argument made formal: from strong duality, <span class="math inline">\(\int [c(x,y) - \phi^*(x) - \psi^*(y)] \, d\pi^* = 0\)</span>. Since the integrand is non-negative everywhere (dual feasibility) and integrates to zero, it must vanish <span class="math inline">\(\pi^*\)</span>-almost surely. The constraint is tight precisely where <span class="math inline">\(\pi^*\)</span> puts mass — on the contact set <span class="math inline">\(\Gamma^* = \{(x,y): \phi^*(x) + \psi^*(y) = c(x,y)\}\)</span>. On pairs <span class="math inline">\((x,y)\)</span> not in the support of <span class="math inline">\(\pi^*\)</span>, the constraint can be strictly slack. The pricing is efficient exactly on the routes that are actually used, and deliberately loose on the routes that are not. This is the LP complementary slackness condition from MATH 304, lifted to infinite dimensions.</p>
+<p><strong>The contact set <span class="math inline">\(\Gamma^*\)</span> — the set of source-destination pairs where the dual constraint is tight — is the support of the optimal coupling <span class="math inline">\(\pi^*\)</span>, and it is <span class="math inline">\(c\)</span>-cyclically monotone.</strong> The <span class="math inline">\(c\)</span>-cyclical monotonicity of <span class="math inline">\(\Gamma^*\)</span> is the Optimal Transport generalization of the no-crossing principle from Topic 1: for any finite collection of pairs <span class="math inline">\((x_1,y_1),\ldots,(x_k,y_k)\)</span> in <span class="math inline">\(\Gamma^*\)</span> and any cyclic permutation <span class="math inline">\(\sigma\)</span>, the inequality <span class="math inline">\(\sum_i c(x_i,y_i) \leq \sum_i c(x_i, y_{\sigma(i)})\)</span> holds. In the discrete setting from MATH 304: the optimal coupling matrix <span class="math inline">\(P^*\)</span> satisfies <span class="math inline">\(P^*_{ij} &gt; 0 \Rightarrow \phi_i^* + \psi_j^* = C_{ij}\)</span> — mass is transported only on routes where the dual prices exactly exhaust the cost. This is LP complementary slackness, stated in the language of the transportation tableau.</p>
+<hr>
+<p><strong>The <span class="math inline">\(c\)</span>-transform <span class="math inline">\(\phi^c(y) = \inf_x\{c(x,y) - \phi(x)\}\)</span> — finding the highest valid selling price at each eastern location given the buying prices — is the Optimal Transport generalization of the Legendre-Fenchel conjugate from Chapter 2 of Phase 0.</strong> The <span class="math inline">\(c\)</span>-transform finds the tightest valid partner potential: given <span class="math inline">\(\phi\)</span>, the highest <span class="math inline">\(\psi(y)\)</span> that does not violate <span class="math inline">\(\phi(x) + \psi(y) \leq c(x,y)\)</span> for any <span class="math inline">\(x\)</span> is exactly <span class="math inline">\(\inf_x\{c(x,y) - \phi(x)\} = \phi^c(y)\)</span>. The Legendre-Fenchel conjugate <span class="math inline">\(\phi^*(y) = \sup_x\{\langle x,y\rangle - \phi(x)\}\)</span> is the <span class="math inline">\(c\)</span>-transform for the linear cost <span class="math inline">\(c(x,y) = -\langle x,y\rangle\)</span>, with the sign flipped. For the quadratic cost <span class="math inline">\(c(x,y) = \|x-y\|^2\)</span>, writing <span class="math inline">\(\tilde\phi(x) = \frac{1}{2}\|x\|^2 - \frac{1}{2}\phi(x)\)</span>, the <span class="math inline">\(c\)</span>-transform becomes <span class="math inline">\(\phi^c(y) = \|y\|^2 - 2\tilde\phi^*(y)\)</span> where <span class="math inline">\(\tilde\phi^*\)</span> is the Legendre-Fenchel conjugate of <span class="math inline">\(\tilde\phi\)</span>. The <span class="math inline">\(c\)</span>-transform is the Legendre-Fenchel transform with the inner product cost replaced by a general transport cost — the entire Chapter 2 of Phase 0 structure, now generalized to arbitrary geometry.</p>
+<p><strong>The <span class="math inline">\(c\)</span>-concavity of the optimal potential <span class="math inline">\(\phi^*\)</span> — the condition <span class="math inline">\((\phi^c)^{\bar{c}} = \phi^*\)</span> — is the Optimal Transport analogue of the condition that a convex function equals its double conjugate <span class="math inline">\((\phi^*)^* = \phi\)</span> from Chapter 2 of Phase 0.</strong> A <span class="math inline">\(c\)</span>-concave function is one that is its own double <span class="math inline">\(c\)</span>-transform — it cannot be improved by taking the <span class="math inline">\(c\)</span>-transform twice. For the quadratic cost, <span class="math inline">\(c\)</span>-concavity of <span class="math inline">\(\phi^*\)</span> is equivalent to convexity of <span class="math inline">\(\tilde\phi^* = \frac{1}{2}\|x\|^2 - \frac{1}{2}\phi^*(x)\)</span> — precisely the condition that the Brenier potential is convex. The <span class="math inline">\(c\)</span>-concave potentials for quadratic cost are exactly the functions that arise as Brenier potentials: the Legendre-Fenchel double conjugate identity from Phase 0 is the special case of <span class="math inline">\(c\)</span>-concavity for linear cost.</p>
+<hr>
+<p><strong>The Kantorovich-Rubinstein formula <span class="math inline">\(W_1(\mu,\nu) = \sup_{\text{Lip}(f)\leq 1}\int f\,d(\mu-\nu)\)</span> — the <span class="math inline">\(W_1\)</span> distance as a supremum over <span class="math inline">\(1\)</span>-Lipschitz functions — is the <span class="math inline">\(c\)</span>-transform duality for the metric cost <span class="math inline">\(c(x,y) = d(x,y)\)</span>, with the dual constraint reducing to the Lipschitz condition.</strong> The proof in the story: for <span class="math inline">\(c(x,y) = d(x,y)\)</span> and <span class="math inline">\(\psi = -\phi\)</span>, the dual constraint <span class="math inline">\(\phi(x) + \psi(y) \leq d(x,y)\)</span> becomes <span class="math inline">\(\phi(x) - \phi(y) \leq d(x,y)\)</span> for all <span class="math inline">\(x,y\)</span> — which is exactly <span class="math inline">\(\text{Lip}(\phi) \leq 1\)</span>. The dual objective becomes <span class="math inline">\(\int \phi \, d\mu - \int \phi \, d\nu = \int \phi \, d(\mu-\nu)\)</span>. The <span class="math inline">\(1\)</span>-Lipschitz functions are the <span class="math inline">\(c\)</span>-concave potentials for the metric cost: the most discriminating price functions that respect the geographic distance structure. A Lipschitz-1 function cannot vary faster than distance — the pricing is constrained by geography, exactly as the no-arbitrage constraint limits the price spread by the transportation cost.</p>
+<p><strong>The Wasserstein GAN discriminator — a neural network trained to maximize <span class="math inline">\(\mathbb{E}_{x\sim\mu}[f_\theta(x)] - \mathbb{E}_{x\sim\nu_\theta}[f_\theta(x)]\)</span> subject to <span class="math inline">\(\text{Lip}(f_\theta) \leq 1\)</span> — is a computational approximation to the optimal Kantorovich potential <span class="math inline">\(\phi^*\)</span> for the <span class="math inline">\(W_1\)</span> distance.</strong> The discriminator’s objective is <span class="math inline">\(\int f_\theta \, d(\mu - \nu_\theta)\)</span>, which by the Kantorovich-Rubinstein formula equals <span class="math inline">\(W_1(\mu,\nu_\theta)\)</span> when <span class="math inline">\(f_\theta\)</span> achieves the supremum. The Lipschitz constraint is enforced via gradient penalty: the condition <span class="math inline">\(\|\nabla f_\theta\|_2 \leq 1\)</span> almost everywhere is the continuous version of <span class="math inline">\(\text{Lip}(f_\theta) \leq 1\)</span>. The generator minimizes <span class="math inline">\(W_1(\mu,\nu_\theta)\)</span> by updating <span class="math inline">\(\theta\)</span> to reduce the discriminator’s maximum score. The entire GAN training loop is the Kantorovich dual problem solved by stochastic gradient ascent on the discriminator and stochastic gradient descent on the generator — a computational implementation of the minimax theorem that proved strong duality.</p>
+<hr>
+<p><strong>The connection to MATH 304 (Computational Operations Research) is direct and complete.</strong> The discrete Kantorovich dual — <span class="math inline">\(\max \{\sum_i a_i\phi_i + \sum_j b_j\psi_j : \phi_i + \psi_j \leq C_{ij}\}\)</span> — is the LP dual of the transportation problem you solved in MATH 304 using the simplex method. The dual variables <span class="math inline">\(\phi_i\)</span> and <span class="math inline">\(\psi_j\)</span> are the shadow prices of the supply and demand constraints. The complementary slackness conditions <span class="math inline">\(P^*_{ij} &gt; 0 \Rightarrow \phi_i + \psi_j = C_{ij}\)</span> are the LP complementary slackness conditions. The strong duality theorem for the Kantorovich problem is the infinite-dimensional generalization of the LP strong duality theorem — the same theorem, in a larger space, proved by the same argument (minimax = Hahn-Banach = separation of convex sets).</p>
+<p><strong>The connection to MATH 213 and MATH 325 (Analysis I and II) runs through the Hahn-Banach theorem and weak convergence.</strong> The minimax exchange <span class="math inline">\(\inf_\pi \sup_{(\phi,\psi)} = \sup_{(\phi,\psi)} \inf_\pi\)</span> requires the coupling set <span class="math inline">\(\Pi(\mu,\nu)\)</span> to be compact in a suitable topology. The topology is the weak topology on measures — the topology of convergence against bounded continuous test functions — and the compactness is Prokhorov’s theorem, which you encountered in the measure theory component of Phase 0. The Kantorovich potentials <span class="math inline">\(\phi \in L^1(\mu)\)</span> are elements of the dual space of <span class="math inline">\(L^\infty(\mu)\)</span>, and the duality between <span class="math inline">\(L^1\)</span> and <span class="math inline">\(L^\infty\)</span> is the functional analytic content of the dual problem. Every result in your analysis sequence about dual spaces, weak convergence, and the Hahn-Banach theorem is instantiated in the proof of the Kantorovich duality theorem.</p>
+<hr>
+<p><strong>Looking forward across the roadmap</strong>, the Kantorovich duality theorem is the theoretical engine of everything that follows. In Chapter 2, the Sinkhorn algorithm has a dual ascent interpretation: the Sinkhorn iterations are coordinate ascent steps on the dual objective <span class="math inline">\(\int \phi \, d\mu + \int \phi^c \, d\nu\)</span> over <span class="math inline">\(c\)</span>-concave potentials. Each Sinkhorn iteration updates one potential while holding the other fixed, climbing the dual objective until convergence. In Chapter 3, the displacement interpolation is constructed using the optimal dual potentials — the geodesic between <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> in Wasserstein space passes through the contact set <span class="math inline">\(\Gamma^*\)</span> at every intermediate time. In Phase 3, the connection between the optimal Kantorovich potential and the score function of a diffusion model — both are gradients of log-density functions, both satisfy Hamilton-Jacobi equations — makes the Kantorovich dual the theoretical bridge between Optimal Transport and score-based generative modeling.</p>
+<p>The price lists on the Kathmandu pricing desk — the buying prices <span class="math inline">\(\phi^*(x)\)</span> in the west and the selling prices <span class="math inline">\(\psi^*(y)\)</span> in the east, tight exactly where grain flows and slack everywhere else — are the Kantorovich potentials <span class="math inline">\((\phi^*, \psi^*)\)</span>, the dual certificates that simultaneously prove the optimality of the transport plan and encode the entire geometry of the Wasserstein distance in two scalar functions.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

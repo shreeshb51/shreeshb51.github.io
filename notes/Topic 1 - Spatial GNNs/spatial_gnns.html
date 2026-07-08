@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>spatial_gnns – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#topic-1---spatial-gnns-the-message-passing-framework" id="toc-topic-1---spatial-gnns-the-message-passing-framework" class="nav-link active" data-scroll-target="#topic-1---spatial-gnns-the-message-passing-framework">Topic 1 - Spatial GNNs: The Message Passing Framework</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#layer-1-story" id="toc-layer-1-story" class="nav-link" data-scroll-target="#layer-1-story">Layer 1 (Story)</a></li>
+  <li><a href="#layer-2-mathematics" id="toc-layer-2-mathematics" class="nav-link" data-scroll-target="#layer-2-mathematics">Layer 2 (Mathematics)</a></li>
+  <li><a href="#layer-3-bridge" id="toc-layer-3-bridge" class="nav-link" data-scroll-target="#layer-3-bridge">Layer 3 (Bridge)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<section id="topic-1---spatial-gnns-the-message-passing-framework" class="level1">
+<h1>Topic 1 - Spatial GNNs: The Message Passing Framework</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>The Schur’s lemma derivation of Chapter 1 ended with a striking result. The most general <span class="math inline">\(S_n\)</span>-equivariant linear map on scalar node features is <span class="math inline">\(h_i \mapsto \alpha h_i + \beta \sum_j h_j\)</span> — a self-weight plus a sum over all other nodes. This is correct, but it is too broad to be useful. It aggregates information from every node in the graph equally, regardless of whether those nodes are connected by an edge or separated by a hundred hops. A social network where every person influences every other person equally, regardless of whether they have ever interacted, is not a model of a social network — it is a model of a fully connected mean field. Real graphs are sparse. Real relationships are local. The structure of the graph — which nodes are connected to which — is the most important piece of information you have, and a globally aggregating equivariant layer throws it away entirely.</p>
+<p>The message passing framework is the resolution of this tension. It preserves <span class="math inline">\(S_n\)</span>-equivariance exactly, as demanded by Chapter 1’s group theory, while restricting aggregation to the local neighborhood defined by the graph’s edges. The result is a family of architectures that are simultaneously principled — derived from symmetry constraints — and practical — exploiting the sparse local structure that makes graphs computationally tractable and statistically meaningful.</p>
+<p>The central intuition is one you already know from your own academic experience. When you are trying to understand a new concept — say, the Radon-Nikodym theorem from Phase 0 — you do not consult every mathematician who has ever lived. You consult your immediate intellectual neighborhood: your professor, the textbooks on your shelf, the papers that paper cites. Each of those sources has its own neighborhood. Over multiple rounds of consultation, information from distant sources reaches you, but it arrives filtered and transformed through intermediate nodes in your academic graph. This is message passing: local aggregation iterated over multiple rounds to propagate information across the graph.</p>
+<p>Formally, a single message passing layer performs three operations in sequence. First, for every directed edge <span class="math inline">\((j, i)\)</span> in the graph, a message function computes a vector <span class="math inline">\(m_{ji}\)</span> from the features of the sender node <span class="math inline">\(j\)</span>, the receiver node <span class="math inline">\(i\)</span>, and optionally the edge feature <span class="math inline">\(e_{ji}\)</span>. Second, for every node <span class="math inline">\(i\)</span>, an aggregation function combines all incoming messages <span class="math inline">\(\{m_{ji} : j \in \mathcal{N}(i)\}\)</span> from the neighborhood <span class="math inline">\(\mathcal{N}(i)\)</span> into a single aggregated message <span class="math inline">\(\bar{m}_i\)</span>. Third, an update function computes the new node feature <span class="math inline">\(h_i^{(k+1)}\)</span> from the aggregated message <span class="math inline">\(\bar{m}_i\)</span> and the current node feature <span class="math inline">\(h_i^{(k)}\)</span>. Stacking <span class="math inline">\(K\)</span> such layers produces a network where each node’s final feature encodes information from its entire <span class="math inline">\(K\)</span>-hop neighborhood.</p>
+<p>This topic has three components that correspond to the three architectural choices embedded in the message passing framework.</p>
+<p>The first component examines the <strong>message function</strong> — the operation that decides what information a node sends to its neighbors. The simplest message function is <span class="math inline">\(m_{ji} = h_j^{(k)}\)</span>: send your current feature unchanged. More expressive choices apply a learned linear transformation <span class="math inline">\(m_{ji} = W h_j^{(k)}\)</span>, or concatenate sender and receiver features <span class="math inline">\(m_{ji} = \phi(h_j^{(k)}, h_i^{(k)})\)</span>, or incorporate edge features <span class="math inline">\(m_{ji} = \phi(h_j^{(k)}, h_i^{(k)}, e_{ji})\)</span>. The choice of message function determines what information flows along each edge and is the primary site of architectural expressiveness in the spatial GNN framework.</p>
+<p>The second component examines the <strong>aggregation function</strong> — the operation that combines incoming messages at each node. The aggregation must be <span class="math inline">\(S_n\)</span>-equivariant and permutation-invariant over the set of incoming messages (since the neighbors of a node have no canonical ordering). The canonical choices are sum aggregation <span class="math inline">\(\bar{m}_i = \sum_{j \in \mathcal{N}(i)} m_{ji}\)</span>, mean aggregation <span class="math inline">\(\bar{m}_i = \frac{1}{|\mathcal{N}(i)|}\sum_{j \in \mathcal{N}(i)} m_{ji}\)</span>, and max aggregation <span class="math inline">\(\bar{m}_i = \max_{j \in \mathcal{N}(i)} m_{ji}\)</span>. The choice of aggregation function has profound consequences for expressive power — a fact that the Weisfeiler-Lehman analysis of Topic 3 will make precise. Sum aggregation is strictly more expressive than mean or max aggregation, for a reason that will become clear when you see which graph structures each aggregation can and cannot distinguish.</p>
+<p>The third component examines the <strong>update function</strong> — the operation that incorporates the aggregated neighborhood information into the node’s own feature. The simplest update is <span class="math inline">\(h_i^{(k+1)} = \sigma(W \bar{m}_i)\)</span> — apply a learned linear transformation to the aggregated message and pass through a nonlinearity. More sophisticated updates use gating mechanisms, residual connections, or recurrent update functions. The Graph Attention Network (GAT) places the attention mechanism inside the message and aggregation steps — weighting each neighbor’s message by a learned attention coefficient <span class="math inline">\(\alpha_{ji}\)</span> that depends on the features of both the sender and receiver — producing a weighted aggregation <span class="math inline">\(\bar{m}_i = \sum_{j \in \mathcal{N}(i)} \alpha_{ji} m_{ji}\)</span> where the weights are data-dependent rather than fixed.</p>
+<p>The connection to your existing curriculum is direct and bilateral. Your COMP 202 course on Data Structures and Algorithms introduced graphs as adjacency lists and adjacency matrices, and gave you the two canonical graph traversal algorithms: breadth-first search and depth-first search. Message passing is differentiable breadth-first search. In BFS, you explore the <span class="math inline">\(k\)</span>-hop neighborhood of a node by iteratively expanding the frontier one hop at a time. In message passing, you do exactly the same thing, but instead of marking nodes as visited, you compute and aggregate differentiable feature vectors at each hop. The neighborhood expansion logic is identical; the difference is that message passing is end-to-end differentiable, so the information aggregated at each hop is learned rather than hand-coded.</p>
+<p>Your COMP 323 course on Graph Theory introduced the Laplacian matrix <span class="math inline">\(L = D - A\)</span>, the adjacency spectrum, and the connection between graph structure and algebraic properties. The message passing framework aggregates over the adjacency structure directly — the neighborhood <span class="math inline">\(\mathcal{N}(i)\)</span> in the message passing update is precisely the set of nodes adjacent to <span class="math inline">\(i\)</span> in the adjacency matrix <span class="math inline">\(A\)</span>. The normalized adjacency matrix <span class="math inline">\(\hat{A} = D^{-1/2}AD^{-1/2}\)</span> that appears in the Graph Convolutional Network (GCN) of Kipf and Welling is the normalized version of the same adjacency matrix from your Graph Theory course, with the degree normalization ensuring that the aggregation does not blow up for high-degree nodes. The spectral interpretation of this normalization — why <span class="math inline">\(\hat{A}\)</span> is the correct normalization rather than <span class="math inline">\(D^{-1}A\)</span> or <span class="math inline">\(A\)</span> itself — is the content of Topic 2.</p>
+<p>By the end of this topic, the message passing framework will feel not like a black box architecture but like the unique sensible answer to the question: how do you build an <span class="math inline">\(S_n\)</span>-equivariant neural network that respects the sparse local structure of a graph? The answer is: compute local messages along edges, aggregate them symmetrically over neighborhoods, and update node features iteratively. Every subsequent GNN architecture — from GraphSAGE to GAT to MPNN to PNA — is a special case of this framework, varying only in the specific choice of message, aggregation, and update functions. The framework is the constant; the architectural variants are the parameters.</p>
+<hr>
+</section>
+<section id="layer-1-story" class="level2">
+<h2 class="anchored" data-anchor-id="layer-1-story">Layer 1 (Story)</h2>
+<p>Imagine it is the early 1980s, before telephone lines reached the mountain villages of Nepal. The Government of Nepal has commissioned you — a young engineer freshly graduated from what would become Pulchowk Campus — to design a communication system for the high Himalayan districts. The system must allow any village to send information to any other village, but the terrain makes direct connections impossible. You cannot build a road from Namche Bazaar directly to Jumla. The mountains, the rivers, the passes — they dictate which villages can be directly connected and which cannot. What you can build is a network of postal relay stations: each village can send a letter to its immediate neighbors, and those neighbors can forward the letter onward.</p>
+<p>You build the network. Namche Bazaar connects to Phakding and Tengboche. Phakding connects to Lukla and Namche Bazaar. Lukla connects to Phakding and the airstrip at Rumjatar. Tengboche connects to Namche Bazaar and Dingboche. The network is a graph — nodes are villages, edges are postal routes. No village is directly connected to every other village. The connections are sparse and local, dictated entirely by geography.</p>
+<p>Now the Government gives you a harder task. It is no longer enough to deliver letters. You must build an intelligence system. Every village has a profile — its population, its altitude, its food stock, its current disease burden. The Government wants to know, for every village, whether it is at risk of a supply crisis in the coming winter. The prediction for each village must incorporate not just that village’s own profile but the profiles of the villages around it, because a supply crisis in Namche Bazaar affects Phakding and Tengboche whether they know it yet or not.</p>
+<p>You cannot send every village’s profile to a central office in Kathmandu and compute everything there. The communication bandwidth is too limited, and the network is too large. You need a distributed algorithm — one that propagates information locally, hop by hop, until every village has accumulated enough intelligence about its surroundings to make a reliable prediction.</p>
+<hr>
+<p><strong>Round Zero: Everyone knows only themselves.</strong></p>
+<p>At the start of the winter assessment, each village holds only its own profile vector. Namche Bazaar knows its own population, altitude, food stock, and disease burden. It knows nothing about Phakding or Tengboche yet. Every village is an island of local information.</p>
+<p>This is the initialization of the network. Before any message passing has occurred, the feature vector of each node encodes only local, self-contained information. In the language of the system you are building, this is Layer 0: <span class="math inline">\(h_i^{(0)} = x_i\)</span>, where <span class="math inline">\(x_i\)</span> is the raw feature vector of village <span class="math inline">\(i\)</span>.</p>
+<hr>
+<p><strong>Round One: Every village sends a letter to its neighbors.</strong></p>
+<p>You instruct every village postmaster to do three things. First, prepare a message summarizing your village’s current situation — not your raw profile, but a transformed summary, because raw numbers from different villages are not directly comparable. The postmaster in Namche Bazaar (at 3440 metres) and the postmaster in Lukla (at 2860 metres) have different baseline conditions, and a single linear transformation applied uniformly across all villages normalizes for these differences. This transformation is the message function: it converts each village’s current feature vector into a message suitable for transmission to neighbors.</p>
+<p>Second, collect all the letters that arrive from your neighboring villages. Namche Bazaar receives letters from Phakding and Tengboche. It does not receive a letter directly from Lukla, because Lukla is not an immediate neighbor — the postal route does not connect them directly. The collection of incoming letters is the aggregation step: for each village, you gather all messages from its immediate neighborhood.</p>
+<p>Third, read all the letters you have received, combine the information in them with what you already know about your own village, and update your profile accordingly. Namche Bazaar now knows its own situation plus a summary of Phakding’s and Tengboche’s situations. This is the update step: the new feature vector of each village is a function of its old feature vector and the aggregated neighborhood messages.</p>
+<p>After Round One, every village has a feature vector that encodes information from its immediate one-hop neighborhood. Namche Bazaar’s updated profile reflects conditions in Phakding and Tengboche. Phakding’s updated profile reflects conditions in Namche Bazaar and Lukla. But Namche Bazaar still knows nothing about Lukla — Lukla is two hops away, and only one round of message passing has occurred.</p>
+<hr>
+<p><strong>Round Two: The second round of letters.</strong></p>
+<p>In Round Two, the same three steps repeat. But now the messages that each village sends are based on its Round One feature vector — which already encodes one-hop neighborhood information. When Phakding sends its Round Two message to Namche Bazaar, that message implicitly contains information about Lukla, because Phakding’s Round One update incorporated Lukla’s Round Zero profile. Namche Bazaar, upon receiving Phakding’s Round Two message, now has indirect access to Lukla’s information — mediated through Phakding.</p>
+<p>After Round Two, every village has a feature vector encoding information from its two-hop neighborhood. After Round Three, three hops. After <span class="math inline">\(K\)</span> rounds, every village has aggregated information from its entire <span class="math inline">\(K\)</span>-hop neighborhood. If the diameter of the postal network — the longest shortest path between any two villages — is <span class="math inline">\(D\)</span>, then after <span class="math inline">\(D\)</span> rounds of message passing, every village has, in principle, been influenced by every other village in the network, through chains of message relaying.</p>
+<p>This is the central computational mechanism of Graph Neural Networks: <span class="math inline">\(K\)</span> rounds of local message passing produce node features that encode <span class="math inline">\(K\)</span>-hop neighborhood information, with the information propagating outward from each node like ripples on a pond.</p>
+<hr>
+<p><strong>The three decisions of the postmaster.</strong></p>
+<p>Every round of message passing requires three decisions from every postmaster, and the quality of the entire system depends on getting these decisions right.</p>
+<p><strong>Decision One: What do you put in the letter?</strong></p>
+<p>The naive postmaster puts everything in the letter — the full raw profile of the village. But this is wasteful and noisy. A wiser postmaster applies judgment: they transform the raw profile into a concise, informative summary that is relevant to the recipient. In Namche Bazaar’s case, the relevant information for its neighbors is not its absolute food stock (5000 kg) but its food stock relative to its population and the expected winter duration — a transformed, normalized signal.</p>
+<p>Different postmasters might apply different transformations depending on who they are writing to. Namche Bazaar might send a different summary to Phakding (lower altitude, different supply dynamics) than to Tengboche (higher altitude, similar conditions). This is the attention mechanism: the message sent along edge <span class="math inline">\((j, i)\)</span> depends not just on the sender <span class="math inline">\(j\)</span> but also on the receiver <span class="math inline">\(i\)</span>, allowing the network to learn which aspects of a neighbor’s profile are most relevant for each specific relationship.</p>
+<p><strong>Decision Two: How do you combine the letters you receive?</strong></p>
+<p>Several letters arrive from different neighbors. The naive postmaster simply adds them up: total them together and treat the sum as the aggregate signal. This is sum aggregation.</p>
+<p>But there is a subtlety. Namche Bazaar has two neighbors: Phakding and Tengboche. A village with ten neighbors receives ten letters. If you simply sum all incoming messages, a village with many neighbors accumulates a much larger aggregate signal than a village with few neighbors, even if the actual information content is the same. This size-sensitivity is sometimes useful — knowing that a village has many neighbors (high degree) is itself information — but it can also be a distortion. Mean aggregation divides the sum by the number of neighbors, normalizing for degree. Max aggregation takes the component-wise maximum, which is sensitive to the most extreme incoming signal rather than the average.</p>
+<p>Here is the break moment. You might think: mean aggregation is obviously better, because it normalizes for degree and makes the aggregate signal comparable across villages with different numbers of neighbors. Why would you ever use sum aggregation, which distorts the signal based on the number of neighbors?</p>
+<p>This breaks cleanly against the following example. Consider two villages. Village A has two neighbors, both reporting food stock level 3. Village B has three neighbors, all reporting food stock level 2. Under mean aggregation, both villages receive the same aggregate signal: the mean of <span class="math inline">\(\{3, 3\}\)</span> is 3, but also, the mean of <span class="math inline">\(\{2, 2, 2\}\)</span> is 2 — actually these differ, good. Try again with a cleaner break.</p>
+<p>Consider two villages. Village A has two neighbors, both at food stock level 3: mean aggregate is 3. Village B has four neighbors, all at food stock level 3: mean aggregate is also 3. These two villages are in completely different situations — Village A has two neighbors at risk, Village B has four — but mean aggregation cannot tell them apart. Sum aggregation gives Village A an aggregate of 6 and Village B an aggregate of 12, correctly distinguishing them. Mean aggregation has destroyed the information about neighborhood size.</p>
+<p>This is not a pathological example. It is the precise reason why the Graph Isomorphism Network (GIN) — the maximally expressive message-passing GNN — uses sum aggregation rather than mean aggregation. Sum aggregation is strictly more expressive than mean aggregation because it preserves information about both the values and the counts of incoming messages. Mean aggregation throws away count information. Max aggregation throws away even more. The aggregation choice is not a detail — it is the primary determinant of theoretical expressive power, as Topic 3 will prove rigorously using the Weisfeiler-Lehman test.</p>
+<p><strong>Decision Three: How do you update your own profile?</strong></p>
+<p>The postmaster receives the aggregated neighborhood signal and must combine it with their own village’s existing profile to produce an updated profile. The simplest approach: apply a learned transformation to the concatenation of the current self-profile and the aggregated neighborhood signal, then pass through a nonlinearity. The nonlinearity is essential — without it, the entire <span class="math inline">\(K\)</span>-layer network collapses to a single linear operation (composition of linear maps is linear), and you lose the capacity to represent nonlinear functions of neighborhood structure.</p>
+<hr>
+<p><strong>The graph-level prediction.</strong></p>
+<p>The Government does not want a risk assessment for each village individually. It wants a single district-level assessment: is this district as a whole at risk of a coordinated supply crisis? This requires aggregating all node-level features into a single graph-level feature vector.</p>
+<p>The graph-level aggregation — called the readout or pooling operation — must be permutation-invariant: the district-level assessment should not depend on which village was numbered first. The simplest invariant readout is the sum or mean over all node features: <span class="math inline">\(h_G = \sum_i h_i^{(K)}\)</span> or <span class="math inline">\(h_G = \frac{1}{n}\sum_i h_i^{(K)}\)</span>. This is the canonical <span class="math inline">\(S_n\)</span>-invariant operation — summation over an unordered set, which is the same regardless of the ordering of the elements.</p>
+<p>After the readout, a final learned transformation maps the graph-level feature vector to the prediction: district-level crisis probability, molecule energy, social network resilience, or whatever the task demands.</p>
+<hr>
+<p><strong>The full pipeline, stated once.</strong></p>
+<p>Initialize: <span class="math inline">\(h_i^{(0)} = x_i\)</span> for all villages <span class="math inline">\(i\)</span>.</p>
+<p>For each round <span class="math inline">\(k = 1, \ldots, K\)</span>: — For each edge <span class="math inline">\((j, i)\)</span>: compute message <span class="math inline">\(m_{ji}^{(k)}\)</span> from <span class="math inline">\(h_j^{(k-1)}\)</span>, <span class="math inline">\(h_i^{(k-1)}\)</span>, and edge feature <span class="math inline">\(e_{ji}\)</span>. — For each node <span class="math inline">\(i\)</span>: aggregate <span class="math inline">\(\bar{m}_i^{(k)} = \text{AGG}\left(\{m_{ji}^{(k)} : j \in \mathcal{N}(i)\}\right)\)</span>. — For each node <span class="math inline">\(i\)</span>: update <span class="math inline">\(h_i^{(k)} = \text{UPD}\left(h_i^{(k-1)}, \bar{m}_i^{(k)}\right)\)</span>.</p>
+<p>Readout: <span class="math inline">\(h_G = \text{READOUT}\left(\{h_i^{(K)} : i \in V\}\right)\)</span>.</p>
+<p>Predict: <span class="math inline">\(\hat{y} = f(h_G)\)</span> for graph-level tasks, or <span class="math inline">\(\hat{y}_i = f(h_i^{(K)})\)</span> for node-level tasks.</p>
+<p>Every GNN architecture you will encounter in the literature — GCN, GraphSAGE, GAT, GIN, MPNN, PNA, DimeNet, SchNet — is a specific instantiation of this pipeline, varying in the choice of message function, aggregation function, update function, and readout. The pipeline itself is the constant. It is <span class="math inline">\(S_n\)</span>-equivariant by construction: because every operation — message computation, neighborhood aggregation, node update — treats all nodes with the same functions and aggregates over unordered sets, relabeling the nodes produces identically relabeled outputs. The permutation symmetry is built into the architecture at the structural level, not enforced as a regularization penalty or learned from data.</p>
+<hr>
+<p><strong>What message passing cannot do.</strong></p>
+<p>Before you move to the mathematics, hold one limitation clearly in mind.</p>
+<p>The postal network aggregates information from <span class="math inline">\(K\)</span>-hop neighborhoods. But two villages that have identical <span class="math inline">\(K\)</span>-hop neighborhood structures — the same pattern of connections and features within <span class="math inline">\(K\)</span> hops — will receive identical feature vectors after <span class="math inline">\(K\)</span> rounds of message passing, even if they are embedded in globally different parts of a larger network. Message passing is local: it sees neighborhood structure, not global position. Two nodes in completely different graphs that happen to have isomorphic <span class="math inline">\(K\)</span>-hop neighborhoods are indistinguishable to a <span class="math inline">\(K\)</span>-layer message-passing GNN.</p>
+<p>This is not a failure of implementation. It is a fundamental structural limit, and it is exactly the limit that the Weisfeiler-Lehman analysis of Topic 3 characterizes with mathematical precision. You are not yet ready for that analysis — it requires the formalism of Topic 2 as an intermediate step — but you should carry this limitation forward as an open question: which graph structures can message passing distinguish, and which are invisible to it?</p>
+<hr>
+</section>
+<section id="layer-2-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="layer-2-mathematics">Layer 2 (Mathematics)</h2>
+<p>We build the formalism in five stages: the precise algebraic definition of a graph and its associated matrices, the general message passing neural network (MPNN) framework, the three canonical instantiations (GCN, GraphSAGE, GAT), the graph-level readout and its invariance properties, and the over-smoothing phenomenon that limits depth.</p>
+<section id="graphs-and-their-matrix-representations" class="level3">
+<h3 class="anchored" data-anchor-id="graphs-and-their-matrix-representations">Graphs and Their Matrix Representations</h3>
+<p><strong>Definition.</strong> A <strong>graph</strong> is a tuple <span class="math inline">\(G = (V, E, X)\)</span> where <span class="math inline">\(V = \{1, \ldots, n\}\)</span> is the node set, <span class="math inline">\(E \subseteq V \times V\)</span> is the edge set, and <span class="math inline">\(X \in \mathbb{R}^{n \times d}\)</span> is the node feature matrix with row <span class="math inline">\(x_i \in \mathbb{R}^d\)</span> being the feature vector of node <span class="math inline">\(i\)</span>. Optionally, <span class="math inline">\(E_{ij} \in \mathbb{R}^k\)</span> is an edge feature vector for each <span class="math inline">\((i,j) \in E\)</span>.</p>
+<p><strong>Adjacency matrix.</strong> The adjacency matrix <span class="math inline">\(A \in \{0,1\}^{n \times n}\)</span> is defined by:</p>
+<p><span class="math display">\[A_{ij} = \begin{cases} 1 &amp; \text{if } (j, i) \in E \\ 0 &amp; \text{otherwise} \end{cases}\]</span></p>
+<p>For undirected graphs, <span class="math inline">\(A = A^\top\)</span>. For directed graphs, <span class="math inline">\(A_{ij} \neq A_{ji}\)</span> in general.</p>
+<p><strong>Degree matrix.</strong> The degree matrix <span class="math inline">\(D \in \mathbb{R}^{n \times n}\)</span> is the diagonal matrix with entries:</p>
+<p><span class="math display">\[D_{ii} = \deg(i) = \sum_{j=1}^{n} A_{ij}\]</span></p>
+<p>the number of neighbors of node <span class="math inline">\(i\)</span>.</p>
+<p><strong>Neighborhood.</strong> The neighborhood of node <span class="math inline">\(i\)</span> is:</p>
+<p><span class="math display">\[\mathcal{N}(i) = \{j \in V : (j,i) \in E\}\]</span></p>
+<p>For undirected graphs, <span class="math inline">\((j,i) \in E \Leftrightarrow (i,j) \in E\)</span>, so <span class="math inline">\(j \in \mathcal{N}(i) \Leftrightarrow i \in \mathcal{N}(j)\)</span>.</p>
+<p><strong>Normalized adjacency.</strong> The symmetrically normalized adjacency matrix is:</p>
+<p><span class="math display">\[\hat{A} = D^{-1/2} A D^{-1/2}, \quad \hat{A}_{ij} = \frac{A_{ij}}{\sqrt{\deg(i)\deg(j)}}\]</span></p>
+<p>The self-loop augmented versions <span class="math inline">\(\tilde{A} = A + I\)</span> and <span class="math inline">\(\tilde{D}_{ii} = \deg(i) + 1\)</span> give <span class="math inline">\(\hat{\tilde{A}} = \tilde{D}^{-1/2}\tilde{A}\tilde{D}^{-1/2}\)</span>, the propagation matrix of the Graph Convolutional Network.</p>
+<hr>
+</section>
+<section id="the-general-mpnn-framework" class="level3">
+<h3 class="anchored" data-anchor-id="the-general-mpnn-framework">The General MPNN Framework</h3>
+<p><strong>Definition (Message Passing Neural Network).</strong> A <strong>message passing neural network</strong> with <span class="math inline">\(K\)</span> layers computes node representations <span class="math inline">\(h_i^{(k)}\)</span> for <span class="math inline">\(k = 0, 1, \ldots, K\)</span> via:</p>
+<p><span class="math display">\[\text{Initialization:} \quad h_i^{(0)} = x_i \in \mathbb{R}^d\]</span></p>
+<p><span class="math display">\[\text{Message:} \quad m_{ji}^{(k)} = \phi^{(k)}\!\left(h_i^{(k-1)},\, h_j^{(k-1)},\, e_{ji}\right)\]</span></p>
+<p><span class="math display">\[\text{Aggregate:} \quad \bar{m}_i^{(k)} = \bigoplus_{j \in \mathcal{N}(i)} m_{ji}^{(k)}\]</span></p>
+<p><span class="math display">\[\text{Update:} \quad h_i^{(k)} = \psi^{(k)}\!\left(h_i^{(k-1)},\, \bar{m}_i^{(k)}\right)\]</span></p>
+<p>where <span class="math inline">\(\phi^{(k)}: \mathbb{R}^{d_{k-1}} \times \mathbb{R}^{d_{k-1}} \times \mathbb{R}^{k_e} \to \mathbb{R}^{d_k}\)</span> is the <strong>message function</strong>, <span class="math inline">\(\bigoplus\)</span> denotes a permutation-invariant <strong>aggregation operator</strong> (sum, mean, max, or learned), and <span class="math inline">\(\psi^{(k)}: \mathbb{R}^{d_{k-1}} \times \mathbb{R}^{d_k} \to \mathbb{R}^{d_k}\)</span> is the <strong>update function</strong>.</p>
+<p><strong>Equivariance of MPNN.</strong> Let <span class="math inline">\(\sigma \in S_n\)</span> be a permutation and <span class="math inline">\(P_\sigma\)</span> its permutation matrix. Define the action of <span class="math inline">\(\sigma\)</span> on node features as <span class="math inline">\((P_\sigma H)_i = H_{\sigma^{-1}(i)}\)</span> (permuting rows). Then:</p>
+<p><strong>Theorem.</strong> The MPNN layer <span class="math inline">\(H^{(k)} = \text{MPNN}(H^{(k-1)}, A)\)</span> satisfies:</p>
+<p><span class="math display">\[\text{MPNN}(P_\sigma H^{(k-1)}, P_\sigma A P_\sigma^\top) = P_\sigma \, \text{MPNN}(H^{(k-1)}, A)\]</span></p>
+<p><strong>Proof sketch.</strong> The message <span class="math inline">\(m_{ji}^{(k)}\)</span> depends only on <span class="math inline">\(h_i^{(k-1)}\)</span> and <span class="math inline">\(h_j^{(k-1)}\)</span>, which under permutation <span class="math inline">\(\sigma\)</span> become <span class="math inline">\(h_{\sigma^{-1}(i)}^{(k-1)}\)</span> and <span class="math inline">\(h_{\sigma^{-1}(j)}^{(k-1)}\)</span>. The adjacency <span class="math inline">\(P_\sigma A P_\sigma^\top\)</span> has entry <span class="math inline">\((i,j)\)</span> equal to <span class="math inline">\(A_{\sigma^{-1}(i)\sigma^{-1}(j)}\)</span>, so the neighborhood of node <span class="math inline">\(i\)</span> under the permuted graph is <span class="math inline">\(\{\sigma(j) : j \in \mathcal{N}(\sigma^{-1}(i))\}\)</span>. The aggregation over this permuted neighborhood, by permutation-invariance of <span class="math inline">\(\bigoplus\)</span>, produces the same result as permuting after aggregating. <span class="math inline">\(\square\)</span></p>
+<hr>
+</section>
+<section id="canonical-instantiation-i-graph-convolutional-network-gcn" class="level3">
+<h3 class="anchored" data-anchor-id="canonical-instantiation-i-graph-convolutional-network-gcn">Canonical Instantiation I: Graph Convolutional Network (GCN)</h3>
+<p><strong>Kipf and Welling (2017).</strong> The GCN layer is:</p>
+<p><span class="math display">\[H^{(k)} = \sigma\!\left(\hat{\tilde{A}} H^{(k-1)} W^{(k)}\right)\]</span></p>
+<p>where <span class="math inline">\(\hat{\tilde{A}} = \tilde{D}^{-1/2}\tilde{A}\tilde{D}^{-1/2}\)</span> is the symmetrically normalized self-loop augmented adjacency matrix, <span class="math inline">\(W^{(k)} \in \mathbb{R}^{d_{k-1} \times d_k}\)</span> is a learnable weight matrix, and <span class="math inline">\(\sigma\)</span> is a pointwise nonlinearity (ReLU).</p>
+<p><strong>MPNN decomposition.</strong> The GCN layer is an instance of the MPNN framework with:</p>
+<p><span class="math display">\[m_{ji}^{(k)} = \frac{1}{\sqrt{\widetilde{\deg}(i)\,\widetilde{\deg}(j)}} h_j^{(k-1)}\]</span></p>
+<p><span class="math display">\[\bar{m}_i^{(k)} = \sum_{j \in \mathcal{N}(i) \cup \{i\}} m_{ji}^{(k)}\]</span></p>
+<p><span class="math display">\[h_i^{(k)} = \sigma\!\left(W^{(k)\top} \bar{m}_i^{(k)}\right)\]</span></p>
+<p>The self-loop (adding <span class="math inline">\(I\)</span> to <span class="math inline">\(A\)</span>) ensures that the update includes the node’s own previous feature, so <span class="math inline">\(h_i^{(k)}\)</span> is a function of <span class="math inline">\(h_i^{(k-1)}\)</span> and the neighborhood. Without the self-loop, the update discards the node’s own feature entirely.</p>
+<p><strong>Spectral motivation.</strong> The normalization <span class="math inline">\(\hat{\tilde{A}}\)</span> is not arbitrary — it is the first-order approximation of a spectral graph filter. This connection is developed fully in Topic 2.</p>
+<hr>
+</section>
+<section id="canonical-instantiation-ii-graphsage" class="level3">
+<h3 class="anchored" data-anchor-id="canonical-instantiation-ii-graphsage">Canonical Instantiation II: GraphSAGE</h3>
+<p><strong>Hamilton, Ying, and Leskovec (2017).</strong> GraphSAGE separates the self-feature from the aggregated neighborhood feature:</p>
+<p><span class="math display">\[h_{\mathcal{N}(i)}^{(k)} = \text{AGG}^{(k)}\!\left(\{h_j^{(k-1)} : j \in \mathcal{N}(i)\}\right)\]</span></p>
+<p><span class="math display">\[h_i^{(k)} = \sigma\!\left(W^{(k)} \cdot \left[h_i^{(k-1)} \,\|\, h_{\mathcal{N}(i)}^{(k)}\right]\right)\]</span></p>
+<p>where <span class="math inline">\([\cdot \| \cdot]\)</span> denotes concatenation and <span class="math inline">\(\text{AGG}^{(k)}\)</span> is one of:</p>
+<p><span class="math display">\[\text{Mean AGG:} \quad h_{\mathcal{N}(i)}^{(k)} = \frac{1}{|\mathcal{N}(i)|}\sum_{j \in \mathcal{N}(i)} h_j^{(k-1)}\]</span></p>
+<p><span class="math display">\[\text{Max AGG:} \quad h_{\mathcal{N}(i)}^{(k)} = \max_{j \in \mathcal{N}(i)} \sigma\!\left(W h_j^{(k-1)}\right)\]</span></p>
+<p><span class="math display">\[\text{LSTM AGG:} \quad h_{\mathcal{N}(i)}^{(k)} = \text{LSTM}\!\left(\{h_j^{(k-1)} : j \in \pi(\mathcal{N}(i))\}\right)\]</span></p>
+<p>where <span class="math inline">\(\pi(\mathcal{N}(i))\)</span> is a random permutation of the neighborhood (the LSTM aggregator is not permutation-invariant by construction, which is a pragmatic compromise for expressiveness).</p>
+<p><strong>Inductive generalization.</strong> GraphSAGE is designed for inductive learning — applying a trained model to graphs not seen during training, including graphs with new nodes. Because the weight matrices <span class="math inline">\(W^{(k)}\)</span> are shared across all nodes and the aggregation is over local neighborhoods, the learned function generalizes to new graph structures without retraining.</p>
+<hr>
+</section>
+<section id="canonical-instantiation-iii-graph-attention-network-gat" class="level3">
+<h3 class="anchored" data-anchor-id="canonical-instantiation-iii-graph-attention-network-gat">Canonical Instantiation III: Graph Attention Network (GAT)</h3>
+<p><strong>Veličković et al.&nbsp;(2018).</strong> The GAT layer computes attention coefficients <span class="math inline">\(\alpha_{ji}\)</span> that weight each neighbor’s contribution:</p>
+<p><span class="math display">\[e_{ji} = \text{LeakyReLU}\!\left(a^\top \left[W h_i^{(k-1)} \,\|\, W h_j^{(k-1)}\right]\right)\]</span></p>
+<p><span class="math display">\[\alpha_{ji} = \text{softmax}_j(e_{ji}) = \frac{\exp(e_{ji})}{\sum_{l \in \mathcal{N}(i)} \exp(e_{li})}\]</span></p>
+<p><span class="math display">\[h_i^{(k)} = \sigma\!\left(\sum_{j \in \mathcal{N}(i)} \alpha_{ji} W h_j^{(k-1)}\right)\]</span></p>
+<p>where <span class="math inline">\(a \in \mathbb{R}^{2d_k}\)</span> is a learnable attention vector and <span class="math inline">\(W \in \mathbb{R}^{d_k \times d_{k-1}}\)</span> is a learnable weight matrix.</p>
+<p><strong>Multi-head attention.</strong> GAT uses <span class="math inline">\(P\)</span> independent attention heads and concatenates (or averages) the results:</p>
+<p><span class="math display">\[h_i^{(k)} = \|_{p=1}^{P} \sigma\!\left(\sum_{j \in \mathcal{N}(i)} \alpha_{ji}^{(p)} W^{(p)} h_j^{(k-1)}\right)\]</span></p>
+<p><strong>Permutation invariance of GAT.</strong> The softmax normalization ensures <span class="math inline">\(\sum_{j \in \mathcal{N}(i)} \alpha_{ji} = 1\)</span> for all <span class="math inline">\(i\)</span>. Since the attention coefficients <span class="math inline">\(\alpha_{ji}\)</span> depend only on the features <span class="math inline">\(h_i^{(k-1)}\)</span> and <span class="math inline">\(h_j^{(k-1)}\)</span> (not on the node indices), and the aggregation <span class="math inline">\(\sum_{j \in \mathcal{N}(i)} \alpha_{ji} W h_j^{(k-1)}\)</span> is a sum over the neighborhood (permutation-invariant), the GAT layer is <span class="math inline">\(S_n\)</span>-equivariant.</p>
+<hr>
+</section>
+<section id="the-graph-isomorphism-network-gin-maximum-expressive-power" class="level3">
+<h3 class="anchored" data-anchor-id="the-graph-isomorphism-network-gin-maximum-expressive-power">The Graph Isomorphism Network (GIN) — Maximum Expressive Power</h3>
+<p><strong>Xu, Hu, Leskovec, Jegelka (2019).</strong> The GIN layer is:</p>
+<p><span class="math display">\[h_i^{(k)} = \text{MLP}^{(k)}\!\left((1 + \epsilon^{(k)}) h_i^{(k-1)} + \sum_{j \in \mathcal{N}(i)} h_j^{(k-1)}\right)\]</span></p>
+<p>where <span class="math inline">\(\epsilon^{(k)} \in \mathbb{R}\)</span> is a learnable (or fixed) scalar and <span class="math inline">\(\text{MLP}^{(k)}\)</span> is a multilayer perceptron.</p>
+<p><strong>Why sum aggregation.</strong> The use of sum (not mean, not max) is essential. The key lemma is:</p>
+<p><strong>Lemma (Xu et al.&nbsp;2019).</strong> Let <span class="math inline">\(\mathcal{X}\)</span> be a countable feature space. A function <span class="math inline">\(f: 2^\mathcal{X} \to \mathbb{R}^d\)</span> over multisets is injective if and only if there exists a function <span class="math inline">\(\phi: \mathcal{X} \to \mathbb{R}^d\)</span> such that <span class="math inline">\(f(X) = \sum_{x \in X} \phi(x)\)</span>.</p>
+<p><strong>Proof sketch.</strong> (<span class="math inline">\(\Leftarrow\)</span>) If <span class="math inline">\(f(X) = \sum_{x\in X}\phi(x)\)</span> and <span class="math inline">\(\phi\)</span> is injective with a countable domain embeddable in <span class="math inline">\(\mathbb{R}^d\)</span>, then distinct multisets have distinct sums. (<span class="math inline">\(\Rightarrow\)</span>) Mean aggregation maps <span class="math inline">\(\{1,1\}\)</span> and <span class="math inline">\(\{1\}\)</span> (as multisets of scalars) to the same value <span class="math inline">\(1\)</span>, failing injectivity. Max aggregation maps <span class="math inline">\(\{1,2\}\)</span> and <span class="math inline">\(\{2\}\)</span> to the same value <span class="math inline">\(2\)</span>, failing injectivity. Sum preserves both multiplicity and values. <span class="math inline">\(\square\)</span></p>
+<p><strong>GIN is as powerful as the WL test.</strong> Any injective aggregation of the form <span class="math inline">\(\sum_{j \in \mathcal{N}(i) \cup \{i\}} \phi(h_j^{(k-1)})\)</span> with an MLP <span class="math inline">\(\phi\)</span> of sufficient width achieves the maximum expressive power of message-passing networks — exactly the power of the 1-dimensional Weisfeiler-Lehman isomorphism test. The proof of this upper bound is the content of Topic 3.</p>
+<hr>
+</section>
+<section id="graph-level-readout" class="level3">
+<h3 class="anchored" data-anchor-id="graph-level-readout">Graph-Level Readout</h3>
+<p><strong>Definition.</strong> A <strong>readout function</strong> maps the set of final node representations <span class="math inline">\(\{h_i^{(K)} : i \in V\}\)</span> to a graph-level representation <span class="math inline">\(h_G \in \mathbb{R}^{d_G}\)</span>:</p>
+<p><span class="math display">\[h_G = \text{READOUT}\!\left(\{h_i^{(K)} : i \in V\}\right)\]</span></p>
+<p><strong>Permutation invariance requirement.</strong> The readout must satisfy <span class="math inline">\(\text{READOUT}(\{h_{\sigma(i)}^{(K)}\}) = \text{READOUT}(\{h_i^{(K)}\})\)</span> for all <span class="math inline">\(\sigma \in S_n\)</span> — the graph-level representation must be independent of node ordering.</p>
+<p><strong>Standard readouts:</strong></p>
+<p><span class="math display">\[\text{Sum:} \quad h_G = \sum_{i \in V} h_i^{(K)}\]</span></p>
+<p><span class="math display">\[\text{Mean:} \quad h_G = \frac{1}{|V|} \sum_{i \in V} h_i^{(K)}\]</span></p>
+<p><span class="math display">\[\text{Max:} \quad h_G = \max_{i \in V} h_i^{(K)}\]</span></p>
+<p><strong>Hierarchical readout.</strong> More expressive readouts learn to pool nodes progressively, coarsening the graph at each pooling step. DiffPool (Ying et al.&nbsp;2018) learns a soft assignment matrix <span class="math inline">\(S^{(k)} \in \mathbb{R}^{n_k \times n_{k+1}}\)</span> that maps <span class="math inline">\(n_k\)</span> nodes to <span class="math inline">\(n_{k+1}\)</span> clusters:</p>
+<p><span class="math display">\[H^{(k+1)} = S^{(k)\top} H^{(k)}_{\text{emb}}, \quad A^{(k+1)} = S^{(k)\top} A^{(k)} S^{(k)}\]</span></p>
+<p>producing a coarsened graph at each level and a hierarchical graph representation.</p>
+<hr>
+</section>
+<section id="over-smoothing-the-depth-limitation" class="level3">
+<h3 class="anchored" data-anchor-id="over-smoothing-the-depth-limitation">Over-Smoothing: The Depth Limitation</h3>
+<p><strong>Phenomenon.</strong> As the number of layers <span class="math inline">\(K\)</span> increases, node representations converge to the same vector — they lose the ability to distinguish different nodes. This is the <strong>over-smoothing</strong> phenomenon.</p>
+<p><strong>Formal statement.</strong> Let <span class="math inline">\(\hat{A} = D^{-1/2}AD^{-1/2}\)</span> be the normalized adjacency of a connected non-bipartite graph. The eigenvalues of <span class="math inline">\(\hat{A}\)</span> satisfy <span class="math inline">\(-1 &lt; \lambda_n \leq \ldots \leq \lambda_2 &lt; \lambda_1 = 1\)</span>. Repeated application of <span class="math inline">\(\hat{A}\)</span> drives <span class="math inline">\(\hat{A}^K H^{(0)}\)</span> toward the dominant eigenvector <span class="math inline">\(\mathbf{1}\)</span> (up to degree normalization):</p>
+<p><span class="math display">\[\lim_{K\to\infty} \hat{A}^K H^{(0)} = \mathbf{d}\,\mathbf{d}^\top H^{(0)} / \|\mathbf{d}\|^2\]</span></p>
+<p>where <span class="math inline">\(\mathbf{d} = (d_1^{1/2}, \ldots, d_n^{1/2})^\top\)</span> is the degree-normalized stationary distribution vector. All node representations converge to the same direction — all local structural information is destroyed.</p>
+<p><strong>Consequence.</strong> GNNs in practice use <span class="math inline">\(K \in \{2, 3, 4\}\)</span> layers. Beyond that, over-smoothing dominates. Techniques to mitigate over-smoothing include: residual connections (<span class="math inline">\(h_i^{(k)} = h_i^{(k-1)} + \text{AGG}(\cdot)\)</span>), jumping knowledge connections (concatenate representations from all layers), and graph transformers that use global attention rather than local aggregation.</p>
+<hr>
+</section>
+<section id="the-complete-mpnn-in-matrix-form" class="level3">
+<h3 class="anchored" data-anchor-id="the-complete-mpnn-in-matrix-form">The Complete MPNN in Matrix Form</h3>
+<p>For GCN, the full <span class="math inline">\(K\)</span>-layer forward pass in matrix notation is:</p>
+<p><span class="math display">\[H^{(0)} = X \in \mathbb{R}^{n \times d_0}\]</span></p>
+<p><span class="math display">\[H^{(k)} = \sigma\!\left(\hat{\tilde{A}} H^{(k-1)} W^{(k)}\right), \quad k = 1, \ldots, K\]</span></p>
+<p><span class="math display">\[h_G = \frac{1}{n}\mathbf{1}^\top H^{(K)} \in \mathbb{R}^{d_K}\]</span></p>
+<p><span class="math display">\[\hat{y} = \text{softmax}(h_G W^{(K+1)})\]</span></p>
+<p>The entire computation is differentiable end-to-end. Gradients flow back through the readout, through all <span class="math inline">\(K\)</span> update layers, and through the normalized adjacency multiplication. Training minimizes the task loss (cross-entropy for classification, mean squared error for regression) via stochastic gradient descent or Adam.</p>
+<hr>
+</section>
+<section id="why-this-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-matters">WHY THIS MATTERS</h3>
+<p>In <strong>COMP 202 (Data Structures and Algorithms)</strong>, the adjacency list representation of a graph enables <span class="math inline">\(O(\deg(i))\)</span> traversal of the neighborhood <span class="math inline">\(\mathcal{N}(i)\)</span> — the same operation that the message passing aggregation <span class="math inline">\(\bigoplus_{j \in \mathcal{N}(i)}\)</span> performs. The total computational cost of one MPNN layer over all nodes is <span class="math inline">\(O(|E| \cdot d)\)</span> — linear in the number of edges, the same asymptotic cost as one pass of BFS over the graph. The sparse matrix-vector product <span class="math inline">\(\hat{A}H\)</span> exploits the sparsity of <span class="math inline">\(A\)</span> exactly as the adjacency list exploits sparsity in BFS — the graph’s sparsity is the computational savings that makes GNNs tractable on graphs with millions of nodes.</p>
+<p>In <strong>COMP 323 (Graph Theory)</strong>, the graph Laplacian <span class="math inline">\(L = D - A\)</span> and its spectral properties — the eigenvalue <span class="math inline">\(\lambda_1 = 0\)</span> with eigenvector <span class="math inline">\(\mathbf{1}\)</span> for a connected graph, the Fiedler value <span class="math inline">\(\lambda_2 &gt; 0\)</span> measuring connectivity — govern the over-smoothing behavior of deep GCNs. The convergence <span class="math inline">\(\hat{A}^K H \to \mathbf{d}\mathbf{d}^\top H / \|\mathbf{d}\|^2\)</span> is a direct consequence of the Perron-Frobenius theorem applied to the non-negative matrix <span class="math inline">\(\hat{A}\)</span> — the dominant eigenvalue is <span class="math inline">\(1\)</span> with eigenvector <span class="math inline">\(\mathbf{d}\)</span>, and all other eigenvalue contributions decay geometrically at rate <span class="math inline">\(|\lambda_2|^K\)</span>. The spectral gap <span class="math inline">\(1 - |\lambda_2|\)</span> from Graph Theory determines the over-smoothing rate: a small spectral gap means slow over-smoothing (information propagates slowly), a large spectral gap means fast over-smoothing (information propagates and homogenizes quickly).</p>
+<p>In <strong>MATH 208 (Statistics and Probability)</strong>, the softmax attention weights <span class="math inline">\(\alpha_{ji} = \exp(e_{ji})/\sum_l \exp(e_{li})\)</span> are a categorical probability distribution over the neighborhood <span class="math inline">\(\mathcal{N}(i)\)</span> — the GAT attention mechanism is a learned probability distribution over neighbors, with the message aggregation <span class="math inline">\(\sum_{j} \alpha_{ji} W h_j^{(k-1)}\)</span> being the expected neighbor feature under this distribution. The multi-head attention with <span class="math inline">\(P\)</span> heads computes <span class="math inline">\(P\)</span> independent such distributions and pools their expectations — a mixture model over neighborhood aggregation strategies. The LeakyReLU in the attention logit computation prevents the degenerate collapse of the softmax to a one-hot distribution (which would reduce GAT to a nearest-neighbor lookup), the same numerical stability concern as the log-sum-exp trick from the Sinkhorn algorithm in Phase 1.</p>
+<hr>
+</section>
+</section>
+<section id="layer-3-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="layer-3-bridge">Layer 3 (Bridge)</h2>
+<p>Every element of the Himalayan postal network story has a precise mathematical address. We walk through them completely — the village profiles, the postmaster’s three decisions, the round-by-round propagation, the break moment about aggregation, and the graph-level district assessment — until the story and the formalism are a single object seen from two angles.</p>
+<hr>
+<p><strong>The villages are the nodes <span class="math inline">\(V = \{1, \ldots, n\}\)</span>, and the postal routes connecting them are the edges <span class="math inline">\(E \subseteq V \times V\)</span>.</strong> The graph <span class="math inline">\(G = (V, E, X)\)</span> is the complete mathematical object corresponding to the postal network: the node set <span class="math inline">\(V\)</span> is the set of villages, the edge set <span class="math inline">\(E\)</span> encodes which villages have direct postal routes between them, and the feature matrix <span class="math inline">\(X \in \mathbb{R}^{n \times d}\)</span> has row <span class="math inline">\(x_i \in \mathbb{R}^d\)</span> being the raw profile of village <span class="math inline">\(i\)</span> — its population, altitude, food stock, and disease burden. The adjacency matrix <span class="math inline">\(A \in \{0,1\}^{n \times n}\)</span> with <span class="math inline">\(A_{ij} = 1\)</span> if <span class="math inline">\((j,i) \in E\)</span> is the matrix encoding of the postal route map: a one in position <span class="math inline">\((i,j)\)</span> means there is a direct route from village <span class="math inline">\(j\)</span> to village <span class="math inline">\(i\)</span>. The degree matrix <span class="math inline">\(D\)</span> with <span class="math inline">\(D_{ii} = \sum_j A_{ij}\)</span> records how many direct neighbors each village has — how many postal routes arrive at village <span class="math inline">\(i\)</span>. Namche Bazaar with two direct neighbors Phakding and Tengboche corresponds to <span class="math inline">\(D_{ii} = 2\)</span> for the node <span class="math inline">\(i\)</span> representing Namche Bazaar.</p>
+<p><strong>The neighborhood <span class="math inline">\(\mathcal{N}(i) = \{j \in V : (j,i) \in E\}\)</span> is the set of villages from which village <span class="math inline">\(i\)</span> directly receives letters — the villages reachable in one hop along the postal routes.</strong> Namche Bazaar’s neighborhood is <span class="math inline">\(\mathcal{N}(\text{Namche}) = \{\text{Phakding}, \text{Tengboche}\}\)</span>. Phakding’s neighborhood is <span class="math inline">\(\mathcal{N}(\text{Phakding}) = \{\text{Namche Bazaar}, \text{Lukla}\}\)</span>. The neighborhood definition is the graph-theoretic formalization of the geographic constraint that determined the postal network: only adjacent villages exchange direct letters. This is the structure that the message passing framework respects and exploits — the MPNN aggregates over <span class="math inline">\(\mathcal{N}(i)\)</span>, not over all <span class="math inline">\(n\)</span> nodes, precisely because the postal network is sparse and local.</p>
+<hr>
+<p><strong>The initialization <span class="math inline">\(h_i^{(0)} = x_i\)</span> — every village begins knowing only its own raw profile — is Layer 0 of the MPNN, before any message passing has occurred.</strong> The feature vector <span class="math inline">\(h_i^{(0)} \in \mathbb{R}^d\)</span> at layer zero is exactly the raw feature vector <span class="math inline">\(x_i\)</span> from the feature matrix <span class="math inline">\(X\)</span>. No information has yet traveled along any postal route. Each node’s representation encodes purely local, self-contained information. This is the mathematical statement of Round Zero in the story: the postal system has not yet been activated, and every village is informationally isolated.</p>
+<hr>
+<p><strong>The postmaster’s first decision — transforming the village’s raw profile into a message suitable for transmission — is the message function <span class="math inline">\(\phi^{(k)}: \mathbb{R}^{d_{k-1}} \times \mathbb{R}^{d_{k-1}} \times \mathbb{R}^{k_e} \to \mathbb{R}^{d_k}\)</span>.</strong> The message <span class="math inline">\(m_{ji}^{(k)} = \phi^{(k)}(h_i^{(k-1)}, h_j^{(k-1)}, e_{ji})\)</span> is the formal identity of the letter that village <span class="math inline">\(j\)</span> sends to village <span class="math inline">\(i\)</span> along edge <span class="math inline">\((j,i)\)</span> in round <span class="math inline">\(k\)</span>. The simplest postmaster — who sends their raw feature unchanged — corresponds to <span class="math inline">\(\phi^{(k)}(h_i, h_j, e_{ji}) = h_j\)</span>: the message is just the sender’s current feature. The wiser postmaster who applies a learned linear transformation corresponds to <span class="math inline">\(\phi^{(k)}(h_i, h_j, e_{ji}) = Wh_j\)</span> for a learnable weight matrix <span class="math inline">\(W \in \mathbb{R}^{d_k \times d_{k-1}}\)</span>: the weight matrix is the postmaster’s judgment about how to compress and normalize the village profile for transmission. The attention-aware postmaster — who sends a different message depending on who the recipient is — corresponds to the GAT message function <span class="math inline">\(\phi^{(k)}(h_i, h_j, e_{ji}) = \alpha_{ji} W h_j\)</span> where <span class="math inline">\(\alpha_{ji} = \text{softmax}_j(a^\top[Wh_i \| Wh_j])\)</span> is a learned attention coefficient that makes the message depend on both the sender <span class="math inline">\(j\)</span> and the receiver <span class="math inline">\(i\)</span>. The attention coefficient <span class="math inline">\(\alpha_{ji}\)</span> is mathematically a categorical probability distribution over the neighborhood <span class="math inline">\(\mathcal{N}(i)\)</span> — it is the learned answer to the question: how much should village <span class="math inline">\(i\)</span> weight the information arriving from village <span class="math inline">\(j\)</span>?</p>
+<hr>
+<p><strong>The postmaster’s second decision — combining all incoming letters into a single aggregate signal — is the aggregation operator <span class="math inline">\(\bigoplus_{j \in \mathcal{N}(i)} m_{ji}^{(k)}\)</span>, and the break moment about mean versus sum aggregation is the content of the injectivity lemma.</strong> The aggregated message <span class="math inline">\(\bar{m}_i^{(k)} = \bigoplus_{j \in \mathcal{N}(i)} m_{ji}^{(k)}\)</span> is the single vector that summarizes everything village <span class="math inline">\(i\)</span> has learned from its neighbors in round <span class="math inline">\(k\)</span>. The aggregation operator <span class="math inline">\(\bigoplus\)</span> must be permutation-invariant over the incoming messages — the order in which the letters arrive at village <span class="math inline">\(i\)</span>’s postal station must not affect the aggregate — because the neighbors <span class="math inline">\(\mathcal{N}(i)\)</span> have no canonical ordering, and <span class="math inline">\(S_n\)</span>-equivariance demands that the computation not depend on arbitrary index assignments.</p>
+<p>The break moment is now fully precise. The two villages in the story — Village A with two neighbors at food stock level 3, and Village B with four neighbors at food stock level 3 — correspond to two multisets: <span class="math inline">\(\{3, 3\}\)</span> and <span class="math inline">\(\{3, 3, 3, 3\}\)</span> in scalar feature space. Mean aggregation maps both to <span class="math inline">\(3\)</span> — it fails to distinguish them because it normalizes by neighborhood size <span class="math inline">\(|\mathcal{N}(i)|\)</span>, discarding the count information. Sum aggregation maps <span class="math inline">\(\{3,3\}\)</span> to <span class="math inline">\(6\)</span> and <span class="math inline">\(\{3,3,3,3\}\)</span> to <span class="math inline">\(12\)</span> — it distinguishes them because it preserves both the values and the multiplicities of the incoming messages. This is exactly the content of the injectivity lemma: a function <span class="math inline">\(f\)</span> on multisets is injective if and only if it can be written as <span class="math inline">\(f(X) = \sum_{x \in X}\phi(x)\)</span> for some function <span class="math inline">\(\phi\)</span>. Mean aggregation is not injective on multisets — it collapses multisets of different sizes to the same value when all elements are equal. Max aggregation is not injective — it collapses multisets with the same maximum to the same value regardless of the remaining elements. Sum aggregation with a universal function approximator <span class="math inline">\(\phi\)</span> (an MLP of sufficient width) is injective on multisets with a countable feature space — it is the unique maximally expressive aggregation. This is why GIN uses sum aggregation: it is the only aggregation that makes the overall message passing function injective on neighborhood multisets, and injectivity is the condition for distinguishing graphs that the WL test can distinguish.</p>
+<p>The normalized adjacency <span class="math inline">\(\hat{A} = D^{-1/2}AD^{-1/2}\)</span> of the GCN corresponds to a specific choice of <span class="math inline">\(\bigoplus\)</span> that combines mean aggregation with symmetric degree normalization: <span class="math inline">\(\hat{A}_{ij} = 1/\sqrt{\deg(i)\deg(j)}\)</span> scales each incoming message by the geometric mean of sender and receiver degrees. This is the degree-normalized mean aggregation — computationally convenient and spectrally well-behaved (its eigenvalues lie in <span class="math inline">\((-1, 1]\)</span>, preventing exploding activations), but less expressive than sum aggregation for the reason the lemma makes precise.</p>
+<hr>
+<p><strong>The postmaster’s third decision — updating the village’s own profile by combining the aggregated neighborhood signal with the existing self-profile — is the update function <span class="math inline">\(\psi^{(k)}: \mathbb{R}^{d_{k-1}} \times \mathbb{R}^{d_k} \to \mathbb{R}^{d_k}\)</span>.</strong> The new feature <span class="math inline">\(h_i^{(k)} = \psi^{(k)}(h_i^{(k-1)}, \bar{m}_i^{(k)})\)</span> is the updated profile of village <span class="math inline">\(i\)</span> after round <span class="math inline">\(k\)</span> of the postal system. In GCN, the update is <span class="math inline">\(h_i^{(k)} = \sigma(W^{(k)\top}(\hat{\tilde{A}}H^{(k-1)})_i)\)</span> — a linear transformation of the aggregated neighborhood signal (including self-loop) followed by a nonlinearity <span class="math inline">\(\sigma\)</span>. The self-loop <span class="math inline">\(\tilde{A} = A + I\)</span> is the mathematical encoding of the story’s requirement that the postmaster reads their own village’s report alongside the incoming letters: adding <span class="math inline">\(I\)</span> to <span class="math inline">\(A\)</span> ensures that node <span class="math inline">\(i\)</span> is included in its own neighborhood for the purpose of the aggregation, so the update <span class="math inline">\(h_i^{(k)}\)</span> depends on <span class="math inline">\(h_i^{(k-1)}\)</span> directly through the aggregation rather than only through the separate <span class="math inline">\(\psi\)</span> argument. In GraphSAGE, the update explicitly separates the self-feature and the neighborhood aggregate: <span class="math inline">\(h_i^{(k)} = \sigma(W^{(k)}[h_i^{(k-1)} \| h_{\mathcal{N}(i)}^{(k)}])\)</span>, where the concatenation <span class="math inline">\([\cdot \| \cdot]\)</span> keeps the postmaster’s own assessment and the neighborhood aggregate as distinct inputs to the update function, allowing the learned weight matrix to weigh them independently. In GIN, the update is <span class="math inline">\((1+\epsilon)h_i^{(k-1)} + \sum_{j \in \mathcal{N}(i)}h_j^{(k-1)}\)</span> passed through an MLP — the scalar <span class="math inline">\(\epsilon\)</span> controls how much weight the village gives to its own current feature relative to the sum of neighborhood features, with the MLP providing the nonlinear transformation needed to make the overall function injective on the combined self-plus-neighborhood multiset.</p>
+<hr>
+<p><strong>Round One of the postal system — every village sends a letter and receives letters, updating its profile to encode one-hop neighborhood information — is the first MPNN layer, <span class="math inline">\(k=1\)</span>.</strong> After one layer, <span class="math inline">\(h_i^{(1)}\)</span> encodes a function of <span class="math inline">\(\{h_j^{(0)} : j \in \mathcal{N}(i) \cup \{i\}\} = \{x_j : j \in \mathcal{N}(i) \cup \{i\}\}\)</span> — the raw features of the one-hop neighborhood. Namche Bazaar’s <span class="math inline">\(h_{\text{Namche}}^{(1)}\)</span> is a function of <span class="math inline">\(x_{\text{Namche}}\)</span>, <span class="math inline">\(x_{\text{Phakding}}\)</span>, and <span class="math inline">\(x_{\text{Tengboche}}\)</span>. It contains no information about Lukla yet. <strong>Round Two — the second round of letters, where Phakding’s message to Namche Bazaar carries implicit information about Lukla — is the second MPNN layer, <span class="math inline">\(k=2\)</span>.</strong> After two layers, <span class="math inline">\(h_i^{(2)}\)</span> encodes a function of all raw features within the two-hop neighborhood: <span class="math inline">\(\{x_j : j \in \mathcal{N}^2(i)\}\)</span> where <span class="math inline">\(\mathcal{N}^2(i) = \{j : \text{dist}(i,j) \leq 2\}\)</span>. The ripple metaphor is exact: each MPNN layer expands the informational horizon of every node by exactly one hop, and <span class="math inline">\(K\)</span> layers give every node a representation encoding its entire <span class="math inline">\(K\)</span>-hop neighborhood structure. The matrix form <span class="math inline">\(H^{(k)} = \sigma(\hat{\tilde{A}}H^{(k-1)}W^{(k)})\)</span> makes this propagation explicit: multiplying by <span class="math inline">\(\hat{\tilde{A}}\)</span> is the aggregation step (one step of neighborhood diffusion on the graph), and multiplying by <span class="math inline">\(W^{(k)}\)</span> followed by <span class="math inline">\(\sigma\)</span> is the update step (learned linear transformation plus nonlinearity).</p>
+<hr>
+<p><strong>The over-smoothing phenomenon — village profiles converging to the same vector after too many rounds of letter exchange — is the convergence <span class="math inline">\(\hat{A}^K H \to \mathbf{d}\mathbf{d}^\top H / \|\mathbf{d}\|^2\)</span> as <span class="math inline">\(K \to \infty\)</span>, governed by the spectral gap of <span class="math inline">\(\hat{A}\)</span>.</strong> After sufficiently many rounds of message passing, every village’s profile encodes information from the entire network — but it encodes it so thoroughly that all village-specific local information is washed out, and every village receives the same global average signal scaled by its degree. This is the Perron-Frobenius theorem in action: the dominant eigenvalue of <span class="math inline">\(\hat{A}\)</span> is <span class="math inline">\(\lambda_1 = 1\)</span> with eigenvector <span class="math inline">\(\mathbf{d} = (d_1^{1/2}, \ldots, d_n^{1/2})^\top\)</span>, and all other eigenvalue contributions decay geometrically at rate <span class="math inline">\(|\lambda_2|^K\)</span>. The spectral gap <span class="math inline">\(1 - |\lambda_2|\)</span> — the Fiedler-adjacent quantity from your COMP 323 Graph Theory course — determines how quickly the postal network homogenizes: a well-connected network (large spectral gap) homogenizes fast, destroying local information quickly; a poorly connected network (small spectral gap, near-disconnected) homogenizes slowly, preserving local information longer. This is why GNNs use <span class="math inline">\(K \in \{2,3,4\}\)</span> layers in practice — deep enough to collect multi-hop neighborhood information, shallow enough to avoid over-smoothing. The residual connection <span class="math inline">\(h_i^{(k)} = h_i^{(k-1)} + \text{AGG}(\cdot)\)</span> is the mathematical fix: it adds a skip connection that preserves the village’s own profile across rounds, preventing the full convergence to the global mean.</p>
+<hr>
+<p><strong>The district-level crisis assessment — a single prediction for the entire postal network rather than a per-village prediction — is the graph-level readout <span class="math inline">\(h_G = \text{READOUT}(\{h_i^{(K)} : i \in V\})\)</span>, which must be <span class="math inline">\(S_n\)</span>-invariant.</strong> The sum readout <span class="math inline">\(h_G = \sum_{i \in V} h_i^{(K)}\)</span> is the canonical invariant operation: summing over an unordered set gives the same result regardless of the order of summation, which is <span class="math inline">\(S_n\)</span>-invariance by definition. The mean readout <span class="math inline">\(h_G = \frac{1}{|V|}\sum_{i \in V} h_i^{(K)}\)</span> is similarly invariant. Both correspond to the story’s instruction that the district-level assessment must not depend on which engineer numbered the villages first. The final prediction <span class="math inline">\(\hat{y} = f(h_G)\)</span> — applying a learned function to the graph-level representation — is the Government’s crisis probability score for the district. For node-level predictions (per-village risk assessment rather than district-level), the readout is omitted and <span class="math inline">\(\hat{y}_i = f(h_i^{(K)})\)</span> directly, which is <span class="math inline">\(S_n\)</span>-equivariant: relabeling the nodes permutes the per-node predictions in the same way, exactly as relabeling the villages permutes the per-village assessments.</p>
+<hr>
+<p><strong>The <span class="math inline">\(S_n\)</span>-equivariance theorem — the MPNN satisfies <span class="math inline">\(\text{MPNN}(P_\sigma H, P_\sigma A P_\sigma^\top) = P_\sigma \, \text{MPNN}(H, A)\)</span> — is the mathematical statement that the postal system produces consistent results regardless of which engineer numbered the villages.</strong> Engineer A’s adjacency matrix <span class="math inline">\(A\)</span> and Engineer B’s adjacency matrix <span class="math inline">\(P_\sigma A P_\sigma^\top\)</span> represent the same physical network under different numberings. The MPNN applied to Engineer B’s representation produces node features that are exactly the permuted version of the node features produced from Engineer A’s representation. The proof rests on two facts: the message function <span class="math inline">\(\phi^{(k)}\)</span> depends on node features but not on node indices (so permuting indices permutes messages in the same way), and the aggregation <span class="math inline">\(\bigoplus_{j \in \mathcal{N}(i)}\)</span> is permutation-invariant over the neighborhood (so the order in which messages arrive at the postal station does not matter). These two facts together ensure that every layer of the MPNN commutes with the permutation action of <span class="math inline">\(S_n\)</span> on node features — the architectural embodiment of the Erlangen Program’s demand that architecture follow symmetry.</p>
+<hr>
+<p><strong>The limitation identified at the end of the story — two villages with identical <span class="math inline">\(K\)</span>-hop neighborhood structures receiving identical feature vectors despite being globally different — is the connection to the Weisfeiler-Lehman test that Topic 3 will formalize.</strong> Two nodes <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span> with isomorphic <span class="math inline">\(K\)</span>-hop neighborhoods satisfy <span class="math inline">\(h_i^{(K)} = h_j^{(K)}\)</span> for any MPNN, regardless of the choice of <span class="math inline">\(\phi^{(k)}\)</span>, <span class="math inline">\(\bigoplus\)</span>, and <span class="math inline">\(\psi^{(k)}\)</span>. This is not a bug — it is a structural consequence of the locality of message passing. The WL test is precisely the algorithm that characterizes which pairs of graphs (or nodes) have isomorphic neighborhood structures at every scale, and the GIN is precisely the MPNN that matches the WL test’s discriminating power. The boundary between what message passing can and cannot distinguish is the boundary between what the WL test can and cannot distinguish — and that boundary is Topic 3.</p>
+<hr>
+<p><strong>The connection to COMP 202 is now fully explicit.</strong> The adjacency list representation of the graph in COMP 202 — storing <span class="math inline">\(\mathcal{N}(i)\)</span> as a list for each node <span class="math inline">\(i\)</span> — is the data structure that implements the aggregation <span class="math inline">\(\bigoplus_{j \in \mathcal{N}(i)} m_{ji}^{(k)}\)</span> in <span class="math inline">\(O(\deg(i))\)</span> time per node per layer, giving total cost <span class="math inline">\(O(|E| \cdot d)\)</span> per layer — linear in edges, the same as BFS. The message passing computation is differentiable BFS: the neighborhood expansion is identical, but instead of a visited boolean, each node accumulates a differentiable feature vector. <strong>The connection to COMP 323 is equally explicit.</strong> The Laplacian <span class="math inline">\(L = D - A\)</span> from Graph Theory governs over-smoothing through the eigenvalue gap of <span class="math inline">\(\hat{A} = D^{-1/2}AD^{-1/2} = I - D^{-1/2}LD^{-1/2}\)</span>: the eigenvalues of <span class="math inline">\(\hat{A}\)</span> are <span class="math inline">\(1 - \tilde{\lambda}_i\)</span> where <span class="math inline">\(\tilde{\lambda}_i\)</span> are the eigenvalues of the normalized Laplacian <span class="math inline">\(\tilde{L} = D^{-1/2}LD^{-1/2}\)</span>. The spectral gap of the graph — the Fiedler value <span class="math inline">\(\tilde{\lambda}_2\)</span> — is the rate at which the postal network homogenizes under repeated message passing. <strong>The connection to MATH 208 is the GAT attention weight.</strong> The softmax attention coefficients <span class="math inline">\(\alpha_{ji} = \exp(e_{ji})/\sum_l \exp(e_{li})\)</span> are a learned categorical probability distribution over <span class="math inline">\(\mathcal{N}(i)\)</span>, and the GAT aggregation <span class="math inline">\(\sum_j \alpha_{ji} Wh_j\)</span> is the expected transformed neighbor feature under this distribution — a conditional expectation in the sense of MATH 208, where the conditioning is on the receiver node’s identity.</p>
+<hr>
+<p>The Himalayan postal network — its villages, routes, postmasters, letters, and district assessment — is now completely dissolved into its mathematical form. The village profiles are <span class="math inline">\(x_i \in \mathbb{R}^d\)</span>. The postal routes are <span class="math inline">\(E\)</span>. The postmaster’s letter is <span class="math inline">\(m_{ji}^{(k)} = \phi^{(k)}(h_i^{(k-1)}, h_j^{(k-1)}, e_{ji})\)</span>. The aggregated mailbag is <span class="math inline">\(\bar{m}_i^{(k)} = \bigoplus_{j \in \mathcal{N}(i)} m_{ji}^{(k)}\)</span>. The updated profile is <span class="math inline">\(h_i^{(k)} = \psi^{(k)}(h_i^{(k-1)}, \bar{m}_i^{(k)})\)</span>. The district assessment is <span class="math inline">\(h_G = \sum_i h_i^{(K)}\)</span>. The consistency across different engineers’ numberings is <span class="math inline">\(S_n\)</span>-equivariance. The limitation that identical local neighborhoods produce identical features is the WL ceiling.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

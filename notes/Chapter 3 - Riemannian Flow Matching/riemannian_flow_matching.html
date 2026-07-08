@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>riemannian_flow_matching – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#chapter-3---riemannian-flow-matching" id="toc-chapter-3---riemannian-flow-matching" class="nav-link active" data-scroll-target="#chapter-3---riemannian-flow-matching">Chapter 3 - Riemannian Flow Matching</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#layer-1-story" id="toc-layer-1-story" class="nav-link" data-scroll-target="#layer-1-story">Layer 1 (Story)</a></li>
+  <li><a href="#layer-2-mathematics" id="toc-layer-2-mathematics" class="nav-link" data-scroll-target="#layer-2-mathematics">Layer 2 (Mathematics)</a></li>
+  <li><a href="#layer-3-bridge" id="toc-layer-3-bridge" class="nav-link" data-scroll-target="#layer-3-bridge">Layer 3 (Bridge)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<section id="chapter-3---riemannian-flow-matching" class="level1">
+<h1>Chapter 3 - Riemannian Flow Matching</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>Chapter 2 built the complete algorithmic toolkit of continuous generative modeling on Euclidean space. Neural ODEs established the continuous-depth normalizing flow framework, trained by the adjoint method and evaluated by the instantaneous change of variables formula. Score matching learned the score function of the forward OU process, enabling reverse-time SDE and probability flow ODE sampling. Rectified flows learned velocity fields by regression on straight-line interpolations, with the reflow procedure converging to the optimal transport plan between noise and data. All three frameworks operated in the same ambient space: <span class="math inline">\(\mathbb{R}^d\)</span>, flat, with the standard Euclidean metric, Gaussian base distributions, and straight-line interpolations as the natural paths.</p>
+<p>The real world does not produce data in <span class="math inline">\(\mathbb{R}^d\)</span>.</p>
+<p>A protein backbone is a sequence of amino acids whose physical configuration is determined by the dihedral angles <span class="math inline">\(\phi\)</span> and <span class="math inline">\(\psi\)</span> at each peptide bond, each taking values in <span class="math inline">\([0, 2\pi)\)</span>. The configuration space is the flat torus <span class="math inline">\(\mathbb{T}^{2n}\)</span> — a product of <span class="math inline">\(2n\)</span> circles — not <span class="math inline">\(\mathbb{R}^{2n}\)</span>. The flat torus has periodic boundary conditions: an angle of <span class="math inline">\(0\)</span> and an angle of <span class="math inline">\(2\pi\)</span> are the same configuration, and the shortest path between angles near <span class="math inline">\(0\)</span> and near <span class="math inline">\(2\pi\)</span> wraps around the circle rather than traveling through the interior. A Gaussian distribution on <span class="math inline">\(\mathbb{R}^{2n}\)</span> placed on this space would assign probability to configurations that violate the periodicity — it would treat angles of <span class="math inline">\(0.1\)</span> and <span class="math inline">\(6.1\)</span> as distant when they are in fact nearly identical. Straight-line interpolation from noise to data would cross the periodic boundary unnaturally.</p>
+<p>A molecular orientation is an element of the rotation group <span class="math inline">\(SO(3)\)</span> — a curved three-dimensional manifold whose geometry is that of the real projective space <span class="math inline">\(\mathbb{RP}^3\)</span>. The geodesic between two orientations is not a straight line in any flat space: it is the shortest rotation connecting them, parameterized by the axis and angle of that rotation. A Gaussian distribution on <span class="math inline">\(\mathbb{R}^3\)</span> projected onto <span class="math inline">\(SO(3)\)</span> would not produce a uniform distribution of orientations — it would concentrate near certain canonical orientations depending on the projection convention. Flow matching with Euclidean straight-line interpolations would produce trajectories that leave <span class="math inline">\(SO(3)\)</span>, requiring projection back onto the manifold at each step and introducing errors that compound over the integration.</p>
+<p>A molecular conformation lives on a product space of <span class="math inline">\(SO(3)\)</span> (overall orientation), <span class="math inline">\(\mathbb{R}^3\)</span> (position), and <span class="math inline">\(\mathbb{T}^{2n}\)</span> (backbone dihedral angles) — a curved, mixed manifold that is neither flat nor homogeneous. Weather on the Earth’s surface is a field of physical quantities defined on <span class="math inline">\(S^2\)</span> — the two-sphere — with its own Riemannian geometry. The set of valid covariance matrices forms the cone of positive definite symmetric matrices — a curved manifold with a specific Riemannian structure known as the Bures-Wasserstein geometry. In each of these settings, the Euclidean flow matching framework of Chapter 2 fails not because it is computationally insufficient but because it is geometrically dishonest: it ignores the manifold structure of the data space, producing flows that stray off the manifold, use incorrect notions of distance and interpolation, and cannot respect the symmetries that define the data domain.</p>
+<p>Riemannian Flow Matching is the extension of flow matching to arbitrary Riemannian manifolds. It replaces Euclidean straight lines with geodesics, Gaussian distributions with heat kernel distributions defined through the Laplace-Beltrami operator, and Euclidean score functions with Riemannian score functions involving the Riemannian gradient. The result is a generative modeling framework that is geometrically faithful: it operates entirely on the manifold, respects the manifold’s metric structure, and produces probability flows that never leave the data domain.</p>
+<p>Chapter 3 is the synthesis point of the entire roadmap. Every mathematical thread developed across all four phases converges here simultaneously.</p>
+<p>From Phase 0: the Riemannian metric <span class="math inline">\(g\)</span>, the exponential map <span class="math inline">\(\exp_x\)</span>, the logarithmic map <span class="math inline">\(\log_x\)</span>, geodesics, and the parallel transport equation are the geometric primitives that Riemannian flow matching builds on. Every computation — interpolation, distance, noise injection, velocity field evaluation — uses these objects.</p>
+<p>From Phase 1: the Wasserstein geometry of probability distributions on manifolds generalizes the flat-space Wasserstein distance using the geodesic distance <span class="math inline">\(d_\mathcal{M}\)</span> in place of the Euclidean distance. The optimal transport plan on a manifold is the coupling that minimizes <span class="math inline">\(\mathbb{E}[d_\mathcal{M}(X_0,X_1)^2]\)</span> — the squared geodesic distance — and the corresponding Brenier map is the gradient of a <span class="math inline">\(c\)</span>-convex function with respect to the Riemannian metric.</p>
+<p>From Phase 2: the Laplace-Beltrami operator <span class="math inline">\(\Delta_\mathcal{M}\)</span>, its eigenfunctions (manifold harmonics), and the heat kernel <span class="math inline">\(k_t(x,y) = e^{t\Delta_\mathcal{M}}(x,y)\)</span> are the tools that define the forward process and the base distribution on the manifold. The spectral theory of <span class="math inline">\(\Delta_\mathcal{M}\)</span> from Chapter 3 of Phase 2 — Laplacian eigenmaps, geodesic convolution, DiffusionNet — is the mathematical machinery that makes the heat kernel computable and the Riemannian score function approximable from data.</p>
+<p>From Phase 3’s Chapters 1 and 2: the JKO scheme, the Fokker-Planck equation, the score function, and the conditional flow matching framework all generalize to Riemannian manifolds. The Fokker-Planck equation on a manifold uses the Laplace-Beltrami operator <span class="math inline">\(\Delta_\mathcal{M}\)</span> in place of the Euclidean Laplacian <span class="math inline">\(\Delta\)</span>. The score function on a manifold is the Riemannian gradient <span class="math inline">\(\text{grad}_\mathcal{M}\log\rho_t\)</span> — the gradient with respect to the Riemannian metric <span class="math inline">\(g\)</span>. The conditional flow matching objective uses geodesic interpolation <span class="math inline">\(\gamma_t(x_0,x_1)\)</span> in place of linear interpolation <span class="math inline">\((1-t)x_0+tx_1\)</span>.</p>
+<p>Chapter 3 develops Riemannian flow matching across two topics corresponding to the two aspects of the roadmap’s final bullet point.</p>
+<p>The first topic is <strong>Generating Data on Manifolds: the Geometric Forward Process</strong>. Before you can run flow matching on a manifold, you need a forward process — a way to take a data point <span class="math inline">\(x_1\in\mathcal{M}\)</span> and produce a noisy version <span class="math inline">\(x_t\in\mathcal{M}\)</span> at noise level <span class="math inline">\(t\)</span>. On <span class="math inline">\(\mathbb{R}^d\)</span>, the forward process is the OU SDE, which adds Gaussian noise isotropically in all directions. On a Riemannian manifold <span class="math inline">\(\mathcal{M}\)</span>, the natural analogue is Brownian motion on the manifold — the stochastic process whose infinitesimal generator is the Laplace-Beltrami operator <span class="math inline">\(\Delta_\mathcal{M}\)</span>. The distribution of Brownian motion on <span class="math inline">\(\mathcal{M}\)</span> started at <span class="math inline">\(x_1\)</span> after time <span class="math inline">\(t\)</span> is the heat kernel <span class="math inline">\(k_t(x|x_1)\)</span> — the fundamental solution of the heat equation <span class="math inline">\(\partial_t k_t = \Delta_\mathcal{M}k_t\)</span> on the manifold. The heat kernel is the manifold analogue of the Gaussian transition density of the OU process: it defines the correct isotropic noise distribution on the manifold, concentrated near <span class="math inline">\(x_1\)</span> for small <span class="math inline">\(t\)</span> and spreading across the manifold as <span class="math inline">\(t\)</span> increases. For compact manifolds without boundary — spheres, tori, rotation groups — the heat kernel converges to the uniform distribution as <span class="math inline">\(t\to\infty\)</span>, making the uniform distribution the natural base distribution for Riemannian flow matching, playing the role that <span class="math inline">\(\mathcal{N}(0,I)\)</span> plays in Euclidean flow matching.</p>
+<p>The second topic is <strong>Flow Matching on Manifolds: Geodesic Interpolation and Riemannian Score Functions</strong>. With the forward process defined through the heat kernel, the flow matching framework generalizes to manifolds by replacing every Euclidean operation with its Riemannian analogue. The linear interpolation <span class="math inline">\((1-t)x_0+tx_1\)</span> becomes the geodesic interpolation <span class="math inline">\(\gamma_t(x_0,x_1) = \exp_{x_0}(t\log_{x_0}(x_1))\)</span> — the point at fraction <span class="math inline">\(t\)</span> along the geodesic from <span class="math inline">\(x_0\)</span> to <span class="math inline">\(x_1\)</span>. The constant velocity <span class="math inline">\(x_1-x_0\)</span> becomes the initial geodesic velocity <span class="math inline">\(\log_{x_0}(x_1)\in T_{x_0}\mathcal{M}\)</span> — the tangent vector pointing from <span class="math inline">\(x_0\)</span> toward <span class="math inline">\(x_1\)</span> whose magnitude equals the geodesic distance. The score function <span class="math inline">\(\nabla\log\rho_t\)</span> becomes the Riemannian gradient <span class="math inline">\(\text{grad}_\mathcal{M}\log\rho_t\)</span> — computed using the inverse metric tensor <span class="math inline">\(g^{-1}\)</span>. The ODE <span class="math inline">\(\dot x_t = f_\theta(x_t,t)\)</span> becomes the manifold ODE <span class="math inline">\(\dot x_t = f_\theta(x_t,t)\in T_{x_t}\mathcal{M}\)</span> — a vector field on the manifold whose solutions are curves on <span class="math inline">\(\mathcal{M}\)</span>. The probability flow ODE produces curves that stay on the manifold by construction, requiring no projection step, no constraint enforcement, and no geometric dishonesty.</p>
+<p>The applications that Riemannian flow matching enables are exactly the open problems identified in the Phase 4 research section of the roadmap.</p>
+<p>Protein backbone generation: the dihedral angle space <span class="math inline">\(\mathbb{T}^{2n}\)</span> is a flat torus, and Riemannian flow matching on the torus with geodesic interpolation (wrapping around the periodic boundary) produces geometrically valid protein backbone configurations that respect the Ramachandran plot constraints without post-processing.</p>
+<p>Molecular orientation generation: <span class="math inline">\(SO(3)\)</span> flow matching generates orientations by flowing on the rotation group’s curved geometry, using the bi-invariant metric of <span class="math inline">\(SO(3)\)</span> and the Haar measure as the base distribution. FrameDiff, FoldFlow, and SE(3) flow matching — the state-of-the-art protein structure generation models — are all special cases of Riemannian flow matching on <span class="math inline">\(SE(3) = SO(3)\ltimes\mathbb{R}^3\)</span>.</p>
+<p>Drug molecule graph generation: generating valid molecular graphs requires flow matching on the space of graphs with the symmetry group <span class="math inline">\(S_n\)</span> (from Phase 2’s Chapter 2) combined with <span class="math inline">\(SE(3)\)</span> geometry for the three-dimensional coordinates — a product manifold combining discrete graph topology with continuous Riemannian geometry.</p>
+<p>The connections to your curriculum reach their maximum integration in Chapter 3, because Riemannian flow matching genuinely requires every mathematical tool from every phase simultaneously.</p>
+<p>Your MATH 217 course on ODEs and PDEs: the heat equation <span class="math inline">\(\partial_t k_t = \Delta_\mathcal{M}k_t\)</span> on the manifold is the PDE that defines the forward process, solved by the heat kernel <span class="math inline">\(k_t(x|x_1)\)</span> whose short-time asymptotics involve the geodesic distance <span class="math inline">\(d_\mathcal{M}(x,x_1)^2/(4t)\)</span> in the exponent — the Varadhan formula. The geodesic ODE <span class="math inline">\(\ddot\gamma^k + \Gamma^k_{ij}\dot\gamma^i\dot\gamma^j = 0\)</span> defines the interpolation paths. The manifold Fokker-Planck equation <span class="math inline">\(\partial_t\rho_t = \Delta_\mathcal{M}\rho_t - \nabla_\mathcal{M}\cdot(\rho_t v_t)\)</span> governs the probability flow.</p>
+<p>Your MATH 325 course on Analysis II: the <span class="math inline">\(L^2(\mathcal{M},\text{vol}_g)\)</span> Hilbert space, the completeness of the Laplace-Beltrami eigenfunctions, and the spectral expansion <span class="math inline">\(k_t(x,y) = \sum_k e^{-\lambda_k t}\phi_k(x)\phi_k(y)\)</span> of the heat kernel in terms of the manifold harmonics from Phase 2’s Chapter 3 are the functional analytic foundations of the Riemannian forward process.</p>
+<p>Your MATH 302 course on Matrix Theory: the metric tensor <span class="math inline">\(g_{ij}\)</span> as a positive definite symmetric matrix at each point, the inverse metric <span class="math inline">\(g^{ij}\)</span> used in the Riemannian gradient <span class="math inline">\(\text{grad}_\mathcal{M}f = g^{-1}\nabla f\)</span>, and the Christoffel symbols <span class="math inline">\(\Gamma^k_{ij} = \frac{1}{2}g^{kl}(\partial_i g_{jl}+\partial_j g_{il}-\partial_l g_{ij})\)</span> as the matrix-valued connection coefficients are all from MATH 302.</p>
+<p>By the end of Chapter 3, the full synthesis will be complete. The Wasserstein geometry of Phase 1 will have become the Riemannian Wasserstein geometry of distribution spaces over curved manifolds. The equivariant architectures of Phase 2 will have become the velocity fields that parameterize the Riemannian probability flows. The score matching and flow matching algorithms of Phase 3’s Chapter 2 will have become their Riemannian analogues, operating on manifolds through the exponential and logarithmic maps. And the heat kernel — the object that connects the Laplace-Beltrami spectral theory of Phase 2’s Chapter 3 to the Fokker-Planck dynamics of Phase 3’s Chapter 1 — will have become the natural forward process that defines the noise distribution on every manifold. The car is not merely driving. It is navigating curved terrain.</p>
+<hr>
+</section>
+<section id="layer-1-story" class="level2">
+<h2 class="anchored" data-anchor-id="layer-1-story">Layer 1 (Story)</h2>
+<p>It is 2024. The Pashupatinath Temple Trust in Kathmandu has commissioned a computational study of Nepal’s ancient pilgrimage network — the system of sacred routes connecting the major Hindu and Buddhist pilgrimage sites across the Himalayan landscape. The network includes routes from the Terai plains up to the high Himalayan shrines: from Janakpur to the Muktinath temple in Mustang, from Lumbini to the Swayambhunath stupa in Kathmandu, from Kathmandu to the Gosaikunda lakes in the Langtang range, and from the lowland temples up to the high Himalayan sacred peaks.</p>
+<p>Your computational team has been asked to build a generative model of pilgrimage route orientations — specifically, the orientations of pilgrims as they navigate the mountain terrain. At each moment of the journey, a pilgrim’s orientation is a full three-dimensional rotation: which direction they face, which way is up for them relative to the terrain slope, and which direction they are inclined to move next. This orientation is an element of the rotation group <span class="math inline">\(SO(3)\)</span> — a curved three-dimensional manifold. You need to generate realistic synthetic pilgrim orientations from historical GPS and inertial measurement data, for use in terrain navigation algorithms and emergency response planning.</p>
+<p>The previous team tried to generate pilgrim orientations using a standard diffusion model operating in <span class="math inline">\(\mathbb{R}^3\)</span> — treating the three Euler angles as flat coordinates and running the OU forward process in this Euclidean space. The results were geometrically wrong in a specific, consequential way. Orientations near the boundary of the Euler angle parameterization — orientations where the pitch angle approaches <span class="math inline">\(\pm 90\)</span> degrees — produced artifacts. The diffusion model would sometimes generate orientations that are invalid rotations: rotation matrices with determinant <span class="math inline">\(-1\)</span> instead of <span class="math inline">\(+1\)</span>, or orthogonal matrices with the wrong handedness. These invalid orientations, when fed into the navigation algorithm, caused it to recommend that pilgrims walk through cliff faces and across vertical rock walls. The flat Euclidean model had generated geometrically impossible motion instructions because it operated in the wrong space.</p>
+<p>Your team’s task is to build a generative model that operates directly on <span class="math inline">\(SO(3)\)</span> — generating valid rotation matrices at every step of the flow, never leaving the manifold, never producing geometrically invalid orientations.</p>
+<hr>
+<p><strong>The problem with Euler angles: why flat coordinates on curved spaces lie.</strong></p>
+<p>Your team’s differential geometer, Pratima, explains the problem at the first team meeting. The rotation group <span class="math inline">\(SO(3)\)</span> is a curved three-dimensional manifold — it cannot be faithfully represented by any flat coordinate system without introducing distortions or singularities. Euler angles are one such flat representation: they parameterize each rotation by three angles <span class="math inline">\((\alpha, \beta, \gamma)\)</span> taking values in a rectangular box. This seems natural — three numbers for a three-dimensional space — but the Euler angle parameterization has a fatal flaw called gimbal lock: when the pitch angle <span class="math inline">\(\beta\)</span> approaches <span class="math inline">\(\pm 90\)</span> degrees, the other two angles <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\gamma\)</span> become degenerate, corresponding to the same physical rotation. The coordinate system develops a singularity — a coordinate chart that collapses at certain orientations, just as the Mercator projection develops a singularity at the poles.</p>
+<p>Running the OU diffusion process in Euler angle coordinates treats the rotation group as if it were a flat rectangular box. The noise added in Euler angle space does not correspond to isotropic noise on the actual curved manifold — it is distorted by the coordinate singularities. Orientations near the singularity accumulate errors and the generated samples stray outside the valid range of <span class="math inline">\(SO(3)\)</span>. The previous team’s cliff-face navigation errors were not a software bug — they were the inevitable consequence of applying a flat-space algorithm to a curved manifold.</p>
+<p>The correct approach is to work intrinsically on <span class="math inline">\(SO(3)\)</span> — to define the forward process, the interpolation, and the velocity field using only the manifold’s own geometric structure, without any reference to a flat coordinate system. This is Riemannian flow matching on <span class="math inline">\(SO(3)\)</span>.</p>
+<hr>
+<p><strong>The Riemannian metric on <span class="math inline">\(SO(3)\)</span>: measuring distances between orientations.</strong></p>
+<p>Pratima draws the key picture. The rotation group <span class="math inline">\(SO(3)\)</span> has a natural notion of distance between two orientations <span class="math inline">\(R_1\)</span> and <span class="math inline">\(R_2\)</span>: the angle <span class="math inline">\(\theta\)</span> of the rotation <span class="math inline">\(R_1^{-1}R_2\)</span> that rotates one orientation into the other. If <span class="math inline">\(R_1^{-1}R_2 = \exp(\hat\omega)\)</span> for a skew-symmetric matrix <span class="math inline">\(\hat\omega\)</span> with <span class="math inline">\(\|\hat\omega\| = \theta\)</span>, then the geodesic distance is <span class="math inline">\(d_{SO(3)}(R_1,R_2) = \theta\)</span> — the minimal rotation angle needed to bring <span class="math inline">\(R_1\)</span> into alignment with <span class="math inline">\(R_2\)</span>.</p>
+<p>This distance is intrinsic — it depends only on the group structure of <span class="math inline">\(SO(3)\)</span>, not on any embedding in a larger flat space. Two orientations that differ by a small rotation are close; two orientations that differ by a large rotation are far. The distance is invariant under the group’s left and right actions: rotating both orientations by the same global rotation does not change their relative distance.</p>
+<p>The Riemannian metric <span class="math inline">\(g\)</span> on <span class="math inline">\(SO(3)\)</span> — the inner product on the tangent space at each point — is the bi-invariant metric derived from this distance. At the identity <span class="math inline">\(I_{3\times 3}\)</span>, the tangent space is <span class="math inline">\(\mathfrak{so}(3)\)</span> — the space of skew-symmetric matrices — and the metric is <span class="math inline">\(g_I(\Omega_1,\Omega_2) = \frac{1}{2}\text{tr}(\Omega_1^\top\Omega_2)\)</span>. At any other rotation <span class="math inline">\(R\)</span>, the metric is defined by left-translating: <span class="math inline">\(g_R(X,Y) = g_I(R^{-1}X,R^{-1}Y)\)</span> for tangent vectors <span class="math inline">\(X,Y\in T_R SO(3)\)</span>. The factor <span class="math inline">\(1/2\)</span> is conventional and ensures that the geodesic distance formula comes out cleanly.</p>
+<hr>
+<p><strong>The exponential and logarithmic maps: moving on <span class="math inline">\(SO(3)\)</span>.</strong></p>
+<p>Your navigation algorithm engineer, Bikash, needs to implement the geodesic interpolation for the flow matching training procedure. Pratima explains the two key maps.</p>
+<p>The exponential map <span class="math inline">\(\exp_R: T_R SO(3)\to SO(3)\)</span> takes a tangent vector at <span class="math inline">\(R\)</span> — an infinitesimal rotation direction — and follows the geodesic in that direction for unit time, producing a new rotation. At the identity: <span class="math inline">\(\exp_I(\hat\omega) = I + \sin\theta\hat n_\times + (1-\cos\theta)\hat n_\times^2\)</span> — the Rodrigues rotation formula, where <span class="math inline">\(\hat n = \hat\omega/\theta\)</span> is the rotation axis and <span class="math inline">\(\theta = \|\hat\omega\|\)</span> is the rotation angle. This is the matrix exponential <span class="math inline">\(e^{\hat\omega}\)</span> of the skew-symmetric matrix <span class="math inline">\(\hat\omega\)</span>. At a general rotation <span class="math inline">\(R\)</span>: <span class="math inline">\(\exp_R(X) = R\cdot\exp_I(R^{-1}X)\)</span> — translate to the identity, apply the matrix exponential, translate back.</p>
+<p>The logarithmic map <span class="math inline">\(\log_R: SO(3)\to T_R SO(3)\)</span> is the inverse: given two rotations <span class="math inline">\(R_0\)</span> and <span class="math inline">\(R_1\)</span>, it returns the tangent vector at <span class="math inline">\(R_0\)</span> pointing toward <span class="math inline">\(R_1\)</span> along the shortest geodesic. <span class="math inline">\(\log_{R_0}(R_1) = R_0\cdot\log_I(R_0^{-1}R_1)\)</span>, where <span class="math inline">\(\log_I(Q) = \frac{\theta}{2\sin\theta}(Q-Q^\top)\)</span> for rotation <span class="math inline">\(Q\)</span> with angle <span class="math inline">\(\theta = \arccos((\text{tr}(Q)-1)/2)\)</span>.</p>
+<p>With these two maps, geodesic interpolation on <span class="math inline">\(SO(3)\)</span> is straightforward. The geodesic from <span class="math inline">\(R_0\)</span> to <span class="math inline">\(R_1\)</span> at time <span class="math inline">\(t\in[0,1]\)</span> is:</p>
+<p><span class="math display">\[R_t = \exp_{R_0}(t\cdot\log_{R_0}(R_1)) = R_0\cdot\exp_I(t\cdot\log_I(R_0^{-1}R_1))\]</span></p>
+<p>This is the spherical linear interpolation — SLERP — familiar from computer graphics and robotics, now derived as the geodesic interpolation on <span class="math inline">\(SO(3)\)</span> using the Riemannian exponential and logarithmic maps. The velocity along this geodesic is constant in the tangent space sense: the initial velocity <span class="math inline">\(\log_{R_0}(R_1)\in T_{R_0}SO(3)\)</span> is parallel-transported along the geodesic unchanged.</p>
+<hr>
+<p><strong>The heat kernel on <span class="math inline">\(SO(3)\)</span>: the correct noise distribution on a curved manifold.</strong></p>
+<p>Bikash asks the natural question: what plays the role of the Gaussian distribution on <span class="math inline">\(SO(3)\)</span>? On <span class="math inline">\(\mathbb{R}^d\)</span>, the OU forward process adds Gaussian noise — <span class="math inline">\(X_t = \alpha_t X_0 + \sigma_t\epsilon\)</span> with <span class="math inline">\(\epsilon\sim\mathcal{N}(0,I)\)</span> — producing a distribution that is Gaussian and concentrated near <span class="math inline">\(X_0\)</span> for small <span class="math inline">\(t\)</span>. On <span class="math inline">\(SO(3)\)</span>, the natural analogue of Gaussian noise is Brownian motion on the manifold — the stochastic process that moves isotropically on the curved surface, spreading outward from any starting point according to the manifold’s own geometry.</p>
+<p>The distribution of Brownian motion on <span class="math inline">\(SO(3)\)</span> started at <span class="math inline">\(R_1\)</span> after time <span class="math inline">\(t\)</span> is the heat kernel <span class="math inline">\(k_t(R|R_1)\)</span> — the fundamental solution of the heat equation on <span class="math inline">\(SO(3)\)</span>:</p>
+<p><span class="math display">\[\frac{\partial}{\partial t}k_t(R|R_1) = \Delta_{SO(3)}k_t(R|R_1)\]</span></p>
+<p>where <span class="math inline">\(\Delta_{SO(3)}\)</span> is the Laplace-Beltrami operator on <span class="math inline">\(SO(3)\)</span> — the same operator whose eigenfunctions are the Wigner D-matrices from Phase 2’s Chapter 1 group theory. The heat kernel has the spectral expansion:</p>
+<p><span class="math display">\[k_t(R|R_1) = \sum_{\ell=0}^\infty (2\ell+1)e^{-\ell(\ell+1)t}\chi_\ell(R_1^{-1}R)\]</span></p>
+<p>where <span class="math inline">\(\chi_\ell(Q) = \text{tr}(D^{(\ell)}(Q))\)</span> is the character of the degree-<span class="math inline">\(\ell\)</span> Wigner D-matrix representation — the sum of diagonal elements of the rotation matrix in the <span class="math inline">\(\ell\)</span>-th irreducible representation.</p>
+<p>For small <span class="math inline">\(t\)</span>: the heat kernel concentrates near <span class="math inline">\(R_1\)</span> like a Gaussian in the geodesic distance: <span class="math inline">\(k_t(R|R_1)\approx(4\pi t)^{-3/2}e^{-d_{SO(3)}(R,R_1)^2/4t}\)</span> — the Varadhan short-time asymptotic. For large <span class="math inline">\(t\)</span>: the exponential factors <span class="math inline">\(e^{-\ell(\ell+1)t}\)</span> suppress all <span class="math inline">\(\ell&gt;0\)</span> terms, and <span class="math inline">\(k_t\to k_0 = \text{Haar measure}\)</span> — the uniform distribution on <span class="math inline">\(SO(3)\)</span>. The heat kernel provides the interpolation between data (<span class="math inline">\(t=0\)</span>, concentrated at <span class="math inline">\(R_1\)</span>) and uniform noise (<span class="math inline">\(t\to\infty\)</span>, spread over all orientations) that is needed for the forward process of a generative model.</p>
+<hr>
+<p><strong>The pilgrimage route analogy: why the heat kernel is the right noise.</strong></p>
+<p>Pratima draws the analogy. Imagine a pilgrim standing at an orientation <span class="math inline">\(R_1\)</span> on the terrain — facing northeast, inclined slightly uphill, body tilted to account for a crosswind. Now imagine they take a random walk of orientation changes: small random rotations applied one after another, each rotation uniformly distributed over small angles in all directions. This is Brownian motion on <span class="math inline">\(SO(3)\)</span> — the pilgrim’s orientation drifts randomly over time, spreading outward from <span class="math inline">\(R_1\)</span> according to the manifold’s geometry.</p>
+<p>For small <span class="math inline">\(t\)</span>, the probability of finding the pilgrim at orientation <span class="math inline">\(R\)</span> is high near <span class="math inline">\(R_1\)</span> and falls off with the geodesic distance <span class="math inline">\(d_{SO(3)}(R,R_1)\)</span> — concentrated, approximately Gaussian in the rotation angle. For large <span class="math inline">\(t\)</span>, the pilgrim has been walking randomly long enough that their orientation could be anything — the distribution spreads to approach the uniform distribution over all possible orientations (the Haar measure on <span class="math inline">\(SO(3)\)</span>).</p>
+<p>This Brownian motion on <span class="math inline">\(SO(3)\)</span> is the correct forward process for Riemannian flow matching on the rotation group. It is the analogue of the OU process on <span class="math inline">\(\mathbb{R}^d\)</span>: starting from data (<span class="math inline">\(R_1\)</span>, a specific pilgrim orientation), it adds noise intrinsically on the manifold until the distribution approaches uniform (the base distribution). The reverse process — Riemannian flow matching — learns to undo this noise, generating realistic pilgrim orientations from random ones.</p>
+<hr>
+<p><strong>The flow matching training procedure on <span class="math inline">\(SO(3)\)</span>.</strong></p>
+<p>With the forward process defined through the heat kernel, the conditional flow matching training procedure on <span class="math inline">\(SO(3)\)</span> proceeds exactly as in the Euclidean case, with every Euclidean operation replaced by its Riemannian analogue.</p>
+<p>For each training pair <span class="math inline">\((R_0, R_1)\)</span> — a noise sample <span class="math inline">\(R_0\sim\text{Haar}(SO(3))\)</span> and a data sample <span class="math inline">\(R_1\sim p_{\text{data}}\)</span>:</p>
+<p>The geodesic interpolation at time <span class="math inline">\(t\)</span>: <span class="math inline">\(R_t = \exp_{R_0}(t\cdot\log_{R_0}(R_1))\)</span>.</p>
+<p>The conditional velocity at <span class="math inline">\(R_t\)</span>: <span class="math inline">\(u_t(R_t|R_0,R_1) = \log_{R_0}(R_1)\in T_{R_0}SO(3)\)</span>, parallel-transported to <span class="math inline">\(T_{R_t}SO(3)\)</span> — the initial geodesic velocity, parallel-transported to the current tangent space.</p>
+<p>The training objective: <span class="math inline">\(\mathcal{L}(\theta) = \mathbb{E}_{R_0,R_1,t}[\|f_\theta(R_t,t) - P_{\gamma,t}(\log_{R_0}(R_1))\|_{g_{R_t}}^2]\)</span>, where <span class="math inline">\(P_{\gamma,t}\)</span> is parallel transport along the geodesic <span class="math inline">\(\gamma\)</span> from <span class="math inline">\(R_0\)</span> to <span class="math inline">\(R_t\)</span> and <span class="math inline">\(\|\cdot\|_{g_{R_t}}\)</span> is the Riemannian norm in <span class="math inline">\(T_{R_t}SO(3)\)</span>.</p>
+<p>The generation procedure: sample <span class="math inline">\(R_0\sim\text{Haar}(SO(3))\)</span> and integrate the manifold ODE <span class="math inline">\(\dot R_t = f_\theta(R_t,t)\in T_{R_t}SO(3)\)</span> on <span class="math inline">\(SO(3)\)</span> using a Riemannian ODE solver — a solver that uses the exponential map to keep each step on the manifold.</p>
+<p>At every step, the generated rotation <span class="math inline">\(R_t\)</span> is a valid element of <span class="math inline">\(SO(3)\)</span> — a proper rotation matrix with determinant <span class="math inline">\(+1\)</span> and <span class="math inline">\(R^\top R = I\)</span>. The Riemannian flow matching framework guarantees this by construction, because the ODE solver uses the exponential map rather than Euclidean updates, staying on the manifold at every integration step.</p>
+<hr>
+<p><strong>The break moment: why parallel transport is necessary.</strong></p>
+<p>Bikash implements the basic version of Riemannian flow matching on <span class="math inline">\(SO(3)\)</span> without parallel transport. At each training step, he computes the geodesic interpolation <span class="math inline">\(R_t = \exp_{R_0}(t\cdot\log_{R_0}(R_1))\)</span> and uses the initial geodesic velocity <span class="math inline">\(v = \log_{R_0}(R_1)\in T_{R_0}SO(3)\)</span> as the velocity target at <span class="math inline">\(R_t\)</span>. He trains the network <span class="math inline">\(f_\theta(R_t,t)\in T_{R_t}SO(3)\)</span> to predict this velocity.</p>
+<p>The issue appears during evaluation. The trained network produces a velocity in <span class="math inline">\(T_{R_t}SO(3)\)</span> — the tangent space at the current point <span class="math inline">\(R_t\)</span>. But the training target <span class="math inline">\(v = \log_{R_0}(R_1)\)</span> lives in <span class="math inline">\(T_{R_0}SO(3)\)</span> — the tangent space at the starting point <span class="math inline">\(R_0\)</span>. These two tangent spaces are different vector spaces, related by parallel transport along the geodesic from <span class="math inline">\(R_0\)</span> to <span class="math inline">\(R_t\)</span>. On a curved manifold, tangent spaces at different points are not canonically identified — there is no natural way to compare a vector at <span class="math inline">\(R_0\)</span> with a vector at <span class="math inline">\(R_t\)</span> without choosing a path between them and parallel-transporting along it.</p>
+<p>By training the network to predict <span class="math inline">\(v\in T_{R_0}SO(3)\)</span> at the point <span class="math inline">\(R_t\)</span> — comparing objects that live in different tangent spaces — Bikash has committed the same error as the previous team’s Euler angle model: ignoring the manifold’s curvature. The network learns to minimize the naive squared error <span class="math inline">\(\|f_\theta(R_t,t) - v\|^2\)</span> where <span class="math inline">\(f_\theta(R_t,t)\in T_{R_t}SO(3)\)</span> and <span class="math inline">\(v\in T_{R_0}SO(3)\)</span>, but this difference is not geometrically meaningful — it compares vectors from two different tangent spaces as if they were in the same flat space.</p>
+<p>The correct training target at <span class="math inline">\(R_t\)</span> is not <span class="math inline">\(v = \log_{R_0}(R_1)\)</span> but <span class="math inline">\(P_{\gamma,t}(v)\)</span> — the parallel transport of <span class="math inline">\(v\)</span> along the geodesic <span class="math inline">\(\gamma\)</span> from <span class="math inline">\(R_0\)</span> to <span class="math inline">\(R_t\)</span>. Parallel transport moves the tangent vector from <span class="math inline">\(T_{R_0}SO(3)\)</span> to <span class="math inline">\(T_{R_t}SO(3)\)</span> along the geodesic, preserving its length and direction relative to the manifold’s geometry. Only after parallel transport do the velocity target and the network output live in the same tangent space, making their comparison geometrically meaningful.</p>
+<p>The break moment is precise: on a flat manifold (Euclidean space), parallel transport is trivial — tangent vectors at different points are canonically identified by translation, and parallel transport does nothing. On a curved manifold like <span class="math inline">\(SO(3)\)</span>, parallel transport is nontrivial — it rotates the tangent vector as it moves along the geodesic, accumulating a rotation proportional to the geodesic curvature. Ignoring parallel transport on a curved manifold introduces systematic errors in the velocity target that corrupt the training signal and produce a learned velocity field that does not correctly generate the data distribution.</p>
+<hr>
+<p><strong>The connection to everything: why this problem synthesizes the entire roadmap.</strong></p>
+<p>Pratima, Bikash, and the full team gather for the final synthesis meeting. They trace the mathematical dependencies of the <span class="math inline">\(SO(3)\)</span> flow matching model.</p>
+<p>The exponential and logarithmic maps — from Phase 0’s differential geometry syllabus. The Riemannian metric and geodesic equation — from Phase 0. The bi-invariant metric on <span class="math inline">\(SO(3)\)</span> as a Lie group — from Phase 0’s tangent bundle and Phase 2’s group theory.</p>
+<p>The Wasserstein distance on <span class="math inline">\(SO(3)\)</span> using geodesic cost <span class="math inline">\(d_{SO(3)}^2\)</span> — from Phase 1’s Wasserstein geometry. The optimal transport plan on <span class="math inline">\(SO(3)\)</span> — the Brenier map for the geodesic squared cost — from Phase 1’s Kantorovich duality, now applied to a curved manifold.</p>
+<p>The Laplace-Beltrami operator <span class="math inline">\(\Delta_{SO(3)}\)</span> — from Phase 2’s Chapter 3 spectral theory. The Wigner D-matrices as its eigenfunctions — from Phase 2’s Chapter 1 group theory. The heat kernel spectral expansion <span class="math inline">\(k_t = \sum_\ell(2\ell+1)e^{-\ell(\ell+1)t}\chi_\ell\)</span> — from the product of Phase 2’s spectral theory and Phase 3’s Fokker-Planck dynamics. The equivariant neural network parameterizing the velocity field — from Phase 2’s Chapter 1 equivariant architecture.</p>
+<p>The JKO scheme for the gradient flow of entropy on <span class="math inline">\(\mathcal{P}_2(SO(3))\)</span> — from Phase 3’s Chapter 1. The Fokker-Planck equation on <span class="math inline">\(SO(3)\)</span> with the Laplace-Beltrami diffusion term — from Phase 3’s Chapter 1. The conditional flow matching objective with geodesic interpolation and parallel-transported velocity targets — from Phase 3’s Chapter 2 flow matching framework, now generalized to the manifold.</p>
+<p>The entire roadmap, from Phase 0’s differential geometry to Phase 3’s flow matching, is necessary for this one model. Remove any thread and the model breaks: without the exponential map you cannot interpolate; without the heat kernel you cannot define noise; without the Wigner D-matrices you cannot compute the heat kernel; without the equivariant architecture you cannot parameterize the velocity field; without the parallel transport you cannot define the training target; without the Wasserstein geometry you cannot analyze the convergence.</p>
+<p>This is why the roadmap was built the way it was. Phase 0 through Phase 3 were not four separate subjects. They were one subject, seen from four angles, assembled here into a single coherent framework for generating data on the curved geometric spaces where the real world’s most important scientific problems live.</p>
+<hr>
+<p><strong>Three pictures to carry into the mathematics.</strong></p>
+<p>The first picture: the rotation group <span class="math inline">\(SO(3)\)</span> as a curved three-dimensional manifold — not a flat box of Euler angles but a smooth curved space with its own metric, geodesics, and tangent spaces. A pilgrim’s orientation is a point on this manifold. Moving in orientation space follows geodesics, not straight Euclidean lines. Distance is measured by rotation angle, not by Euclidean norm.</p>
+<p>The second picture: the heat kernel on <span class="math inline">\(SO(3)\)</span> as isotropic diffusion on the curved manifold — probability mass spreading outward from a data point <span class="math inline">\(R_1\)</span> according to the Riemannian geometry, converging to the Haar measure (uniform distribution) as time increases. The spectral expansion <span class="math inline">\(k_t = \sum_\ell(2\ell+1)e^{-\ell(\ell+1)t}\chi_\ell\)</span> decaying through the Wigner D-matrix eigenvalues <span class="math inline">\(\ell(\ell+1)\)</span> of the Laplace-Beltrami operator.</p>
+<p>The third picture: parallel transport as the essential correction for training on curved manifolds — the initial geodesic velocity <span class="math inline">\(\log_{R_0}(R_1)\in T_{R_0}SO(3)\)</span> transported to the current tangent space <span class="math inline">\(T_{R_t}SO(3)\)</span> along the geodesic <span class="math inline">\(\gamma\)</span>, rotating as it moves to account for the manifold’s curvature. Without parallel transport, training targets live in the wrong tangent space. With it, the velocity field is geometrically consistent, the learned flow stays on the manifold, and the generated pilgrim orientations are valid rotations.</p>
+<hr>
+</section>
+<section id="layer-2-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="layer-2-mathematics">Layer 2 (Mathematics)</h2>
+<p>We build the formalism in six stages: Riemannian manifolds and the geometric primitives for flow matching, the heat kernel as the canonical forward process on manifolds, the Riemannian score function and Fokker-Planck equation on manifolds, the conditional flow matching objective with geodesic interpolation and parallel transport, the specific instantiation on <span class="math inline">\(SO(3)\)</span> and <span class="math inline">\(S^n\)</span>, and the connection to equivariant architectures and practical implementation.</p>
+<section id="geometric-primitives-for-riemannian-flow-matching" class="level3">
+<h3 class="anchored" data-anchor-id="geometric-primitives-for-riemannian-flow-matching">Geometric Primitives for Riemannian Flow Matching</h3>
+<p><strong>Setting.</strong> Let <span class="math inline">\((\mathcal{M}, g)\)</span> be a compact connected Riemannian manifold without boundary, with Riemannian metric <span class="math inline">\(g\)</span>, Levi-Civita connection <span class="math inline">\(\nabla\)</span>, and Riemannian volume measure <span class="math inline">\(\text{vol}_g\)</span>.</p>
+<p><strong>Geodesic distance:</strong></p>
+<p><span class="math display">\[d_\mathcal{M}(x,y) = \inf_{\gamma:\gamma(0)=x,\gamma(1)=y}\int_0^1\sqrt{g_{\gamma(t)}(\dot\gamma(t),\dot\gamma(t))}\,dt\]</span></p>
+<p><strong>Exponential map:</strong> <span class="math inline">\(\exp_x: T_x\mathcal{M}\to\mathcal{M}\)</span>, <span class="math inline">\(\exp_x(v) = \gamma_v(1)\)</span> where <span class="math inline">\(\gamma_v\)</span> is the geodesic with <span class="math inline">\(\gamma_v(0)=x\)</span>, <span class="math inline">\(\dot\gamma_v(0)=v\)</span>.</p>
+<p><strong>Logarithmic map:</strong> <span class="math inline">\(\log_x: \mathcal{M}\to T_x\mathcal{M}\)</span>, the inverse of <span class="math inline">\(\exp_x\)</span> within the injectivity radius: <span class="math inline">\(\log_x(y) = v\)</span> such that <span class="math inline">\(\exp_x(v) = y\)</span> and <span class="math inline">\(\|v\|_g = d_\mathcal{M}(x,y)\)</span>.</p>
+<p><strong>Geodesic interpolation:</strong> The geodesic from <span class="math inline">\(x_0\)</span> to <span class="math inline">\(x_1\)</span> at time <span class="math inline">\(t\in[0,1]\)</span>:</p>
+<p><span class="math display">\[\gamma_t(x_0,x_1) = \exp_{x_0}(t\cdot\log_{x_0}(x_1))\]</span></p>
+<p>with velocity <span class="math inline">\(\dot\gamma_t = P_{\gamma,0\to t}(\log_{x_0}(x_1)/d_\mathcal{M}(x_0,x_1))\cdot d_\mathcal{M}(x_0,x_1)\)</span> — constant speed.</p>
+<p><strong>Parallel transport:</strong> <span class="math inline">\(P_{\gamma,s\to t}: T_{\gamma(s)}\mathcal{M}\to T_{\gamma(t)}\mathcal{M}\)</span>, the linear isometry solving:</p>
+<p><span class="math display">\[\nabla_{\dot\gamma}V = 0, \quad V(s) = v_0\]</span></p>
+<p>where <span class="math inline">\(\nabla_{\dot\gamma}V^k = \dot V^k + \Gamma^k_{ij}\dot\gamma^i V^j = 0\)</span> in local coordinates.</p>
+<p><strong>Properties of parallel transport:</strong> <span class="math inline">\(P_{\gamma,s\to t}\)</span> is a linear isometry: <span class="math inline">\(g_{\gamma(t)}(P_{\gamma,s\to t}u, P_{\gamma,s\to t}v) = g_{\gamma(s)}(u,v)\)</span> for all <span class="math inline">\(u,v\in T_{\gamma(s)}\mathcal{M}\)</span>.</p>
+<p><strong>Riemannian gradient:</strong> For <span class="math inline">\(f\in C^\infty(\mathcal{M})\)</span>:</p>
+<p><span class="math display">\[\text{grad}_\mathcal{M}f(x) = g^{ij}(x)\partial_i f\,\partial_j\big|_x \in T_x\mathcal{M}\]</span></p>
+<p>where <span class="math inline">\(g^{ij}\)</span> is the inverse metric tensor. Satisfies <span class="math inline">\(g_x(\text{grad}_\mathcal{M}f(x), v) = df_x(v)\)</span> for all <span class="math inline">\(v\in T_x\mathcal{M}\)</span>.</p>
+<p><strong>Riemannian divergence:</strong> For a vector field <span class="math inline">\(X\)</span> on <span class="math inline">\(\mathcal{M}\)</span>:</p>
+<p><span class="math display">\[\text{div}_\mathcal{M}X = \frac{1}{\sqrt{|g|}}\partial_i(\sqrt{|g|}X^i)\]</span></p>
+<p><strong>Laplace-Beltrami operator:</strong></p>
+<p><span class="math display">\[\Delta_\mathcal{M}f = \text{div}_\mathcal{M}(\text{grad}_\mathcal{M}f) = \frac{1}{\sqrt{|g|}}\partial_i(g^{ij}\sqrt{|g|}\partial_j f)\]</span></p>
+<p>Self-adjoint on <span class="math inline">\(L^2(\mathcal{M},\text{vol}_g)\)</span> with eigendecomposition <span class="math inline">\(\Delta_\mathcal{M}\phi_k = -\lambda_k\phi_k\)</span>, <span class="math inline">\(0=\lambda_0\leq\lambda_1\leq\cdots\nearrow\infty\)</span>.</p>
+<hr>
+</section>
+<section id="the-heat-kernel-as-forward-process" class="level3">
+<h3 class="anchored" data-anchor-id="the-heat-kernel-as-forward-process">The Heat Kernel as Forward Process</h3>
+<p><strong>Definition (Heat kernel).</strong> The <strong>heat kernel</strong> <span class="math inline">\(k_t: \mathcal{M}\times\mathcal{M}\to\mathbb{R}_{&gt;0}\)</span> is the fundamental solution of the heat equation on <span class="math inline">\(\mathcal{M}\)</span>:</p>
+<p><span class="math display">\[\frac{\partial}{\partial t}k_t(x,y) = \Delta_{\mathcal{M},x}k_t(x,y), \quad \lim_{t\to 0}k_t(x,y) = \delta_y(x)\]</span></p>
+<p><strong>Spectral expansion:</strong></p>
+<p><span class="math display">\[k_t(x,y) = \sum_{k=0}^\infty e^{-\lambda_k t}\phi_k(x)\phi_k(y)\]</span></p>
+<p>where <span class="math inline">\(\phi_k\)</span> are <span class="math inline">\(L^2(\mathcal{M})\)</span>-orthonormal eigenfunctions of <span class="math inline">\(\Delta_\mathcal{M}\)</span>.</p>
+<p><strong>Properties:</strong></p>
+<p>Symmetry: <span class="math inline">\(k_t(x,y) = k_t(y,x)\)</span>.</p>
+<p>Semigroup: <span class="math inline">\(k_{s+t}(x,y) = \int_\mathcal{M}k_s(x,z)k_t(z,y)\,d\text{vol}(z)\)</span>.</p>
+<p>Normalization: <span class="math inline">\(\int_\mathcal{M}k_t(x,y)\,d\text{vol}(y) = 1\)</span> for all <span class="math inline">\(x,t\)</span>.</p>
+<p>Convergence: <span class="math inline">\(k_t(x,y)\to 1/\text{vol}(\mathcal{M})\)</span> as <span class="math inline">\(t\to\infty\)</span> — approaches uniform distribution.</p>
+<p><strong>Varadhan’s formula (short-time asymptotics):</strong></p>
+<p><span class="math display">\[k_t(x,y) = \frac{1}{(4\pi t)^{d/2}}\exp\!\left(-\frac{d_\mathcal{M}(x,y)^2}{4t}\right)(1 + O(t)) \quad \text{as } t\to 0\]</span></p>
+<p><strong>Forward process.</strong> The <strong>Riemannian forward process</strong> with data point <span class="math inline">\(x_1\in\mathcal{M}\)</span>:</p>
+<p><span class="math display">\[p_t(x|x_1) = k_{T(1-t)}(x,x_1)\]</span></p>
+<p>where <span class="math inline">\(T &gt; 0\)</span> is a fixed time horizon. At <span class="math inline">\(t=0\)</span>: <span class="math inline">\(p_0(x|x_1) = k_T(x,x_1)\approx\text{uniform}\)</span> (approximately the base distribution). At <span class="math inline">\(t=1\)</span>: <span class="math inline">\(p_1(x|x_1) = k_0(x,x_1) = \delta_{x_1}(x)\)</span> (concentrated at data).</p>
+<p><strong>Riemannian Ornstein-Uhlenbeck (OU) process.</strong> The SDE on <span class="math inline">\(\mathcal{M}\)</span>:</p>
+<p><span class="math display">\[dX_t = -\frac{1}{2}X_t\,dt + dW_t^\mathcal{M}\]</span></p>
+<p>where <span class="math inline">\(W_t^\mathcal{M}\)</span> is Brownian motion on <span class="math inline">\(\mathcal{M}\)</span> (the process with generator <span class="math inline">\(\Delta_\mathcal{M}/2\)</span>), has stationary distribution equal to the uniform measure (Haar measure for Lie groups) — the Riemannian analogue of <span class="math inline">\(\mathcal{N}(0,I)\)</span> being the stationary distribution of the Euclidean OU process.</p>
+<hr>
+</section>
+<section id="riemannian-score-function-and-fokker-planck-equation" class="level3">
+<h3 class="anchored" data-anchor-id="riemannian-score-function-and-fokker-planck-equation">Riemannian Score Function and Fokker-Planck Equation</h3>
+<p><strong>Definition (Riemannian score function).</strong> For a density <span class="math inline">\(\rho_t\)</span> on <span class="math inline">\(\mathcal{M}\)</span> (with respect to <span class="math inline">\(\text{vol}_g\)</span>):</p>
+<p><span class="math display">\[s_t(x) = \text{grad}_\mathcal{M}\log\rho_t(x) = g^{-1}\nabla_x\log\rho_t(x) \in T_x\mathcal{M}\]</span></p>
+<p><strong>Riemannian Fokker-Planck equation.</strong> For the SDE <span class="math inline">\(dX_t = b_t(X_t)dt + \sigma\,dW_t^\mathcal{M}\)</span> on <span class="math inline">\(\mathcal{M}\)</span>:</p>
+<p><span class="math display">\[\frac{\partial\rho_t}{\partial t} = -\text{div}_\mathcal{M}(\rho_t b_t) + \frac{\sigma^2}{2}\Delta_\mathcal{M}\rho_t\]</span></p>
+<p><strong>Riemannian continuity equation.</strong> For a deterministic flow <span class="math inline">\(\dot x_t = v_t(x_t)\)</span> on <span class="math inline">\(\mathcal{M}\)</span>:</p>
+<p><span class="math display">\[\frac{\partial\rho_t}{\partial t} + \text{div}_\mathcal{M}(\rho_t v_t) = 0\]</span></p>
+<p><strong>Riemannian score of the heat kernel:</strong></p>
+<p><span class="math display">\[\text{grad}_\mathcal{M}\log k_t(x,x_1) = -\frac{\log_x(x_1)}{2t} + O(d_\mathcal{M}(x,x_1)) \quad \text{as } t\to 0\]</span></p>
+<p>using the Varadhan asymptotic. For small <span class="math inline">\(t\)</span>, the score of the heat kernel points along the geodesic from <span class="math inline">\(x\)</span> toward <span class="math inline">\(x_1\)</span>, with magnitude proportional to the geodesic distance divided by <span class="math inline">\(2t\)</span> — the Riemannian analogue of the Euclidean score <span class="math inline">\(\nabla\log\mathcal{N}(x;x_1,\sigma^2) = -(x-x_1)/\sigma^2\)</span>.</p>
+<p><strong>Riemannian denoising score matching.</strong> The score <span class="math inline">\(s_t(x) = \text{grad}_\mathcal{M}\log\rho_t(x)\)</span> satisfies:</p>
+<p><span class="math display">\[s_t(x) = \mathbb{E}_{x_1\sim p_1(\cdot|x)}\!\left[-\frac{\log_x(x_1)}{2t(1-t)}\right] = -\frac{\mathbb{E}[\log_x(x_1)|X_t=x]}{2t(1-t)}\]</span></p>
+<p>the Riemannian Tweedie formula — replacing <span class="math inline">\(-(x-x_1)/\sigma^2\)</span> with <span class="math inline">\(-\log_x(x_1)/(2t(1-t))\)</span>, where <span class="math inline">\(\log_x(x_1)\in T_x\mathcal{M}\)</span> is the Riemannian logarithm (geodesic direction toward <span class="math inline">\(x_1\)</span>).</p>
+<hr>
+</section>
+<section id="conditional-flow-matching-on-manifolds" class="level3">
+<h3 class="anchored" data-anchor-id="conditional-flow-matching-on-manifolds">Conditional Flow Matching on Manifolds</h3>
+<p><strong>Definition (Riemannian conditional flow matching).</strong> Given conditional probability path <span class="math inline">\(p_t(\cdot|x_1)\)</span> on <span class="math inline">\(\mathcal{M}\)</span> with conditional velocity field <span class="math inline">\(u_t(\cdot|x_1): \mathcal{M}\to T\mathcal{M}\)</span> satisfying:</p>
+<p><span class="math display">\[\frac{\partial p_t(x|x_1)}{\partial t} + \text{div}_\mathcal{M}(p_t(\cdot|x_1)\cdot u_t(\cdot|x_1)) = 0\]</span></p>
+<p>the <strong>Riemannian conditional flow matching (RCFM) objective</strong> is:</p>
+<p><span class="math display">\[\mathcal{L}_{\text{RCFM}}(\theta) = \mathbb{E}_{t,x_1\sim p_{\text{data}},x\sim p_t(\cdot|x_1)}\!\left[\|f_\theta(x,t) - u_t(x|x_1)\|_{g_x}^2\right]\]</span></p>
+<p>where <span class="math inline">\(\|v\|_{g_x}^2 = g_x(v,v)\)</span> is the Riemannian norm in <span class="math inline">\(T_x\mathcal{M}\)</span>.</p>
+<p><strong>Geodesic conditional path.</strong> The simplest choice: the geodesic interpolation <span class="math inline">\(x = \gamma_t(x_0,x_1)\)</span> with <span class="math inline">\(x_0\sim p_0\)</span> (base distribution). The conditional probability path:</p>
+<p><span class="math display">\[p_t(x|x_0,x_1) = \delta_{\gamma_t(x_0,x_1)}(x)\]</span></p>
+<p>Conditional velocity field — initial geodesic velocity parallel-transported to <span class="math inline">\(x_t\)</span>:</p>
+<p><span class="math display">\[u_t(x_t|x_0,x_1) = P_{\gamma,0\to t}\!\left(\log_{x_0}(x_1)\right) \in T_{x_t}\mathcal{M}\]</span></p>
+<p><strong>Why parallel transport is necessary.</strong> The initial geodesic velocity <span class="math inline">\(v = \log_{x_0}(x_1)\in T_{x_0}\mathcal{M}\)</span> lives in the tangent space at <span class="math inline">\(x_0\)</span>. The velocity target for the network at <span class="math inline">\(x_t\)</span> must live in <span class="math inline">\(T_{x_t}\mathcal{M}\)</span>. On a curved manifold, <span class="math inline">\(T_{x_0}\mathcal{M}\)</span> and <span class="math inline">\(T_{x_t}\mathcal{M}\)</span> are different vector spaces with no canonical identification. Parallel transport <span class="math inline">\(P_{\gamma,0\to t}\)</span> provides the geometrically correct identification, preserving the vector’s magnitude and direction relative to the manifold’s geometry.</p>
+<p><strong>On flat manifolds:</strong> <span class="math inline">\(P_{\gamma,0\to t}(v) = v\)</span> — parallel transport is trivial (identity map). The velocity target at <span class="math inline">\(x_t\)</span> is the same as at <span class="math inline">\(x_0\)</span>: <span class="math inline">\(u_t = x_1-x_0\)</span> — recovering the Euclidean rectified flow.</p>
+<p><strong>On curved manifolds:</strong> <span class="math inline">\(P_{\gamma,0\to t}(v)\neq v\)</span> in general. The rotation accumulated by parallel transport equals the holonomy of the geodesic triangle, proportional to the curvature enclosed.</p>
+<p><strong>Theorem (RCFM equivalence).</strong> Under regularity conditions:</p>
+<p><span class="math display">\[\nabla_\theta\mathcal{L}_{\text{RCFM}}(\theta) = \nabla_\theta\mathcal{L}_{\text{RFM}}(\theta)\]</span></p>
+<p>where <span class="math inline">\(\mathcal{L}_{\text{RFM}}\)</span> is the intractable marginal Riemannian flow matching objective. The proof follows the same tower property argument as the Euclidean CFM theorem, with the Riemannian inner product <span class="math inline">\(g_x(\cdot,\cdot)\)</span> replacing the Euclidean inner product.</p>
+<hr>
+</section>
+<section id="instantiation-on-so3" class="level3">
+<h3 class="anchored" data-anchor-id="instantiation-on-so3">Instantiation on <span class="math inline">\(SO(3)\)</span></h3>
+<p><strong>Group structure.</strong> <span class="math inline">\(SO(3) = \{R\in\mathbb{R}^{3\times 3}: R^\top R=I, \det R=+1\}\)</span> with group operation being matrix multiplication.</p>
+<p><strong>Bi-invariant metric.</strong> The unique (up to scaling) bi-invariant Riemannian metric on <span class="math inline">\(SO(3)\)</span>:</p>
+<p><span class="math display">\[g_R(X,Y) = \frac{1}{2}\text{tr}(X^\top Y), \quad X,Y\in T_RSO(3)\]</span></p>
+<p>where <span class="math inline">\(T_RSO(3) = \{R\Omega: \Omega\in\mathfrak{so}(3)\} = \{X\in\mathbb{R}^{3\times 3}: R^\top X\text{ skew-symmetric}\}\)</span>.</p>
+<p><strong>Geodesic distance:</strong></p>
+<p><span class="math display">\[d_{SO(3)}(R_1,R_2) = \frac{1}{\sqrt{2}}\|\log(R_1^\top R_2)\|_F = |\theta(R_1^\top R_2)|\]</span></p>
+<p>where <span class="math inline">\(\theta(Q) = \arccos((\text{tr}(Q)-1)/2)\)</span> is the rotation angle of <span class="math inline">\(Q\)</span>.</p>
+<p><strong>Exponential map (Rodrigues formula):</strong> For <span class="math inline">\(\Omega\in\mathfrak{so}(3)\)</span> with <span class="math inline">\(\|\Omega\|_F = \sqrt{2}\theta\)</span>:</p>
+<p><span class="math display">\[\exp_I(\Omega) = I + \frac{\sin\theta}{\theta}\Omega + \frac{1-\cos\theta}{\theta^2}\Omega^2\]</span></p>
+<p>At general <span class="math inline">\(R\)</span>: <span class="math inline">\(\exp_R(X) = R\cdot\exp_I(R^\top X)\)</span>.</p>
+<p><strong>Logarithmic map:</strong></p>
+<p><span class="math display">\[\log_I(Q) = \frac{\theta}{2\sin\theta}(Q - Q^\top), \quad \theta = \arccos\!\left(\frac{\text{tr}(Q)-1}{2}\right)\]</span></p>
+<p>At general <span class="math inline">\(R_0\)</span>: <span class="math inline">\(\log_{R_0}(R_1) = R_0\cdot\log_I(R_0^\top R_1)\)</span>.</p>
+<p><strong>Parallel transport on <span class="math inline">\(SO(3)\)</span>.</strong> For a geodesic <span class="math inline">\(\gamma(t) = R_0\exp(t\Omega)\)</span> with <span class="math inline">\(\Omega\in\mathfrak{so}(3)\)</span>, the parallel transport of <span class="math inline">\(X_0\in T_{R_0}SO(3)\)</span> to <span class="math inline">\(T_{\gamma(t)}SO(3)\)</span> is:</p>
+<p><span class="math display">\[P_{\gamma,0\to t}(X_0) = \gamma(t)\cdot\exp\!\left(-\frac{t}{2}\Omega\right)\cdot R_0^\top X_0\cdot\exp\!\left(\frac{t}{2}\Omega\right)\]</span></p>
+<p>For the bi-invariant metric, this simplifies to conjugation by the half-angle rotation.</p>
+<p><strong>Heat kernel on <span class="math inline">\(SO(3)\)</span>.</strong> Using the Peter-Weyl theorem and Wigner D-matrices <span class="math inline">\(D^{(\ell)}: SO(3)\to GL(\mathbb{R}^{2\ell+1})\)</span>:</p>
+<p><span class="math display">\[k_t(R,R') = \sum_{\ell=0}^\infty (2\ell+1)e^{-\ell(\ell+1)t}\chi_\ell(R'^\top R)\]</span></p>
+<p>where <span class="math inline">\(\chi_\ell(Q) = \text{tr}(D^{(\ell)}(Q)) = \sum_{m=-\ell}^\ell D^{(\ell)}_{mm}(Q)\)</span> is the character of the <span class="math inline">\(\ell\)</span>-th irreducible representation and <span class="math inline">\(\lambda_\ell = \ell(\ell+1)\)</span> is the eigenvalue of the Laplace-Beltrami operator on <span class="math inline">\(SO(3)\)</span> for the <span class="math inline">\(\ell\)</span>-th irrep.</p>
+<p><strong>Varadhan asymptotics on <span class="math inline">\(SO(3)\)</span>:</strong> For small <span class="math inline">\(t\)</span>:</p>
+<p><span class="math display">\[k_t(R,R') \approx \frac{1}{(4\pi t)^{3/2}}\exp\!\left(-\frac{d_{SO(3)}(R,R')^2}{4t}\right)\cdot\frac{d_{SO(3)}(R,R')/2}{\sin(d_{SO(3)}(R,R')/2)}\]</span></p>
+<p>The correction factor <span class="math inline">\(\theta/(2\sin(\theta/2))\)</span> (the Jacobian of the exponential map) accounts for the curvature of <span class="math inline">\(SO(3)\)</span>.</p>
+<p><strong>Haar measure.</strong> The unique left- and right-invariant probability measure on <span class="math inline">\(SO(3)\)</span>: <span class="math inline">\(d\text{Haar}(R) = \frac{1}{8\pi^2}\sin\beta\,d\alpha\,d\beta\,d\gamma\)</span> in Euler angles. Base distribution for <span class="math inline">\(SO(3)\)</span> flow matching.</p>
+<p><strong>SLERP (Geodesic interpolation on <span class="math inline">\(SO(3)\)</span>):</strong></p>
+<p><span class="math display">\[R_t = R_0\cdot\exp(t\cdot\log_I(R_0^\top R_1)) = R_0\cdot(R_0^\top R_1)^t\]</span></p>
+<p>where <span class="math inline">\((R_0^\top R_1)^t = \exp(t\log_I(R_0^\top R_1))\)</span> uses the matrix exponential.</p>
+<p><strong><span class="math inline">\(SO(3)\)</span> conditional flow matching objective:</strong></p>
+<p><span class="math display">\[\mathcal{L}_{SO(3)}(\theta) = \mathbb{E}_{t,R_1\sim p_{\text{data}},R_0\sim\text{Haar}}\!\left[\left\|f_\theta(R_t,t) - P_{\gamma,0\to t}(\log_{R_0}(R_1))\right\|_{g_{R_t}}^2\right]\]</span></p>
+<p>where <span class="math inline">\(R_t = R_0\exp(t\log_I(R_0^\top R_1))\)</span>.</p>
+<hr>
+</section>
+<section id="instantiation-on-sn-and-general-compact-manifolds" class="level3">
+<h3 class="anchored" data-anchor-id="instantiation-on-sn-and-general-compact-manifolds">Instantiation on <span class="math inline">\(S^n\)</span> and General Compact Manifolds</h3>
+<p><strong>The <span class="math inline">\(n\)</span>-sphere <span class="math inline">\(S^n\subset\mathbb{R}^{n+1}\)</span>.</strong> Geodesic distance: <span class="math inline">\(d_{S^n}(x,y) = \arccos(x\cdot y)\)</span>. Exponential map: <span class="math inline">\(\exp_x(v) = \cos(\|v\|)x + \sin(\|v\|)v/\|v\|\)</span>. Logarithmic map: <span class="math inline">\(\log_x(y) = \frac{\arccos(x\cdot y)}{\sqrt{1-(x\cdot y)^2}}(y-(x\cdot y)x)\)</span>. Heat kernel: <span class="math inline">\(k_t(x,y) = \sum_{k=0}^\infty e^{-k(k+n-1)t}P_k^{(n)}(x\cdot y)\)</span> where <span class="math inline">\(P_k^{(n)}\)</span> are Gegenbauer polynomials (the <span class="math inline">\(S^n\)</span> analogues of Legendre polynomials), with eigenvalues <span class="math inline">\(\lambda_k = k(k+n-1)\)</span>.</p>
+<p><strong>The flat torus <span class="math inline">\(\mathbb{T}^n = (\mathbb{R}/2\pi\mathbb{Z})^n\)</span>.</strong> Geodesic distance: <span class="math inline">\(d_{\mathbb{T}^n}(\theta,\phi) = \sqrt{\sum_i\min(|\theta_i-\phi_i|,2\pi-|\theta_i-\phi_i|)^2}\)</span> — the wrapped distance. Heat kernel: <span class="math inline">\(k_t(\theta,\phi) = \prod_i\vartheta_3((\theta_i-\phi_i)/2,e^{-t})\)</span> where <span class="math inline">\(\vartheta_3\)</span> is the Jacobi theta function. Flow matching on <span class="math inline">\(\mathbb{T}^n\)</span> is the natural model for protein backbone dihedral angles — the geodesic interpolation wraps correctly around the periodic boundary.</p>
+<p><strong>The special Euclidean group <span class="math inline">\(SE(3) = SO(3)\ltimes\mathbb{R}^3\)</span>.</strong> Acts on <span class="math inline">\(\mathbb{R}^3\)</span> as <span class="math inline">\((R,t)\cdot x = Rx+t\)</span>. Metric: product of <span class="math inline">\(SO(3)\)</span> and <span class="math inline">\(\mathbb{R}^3\)</span> metrics with tunable relative weighting. Flow matching on <span class="math inline">\(SE(3)\)</span> generates full molecular poses (orientation + position) — the framework used in FrameDiff, FoldFlow, and AlphaFlow for protein backbone generation.</p>
+<hr>
+</section>
+<section id="equivariant-velocity-fields-and-practical-implementation" class="level3">
+<h3 class="anchored" data-anchor-id="equivariant-velocity-fields-and-practical-implementation">Equivariant Velocity Fields and Practical Implementation</h3>
+<p><strong>Symmetry requirement.</strong> For molecular generation on <span class="math inline">\(SE(3)\)</span>, the velocity field <span class="math inline">\(f_\theta: SE(3)\times[0,1]\to\mathfrak{se}(3)\)</span> must be <span class="math inline">\(SE(3)\)</span>-equivariant: for any <span class="math inline">\(g\in SE(3)\)</span>:</p>
+<p><span class="math display">\[f_\theta(g\cdot x, t) = g\cdot f_\theta(x,t)\]</span></p>
+<p>where <span class="math inline">\(g\cdot f_\theta\)</span> denotes the adjoint action of <span class="math inline">\(SE(3)\)</span> on the Lie algebra <span class="math inline">\(\mathfrak{se}(3)\)</span>.</p>
+<p><strong>Architecture.</strong> The <span class="math inline">\(SE(3)\)</span>-equivariant GNN from Phase 2 Chapter 2 — using <span class="math inline">\(SO(3)\)</span>-equivariant message passing with spherical harmonic features and Clebsch-Gordan tensor products — is the canonical architecture for the velocity field. Node features are <span class="math inline">\(SO(3)\)</span> equivariant vectors; edge features are radial basis functions of inter-atomic distances (invariant) combined with spherical harmonics of direction vectors (equivariant).</p>
+<p><strong>Riemannian ODE solver.</strong> The generation ODE <span class="math inline">\(\dot R_t = f_\theta(R_t,t)\in T_{R_t}SO(3)\)</span> is integrated using the <strong>geodesic Euler method</strong>:</p>
+<p><span class="math display">\[R_{t+h} = \exp_{R_t}(h\cdot f_\theta(R_t,t))\]</span></p>
+<p>each step uses the exponential map to stay on the manifold, replacing the Euclidean update <span class="math inline">\(x_{t+h} = x_t + h\cdot f_\theta(x_t,t)\)</span>.</p>
+<p><strong>Higher-order Riemannian ODE solvers.</strong> The Runge-Kutta method on manifolds (Munthe-Kaas method) uses the Lie group structure:</p>
+<p><span class="math display">\[k_1 = f_\theta(R_t,t), \quad k_2 = f_\theta(\exp_{R_t}(h k_1/2), t+h/2)\]</span> <span class="math display">\[R_{t+h} = \exp_{R_t}(h k_2 + O(h^3))\]</span></p>
+<p><strong>Practical heat kernel sampling.</strong> Sampling from <span class="math inline">\(k_t(R|R_1)\)</span> on <span class="math inline">\(SO(3)\)</span>: sample <span class="math inline">\(\omega\sim p(\omega|t)\cdot\sin^2(\omega/2)\)</span> for <span class="math inline">\(p(\omega|t)\propto\sum_\ell(2\ell+1)e^{-\ell(\ell+1)t}\sin((\ell+1/2)\omega)/\sin(\omega/2)\)</span>, then sample a random axis <span class="math inline">\(\hat n\sim\text{Uniform}(S^2)\)</span>, return <span class="math inline">\(R = R_1\cdot\exp(\omega\hat n_\times)\)</span>.</p>
+<hr>
+</section>
+<section id="why-this-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-matters">WHY THIS MATTERS</h3>
+<p>In <strong>MATH 217 (ODEs and PDEs)</strong>, the heat equation on <span class="math inline">\(\mathcal{M}\)</span>: <span class="math inline">\(\partial_t k_t = \Delta_\mathcal{M}k_t\)</span> is the generalization of the Euclidean heat equation <span class="math inline">\(\partial_t u = \Delta u\)</span> from MATH 217 — the same parabolic PDE, now with the Laplace-Beltrami operator replacing the flat Laplacian, and the manifold geometry determining the fundamental solution through the spectral expansion <span class="math inline">\(k_t = \sum_k e^{-\lambda_k t}\phi_k\otimes\phi_k\)</span>. The geodesic ODE <span class="math inline">\(\ddot\gamma^k + \Gamma^k_{ij}\dot\gamma^i\dot\gamma^j = 0\)</span> — the equation defining geodesic interpolation — is the Euler-Lagrange equation for the length functional, a second-order nonlinear ODE system from MATH 217 whose unique solution is guaranteed by Picard-Lindelöf. The parallel transport ODE <span class="math inline">\(\dot V^k + \Gamma^k_{ij}\dot\gamma^i V^j = 0\)</span> is a first-order linear ODE along the geodesic — uniquely solvable by Picard-Lindelöf, producing the parallel transport map <span class="math inline">\(P_{\gamma,0\to t}\)</span> needed for the correct velocity target. The Riemannian Fokker-Planck equation <span class="math inline">\(\partial_t\rho_t = -\text{div}_\mathcal{M}(\rho_t b_t) + \frac{\sigma^2}{2}\Delta_\mathcal{M}\rho_t\)</span> is the manifold generalization of the flat Fokker-Planck equation from Phase 3 Chapter 1 — replacing <span class="math inline">\(\nabla\cdot\)</span> with <span class="math inline">\(\text{div}_\mathcal{M}\)</span> and <span class="math inline">\(\Delta\)</span> with <span class="math inline">\(\Delta_\mathcal{M}\)</span>.</p>
+<p>In <strong>MATH 325 (Analysis II)</strong>, the spectral expansion <span class="math inline">\(k_t(x,y) = \sum_k e^{-\lambda_k t}\phi_k(x)\phi_k(y)\)</span> of the heat kernel uses the completeness of the Laplace-Beltrami eigenfunctions in <span class="math inline">\(L^2(\mathcal{M},\text{vol}_g)\)</span> — the Hilbert space result from Analysis II generalized to manifolds. The convergence <span class="math inline">\(k_t\to\text{vol}(\mathcal{M})^{-1}\)</span> as <span class="math inline">\(t\to\infty\)</span> is operator convergence in <span class="math inline">\(L^2(\mathcal{M})\)</span> — the <span class="math inline">\(\ell^2\)</span> summability of <span class="math inline">\(e^{-\lambda_k t}\to 0\)</span> for all <span class="math inline">\(\lambda_k&gt;0\)</span>, using the discrete spectrum of the compact self-adjoint operator <span class="math inline">\(\Delta_\mathcal{M}\)</span> on the compact manifold <span class="math inline">\(\mathcal{M}\)</span>. The Riemannian denoising score matching objective <span class="math inline">\(\mathbb{E}[\|f_\theta-u_t(\cdot|x_1)\|_{g_x}^2]\)</span> uses the Riemannian <span class="math inline">\(L^2\)</span> inner product <span class="math inline">\(\langle u,v\rangle_{L^2(\mathcal{M},g)} = \int_\mathcal{M}g_x(u(x),v(x))\,d\text{vol}(x)\)</span> from Analysis II — the functional analytic foundation of the conditional flow matching equivalence theorem on manifolds.</p>
+<p>In <strong>MATH 302 (Matrix Theory)</strong>, the bi-invariant metric <span class="math inline">\(g_R(X,Y) = \frac{1}{2}\text{tr}(X^\top Y)\)</span> on <span class="math inline">\(SO(3)\)</span> is the Frobenius inner product from MATH 302 restricted to the tangent space — the matrix inner product that makes <span class="math inline">\(SO(3)\)</span> a Riemannian manifold with a metrically consistent Lie group structure. The Rodrigues formula <span class="math inline">\(\exp_I(\Omega) = I + \frac{\sin\theta}{\theta}\Omega + \frac{1-\cos\theta}{\theta^2}\Omega^2\)</span> is the matrix exponential of a skew-symmetric matrix — computable using the Cayley-Hamilton theorem from MATH 302 (which shows that <span class="math inline">\(\Omega^3 = -\theta^2\Omega\)</span> for <span class="math inline">\(\|\Omega\|=\sqrt{2}\theta\)</span>, making the matrix exponential series terminate after three terms). The Wigner D-matrix eigenvalues <span class="math inline">\(\lambda_\ell = \ell(\ell+1)\)</span> of <span class="math inline">\(\Delta_{SO(3)}\)</span> are the matrix-analytic counterpart of the eigenvalues of the angular momentum operators from Phase 2’s representation theory — the same <span class="math inline">\(\ell(\ell+1)\)</span> that appeared in the spherical harmonic eigenvalues <span class="math inline">\(\Delta_{S^2}Y_\ell^m = -\ell(\ell+1)Y_\ell^m\)</span> from MATH 217’s treatment of the Laplacian in spherical coordinates.</p>
+<hr>
+</section>
+</section>
+<section id="layer-3-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="layer-3-bridge">Layer 3 (Bridge)</h2>
+<p>Every element of the Pashupatinath Temple Trust pilgrimage navigation story has a precise mathematical address. We walk through them completely — Pratima’s curved manifold explanation, the gimbal lock failure, the bi-invariant metric, the exponential and logarithmic maps as SLERP, the heat kernel as isotropic diffusion, Bikash’s parallel transport error, the full flow matching training procedure, and the synthesis of every roadmap thread — until the story and the formalism are a single object seen from two angles.</p>
+<hr>
+<p><strong>The previous team’s failure — generating invalid rotations with determinant <span class="math inline">\(-1\)</span> or wrong handedness by running the OU diffusion process in Euler angle coordinates — is the formal consequence of using a coordinate chart that is singular at certain orientations, producing a forward process that is not equivariant under the group action of <span class="math inline">\(SO(3)\)</span> and whose noise distribution is distorted by the Jacobian of the coordinate transformation.</strong> The Euler angle parameterization <span class="math inline">\((\alpha,\beta,\gamma)\mapsto R_{ZYZ}(\alpha,\beta,\gamma)\)</span> has Jacobian determinant proportional to <span class="math inline">\(\sin\beta\)</span> — which vanishes at <span class="math inline">\(\beta = 0\)</span> and <span class="math inline">\(\beta = \pi\)</span>, the gimbal lock singularities. The OU noise added uniformly in Euler angle space adds noise proportional to <span class="math inline">\(1/\sin\beta\)</span> in rotation angle space near the singularities, creating anisotropic and divergent noise distributions that do not correspond to any intrinsic geometric operation on <span class="math inline">\(SO(3)\)</span>. The generated samples outside the valid range correspond to the coordinate patch’s image exceeding the fundamental domain of the parameterization — the pre-image of invalid rotation matrices under the broken coordinate chart. The correct forward process must be defined intrinsically on <span class="math inline">\(SO(3)\)</span> without any coordinate system — the Riemannian Brownian motion with generator <span class="math inline">\(\frac{1}{2}\Delta_{SO(3)}\)</span>, which is by definition coordinate-independent and produces only valid rotation matrices at every time step.</p>
+<p><strong>Pratima’s explanation that <span class="math inline">\(SO(3)\)</span> is a curved three-dimensional manifold that cannot be faithfully represented by any flat coordinate system without singularities — specifically the gimbal lock of Euler angles at <span class="math inline">\(\beta=\pm 90°\)</span> — is the precise content of the topological fact <span class="math inline">\(SO(3)\cong\mathbb{RP}^3\)</span>, which is not diffeomorphic to any open subset of <span class="math inline">\(\mathbb{R}^3\)</span>.</strong> The real projective space <span class="math inline">\(\mathbb{RP}^3\)</span> is compact and has nontrivial fundamental group <span class="math inline">\(\pi_1(\mathbb{RP}^3) = \mathbb{Z}/2\mathbb{Z}\)</span> — it cannot be covered by a single coordinate chart without singularities. The Euler angle chart is one such attempted parameterization; the axis-angle chart is another; quaternion coordinates are a double cover (<span class="math inline">\(SU(2)\cong S^3\)</span> covering <span class="math inline">\(SO(3)\)</span> 2-to-1) that avoids singularities but introduces the identification <span class="math inline">\(q\sim -q\)</span>. The Riemannian manifold structure of <span class="math inline">\(SO(3)\)</span> — its metric <span class="math inline">\(g\)</span>, exponential map, logarithmic map, and Laplace-Beltrami operator — is defined intrinsically without any chart, making the Riemannian flow matching framework coordinate-free and singularity-free.</p>
+<hr>
+<p><strong>The bi-invariant metric <span class="math inline">\(g_R(X,Y) = \frac{1}{2}\text{tr}(X^\top Y)\)</span> on <span class="math inline">\(SO(3)\)</span> — defining distance between orientations as the minimal rotation angle needed to bring one into alignment with the other — is the unique (up to scaling) Riemannian metric on <span class="math inline">\(SO(3)\)</span> that is invariant under both left multiplication <span class="math inline">\(R\mapsto LR\)</span> and right multiplication <span class="math inline">\(R\mapsto RL\)</span> for any <span class="math inline">\(L\in SO(3)\)</span>, derived from the Frobenius inner product from MATH 302.</strong> The bi-invariance means: rotating both orientations by the same global rotation (left multiplication) or by the same body-frame rotation (right multiplication) does not change their relative distance. For the pilgrim navigation problem: the distance between two pilgrim orientations <span class="math inline">\(R_1\)</span> and <span class="math inline">\(R_2\)</span> is the same whether measured in the world frame or in the pilgrim’s body frame — a physically correct property that Euler angle distances do not have. The geodesic distance <span class="math inline">\(d_{SO(3)}(R_1,R_2) = |\theta(R_1^\top R_2)| = \frac{1}{\sqrt{2}}\|\log(R_1^\top R_2)\|_F\)</span> is computed as the Frobenius norm of the matrix logarithm — the MATH 302 matrix norm applied to the rotation difference matrix <span class="math inline">\(R_1^\top R_2\in SO(3)\)</span>.</p>
+<p><strong>The Rodrigues rotation formula <span class="math inline">\(\exp_I(\Omega) = I + \frac{\sin\theta}{\theta}\Omega + \frac{1-\cos\theta}{\theta^2}\Omega^2\)</span> for <span class="math inline">\(\Omega\in\mathfrak{so}(3)\)</span> with <span class="math inline">\(\|\Omega\|_F = \sqrt{2}\theta\)</span> — the exponential map at the identity of <span class="math inline">\(SO(3)\)</span> — terminates after three terms by the Cayley-Hamilton theorem from MATH 302 applied to the skew-symmetric matrix <span class="math inline">\(\Omega\)</span>.</strong> The Cayley-Hamilton theorem states that every matrix satisfies its own characteristic polynomial. For a skew-symmetric <span class="math inline">\(3\times 3\)</span> matrix <span class="math inline">\(\Omega\)</span> with <span class="math inline">\(\|\Omega\|_F = \sqrt{2}\theta\)</span>, the characteristic polynomial is <span class="math inline">\(\lambda(\lambda^2+\theta^2) = 0\)</span>, giving the minimal polynomial identity <span class="math inline">\(\Omega(\Omega^2+\theta^2 I) = 0\)</span>, i.e., <span class="math inline">\(\Omega^3 = -\theta^2\Omega\)</span>. This makes all powers <span class="math inline">\(\Omega^k\)</span> for <span class="math inline">\(k\geq 3\)</span> expressible in terms of <span class="math inline">\(\Omega\)</span> and <span class="math inline">\(\Omega^2\)</span>, and the matrix exponential series <span class="math inline">\(e^\Omega = \sum_{k=0}^\infty\Omega^k/k!\)</span> collapses to the three-term Rodrigues formula by grouping even and odd powers: <span class="math inline">\(\sum_{k=0}^\infty(-1)^k\theta^{2k}/(2k)! = \cos\theta\)</span> and <span class="math inline">\(\sum_{k=0}^\infty(-1)^k\theta^{2k+1}/(2k+1)! = \sin\theta\)</span>. The formula <span class="math inline">\(\exp_R(X) = R\cdot\exp_I(R^\top X)\)</span> at general <span class="math inline">\(R\)</span> uses left-translation invariance of the metric: the exponential map at <span class="math inline">\(R\)</span> is computed by translating to the identity, applying the Rodrigues formula, and translating back.</p>
+<p><strong>The SLERP formula <span class="math inline">\(R_t = R_0\cdot(R_0^\top R_1)^t = R_0\cdot\exp_I(t\cdot\log_I(R_0^\top R_1))\)</span> — the geodesic interpolation between orientations <span class="math inline">\(R_0\)</span> and <span class="math inline">\(R_1\)</span> at time <span class="math inline">\(t\in[0,1]\)</span> — is the Riemannian exponential map applied to the scaled logarithmic map, and is the intrinsic <span class="math inline">\(SO(3)\)</span> analogue of the Euclidean linear interpolation <span class="math inline">\((1-t)x_0+tx_1\)</span>.</strong> The pilgrim at time <span class="math inline">\(t\)</span> of their reorientation journey from <span class="math inline">\(R_0\)</span> to <span class="math inline">\(R_1\)</span> is at the orientation <span class="math inline">\(R_t\)</span> obtained by rotating from <span class="math inline">\(R_0\)</span> by fraction <span class="math inline">\(t\)</span> of the total rotation needed to reach <span class="math inline">\(R_1\)</span> — following the shortest rotation path at constant angular velocity. The SLERP has constant speed in the Riemannian sense: <span class="math inline">\(\|\dot R_t\|_{g_{R_t}} = d_{SO(3)}(R_0,R_1)\)</span> for all <span class="math inline">\(t\in[0,1]\)</span>, the constant speed property of geodesics. The velocity <span class="math inline">\(\dot R_t = R_0\cdot\Omega\cdot\exp_I(t\Omega)\)</span> for <span class="math inline">\(\Omega = \log_I(R_0^\top R_1)\)</span> is a tangent vector in <span class="math inline">\(T_{R_t}SO(3)\)</span> — an element of the Lie algebra translated to the current point — confirming that the geodesic velocity is a valid tangent vector to <span class="math inline">\(SO(3)\)</span> at every time.</p>
+<hr>
+<p><strong>The heat kernel on <span class="math inline">\(SO(3)\)</span>: <span class="math inline">\(k_t(R,R') = \sum_{\ell=0}^\infty(2\ell+1)e^{-\ell(\ell+1)t}\chi_\ell(R'^\top R)\)</span> — the fundamental solution of the heat equation <span class="math inline">\(\partial_t k_t = \Delta_{SO(3)}k_t\)</span> — uses the Wigner D-matrix characters <span class="math inline">\(\chi_\ell(Q) = \text{tr}(D^{(\ell)}(Q))\)</span> as the eigenfunctions of <span class="math inline">\(\Delta_{SO(3)}\)</span>, with eigenvalues <span class="math inline">\(\lambda_\ell = \ell(\ell+1)\)</span> from Phase 2’s representation theory.</strong> The spectral expansion of the heat kernel <span class="math inline">\(k_t = \sum_k e^{-\lambda_k t}\phi_k\otimes\phi_k\)</span> — general Laplace-Beltrami spectral theory from Phase 2’s Chapter 3 — specializes to the <span class="math inline">\(SO(3)\)</span> case via the Peter-Weyl theorem: the complete orthonormal basis for <span class="math inline">\(L^2(SO(3),\text{Haar})\)</span> consists of the matrix elements <span class="math inline">\(\sqrt{2\ell+1}D^{(\ell)}_{mn}(R)\)</span> for <span class="math inline">\(\ell\geq 0\)</span> and <span class="math inline">\(m,n\in\{-\ell,\ldots,\ell\}\)</span>. The Laplace-Beltrami operator <span class="math inline">\(\Delta_{SO(3)}\)</span> acts on each irrep <span class="math inline">\(D^{(\ell)}\)</span> as scalar multiplication by <span class="math inline">\(-\ell(\ell+1)\)</span> — the angular momentum eigenvalue from Phase 2’s Chapter 1 group theory: <span class="math inline">\(\Delta_{SO(3)}D^{(\ell)}_{mn} = -\ell(\ell+1)D^{(\ell)}_{mn}\)</span>. The character <span class="math inline">\(\chi_\ell(Q) = \sum_m D^{(\ell)}_{mm}(Q) = \sum_m e^{-im\theta}\)</span> for rotation <span class="math inline">\(Q\)</span> with angle <span class="math inline">\(\theta\)</span> — the trace of the Wigner D-matrix — depends only on the rotation angle, making the heat kernel <span class="math inline">\(k_t(R,R')\)</span> a function only of <span class="math inline">\(d_{SO(3)}(R,R')\)</span> (the bi-invariant property). The factor <span class="math inline">\((2\ell+1)\)</span> counts the dimension of the <span class="math inline">\(\ell\)</span>-th irrep — the number of matrix elements <span class="math inline">\(D^{(\ell)}_{mn}\)</span> contributing at each frequency level.</p>
+<p><strong>The convergence <span class="math inline">\(k_t(R,R')\to 1\)</span> (the Haar measure density) as <span class="math inline">\(t\to\infty\)</span> — the pilgrim’s orientation distribution spreading to uniform over all possible orientations after long random walking — is the exponential decay of all <span class="math inline">\(\ell&gt;0\)</span> terms in the spectral expansion, with the <span class="math inline">\(\ell=0\)</span> constant term surviving.</strong> At <span class="math inline">\(\ell=0\)</span>: <span class="math inline">\(D^{(0)}(R) = 1\)</span> for all <span class="math inline">\(R\)</span> (the trivial representation), <span class="math inline">\(\chi_0(Q) = 1\)</span>, eigenvalue <span class="math inline">\(\lambda_0 = 0\)</span>, so the <span class="math inline">\(\ell=0\)</span> term contributes <span class="math inline">\((2\cdot 0+1)e^0\cdot 1 = 1\)</span> for all <span class="math inline">\(t\)</span> — the constant function on <span class="math inline">\(SO(3)\)</span> that integrates to <span class="math inline">\(1\)</span> under the Haar measure. For all <span class="math inline">\(\ell\geq 1\)</span>: <span class="math inline">\(\lambda_\ell = \ell(\ell+1)\geq 2\)</span>, so <span class="math inline">\(e^{-\ell(\ell+1)t}\to 0\)</span> as <span class="math inline">\(t\to\infty\)</span> — all non-trivial frequency components decay exponentially. The spectral gap <span class="math inline">\(\lambda_1 = 2\)</span> governs the rate of convergence to uniform: <span class="math inline">\(\|k_t(\cdot,\cdot)-1\|_{L^2}\leq Ce^{-2t}\)</span> for some constant <span class="math inline">\(C\)</span> — the same spectral gap that controlled over-smoothing in Phase 2’s Chapter 2 GNN analysis, now controlling the rate at which the forward diffusion process destroys information about the original orientation <span class="math inline">\(R_1\)</span>.</p>
+<p><strong>The Varadhan short-time asymptotic <span class="math inline">\(k_t(R,R')\approx(4\pi t)^{-3/2}e^{-d_{SO(3)}(R,R')^2/4t}\cdot\frac{d_{SO(3)}(R,R')/2}{\sin(d_{SO(3)}(R,R')/2)}\)</span> — the heat kernel concentrated near <span class="math inline">\(R'\)</span> like a Gaussian in geodesic distance for small <span class="math inline">\(t\)</span>, with a curvature correction factor — confirms that the Riemannian forward process is the intrinsic analogue of the Euclidean Gaussian noise, with the geodesic distance replacing the Euclidean distance.</strong> The flat-space heat kernel is <span class="math inline">\((4\pi t)^{-d/2}e^{-\|x-y\|^2/4t}\)</span> — the Gaussian with variance <span class="math inline">\(2t\)</span> in Euclidean distance. The <span class="math inline">\(SO(3)\)</span> correction factor <span class="math inline">\(\frac{\theta/2}{\sin(\theta/2)}\)</span> for <span class="math inline">\(\theta = d_{SO(3)}(R,R')\)</span> — the Jacobian of the exponential map from Phase 2’s Chapter 3 Topic 1 — accounts for the curvature of <span class="math inline">\(SO(3)\)</span>: geodesic balls on <span class="math inline">\(SO(3)\)</span> have smaller volume than Euclidean balls of the same radius (because <span class="math inline">\(SO(3)\)</span> has positive sectional curvature), so the density is higher than the flat Gaussian prediction and must be corrected by this factor. The Riemannian Tweedie formula <span class="math inline">\(s_t(x) = -\mathbb{E}[\log_x(X_1)|X_t=x]/(2t(1-t))\)</span> is the manifold analogue of the Euclidean formula <span class="math inline">\(s_t(x) = -(x-\alpha_t\hat x_0)/\sigma_t^2\)</span> — replacing the Euclidean difference <span class="math inline">\(x-\hat x_0\)</span> with the Riemannian logarithm <span class="math inline">\(\log_x(X_1)\in T_x\mathcal{M}\)</span>, which is the geodesic direction from <span class="math inline">\(x\)</span> toward the data point <span class="math inline">\(X_1\)</span> measured in the tangent space.</p>
+<hr>
+<p><strong>Bikash’s error — training the network to predict <span class="math inline">\(v = \log_{R_0}(R_1)\in T_{R_0}SO(3)\)</span> at the point <span class="math inline">\(R_t\in SO(3)\)</span>, comparing objects from different tangent spaces — is the precise failure of treating a curved manifold as flat, comparing vectors from <span class="math inline">\(T_{R_0}SO(3)\)</span> and <span class="math inline">\(T_{R_t}SO(3)\)</span> as if they were the same vector space.</strong> On <span class="math inline">\(\mathbb{R}^d\)</span>, all tangent spaces are canonically identified: <span class="math inline">\(T_x\mathbb{R}^d\cong\mathbb{R}^d\)</span> for all <span class="math inline">\(x\)</span>, and the parallel transport map is the identity. The Euclidean rectified flow velocity target <span class="math inline">\(u_t = x_1-x_0\)</span> is a vector in <span class="math inline">\(T_{x_0}\mathbb{R}^d = \mathbb{R}^d\)</span>, identically used as a target in <span class="math inline">\(T_{x_t}\mathbb{R}^d = \mathbb{R}^d\)</span> because the two spaces are the same. On <span class="math inline">\(SO(3)\)</span>, there is no canonical identification between <span class="math inline">\(T_{R_0}SO(3)\)</span> and <span class="math inline">\(T_{R_t}SO(3)\)</span> for <span class="math inline">\(R_0\neq R_t\)</span> — they are different vector spaces, related only through a choice of path. The naive comparison <span class="math inline">\(\|f_\theta(R_t,t) - \log_{R_0}(R_1)\|^2\)</span> subtracts a vector in <span class="math inline">\(T_{R_t}SO(3)\)</span> from a vector in <span class="math inline">\(T_{R_0}SO(3)\)</span>, which is geometrically undefined on a curved manifold — equivalent to subtracting temperature in Kathmandu from altitude in Namche Bazaar.</p>
+<p><strong>The parallel transport correction <span class="math inline">\(P_{\gamma,0\to t}(\log_{R_0}(R_1))\in T_{R_t}SO(3)\)</span> — moving the initial geodesic velocity from <span class="math inline">\(T_{R_0}SO(3)\)</span> to <span class="math inline">\(T_{R_t}SO(3)\)</span> along the geodesic <span class="math inline">\(\gamma\)</span> — is the unique geometrically correct velocity target at <span class="math inline">\(R_t\)</span>, satisfying <span class="math inline">\(\nabla_{\dot\gamma}V = 0\)</span> along <span class="math inline">\(\gamma\)</span> with initial value <span class="math inline">\(V(0) = \log_{R_0}(R_1)\)</span>.</strong> On <span class="math inline">\(SO(3)\)</span> with the bi-invariant metric, the parallel transport formula <span class="math inline">\(P_{\gamma,0\to t}(X_0) = \gamma(t)\cdot\exp(-\frac{t}{2}\Omega)\cdot R_0^\top X_0\cdot\exp(\frac{t}{2}\Omega)\)</span> for geodesic <span class="math inline">\(\gamma(t) = R_0\exp(t\Omega)\)</span> is a conjugation by the half-angle rotation — the curvature of <span class="math inline">\(SO(3)\)</span> rotates the tangent vector by half the rotation angle as it is transported along the geodesic. This is the holonomy of <span class="math inline">\(SO(3)\)</span>: parallel transporting a vector around a geodesic triangle accumulates a rotation proportional to the area of the triangle times the sectional curvature — the Gauss-Bonnet theorem from Phase 2’s Chapter 3 Topic 1 applied to the group manifold. The parallel transport ODE <span class="math inline">\(\dot V^k + \Gamma^k_{ij}\dot\gamma^i V^j = 0\)</span> from Phase 0’s differential geometry, solved uniquely by Picard-Lindelöf, is what produces <span class="math inline">\(P_{\gamma,0\to t}\)</span> — and ignoring it, as Bikash did, produces systematic training errors that scale with the curvature of <span class="math inline">\(SO(3)\)</span> (proportional to <span class="math inline">\(1/4\)</span> for the standard normalization) times the squared geodesic distance <span class="math inline">\(d_{SO(3)}(R_0,R_t)^2\)</span>.</p>
+<hr>
+<p><strong>The complete Riemannian conditional flow matching objective <span class="math inline">\(\mathcal{L}_{SO(3)}(\theta) = \mathbb{E}_{t,R_1,R_0}[\|f_\theta(R_t,t) - P_{\gamma,0\to t}(\log_{R_0}(R_1))\|_{g_{R_t}}^2]\)</span> — using the Riemannian norm <span class="math inline">\(\|v\|_{g_R}^2 = \frac{1}{2}\text{tr}(v^\top v)\)</span> for <span class="math inline">\(v\in T_RSO(3)\)</span> — is the <span class="math inline">\(SO(3)\)</span> instantiation of the general Riemannian CFM framework, with the conditional flow matching equivalence theorem <span class="math inline">\(\nabla_\theta\mathcal{L}_{\text{RCFM}} = \nabla_\theta\mathcal{L}_{\text{RFM}}\)</span> holding by the same tower property argument from MATH 208 as in the Euclidean case.</strong> The training procedure: sample <span class="math inline">\(R_1\sim p_{\text{data}}\)</span> (a data pilgrim orientation), sample <span class="math inline">\(R_0\sim\text{Haar}(SO(3))\)</span> (a uniform random orientation), sample <span class="math inline">\(t\sim U[0,1]\)</span>, compute <span class="math inline">\(R_t = R_0\exp(t\log_I(R_0^\top R_1))\)</span> (SLERP interpolation), compute the parallel-transported velocity <span class="math inline">\(P_{\gamma,0\to t}(\log_{R_0}(R_1))\)</span> (correct tangent space target), evaluate <span class="math inline">\(f_\theta(R_t,t)\in T_{R_t}SO(3)\)</span> (network output), compute Riemannian MSE loss <span class="math inline">\(\frac{1}{2}\text{tr}((f_\theta - P_{\gamma,0\to t}v)^\top(f_\theta - P_{\gamma,0\to t}v))\)</span>, backpropagate. The generation procedure: sample <span class="math inline">\(R_0\sim\text{Haar}(SO(3))\)</span>, integrate the geodesic Euler method <span class="math inline">\(R_{t+h} = \exp_{R_t}(h\cdot f_\theta(R_t,t))\)</span> from <span class="math inline">\(t=0\)</span> to <span class="math inline">\(t=1\)</span>, output <span class="math inline">\(R_1 = R_T\)</span> — a valid element of <span class="math inline">\(SO(3)\)</span> at every integration step, guaranteed by the exponential map’s codomain.</p>
+<p><strong>The geodesic Euler method <span class="math inline">\(R_{t+h} = \exp_{R_t}(h\cdot f_\theta(R_t,t))\)</span> — using the exponential map to update on <span class="math inline">\(SO(3)\)</span> rather than the Euclidean update <span class="math inline">\(R_{t+h} = R_t + h\cdot f_\theta(R_t,t)\)</span> — stays on the manifold at every step because <span class="math inline">\(\exp_R(v)\in SO(3)\)</span> for any <span class="math inline">\(v\in T_RSO(3)\)</span>, while the Euclidean update <span class="math inline">\(R_t + hv\notin SO(3)\)</span> in general.</strong> The Euclidean update produces a matrix that is no longer orthogonal: <span class="math inline">\((R_t+hv)^\top(R_t+hv) = I + h(R_t^\top v + v^\top R_t) + h^2 v^\top v = I + O(h)\)</span> — deviating from identity at first order in <span class="math inline">\(h\)</span>. The exponential map update is exactly on <span class="math inline">\(SO(3)\)</span> at all step sizes <span class="math inline">\(h\)</span>: <span class="math inline">\(\exp_{R_t}(hv)^\top\exp_{R_t}(hv) = I\)</span> exactly, because <span class="math inline">\(\exp_I(h R_t^\top v)\in SO(3)\)</span> and <span class="math inline">\(SO(3)\)</span> is closed under matrix multiplication. This is the fundamental advantage of Riemannian ODE solvers over projected solvers (which take a Euclidean step and then project back onto the manifold): the exponential map step is exactly on the manifold with no projection error, and the Rodrigues formula computes it in <span class="math inline">\(O(d^2)\)</span> matrix operations for <span class="math inline">\(d=3\)</span> in the <span class="math inline">\(SO(3)\)</span> case.</p>
+<hr>
+<p><strong>The synthesis of the entire roadmap — every mathematical thread from Phase 0 through Phase 3 converging in the <span class="math inline">\(SO(3)\)</span> flow matching model — is not a coincidence but the inevitable consequence of the problem’s geometric structure.</strong> Phase 0’s exponential map <span class="math inline">\(\exp_R\)</span> and logarithmic map <span class="math inline">\(\log_R\)</span> are used for SLERP interpolation and the geodesic Euler solver. Phase 0’s Riemannian metric <span class="math inline">\(g_R = \frac{1}{2}\text{tr}(\cdot^\top\cdot)\)</span> defines the loss function’s norm. Phase 0’s parallel transport equation <span class="math inline">\(\dot V^k+\Gamma^k_{ij}\dot\gamma^i V^j = 0\)</span> defines the correct velocity target. Phase 1’s Wasserstein-2 distance on <span class="math inline">\(SO(3)\)</span> using geodesic cost <span class="math inline">\(d_{SO(3)}^2\)</span> defines the optimal coupling problem whose solution the reflow procedure converges to. Phase 1’s Brenier theorem on <span class="math inline">\(SO(3)\)</span> — the optimal transport map for the geodesic squared cost is a <span class="math inline">\(c\)</span>-cyclically monotone map — characterizes the limiting coupling after infinite reflow iterations. Phase 2’s Laplace-Beltrami operator <span class="math inline">\(\Delta_{SO(3)}\)</span> defines the heat equation whose fundamental solution <span class="math inline">\(k_t\)</span> is the forward process. Phase 2’s Wigner D-matrices <span class="math inline">\(D^{(\ell)}\)</span> are the eigenfunctions of <span class="math inline">\(\Delta_{SO(3)}\)</span>, giving the spectral expansion of <span class="math inline">\(k_t\)</span>. Phase 2’s equivariant architecture — the <span class="math inline">\(SO(3)\)</span>-equivariant GNN with spherical harmonic features and Clebsch-Gordan tensor products — parameterizes the velocity field <span class="math inline">\(f_\theta\)</span> with the required equivariance <span class="math inline">\(f_\theta(R\cdot x,t) = R\cdot f_\theta(x,t)\)</span>. Phase 3’s JKO scheme characterizes the heat kernel as the gradient flow of entropy on <span class="math inline">\(\mathcal{P}_2(SO(3))\)</span>. Phase 3’s Fokker-Planck equation on <span class="math inline">\(SO(3)\)</span> governs the evolution of the forward and reverse process densities. Phase 3’s conditional flow matching framework — with the tower property equivalence <span class="math inline">\(\mathcal{L}_{\text{RCFM}} = \mathcal{L}_{\text{RFM}}+C\)</span> — makes the training objective tractable without computing the intractable marginal velocity field.</p>
+<hr>
+<p><strong>The connection to MATH 217 is through the geodesic ODE, parallel transport ODE, and manifold heat equation.</strong> The geodesic equation <span class="math inline">\(\ddot\gamma^k+\Gamma^k_{ij}\dot\gamma^i\dot\gamma^j = 0\)</span> defines SLERP — solved by the Rodrigues formula via Cayley-Hamilton. The parallel transport equation <span class="math inline">\(\dot V^k+\Gamma^k_{ij}\dot\gamma^i V^j = 0\)</span> defines the correct velocity target — solved uniquely by Picard-Lindelöf, producing the half-angle conjugation formula for <span class="math inline">\(SO(3)\)</span>. The heat equation <span class="math inline">\(\partial_t k_t = \Delta_{SO(3)}k_t\)</span> defines the forward process — solved by the spectral expansion using the completeness of Wigner D-matrix characters. <strong>The connection to MATH 325 is through the <span class="math inline">\(L^2(\mathcal{M},\text{vol}_g)\)</span> spectral theory.</strong> The completeness of the Wigner D-matrix basis in <span class="math inline">\(L^2(SO(3),\text{Haar})\)</span> gives the spectral expansion of <span class="math inline">\(k_t\)</span>. The convergence <span class="math inline">\(k_t\to 1\)</span> in <span class="math inline">\(L^2\)</span> uses <span class="math inline">\(e^{-\ell(\ell+1)t}\to 0\)</span> for <span class="math inline">\(\ell\geq 1\)</span> — the <span class="math inline">\(\ell^2\)</span> summability of the spectral coefficients. The RCFM equivalence theorem uses the tower property <span class="math inline">\(\mathbb{E}[\mathbb{E}[Y|Z]]=\mathbb{E}[Y]\)</span> from MATH 208 in the Riemannian <span class="math inline">\(L^2(g_x)\)</span> inner product. <strong>The connection to MATH 302 is through the matrix exponential, Frobenius inner product, and Cayley-Hamilton theorem.</strong> The Rodrigues formula is the matrix exponential with Cayley-Hamilton truncation. The bi-invariant metric is the Frobenius inner product restricted to tangent spaces. The Wigner D-matrix eigenvalues <span class="math inline">\(\ell(\ell+1)\)</span> are the eigenvalues of the angular momentum operator in matrix representation — the same eigenvalue problem from MATH 302’s matrix theory applied to the Lie algebra representation.</p>
+<hr>
+<p>The Pashupatinath Temple Trust pilgrimage navigation story — Pratima’s gimbal lock explanation as the singularity of the Euler angle chart, the bi-invariant metric as the Frobenius inner product on tangent spaces, the Rodrigues exponential map derived by Cayley-Hamilton, SLERP as geodesic interpolation via <span class="math inline">\(\exp\)</span> and <span class="math inline">\(\log\)</span>, the heat kernel spectral expansion through Wigner D-matrix characters, the Varadhan asymptotic as the curvature-corrected Gaussian approximation, Bikash’s parallel transport error as the consequence of comparing vectors in different tangent spaces, the correct training target as <span class="math inline">\(P_{\gamma,0\to t}(\log_{R_0}(R_1))\)</span>, the geodesic Euler solver staying on <span class="math inline">\(SO(3)\)</span> at every step, and the synthesis of all four phases in a single model — is now completely dissolved into its mathematical form. The manifold is <span class="math inline">\(SO(3)\cong\mathbb{RP}^3\)</span>. The metric is <span class="math inline">\(g_R(X,Y) = \frac{1}{2}\text{tr}(X^\top Y)\)</span>. The distance is <span class="math inline">\(d_{SO(3)}(R_0,R_1) = |\theta(R_0^\top R_1)|\)</span>. The exponential map is the Rodrigues formula. The logarithmic map is <span class="math inline">\(\log_{R_0}(R_1) = R_0\log_I(R_0^\top R_1)\)</span>. The SLERP is <span class="math inline">\(R_t = R_0(R_0^\top R_1)^t\)</span>. The heat kernel is <span class="math inline">\(k_t = \sum_\ell(2\ell+1)e^{-\ell(\ell+1)t}\chi_\ell\)</span>. The Varadhan asymptotic is <span class="math inline">\(k_t\approx(4\pi t)^{-3/2}e^{-d^2/4t}\cdot\frac{d/2}{\sin(d/2)}\)</span>. The parallel transport is <span class="math inline">\(P_{\gamma,0\to t}(X_0) = \gamma(t)\exp(-\frac{t}{2}\Omega)R_0^\top X_0\exp(\frac{t}{2}\Omega)\)</span>. The RCFM objective is <span class="math inline">\(\mathbb{E}[\|f_\theta(R_t,t)-P_{\gamma,0\to t}(\log_{R_0}(R_1))\|_{g_{R_t}}^2]\)</span>. The geodesic Euler solver is <span class="math inline">\(R_{t+h} = \exp_{R_t}(h f_\theta(R_t,t))\)</span>.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

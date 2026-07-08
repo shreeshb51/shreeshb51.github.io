@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>fokker_planck – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#topic-2--the-fokker-planck-equation-time-evolution-of-probability-densities" id="toc-topic-2--the-fokker-planck-equation-time-evolution-of-probability-densities" class="nav-link active" data-scroll-target="#topic-2--the-fokker-planck-equation-time-evolution-of-probability-densities">Topic 2 -The Fokker-Planck Equation: Time Evolution of Probability Densities</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#layer-1-story" id="toc-layer-1-story" class="nav-link" data-scroll-target="#layer-1-story">Layer 1 (Story)</a></li>
+  <li><a href="#layer-2-mathematics" id="toc-layer-2-mathematics" class="nav-link" data-scroll-target="#layer-2-mathematics">Layer 2 (Mathematics)</a></li>
+  <li><a href="#layer-3-bridge" id="toc-layer-3-bridge" class="nav-link" data-scroll-target="#layer-3-bridge">Layer 3 (Bridge)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<section id="topic-2--the-fokker-planck-equation-time-evolution-of-probability-densities" class="level1">
+<h1>Topic 2 -The Fokker-Planck Equation: Time Evolution of Probability Densities</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>Topic 1 established the variational architecture of probability flow: the JKO scheme showed that the heat equation is gradient descent of entropy in Wasserstein space, and that every PDE governing distributional evolution is the gradient flow of some functional. The framework is geometric and variational — it tells you that probability distributions flow downhill on functionals, and that the JKO proximal step discretizes this flow correctly.</p>
+<p>Topic 2 shifts from the variational to the dynamical. Instead of asking which functional is being minimized, it asks how individual particles move. Instead of describing the evolution of a density <span class="math inline">\(\rho_t\)</span> through a PDE on functions, it describes the evolution of individual random particles through a stochastic differential equation on trajectories. The Fokker-Planck equation is the bridge between these two descriptions: it is the PDE that governs the density <span class="math inline">\(\rho_t\)</span> of a cloud of particles each following a stochastic differential equation. The two perspectives — population-level density evolution and individual-level stochastic trajectory — are two windows into the same mathematical object, and the Fokker-Planck equation is the precise theorem that makes this duality exact.</p>
+<p>This duality is not merely conceptually elegant. It is computationally essential for generative modeling. A generative model must do two things: run a forward process that transforms data into noise (the noising direction), and run a reverse process that transforms noise back into data (the generation direction). The forward process is most naturally described at the particle level — each data point <span class="math inline">\(x_0\)</span> follows a stochastic trajectory <span class="math inline">\(X_t\)</span> driven by a specific SDE, accumulating noise until it becomes indistinguishable from a Gaussian. The reverse process is most naturally described at the density level — starting from the Gaussian density <span class="math inline">\(\rho_T \approx \mathcal{N}(0,I)\)</span>, evolve <span class="math inline">\(\rho_t\)</span> backward in time until it matches the data density <span class="math inline">\(\rho_0 = p_{\text{data}}\)</span>. The Fokker-Planck equation is the theorem that connects these two descriptions: knowing the SDE driving individual particles tells you the PDE governing the density, and vice versa. Every modern diffusion model — DDPM, score-based SDE, DDIM, flow matching — is a specific choice of SDE paired with its Fokker-Planck equation, and the training procedure is the method for learning the drift term that drives both.</p>
+<p>This topic has three components that build in strict sequence.</p>
+<p>The first component is <strong>the stochastic differential equation and its relationship to the Fokker-Planck equation</strong>. A stochastic differential equation <span class="math inline">\(dX_t = b(X_t,t)dt + \sigma(t)dW_t\)</span> describes the trajectory of a single random particle: at each instant, the particle moves by a deterministic drift <span class="math inline">\(b(X_t,t)dt\)</span> plus a random Gaussian perturbation <span class="math inline">\(\sigma(t)dW_t\)</span> from the Brownian motion <span class="math inline">\(W_t\)</span>. The drift <span class="math inline">\(b\)</span> is a vector field on <span class="math inline">\(\mathbb{R}^d\)</span> — it points in the direction the particle is being pushed deterministically at each location and time. The noise coefficient <span class="math inline">\(\sigma(t)\)</span> controls how much randomness is added at each instant. The Fokker-Planck equation says: if many particles independently follow this SDE, starting from an initial density <span class="math inline">\(\rho_0\)</span>, then the density <span class="math inline">\(\rho_t\)</span> of the particle cloud at time <span class="math inline">\(t\)</span> satisfies <span class="math inline">\(\partial_t\rho_t = -\nabla\cdot(\rho_t b_t) + \frac{\sigma^2}{2}\Delta\rho_t\)</span>. The first term <span class="math inline">\(-\nabla\cdot(\rho_t b_t)\)</span> is advection — probability mass being carried by the drift. The second term <span class="math inline">\(\frac{\sigma^2}{2}\Delta\rho_t\)</span> is diffusion — probability mass spreading due to Brownian noise. Together they describe the two forces acting on the probability cloud: being pushed by the deterministic drift and being spread by the stochastic noise.</p>
+<p>The second component is <strong>the continuity equation and its role as the noiseless limit</strong>. When <span class="math inline">\(\sigma = 0\)</span> — no Brownian noise, purely deterministic flow — the Fokker-Planck equation reduces to the continuity equation <span class="math inline">\(\partial_t\rho_t + \nabla\cdot(\rho_t v_t) = 0\)</span> with <span class="math inline">\(v_t = b_t\)</span>. This is the equation of probability mass conservation under a deterministic velocity field — the same continuity equation that appeared in the Benamou-Brenier formula of Phase 1 and in the JKO scheme’s characterization of Wasserstein geodesics. The continuity equation is the skeleton of the Fokker-Planck equation: add noise (<span class="math inline">\(\sigma &gt; 0\)</span>) and you get the full Fokker-Planck; remove noise (<span class="math inline">\(\sigma = 0\)</span>) and you get pure advection. This connection is crucial for generative modeling: diffusion models use the full Fokker-Planck equation with noise for training stability, while flow matching models use the continuity equation with <span class="math inline">\(\sigma = 0\)</span> for faster, straighter generation trajectories. Both are special cases of the same Fokker-Planck family, parameterized by the noise level <span class="math inline">\(\sigma\)</span>.</p>
+<p>The third component is <strong>the Ornstein-Uhlenbeck process and the forward diffusion process of generative models</strong>. The specific SDE used in diffusion models is the Ornstein-Uhlenbeck process: <span class="math inline">\(dX_t = -\frac{1}{2}X_t\,dt + dW_t\)</span> — a particle being pulled toward the origin by a linear restoring force <span class="math inline">\(-X_t/2\)</span>, plus Brownian noise. This SDE has the remarkable property that its stationary distribution — the distribution toward which <span class="math inline">\(\rho_t\)</span> converges as <span class="math inline">\(t\to\infty\)</span> — is exactly the standard Gaussian <span class="math inline">\(\mathcal{N}(0,I)\)</span>. This makes the OU process the canonical forward process for generative modeling: start any data distribution <span class="math inline">\(\rho_0 = p_{\text{data}}\)</span>, run the OU SDE forward for time <span class="math inline">\(T\)</span>, and the density <span class="math inline">\(\rho_T\)</span> is approximately Gaussian regardless of what <span class="math inline">\(p_{\text{data}}\)</span> was. The reverse process — the generation direction — is a different SDE running backward in time, whose drift involves the score function <span class="math inline">\(\nabla\log\rho_t\)</span> that Topic 1 identified as the fundamental object of Wasserstein gradient flows. The Fokker-Planck equation for the OU process is a specific free energy gradient flow — the gradient flow of <span class="math inline">\(\mathcal{F}(\rho) = \int\rho\log\rho + \frac{1}{2}\int\|x\|^2\rho\,dx\)</span>, exactly the free energy functional of Topic 1 with quadratic potential <span class="math inline">\(V(x) = \|x\|^2/2\)</span>.</p>
+<p>The connections to your curriculum are direct and multiple.</p>
+<p>Your MATH 217 course on ODEs and PDEs is the central scaffold. The Fokker-Planck equation is a second-order linear parabolic PDE — the variable-coefficient generalization of the heat equation whose solvability, maximum principle, and long-time behavior you have studied in MATH 217. The method of characteristics from MATH 217 applies to the advection term <span class="math inline">\(-\nabla\cdot(\rho_t b_t)\)</span>: characteristics are the trajectories of the ODE <span class="math inline">\(\dot x = b(x,t)\)</span>, along which <span class="math inline">\(\rho_t\)</span> is constant in the absence of diffusion. The existence and uniqueness of SDE solutions — the stochastic analogue of Picard-Lindelöf from MATH 217 — holds under the same Lipschitz conditions on <span class="math inline">\(b\)</span> that guarantee ODE well-posedness.</p>
+<p>Your MATH 208 course on Statistics and Probability provides the Brownian motion <span class="math inline">\(W_t\)</span> — the continuous-time stochastic process with independent Gaussian increments, <span class="math inline">\(W_t - W_s \sim \mathcal{N}(0,(t-s)I)\)</span> for <span class="math inline">\(t &gt; s\)</span>. The Gaussian distribution of the OU process’s stationary state, the conditional Gaussian distributions along the OU trajectory, and the denoising interpretation of score matching all use the Gaussian probability theory from MATH 208. The transition density of the OU process — the conditional distribution of <span class="math inline">\(X_t\)</span> given <span class="math inline">\(X_0 = x_0\)</span> — is Gaussian with explicitly computable mean and variance, computed by solving the linear SDE exactly using the integrating factor technique from MATH 217.</p>
+<p>Your MATH 201 course on Advanced Calculus provides Itô’s formula — the stochastic chain rule <span class="math inline">\(df(X_t) = \nabla f(X_t)\cdot dX_t + \frac{1}{2}\text{tr}(\nabla^2 f(X_t))\sigma^2\,dt\)</span> — which is the multivariable chain rule from MATH 201 with an additional second-order correction term arising from the quadratic variation of Brownian motion. This second-order term is the origin of the diffusion term <span class="math inline">\(\frac{\sigma^2}{2}\Delta\rho_t\)</span> in the Fokker-Planck equation: the Laplacian <span class="math inline">\(\Delta\)</span> appears because Itô’s formula produces a trace of the Hessian, which for isotropic noise <span class="math inline">\(\sigma I\)</span> reduces to <span class="math inline">\(\sigma^2\)</span> times the Laplacian.</p>
+<p>By the end of this topic, the Fokker-Planck equation will feel not like a technical PDE imported from statistical physics but like the inevitable consequence of asking two equivalent questions simultaneously: how does the density of a particle cloud evolve, and how do individual particles move? Both questions have the same answer, expressed in two different mathematical languages — the PDE language of the Fokker-Planck equation and the SDE language of the stochastic trajectory. Every generative model in Chapter 2 is a specific answer to these two questions: a specific SDE for the particles and the corresponding Fokker-Planck equation for the density, with the training procedure learning the drift term that makes the reverse flow produce data from noise.</p>
+<hr>
+</section>
+<section id="layer-1-story" class="level2">
+<h2 class="anchored" data-anchor-id="layer-1-story">Layer 1 (Story)</h2>
+<p>It is 2019. The Department of Hydrology and Meteorology has deployed a network of automated weather stations across Nepal — 847 stations scattered from the Terai lowlands to the high Himalayan ridges, each recording temperature, humidity, wind speed, and atmospheric pressure every hour. The data flows continuously to the central server in Kathmandu.</p>
+<p>Your task is not to record the weather. Your task is to simulate it — to build a generative model that can produce realistic synthetic weather trajectories, sequences of atmospheric states evolving through time that look indistinguishable from real observations. The synthetic data will be used to train emergency response systems, stress-test flood prediction algorithms, and augment the sparse historical record for rare extreme events like the 1993 Koshi floods or the 2015 post-earthquake landslide storms.</p>
+<p>The fundamental question is: how does the atmosphere move? Not in the meteorological sense — you are not solving the Navier-Stokes equations. In the probabilistic sense: if you think of the current atmospheric state as a point <span class="math inline">\(x\)</span> in some high-dimensional space, how does that point wander through the space over time? What forces push it? What randomness buffets it? And how do you learn those forces and that randomness from the historical record of 847 stations observing for twenty years?</p>
+<hr>
+<p><strong>Two kinds of motion: drift and diffusion.</strong></p>
+<p>You hire two research assistants — Aakriti, a dynamicist, and Bikram, a statistician — and ask them each to describe how the atmospheric state moves.</p>
+<p>Aakriti thinks in terms of deterministic forces. She says: the atmosphere has preferred states. In the pre-monsoon season, pressure systems build predictably — temperature rises, humidity climbs, the jet stream shifts northward. There is a deterministic drift pulling the atmospheric state toward these preferred configurations. If you know where the state is now, the drift tells you which direction it wants to move. The drift is a vector field <span class="math inline">\(b(x,t)\)</span>: at each atmospheric state <span class="math inline">\(x\)</span> and each time <span class="math inline">\(t\)</span>, it points in the direction the atmosphere is being pushed by the large-scale dynamics.</p>
+<p>Bikram thinks in terms of random perturbations. He says: no matter how precisely you know today’s atmospheric state, tomorrow’s will be uncertain. Convective cells form unpredictably. A dust storm in Rajasthan influences humidity in the Terai in ways too complex to track. A rockfall in the Mustang valley creates a local pressure anomaly. These perturbations are effectively random — not because they are truly random, but because they depend on details too fine to observe or model. The randomness is Brownian: the accumulated effect of countless small, independent, unresolvable perturbations, each tiny, summing to a non-trivial uncertainty that grows with time.</p>
+<p>The atmospheric state does both simultaneously. It drifts toward preferred configurations and diffuses away from them due to unresolvable perturbations. The stochastic differential equation:</p>
+<p><span class="math display">\[dX_t = b(X_t, t)\,dt + \sigma\,dW_t\]</span></p>
+<p>is the mathematical sentence encoding both: the deterministic drift <span class="math inline">\(b(X_t,t)dt\)</span> and the random diffusion <span class="math inline">\(\sigma\,dW_t\)</span>. Aakriti designed the drift term. Bikram designed the noise term. Together they describe the trajectory of a single atmospheric state evolving through time — a single weather realization.</p>
+<hr>
+<p><strong>The particle cloud: from one trajectory to the density.</strong></p>
+<p>Aakriti and Bikram’s SDE describes one possible weather trajectory. But you need the full distribution of possible trajectories — the probability cloud of all atmospheric states the system might visit at each time.</p>
+<p>Imagine releasing not one weather station but a thousand imaginary copies of the atmosphere, each starting from the same observed initial state in January 2019, each evolving independently under the same SDE but with different random perturbations. At <span class="math inline">\(t=0\)</span>, all thousand copies are at the same point — the initial atmospheric state is known precisely, so the initial density <span class="math inline">\(\rho_0\)</span> is a sharp spike at the observed state. At <span class="math inline">\(t=1\)</span> hour, the copies have spread slightly — small random perturbations have separated them. At <span class="math inline">\(t=1\)</span> day, the spread is larger — the randomness has accumulated. At <span class="math inline">\(t=1\)</span> week, the copies span a wide cloud — the initial certainty has dissolved into a broad distribution reflecting the genuine uncertainty of the seven-day weather forecast.</p>
+<p>This spreading cloud is a probability distribution <span class="math inline">\(\rho_t\)</span> evolving through time. The question — how does <span class="math inline">\(\rho_t\)</span> evolve? — has a precise answer: the Fokker-Planck equation. If the individual particles follow <span class="math inline">\(dX_t = b(X_t,t)dt + \sigma dW_t\)</span>, then the cloud density satisfies:</p>
+<p><span class="math display">\[\partial_t\rho_t = -\nabla\cdot(\rho_t b_t) + \frac{\sigma^2}{2}\Delta\rho_t\]</span></p>
+<p>Two terms. The first, <span class="math inline">\(-\nabla\cdot(\rho_t b_t)\)</span>, is advection: the cloud is carried by the drift <span class="math inline">\(b_t\)</span>, with the entire probability distribution being pushed in the direction the drift field points. The second, <span class="math inline">\(\frac{\sigma^2}{2}\Delta\rho_t\)</span>, is diffusion: the cloud spreads due to the Brownian noise, with the spreading rate proportional to <span class="math inline">\(\sigma^2\)</span>. Together: the cloud drifts and spreads. This is the Fokker-Planck equation — the population-level description of what the SDE describes at the individual level.</p>
+<hr>
+<p><strong>Advection: the drift carries the cloud.</strong></p>
+<p>To understand the advection term, watch what happens if you turn off the noise entirely: <span class="math inline">\(\sigma = 0\)</span>. The SDE becomes a deterministic ODE <span class="math inline">\(\dot X_t = b(X_t,t)\)</span>, and the Fokker-Planck equation becomes the continuity equation <span class="math inline">\(\partial_t\rho_t + \nabla\cdot(\rho_t b_t) = 0\)</span>.</p>
+<p>Imagine the thousand imaginary atmosphere copies evolving without any randomness — purely deterministic drift. They all start at the same point. They all follow the same path. After one week, they are all at the same state — no spreading, no uncertainty. The density <span class="math inline">\(\rho_t\)</span> remains a sharp spike throughout, just moving through atmospheric state space along the deterministic trajectory defined by the drift <span class="math inline">\(b\)</span>.</p>
+<p>Now suppose the thousand copies start from slightly different initial states — the initial density <span class="math inline">\(\rho_0\)</span> is not a sharp spike but a small cloud representing measurement uncertainty. Each copy follows the deterministic drift from its own starting point. The cloud deforms as it moves: if the drift is convergent (the vector field pointing inward toward a common attractor), the cloud shrinks as the copies converge. If the drift is divergent (the vector field spreading outward), the cloud expands. The continuity equation <span class="math inline">\(\partial_t\rho_t = -\nabla\cdot(\rho_t b_t)\)</span> tracks this deformation precisely — the divergence <span class="math inline">\(\nabla\cdot b_t\)</span> of the drift field measures whether the cloud is compressing or expanding at each point.</p>
+<hr>
+<p><strong>Diffusion: the noise spreads the cloud.</strong></p>
+<p>Now turn the drift off entirely: <span class="math inline">\(b = 0\)</span>. The SDE becomes pure Brownian motion <span class="math inline">\(dX_t = \sigma dW_t\)</span>, and the Fokker-Planck equation becomes the heat equation <span class="math inline">\(\partial_t\rho_t = \frac{\sigma^2}{2}\Delta\rho_t\)</span> — exactly the entropy gradient flow of Topic 1. The probability cloud spreads isotropically from its initial location, with the spreading rate proportional to <span class="math inline">\(\sigma^2\)</span>. After time <span class="math inline">\(t\)</span>, a cloud that started as a sharp spike at <span class="math inline">\(x_0\)</span> has spread to a Gaussian with variance <span class="math inline">\(\sigma^2 t\)</span> in every direction.</p>
+<p>This is the purely diffusive case — no preferred direction, just spreading. The weather analogy: if there were no atmospheric dynamics (no drift), the forecast uncertainty would simply grow as a Gaussian ball around the initial state, expanding at rate <span class="math inline">\(\sigma^2\)</span> in every direction. Real forecast uncertainty does not behave this way — it grows faster in some directions than others (the unstable directions of the atmospheric dynamics), and the drift carries the uncertainty cloud toward preferred atmospheric states. But the pure diffusion term captures the isotropic component of forecast uncertainty growth.</p>
+<hr>
+<p><strong>The Ornstein-Uhlenbeck process: drift back toward equilibrium.</strong></p>
+<p>The specific SDE that proves most useful for generative modeling is the Ornstein-Uhlenbeck process:</p>
+<p><span class="math display">\[dX_t = -\frac{\beta(t)}{2} X_t\,dt + \sqrt{\beta(t)}\,dW_t\]</span></p>
+<p>where <span class="math inline">\(\beta(t) &gt; 0\)</span> is a time-varying noise schedule. The drift <span class="math inline">\(b(x,t) = -\frac{\beta(t)}{2}x\)</span> is linear and pointing toward the origin: wherever the atmospheric state is, the drift pulls it toward zero. The further from the origin, the stronger the pull. This is a restoring force — a stochastic spring pulling every particle back toward the center.</p>
+<p>The monsoon analogy: imagine a weather station recording temperature anomalies — deviations from the seasonal mean. In October, after the monsoon, temperatures overshoot the mean and then relax back toward it. The relaxation is the drift <span class="math inline">\(-\frac{\beta}{2}x\)</span>: the anomaly is pushed toward zero at a rate proportional to its magnitude. Meanwhile, unpredictable convective events create random perturbations <span class="math inline">\(\sqrt{\beta}dW_t\)</span> that kick the anomaly away from zero. The OU process is the balance between these two forces: deterministic relaxation toward zero and stochastic excitation away from it.</p>
+<p>The OU process has a beautiful property: regardless of where you start, the distribution <span class="math inline">\(\rho_t\)</span> converges to the standard Gaussian <span class="math inline">\(\mathcal{N}(0,I)\)</span> as <span class="math inline">\(t\to\infty\)</span>. The restoring drift always wins eventually — it pulls every particle toward the origin, and the noise spreads things out just enough to maintain a Gaussian spread rather than collapsing to a point. The stationary distribution is <span class="math inline">\(\rho_\infty = \mathcal{N}(0,I)\)</span> — a precise Gaussian equilibrium where drift and diffusion balance exactly.</p>
+<p>For generative modeling, this is exactly the property you need: start any data distribution <span class="math inline">\(\rho_0 = p_{\text{data}}\)</span> and run the OU process forward. After sufficient time <span class="math inline">\(T\)</span>, the distribution <span class="math inline">\(\rho_T\approx\mathcal{N}(0,I)\)</span> regardless of what <span class="math inline">\(p_{\text{data}}\)</span> was. The forward OU process is a universal noising machine — it destroys the structure of any distribution and replaces it with Gaussian noise. Generation is the reverse: start from Gaussian noise and run the reverse process to recover the data distribution.</p>
+<hr>
+<p><strong>The transition density: what one step of the OU process looks like.</strong></p>
+<p>The OU process has the remarkable property that its transition density — the conditional distribution of <span class="math inline">\(X_t\)</span> given <span class="math inline">\(X_0 = x_0\)</span> — is exactly Gaussian at every time <span class="math inline">\(t\)</span>, computable in closed form.</p>
+<p>Starting from <span class="math inline">\(X_0 = x_0\)</span>, after time <span class="math inline">\(t\)</span>:</p>
+<p><span class="math display">\[X_t | X_0 = x_0 \sim \mathcal{N}(\alpha_t x_0,\, \sigma_t^2 I)\]</span></p>
+<p>where <span class="math inline">\(\alpha_t = e^{-\frac{1}{2}\int_0^t\beta(s)ds}\)</span> is the signal coefficient — how much of the original <span class="math inline">\(x_0\)</span> survives — and <span class="math inline">\(\sigma_t^2 = 1 - \alpha_t^2\)</span> is the noise variance — how much Gaussian noise has accumulated. At <span class="math inline">\(t=0\)</span>: <span class="math inline">\(\alpha_0 = 1\)</span>, <span class="math inline">\(\sigma_0 = 0\)</span> — the state is exactly <span class="math inline">\(x_0\)</span>. As <span class="math inline">\(t\to\infty\)</span>: <span class="math inline">\(\alpha_t\to 0\)</span>, <span class="math inline">\(\sigma_t\to 1\)</span> — the state is pure <span class="math inline">\(\mathcal{N}(0,I)\)</span>, completely forgetting <span class="math inline">\(x_0\)</span>.</p>
+<p>This interpolation from data to noise is the forward process of diffusion models. The variable <span class="math inline">\(\alpha_t\)</span> is called the signal-to-noise ratio’s signal component: at early times, <span class="math inline">\(\alpha_t \approx 1\)</span> and the state is mostly signal; at late times, <span class="math inline">\(\alpha_t \approx 0\)</span> and the state is mostly noise. The noise schedule <span class="math inline">\(\beta(t)\)</span> controls the rate of this transition — a fast-rising <span class="math inline">\(\beta\)</span> destroys structure quickly, a slow-rising <span class="math inline">\(\beta\)</span> destroys it gradually.</p>
+<hr>
+<p><strong>The break moment: why you cannot just reverse the SDE naively.</strong></p>
+<p>You have the forward process perfectly understood. Each weather trajectory starts from data and evolves toward Gaussian noise. Now you want to reverse it: start from Gaussian noise and evolve backward to data. The naive assumption: simply negate the SDE. If the forward SDE is <span class="math inline">\(dX_t = b(X_t,t)dt + \sigma dW_t\)</span>, then surely the reverse SDE is <span class="math inline">\(dX_t = -b(X_t,t)dt + \sigma dW_t\)</span> — just flip the drift sign and run time backward.</p>
+<p>This breaks immediately, in a way that is both subtle and instructive.</p>
+<p>Reversing the drift sign without modification gives the SDE <span class="math inline">\(dX_t = -b(X_t,t)dt + \sigma dW_t\)</span>. Consider the pure diffusion case <span class="math inline">\(b = 0\)</span>: the naive reverse is <span class="math inline">\(dX_t = \sigma dW_t\)</span> — the same pure Brownian motion as the forward process. But this cannot be right: pure Brownian motion always spreads probability mass outward. Starting from a Gaussian <span class="math inline">\(\mathcal{N}(0,I)\)</span> and running pure Brownian motion backward gives another spreading Gaussian — not a concentration back toward the data. The reverse process must somehow concentrate probability mass, not spread it. Simply negating the drift cannot achieve this.</p>
+<p>The correct reverse-time SDE, derived by Anderson (1982) using time-reversal of stochastic processes, is:</p>
+<p><span class="math display">\[dX_t = \left[b(X_t,t) - \sigma^2\nabla\log\rho_t(X_t)\right]dt + \sigma\,d\tilde W_t\]</span></p>
+<p>where <span class="math inline">\(\tilde W_t\)</span> is a new Brownian motion running backward in time. The correction term <span class="math inline">\(-\sigma^2\nabla\log\rho_t(X_t) = -\sigma^2 s_t(X_t)\)</span> — the score function multiplied by <span class="math inline">\(\sigma^2\)</span> — is what makes concentration possible. The score function <span class="math inline">\(s_t = \nabla\log\rho_t\)</span> points from low-density regions toward high-density regions — it is the uphill direction in log-probability space. Adding <span class="math inline">\(-\sigma^2 s_t\)</span> to the drift means the reverse process actively pushes particles toward high-density regions: toward the data. This is the force that counteracts the diffusion’s spreading tendency and concentrates probability mass back onto the data manifold.</p>
+<p>The correction term is not optional. It is not a small improvement on the naive approach. It is the essential difference between a reverse process that concentrates and a reverse process that merely continues spreading. Without the score function correction, the reverse SDE is just more diffusion. With it, the reverse SDE is a precise, mathematically exact time-reversal of the forward process.</p>
+<p>This is why learning the score function <span class="math inline">\(s_t = \nabla\log\rho_t\)</span> is the central task of diffusion model training. The forward process is known — it is the OU SDE with a fixed noise schedule. The reverse process requires the score function at every time <span class="math inline">\(t\)</span> and every location <span class="math inline">\(x\)</span>. Score matching learns this function. Neural networks parameterize it. And the Fokker-Planck equation is the guarantee that if you learn the score correctly and run the reverse SDE, the resulting density <span class="math inline">\(\rho_t\)</span> for decreasing <span class="math inline">\(t\)</span> will exactly retrace the forward process — from Gaussian noise back to the data distribution.</p>
+<hr>
+<p><strong>The continuity equation as the zero-noise limit: flow matching’s foundation.</strong></p>
+<p>The Koshi basin hydrologist from Topic 1 returns. She notices that the weather station SDE, when the noise is turned off (<span class="math inline">\(\sigma\to 0\)</span>), becomes the continuity equation <span class="math inline">\(\partial_t\rho_t = -\nabla\cdot(\rho_t v_t)\)</span> with <span class="math inline">\(v_t = b_t\)</span>. In this limit, there is no diffusion — probability mass flows purely deterministically along streamlines of the velocity field <span class="math inline">\(v_t\)</span>.</p>
+<p>This is the foundation of flow matching — the architecture of Chapter 2’s second major topic. Instead of learning the score function and running a noisy reverse SDE, flow matching directly learns the velocity field <span class="math inline">\(v_t\)</span> that transports the noise distribution <span class="math inline">\(\rho_T = \mathcal{N}(0,I)\)</span> to the data distribution <span class="math inline">\(\rho_0 = p_{\text{data}}\)</span> along deterministic streamlines. No noise is needed during generation — only during training, to define the interpolating distributions <span class="math inline">\(\rho_t\)</span> whose velocity field <span class="math inline">\(v_t\)</span> is being learned.</p>
+<p>The Fokker-Planck equation unifies both approaches: diffusion models are Fokker-Planck equations with <span class="math inline">\(\sigma &gt; 0\)</span> learned through the score function; flow matching models are Fokker-Planck equations with <span class="math inline">\(\sigma = 0\)</span> learned through the velocity field. The noise level <span class="math inline">\(\sigma\)</span> is the dial that interpolates between the two families. The Fokker-Planck equation is the master equation of which both are special cases.</p>
+<hr>
+<p><strong>Three pictures to carry into the mathematics.</strong></p>
+<p>The first picture: the thousand imaginary atmosphere copies evolving from the same initial state — some drifting toward monsoon onset, others veering toward dry spells due to random perturbations — forming a probability cloud whose density <span class="math inline">\(\rho_t\)</span> satisfies the Fokker-Planck equation. The forward process turns a sharp spike into a Gaussian cloud. The reverse process, running the corrected reverse SDE with the score function, turns the Gaussian cloud back into a sharp spike at the data.</p>
+<p>The second picture: the OU process as a stochastic spring — the linear drift <span class="math inline">\(-\frac{\beta}{2}x\)</span> pulling every atmospheric state toward the origin, balanced by the Brownian noise <span class="math inline">\(\sqrt{\beta}dW_t\)</span> pushing it away. The transition density <span class="math inline">\(\mathcal{N}(\alpha_t x_0, \sigma_t^2 I)\)</span> interpolating between data (<span class="math inline">\(t=0\)</span>, pure signal) and noise (<span class="math inline">\(t\to\infty\)</span>, pure Gaussian). The signal coefficient <span class="math inline">\(\alpha_t\to 0\)</span> and noise coefficient <span class="math inline">\(\sigma_t\to 1\)</span> as the OU process destroys structure.</p>
+<p>The third picture: the break moment — the naive reverse SDE producing more diffusion, not concentration — and the correct Anderson reverse SDE adding the score correction <span class="math inline">\(-\sigma^2\nabla\log\rho_t\)</span>, which is the uphill direction in log-probability space, the force that concentrates probability mass onto the data manifold. The score function is the map that tells each particle which direction is uphill — toward data, away from noise.</p>
+<hr>
+</section>
+<section id="layer-2-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="layer-2-mathematics">Layer 2 (Mathematics)</h2>
+<p>We build the formalism in six stages: Brownian motion and Itô calculus, the stochastic differential equation and its solution theory, the Fokker-Planck equation and its derivation from the SDE, the Ornstein-Uhlenbeck process and its transition density, the reverse-time SDE and the Anderson theorem, and the probability flow ODE connecting the stochastic and deterministic perspectives.</p>
+<section id="brownian-motion-and-itô-calculus" class="level3">
+<h3 class="anchored" data-anchor-id="brownian-motion-and-itô-calculus">Brownian Motion and Itô Calculus</h3>
+<p><strong>Definition (Brownian motion).</strong> A <strong>standard Brownian motion</strong> (Wiener process) <span class="math inline">\(W_t = (W_t^1,\ldots,W_t^d)\)</span> on <span class="math inline">\(\mathbb{R}^d\)</span> is a stochastic process satisfying:</p>
+<ul>
+<li><span class="math inline">\(W_0 = 0\)</span> almost surely</li>
+<li>Independent increments: <span class="math inline">\(W_t - W_s \perp W_s - W_r\)</span> for <span class="math inline">\(r &lt; s &lt; t\)</span></li>
+<li>Gaussian increments: <span class="math inline">\(W_t - W_s \sim \mathcal{N}(0,(t-s)I_d)\)</span> for <span class="math inline">\(s &lt; t\)</span></li>
+<li>Continuous paths: <span class="math inline">\(t\mapsto W_t\)</span> is continuous almost surely</li>
+</ul>
+<p><strong>Quadratic variation.</strong> The key property distinguishing Brownian motion from smooth paths:</p>
+<p><span class="math display">\[[W,W]_t = \lim_{\|\Pi\|\to 0}\sum_i (W_{t_{i+1}} - W_{t_i})^2 = t\cdot I_d\]</span></p>
+<p>in probability, where the limit is over partitions <span class="math inline">\(\Pi = \{0 = t_0 &lt; t_1 &lt; \cdots &lt; t_n = t\}\)</span>. This is written informally as <span class="math inline">\(dW_t\,dW_t^\top = I_d\,dt\)</span>.</p>
+<p><strong>Itô integral.</strong> For an adapted process <span class="math inline">\(f(t,\omega)\)</span> with <span class="math inline">\(\int_0^T\mathbb{E}[\|f(t)\|^2]dt &lt; \infty\)</span>:</p>
+<p><span class="math display">\[\int_0^T f(t)\,dW_t = \lim_{\|\Pi\|\to 0}\sum_i f(t_i)(W_{t_{i+1}} - W_{t_i})\]</span></p>
+<p>using the left-endpoint (non-anticipating) rule — Itô convention.</p>
+<p><strong>Itô’s formula (stochastic chain rule).</strong> For <span class="math inline">\(f \in C^2(\mathbb{R}^d\times[0,T])\)</span> and <span class="math inline">\(dX_t = b_t\,dt + \sigma_t\,dW_t\)</span>:</p>
+<p><span class="math display">\[df(X_t,t) = \left(\partial_t f + \nabla_x f\cdot b_t + \frac{1}{2}\text{tr}(\sigma_t\sigma_t^\top\nabla_x^2 f)\right)dt + \nabla_x f\cdot\sigma_t\,dW_t\]</span></p>
+<p>The correction term <span class="math inline">\(\frac{1}{2}\text{tr}(\sigma_t\sigma_t^\top\nabla_x^2 f)\)</span> — absent in the classical chain rule — arises from the quadratic variation <span class="math inline">\(dW_t\,dW_t^\top = I\,dt\)</span>. For scalar noise <span class="math inline">\(\sigma_t = \sigma I\)</span>:</p>
+<p><span class="math display">\[df(X_t,t) = \left(\partial_t f + \nabla f\cdot b_t + \frac{\sigma^2}{2}\Delta f\right)dt + \sigma\nabla f\cdot dW_t\]</span></p>
+<hr>
+</section>
+<section id="stochastic-differential-equations" class="level3">
+<h3 class="anchored" data-anchor-id="stochastic-differential-equations">Stochastic Differential Equations</h3>
+<p><strong>Definition (SDE).</strong> A <strong>stochastic differential equation</strong> in Itô form:</p>
+<p><span class="math display">\[dX_t = b(X_t,t)\,dt + \sigma(t)\,dW_t, \quad X_0 \sim \rho_0\]</span></p>
+<p>where <span class="math inline">\(b: \mathbb{R}^d\times[0,T]\to\mathbb{R}^d\)</span> is the <strong>drift</strong>, <span class="math inline">\(\sigma: [0,T]\to\mathbb{R}\)</span> is the <strong>diffusion coefficient</strong>, and <span class="math inline">\(W_t\)</span> is a standard <span class="math inline">\(d\)</span>-dimensional Brownian motion.</p>
+<p><strong>Existence and uniqueness (Itô).</strong> Under the conditions: - <strong>Lipschitz drift:</strong> <span class="math inline">\(\|b(x,t) - b(y,t)\| \leq L\|x-y\|\)</span> for all <span class="math inline">\(x,y,t\)</span> - <strong>Linear growth:</strong> <span class="math inline">\(\|b(x,t)\| + \sigma(t) \leq C(1+\|x\|)\)</span></p>
+<p>there exists a unique strong solution <span class="math inline">\(X_t\)</span> with <span class="math inline">\(\mathbb{E}[\sup_{t\leq T}\|X_t\|^2] &lt; \infty\)</span>.</p>
+<p><strong>Explicit solution for linear SDEs.</strong> For the linear SDE <span class="math inline">\(dX_t = A(t)X_t\,dt + \sigma(t)\,dW_t\)</span>, the solution is:</p>
+<p><span class="math display">\[X_t = \Phi(t,0)X_0 + \int_0^t \Phi(t,s)\sigma(s)\,dW_s\]</span></p>
+<p>where <span class="math inline">\(\Phi(t,s)\)</span> is the fundamental matrix satisfying <span class="math inline">\(\partial_t\Phi(t,s) = A(t)\Phi(t,s)\)</span>, <span class="math inline">\(\Phi(s,s) = I\)</span>. For scalar <span class="math inline">\(A(t) = -\beta(t)/2\)</span> and <span class="math inline">\(\sigma(t) = \sqrt{\beta(t)}\)</span>:</p>
+<p><span class="math display">\[X_t = e^{-\frac{1}{2}\int_0^t\beta(s)ds}X_0 + \int_0^t e^{-\frac{1}{2}\int_s^t\beta(u)du}\sqrt{\beta(s)}\,dW_s\]</span></p>
+<hr>
+</section>
+<section id="the-fokker-planck-equation" class="level3">
+<h3 class="anchored" data-anchor-id="the-fokker-planck-equation">The Fokker-Planck Equation</h3>
+<p><strong>Derivation via Itô’s formula.</strong> Let <span class="math inline">\(\rho_t\)</span> be the density of <span class="math inline">\(X_t\)</span> (assuming it exists). For any test function <span class="math inline">\(\phi \in C_c^\infty(\mathbb{R}^d)\)</span>:</p>
+<p><span class="math display">\[\frac{d}{dt}\mathbb{E}[\phi(X_t)] = \mathbb{E}\left[\nabla\phi(X_t)\cdot b(X_t,t) + \frac{\sigma^2}{2}\Delta\phi(X_t)\right]\]</span></p>
+<p>by Itô’s formula (taking expectations eliminates the stochastic integral term <span class="math inline">\(\mathbb{E}[\nabla\phi\cdot\sigma\,dW_t] = 0\)</span>). Writing this as:</p>
+<p><span class="math display">\[\frac{d}{dt}\int\phi\,\rho_t\,dx = \int\left[\nabla\phi\cdot b\,\rho_t + \frac{\sigma^2}{2}(\Delta\phi)\rho_t\right]dx\]</span></p>
+<p>Integrating by parts (Green’s identity):</p>
+<p><span class="math display">\[= \int\phi\left[-\nabla\cdot(b\rho_t) + \frac{\sigma^2}{2}\Delta\rho_t\right]dx\]</span></p>
+<p>Since this holds for all <span class="math inline">\(\phi\)</span>:</p>
+<p><span class="math display">\[\boxed{\partial_t\rho_t = -\nabla\cdot(b_t\rho_t) + \frac{\sigma^2}{2}\Delta\rho_t}\]</span></p>
+<p>the <strong>Fokker-Planck equation</strong> (also called the forward Kolmogorov equation).</p>
+<p><strong>Structure of terms:</strong></p>
+<p><strong>Advection term:</strong> <span class="math inline">\(-\nabla\cdot(b_t\rho_t) = -\sum_i\partial_{x_i}(b_t^i\rho_t)\)</span> — probability mass transported by drift <span class="math inline">\(b_t\)</span>.</p>
+<p><strong>Diffusion term:</strong> <span class="math inline">\(\frac{\sigma^2}{2}\Delta\rho_t = \frac{\sigma^2}{2}\sum_i\partial_{x_i}^2\rho_t\)</span> — probability mass spread by Brownian noise.</p>
+<p><strong>Probability flux.</strong> The Fokker-Planck equation is a conservation law:</p>
+<p><span class="math display">\[\partial_t\rho_t + \nabla\cdot J_t = 0\]</span></p>
+<p>where <span class="math inline">\(J_t = b_t\rho_t - \frac{\sigma^2}{2}\nabla\rho_t\)</span> is the <strong>probability flux</strong> — drift flux minus diffusion flux. At stationarity <span class="math inline">\(\partial_t\rho = 0\)</span>: <span class="math inline">\(\nabla\cdot J = 0\)</span> — zero divergence of the flux.</p>
+<p><strong>Special cases:</strong></p>
+<p><span class="math inline">\(\sigma = 0\)</span>: Continuity equation <span class="math inline">\(\partial_t\rho_t + \nabla\cdot(\rho_t b_t) = 0\)</span>.</p>
+<p><span class="math inline">\(b = 0\)</span>: Heat equation <span class="math inline">\(\partial_t\rho_t = \frac{\sigma^2}{2}\Delta\rho_t\)</span>.</p>
+<p><span class="math inline">\(b = -\nabla V\)</span>: Fokker-Planck for overdamped Langevin <span class="math inline">\(dX_t = -\nabla V(X_t)dt + \sigma dW_t\)</span>:</p>
+<p><span class="math display">\[\partial_t\rho_t = \nabla\cdot(\rho_t\nabla V) + \frac{\sigma^2}{2}\Delta\rho_t\]</span></p>
+<p>Stationary solution: <span class="math inline">\(\rho_\infty\propto e^{-2V/\sigma^2}\)</span> (Gibbs distribution).</p>
+<hr>
+</section>
+<section id="the-ornstein-uhlenbeck-process" class="level3">
+<h3 class="anchored" data-anchor-id="the-ornstein-uhlenbeck-process">The Ornstein-Uhlenbeck Process</h3>
+<p><strong>Definition.</strong> The <strong>Ornstein-Uhlenbeck (OU) process</strong> with noise schedule <span class="math inline">\(\beta(t) &gt; 0\)</span>:</p>
+<p><span class="math display">\[dX_t = -\frac{\beta(t)}{2}X_t\,dt + \sqrt{\beta(t)}\,dW_t\]</span></p>
+<p><strong>Explicit solution.</strong> Applying the linear SDE formula with <span class="math inline">\(A(t) = -\beta(t)/2 \cdot I\)</span>:</p>
+<p><span class="math display">\[X_t = \alpha_t X_0 + \sigma_t Z, \quad Z\sim\mathcal{N}(0,I)\]</span></p>
+<p>where:</p>
+<p><span class="math display">\[\alpha_t = e^{-\frac{1}{2}\int_0^t\beta(s)ds}, \quad \sigma_t^2 = 1 - \alpha_t^2\]</span></p>
+<p><strong>Proof of <span class="math inline">\(\sigma_t^2 = 1-\alpha_t^2\)</span>.</strong> The variance of <span class="math inline">\(X_t|X_0\)</span> is <span class="math inline">\(\int_0^t\alpha_t^2\alpha_s^{-2}\beta(s)ds = \alpha_t^2\int_0^t\frac{\beta(s)ds}{e^{-\int_0^s\beta(u)du}} = 1-\alpha_t^2\)</span> by direct computation using <span class="math inline">\(\frac{d}{ds}\alpha_s^{-2} = \beta(s)\alpha_s^{-2}\)</span>.</p>
+<p><strong>Transition density.</strong> The conditional distribution of <span class="math inline">\(X_t\)</span> given <span class="math inline">\(X_0 = x_0\)</span> is:</p>
+<p><span class="math display">\[p(x_t|x_0) = \mathcal{N}(x_t;\,\alpha_t x_0,\,\sigma_t^2 I)\]</span></p>
+<p>This is the <strong>reparameterization</strong> used in DDPM (Ho et al.&nbsp;2020): <span class="math inline">\(X_t = \alpha_t x_0 + \sigma_t\epsilon\)</span>, <span class="math inline">\(\epsilon\sim\mathcal{N}(0,I)\)</span>.</p>
+<p><strong>Marginal density.</strong> For <span class="math inline">\(X_0\sim p_{\text{data}}\)</span>:</p>
+<p><span class="math display">\[\rho_t(x) = \int p_{\text{data}}(x_0)\,\mathcal{N}(x;\,\alpha_t x_0,\,\sigma_t^2 I)\,dx_0\]</span></p>
+<p>a Gaussian mixture with components centered at <span class="math inline">\(\alpha_t x_0\)</span> for each data point <span class="math inline">\(x_0\)</span>.</p>
+<p><strong>Fokker-Planck for OU.</strong> The drift <span class="math inline">\(b(x,t) = -\frac{\beta(t)}{2}x\)</span> gives:</p>
+<p><span class="math display">\[\partial_t\rho_t = \nabla\cdot\!\left(\frac{\beta(t)}{2}x\rho_t\right) + \frac{\beta(t)}{2}\Delta\rho_t = \frac{\beta(t)}{2}\left[\nabla\cdot(x\rho_t) + \Delta\rho_t\right]\]</span></p>
+<p><strong>Stationary distribution.</strong> Setting <span class="math inline">\(\partial_t\rho = 0\)</span>: <span class="math inline">\(\nabla\cdot(x\rho) + \Delta\rho = 0\)</span>, so <span class="math inline">\(\nabla\cdot(x\rho + \nabla\rho) = 0\)</span>. Solution: <span class="math inline">\(x\rho_\infty + \nabla\rho_\infty = 0\)</span>, giving <span class="math inline">\(\nabla\log\rho_\infty = -x\)</span>, so:</p>
+<p><span class="math display">\[\rho_\infty(x) = \mathcal{N}(x;\,0,\,I)\]</span></p>
+<p>the standard Gaussian. The OU process converges to <span class="math inline">\(\mathcal{N}(0,I)\)</span> from any initial distribution.</p>
+<p><strong>Signal-to-noise ratio.</strong> Define <span class="math inline">\(\text{SNR}(t) = \alpha_t^2/\sigma_t^2\)</span>. The noise schedule determines <span class="math inline">\(\text{SNR}(t)\)</span>: - Linear schedule: <span class="math inline">\(\beta(t) = \beta_{\min} + t(\beta_{\max}-\beta_{\min})\)</span> - Cosine schedule (Nichol-Dhariwal): <span class="math inline">\(\alpha_t = \cos(\pi t/2T)\)</span>, giving smoother SNR decay</p>
+<hr>
+</section>
+<section id="score-function-and-denoising" class="level3">
+<h3 class="anchored" data-anchor-id="score-function-and-denoising">Score Function and Denoising</h3>
+<p><strong>Score function of <span class="math inline">\(\rho_t\)</span>:</strong></p>
+<p><span class="math display">\[s_t(x) = \nabla_x\log\rho_t(x)\]</span></p>
+<p><strong>Score of the marginal via Tweedie’s formula.</strong> For <span class="math inline">\(X_t = \alpha_t X_0 + \sigma_t\epsilon\)</span>, <span class="math inline">\(\epsilon\sim\mathcal{N}(0,I)\)</span>:</p>
+<p><span class="math display">\[\nabla_x\log\rho_t(x) = -\frac{x - \alpha_t\mathbb{E}[X_0|X_t=x]}{\sigma_t^2}\]</span></p>
+<p><strong>Proof.</strong> Using Bayes:</p>
+<p><span class="math display">\[\rho_t(x) = \int p_{\text{data}}(x_0)\frac{1}{(2\pi\sigma_t^2)^{d/2}}e^{-\frac{\|x-\alpha_t x_0\|^2}{2\sigma_t^2}}\,dx_0\]</span></p>
+<p><span class="math display">\[\nabla_x\log\rho_t(x) = \frac{\nabla_x\rho_t(x)}{\rho_t(x)} = \frac{\int p_{\text{data}}(x_0)\frac{-(x-\alpha_t x_0)}{\sigma_t^2}\mathcal{N}(x;\alpha_t x_0,\sigma_t^2)dx_0}{\rho_t(x)}\]</span></p>
+<p><span class="math display">\[= -\frac{x}{\sigma_t^2} + \frac{\alpha_t}{\sigma_t^2}\frac{\int x_0\,p_{\text{data}}(x_0)\mathcal{N}(x;\alpha_t x_0,\sigma_t^2)dx_0}{\rho_t(x)} = -\frac{x - \alpha_t\mathbb{E}[X_0|X_t=x]}{\sigma_t^2}\]</span></p>
+<p><strong>Reparameterization.</strong> Since <span class="math inline">\(X_t = \alpha_t X_0 + \sigma_t\epsilon\)</span>, the optimal denoiser <span class="math inline">\(\hat x_0(x,t) = \mathbb{E}[X_0|X_t=x]\)</span> gives:</p>
+<p><span class="math display">\[s_t(x) = -\frac{x - \alpha_t\hat x_0(x,t)}{\sigma_t^2} = -\frac{\mathbb{E}[\epsilon|X_t=x]}{\sigma_t} = -\frac{\hat\epsilon(x,t)}{\sigma_t}\]</span></p>
+<p>Three equivalent parameterizations of the score: <span class="math inline">\(x\)</span>-prediction (<span class="math inline">\(\hat x_0\)</span>), <span class="math inline">\(\epsilon\)</span>-prediction (<span class="math inline">\(\hat\epsilon\)</span>), and <span class="math inline">\(v\)</span>-prediction (<span class="math inline">\(v = \alpha_t\epsilon - \sigma_t x_0\)</span>).</p>
+<p><strong>Score matching objective (Vincent 2011, Song-Ermon 2019):</strong></p>
+<p><span class="math display">\[\mathcal{L}_{\text{SM}}(\theta) = \mathbb{E}_{t,X_t}\left[\|s_\theta(X_t,t) - \nabla_{X_t}\log\rho_t(X_t)\|^2\right]\]</span></p>
+<p><strong>Denoising score matching (DSM):</strong> Equivalent tractable objective:</p>
+<p><span class="math display">\[\mathcal{L}_{\text{DSM}}(\theta) = \mathbb{E}_{t,X_0,\epsilon}\left[\left\|s_\theta(\alpha_t X_0+\sigma_t\epsilon,\,t) + \frac{\epsilon}{\sigma_t}\right\|^2\right]\]</span></p>
+<p>The intractable <span class="math inline">\(\nabla\log\rho_t\)</span> is replaced by <span class="math inline">\(-\epsilon/\sigma_t\)</span> — the known noise added in the forward process — making the objective computable from data without knowing the true score.</p>
+<hr>
+</section>
+<section id="reverse-time-sde-and-andersons-theorem" class="level3">
+<h3 class="anchored" data-anchor-id="reverse-time-sde-and-andersons-theorem">Reverse-Time SDE and Anderson’s Theorem</h3>
+<p><strong>Theorem (Anderson 1982).</strong> Let <span class="math inline">\(X_t\)</span> satisfy the forward SDE:</p>
+<p><span class="math display">\[dX_t = b(X_t,t)\,dt + \sigma(t)\,dW_t, \quad t\in[0,T]\]</span></p>
+<p>with marginal densities <span class="math inline">\(\rho_t\)</span>. Define the <strong>reverse-time process</strong> <span class="math inline">\(\tilde X_t = X_{T-t}\)</span>. Then <span class="math inline">\(\tilde X_t\)</span> satisfies:</p>
+<p><span class="math display">\[d\tilde X_t = \left[{-b(\tilde X_t,T-t) + \sigma(T-t)^2\nabla\log\rho_{T-t}(\tilde X_t)}\right]dt + \sigma(T-t)\,d\tilde W_t\]</span></p>
+<p>where <span class="math inline">\(\tilde W_t\)</span> is a standard Brownian motion under the time-reversed filtration.</p>
+<p><strong>Proof sketch.</strong> Using the Doob-Meyer decomposition and time-reversal of martingales: for a diffusion with generator <span class="math inline">\(\mathcal{L}f = b\cdot\nabla f + \frac{\sigma^2}{2}\Delta f\)</span>, the adjoint generator (in <span class="math inline">\(L^2(\rho_t)\)</span>) is <span class="math inline">\(\mathcal{L}^*f = -\nabla\cdot(bf) + \frac{\sigma^2}{2}\Delta f\)</span>. The reverse-time drift is obtained by decomposing <span class="math inline">\(b\)</span> into its <span class="math inline">\(\rho_t\)</span>-symmetric and antisymmetric parts:</p>
+<p><span class="math display">\[\tilde b(x,t) = -b(x,T-t) + \sigma^2\nabla\log\rho_{T-t}(x) = -b(x,T-t) + \sigma^2 s_{T-t}(x)\]</span></p>
+<p>The score correction <span class="math inline">\(\sigma^2\nabla\log\rho_{T-t}\)</span> accounts for the change in the reference measure from <span class="math inline">\(\rho_0\)</span> to <span class="math inline">\(\rho_T\)</span> under time reversal. <span class="math inline">\(\square\)</span></p>
+<p><strong>For the OU forward process</strong> <span class="math inline">\(dX_t = -\frac{\beta_t}{2}X_t\,dt + \sqrt{\beta_t}\,dW_t\)</span>, the reverse SDE is:</p>
+<p><span class="math display">\[d\tilde X_t = \left[\frac{\beta_{T-t}}{2}\tilde X_t + \beta_{T-t}\nabla\log\rho_{T-t}(\tilde X_t)\right]dt + \sqrt{\beta_{T-t}}\,d\tilde W_t\]</span></p>
+<p><span class="math display">\[= \left[\frac{\beta_{T-t}}{2}\tilde X_t + \beta_{T-t}s_{T-t}(\tilde X_t)\right]dt + \sqrt{\beta_{T-t}}\,d\tilde W_t\]</span></p>
+<p><strong>DDPM connection.</strong> Replacing <span class="math inline">\(s_{T-t}(x) \approx s_\theta(x,T-t)\)</span> with a learned neural network and discretizing gives the DDPM reverse sampling:</p>
+<p><span class="math display">\[x_{t-1} = \frac{1}{\sqrt{\bar\alpha_t}}\left(x_t + (1-\bar\alpha_t)s_\theta(x_t,t)\right) + \sqrt{1-\bar\alpha_{t-1}}\epsilon_t\]</span></p>
+<p>where <span class="math inline">\(\bar\alpha_t = \alpha_t^2\)</span> and <span class="math inline">\(\epsilon_t\sim\mathcal{N}(0,I)\)</span>.</p>
+<hr>
+</section>
+<section id="probability-flow-ode" class="level3">
+<h3 class="anchored" data-anchor-id="probability-flow-ode">Probability Flow ODE</h3>
+<p><strong>Theorem (Song et al.&nbsp;2021).</strong> For any SDE <span class="math inline">\(dX_t = b_t(X_t)dt + \sigma_t dW_t\)</span> with marginals <span class="math inline">\(\rho_t\)</span>, there exists an ODE — the <strong>probability flow ODE</strong> — with the same marginals:</p>
+<p><span class="math display">\[\frac{dx_t}{dt} = b_t(x_t) - \frac{\sigma_t^2}{2}\nabla\log\rho_t(x_t) = b_t(x_t) - \frac{\sigma_t^2}{2}s_t(x_t)\]</span></p>
+<p><strong>Proof.</strong> The Fokker-Planck equation for the SDE is:</p>
+<p><span class="math display">\[\partial_t\rho_t = -\nabla\cdot(\rho_t b_t) + \frac{\sigma_t^2}{2}\Delta\rho_t\]</span></p>
+<p>Rewrite the diffusion term: <span class="math inline">\(\frac{\sigma_t^2}{2}\Delta\rho_t = -\nabla\cdot\!\left(-\frac{\sigma_t^2}{2}\nabla\rho_t\right) = -\nabla\cdot\!\left(-\frac{\sigma_t^2}{2}\rho_t\nabla\log\rho_t\right)\)</span>. Therefore:</p>
+<p><span class="math display">\[\partial_t\rho_t = -\nabla\cdot\!\left(\rho_t\!\left(b_t - \frac{\sigma_t^2}{2}\nabla\log\rho_t\right)\right)\]</span></p>
+<p>This is the continuity equation <span class="math inline">\(\partial_t\rho_t + \nabla\cdot(\rho_t v_t) = 0\)</span> with velocity field:</p>
+<p><span class="math display">\[v_t = b_t - \frac{\sigma_t^2}{2}\nabla\log\rho_t = b_t - \frac{\sigma_t^2}{2}s_t\]</span></p>
+<p>The ODE <span class="math inline">\(dx_t/dt = v_t(x_t)\)</span> has the same marginals as the original SDE. <span class="math inline">\(\square\)</span></p>
+<p><strong>Consequence for generation.</strong> The probability flow ODE can be integrated backward from <span class="math inline">\(t=T\)</span> (Gaussian) to <span class="math inline">\(t=0\)</span> (data) using any ODE solver — Euler, Runge-Kutta, adaptive — without stochastic noise. This gives DDIM (Song et al.&nbsp;2020): deterministic generation with the same marginals as DDPM but faster (fewer function evaluations, no stochastic sampling noise).</p>
+<p><strong>For the OU process</strong>, the probability flow ODE is:</p>
+<p><span class="math display">\[\frac{dx_t}{dt} = -\frac{\beta_t}{2}x_t - \frac{\beta_t}{2}\nabla\log\rho_t(x_t) = -\frac{\beta_t}{2}\left(x_t + s_t(x_t)\right)\]</span></p>
+<hr>
+</section>
+<section id="why-this-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-matters">WHY THIS MATTERS</h3>
+<p>In <strong>MATH 217 (ODEs and PDEs)</strong>, the Fokker-Planck equation <span class="math inline">\(\partial_t\rho_t = -\nabla\cdot(b_t\rho_t) + \frac{\sigma^2}{2}\Delta\rho_t\)</span> is a second-order linear parabolic PDE — the same structural class as the heat equation from MATH 217, with the variable-coefficient first-order term <span class="math inline">\(-\nabla\cdot(b_t\rho_t)\)</span> adding advection to the diffusion. The maximum principle from MATH 217 guarantees that <span class="math inline">\(\rho_t \geq 0\)</span> is preserved — non-negativity of the density is a consequence of the PDE’s structure, not an additional constraint. The fundamental solution of the heat equation <span class="math inline">\(K_t(x) = (4\pi t)^{-d/2}e^{-|x|^2/4t}\)</span> is the transition density of pure Brownian motion — the solution of the Fokker-Planck equation with <span class="math inline">\(b=0\)</span> — whose Gaussian form follows from the Fourier transform method of MATH 217. Itô’s formula <span class="math inline">\(df = (\partial_t f + \nabla f\cdot b + \frac{\sigma^2}{2}\Delta f)dt + \sigma\nabla f\cdot dW\)</span> is the stochastic chain rule — its derivation using <span class="math inline">\(dW_t^2 = dt\)</span> (the quadratic variation) is the stochastic analogue of the Taylor expansion <span class="math inline">\(df = (\partial_t f + \nabla f\cdot\dot x)dt\)</span> for smooth paths, with the extra Laplacian term <span class="math inline">\(\frac{\sigma^2}{2}\Delta f\,dt\)</span> arising from the quadratic variation of Brownian motion — the second-order term that MATH 217’s smooth-path chain rule neglects.</p>
+<p>In <strong>MATH 208 (Statistics and Probability)</strong>, the Brownian motion <span class="math inline">\(W_t\)</span> is the continuous-time limit of the random walk from MATH 208 — the process with independent <span class="math inline">\(\mathcal{N}(0,dt)\)</span> increments at every infinitesimal time step. The Gaussian transition density <span class="math inline">\(p(x_t|x_0) = \mathcal{N}(x_t;\alpha_t x_0,\sigma_t^2 I)\)</span> of the OU process is the conditional Gaussian distribution from MATH 208 — computed using the Gaussian integral formula and Bayes’ theorem. Tweedie’s formula <span class="math inline">\(\nabla\log\rho_t(x) = -(x - \alpha_t\hat x_0(x,t))/\sigma_t^2\)</span> is the score function of a Gaussian mixture — derived by differentiating the log of a mixture of Gaussians, using the MATH 208 formula for conditional expectations in Gaussian models. The denoising score matching objective <span class="math inline">\(\mathcal{L}_{\text{DSM}}(\theta) = \mathbb{E}[\|s_\theta(X_t,t) + \epsilon/\sigma_t\|^2]\)</span> is a mean squared error loss — the same MSE from MATH 208’s regression theory, here regressing the neural network <span class="math inline">\(s_\theta\)</span> onto the known noise direction <span class="math inline">\(-\epsilon/\sigma_t\)</span>.</p>
+<p>In <strong>MATH 201 (Advanced Calculus)</strong>, the integration by parts used to derive the Fokker-Planck equation — <span class="math inline">\(\int(\nabla\phi\cdot b)\rho\,dx = -\int\phi\nabla\cdot(b\rho)\,dx\)</span> — is the divergence theorem from MATH 201 applied to the product <span class="math inline">\(\phi b\rho\)</span> with boundary terms vanishing at infinity. The gradient <span class="math inline">\(\nabla_x\log\rho_t(x)\)</span> is the multivariable gradient from MATH 201, applied to the log-density as a scalar field on <span class="math inline">\(\mathbb{R}^d\)</span>. The probability flow ODE’s velocity field <span class="math inline">\(v_t = b_t - \frac{\sigma_t^2}{2}\nabla\log\rho_t\)</span> is a vector field on <span class="math inline">\(\mathbb{R}^d\)</span> — its divergence <span class="math inline">\(\nabla\cdot v_t = \nabla\cdot b_t - \frac{\sigma_t^2}{2}\Delta\log\rho_t\)</span> appears in the continuity equation, connecting the multivariable calculus of MATH 201 to the PDE theory of MATH 217 through the divergence theorem.</p>
+<hr>
+</section>
+</section>
+<section id="layer-3-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="layer-3-bridge">Layer 3 (Bridge)</h2>
+<p>Every element of the Department of Hydrology weather station story has a precise mathematical address. We walk through them completely — Aakriti’s drift, Bikram’s randomness, the thousand imaginary atmosphere copies, the advection and diffusion terms, the OU stochastic spring, the transition density interpolation, the break moment of the naive reverse SDE, the Anderson correction, and the probability flow ODE — until the story and the formalism are a single object seen from two angles.</p>
+<hr>
+<p><strong>Aakriti’s deterministic drift — the vector field pointing in the direction the atmospheric state wants to move at each location and time — is the drift function <span class="math inline">\(b: \mathbb{R}^d\times[0,T]\to\mathbb{R}^d\)</span> in the SDE <span class="math inline">\(dX_t = b(X_t,t)dt + \sigma(t)dW_t\)</span>.</strong> The drift <span class="math inline">\(b(x,t)\)</span> is a vector at each point <span class="math inline">\(x\)</span> in atmospheric state space and each time <span class="math inline">\(t\)</span>, encoding the deterministic component of atmospheric evolution — the large-scale dynamics that push temperature, pressure, and humidity toward preferred seasonal configurations. In the OU process specifically, <span class="math inline">\(b(x,t) = -\frac{\beta(t)}{2}x\)</span> — the linear restoring force pulling every atmospheric state toward the origin (the seasonal mean). The Lipschitz condition <span class="math inline">\(\|b(x,t)-b(y,t)\|\leq L\|x-y\|\)</span> — which guarantees the Itô existence and uniqueness theorem, the stochastic Picard-Lindelöf from MATH 217 — is satisfied for the OU drift with <span class="math inline">\(L = \beta(t)/2\)</span>, ensuring that the SDE has a unique strong solution <span class="math inline">\(X_t\)</span> for any initial condition <span class="math inline">\(X_0\sim\rho_0\)</span>.</p>
+<p><strong>Bikram’s random perturbations — the accumulated effect of countless small, independent, unresolvable atmospheric disturbances — is the Brownian motion <span class="math inline">\(W_t\)</span>, a standard <span class="math inline">\(d\)</span>-dimensional Wiener process with independent Gaussian increments <span class="math inline">\(W_t - W_s\sim\mathcal{N}(0,(t-s)I_d)\)</span>.</strong> The independence of increments — <span class="math inline">\(W_t - W_s\perp W_s - W_r\)</span> for <span class="math inline">\(r &lt; s &lt; t\)</span> — is the mathematical statement that perturbations in non-overlapping time intervals are independent, reflecting the assumption that the unresolvable atmospheric disturbances at different times are uncorrelated. The Gaussian distribution of each increment reflects the central limit theorem from MATH 208: the sum of many small, independent, unresolvable perturbations converges to Gaussian by the CLT, regardless of the individual perturbations’ distributions. The quadratic variation <span class="math inline">\([W,W]_t = tI_d\)</span> — the fact that the sum of squared Brownian increments converges to <span class="math inline">\(t\)</span> rather than zero — is what distinguishes Brownian paths from smooth paths and produces the additional Laplacian term in Itô’s formula.</p>
+<hr>
+<p><strong>The thousand imaginary atmosphere copies evolving independently from the same initial state — forming a spreading probability cloud <span class="math inline">\(\rho_t\)</span> — is the empirical measure <span class="math inline">\(\hat\rho_t^n = \frac{1}{n}\sum_{i=1}^n\delta_{X_t^{(i)}}\)</span> of <span class="math inline">\(n\)</span> independent solutions to the same SDE, converging to the true marginal density <span class="math inline">\(\rho_t\)</span> as <span class="math inline">\(n\to\infty\)</span> by the law of large numbers.</strong> Each copy <span class="math inline">\(X_t^{(i)}\)</span> follows <span class="math inline">\(dX_t^{(i)} = b(X_t^{(i)},t)dt + \sigma(t)dW_t^{(i)}\)</span> with independent Brownian motions <span class="math inline">\(W_t^{(i)}\)</span>. The density <span class="math inline">\(\rho_t\)</span> is the distribution of any single copy at time <span class="math inline">\(t\)</span> — the marginal law of <span class="math inline">\(X_t\)</span>. The Fokker-Planck equation <span class="math inline">\(\partial_t\rho_t = -\nabla\cdot(b_t\rho_t) + \frac{\sigma^2}{2}\Delta\rho_t\)</span> governs how this marginal law evolves. The initial sharp spike <span class="math inline">\(\rho_0 = \delta_{x_0}\)</span> — all thousand copies starting at the same observed atmospheric state — spreads into a Gaussian cloud <span class="math inline">\(\rho_t = \mathcal{N}(\alpha_t x_0, \sigma_t^2 I)\)</span> for the OU process, with the Gaussian width <span class="math inline">\(\sigma_t\)</span> growing from zero as <span class="math inline">\(t\)</span> increases. The seven-day forecast uncertainty — the cloud spanning a wide distribution after one week — is the variance <span class="math inline">\(\sigma_t^2 = 1-\alpha_t^2\)</span> of this Gaussian, growing from zero at <span class="math inline">\(t=0\)</span> toward one as <span class="math inline">\(t\to\infty\)</span>.</p>
+<hr>
+<p><strong>The advection term <span class="math inline">\(-\nabla\cdot(\rho_t b_t)\)</span> — probability mass being carried by the drift field — is derived by taking expectations in Itô’s formula and integrating by parts using the divergence theorem from MATH 201.</strong> The derivation proceeds: apply Itô’s formula to <span class="math inline">\(\phi(X_t)\)</span> for test function <span class="math inline">\(\phi\in C_c^\infty\)</span>, giving <span class="math inline">\(d\phi(X_t) = (\nabla\phi\cdot b_t + \frac{\sigma^2}{2}\Delta\phi)dt + \sigma\nabla\phi\cdot dW_t\)</span>. Take expectations: <span class="math inline">\(\frac{d}{dt}\mathbb{E}[\phi(X_t)] = \mathbb{E}[\nabla\phi(X_t)\cdot b_t + \frac{\sigma^2}{2}\Delta\phi(X_t)]\)</span> — the stochastic integral term vanishes because <span class="math inline">\(\mathbb{E}[\int f\,dW] = 0\)</span> for adapted <span class="math inline">\(f\)</span>. Write as <span class="math inline">\(\frac{d}{dt}\int\phi\rho_t\,dx = \int(\nabla\phi\cdot b_t + \frac{\sigma^2}{2}\Delta\phi)\rho_t\,dx\)</span>. Integrate by parts: <span class="math inline">\(\int\nabla\phi\cdot b_t\rho_t\,dx = -\int\phi\nabla\cdot(b_t\rho_t)\,dx\)</span> (divergence theorem, boundary terms vanish at infinity) and <span class="math inline">\(\int(\Delta\phi)\rho_t\,dx = \int\phi\Delta\rho_t\,dx\)</span> (Green’s identity, twice). Since this holds for all <span class="math inline">\(\phi\)</span>, the densities satisfy <span class="math inline">\(\partial_t\rho_t = -\nabla\cdot(b_t\rho_t) + \frac{\sigma^2}{2}\Delta\rho_t\)</span>. The advection term measures the convergence or divergence of the drift field weighted by the current density — <span class="math inline">\(-\nabla\cdot(b_t\rho_t) = -(\nabla\cdot b_t)\rho_t - b_t\cdot\nabla\rho_t\)</span>: the first part compresses or expands the cloud based on the divergence of <span class="math inline">\(b_t\)</span>, the second part translates the cloud in the direction of <span class="math inline">\(b_t\)</span>.</p>
+<p><strong>The diffusion term <span class="math inline">\(\frac{\sigma^2}{2}\Delta\rho_t\)</span> — probability mass spreading due to Brownian noise — arises from the quadratic variation of Brownian motion through Itô’s formula, and is the precise mathematical encoding of the fact that random perturbations spread the probability cloud isotropically at rate <span class="math inline">\(\sigma^2\)</span>.</strong> The quadratic variation <span class="math inline">\(dW_t^2 = dt\)</span> — the defining property that distinguishes Brownian paths from smooth paths — produces the Laplacian correction <span class="math inline">\(\frac{\sigma^2}{2}\Delta f\)</span> in Itô’s formula beyond the classical chain rule term <span class="math inline">\(\nabla f\cdot b_t\)</span>. This Laplacian correction, after taking expectations and integrating by parts, becomes the diffusion term <span class="math inline">\(\frac{\sigma^2}{2}\Delta\rho_t\)</span> in the Fokker-Planck equation. The spreading rate <span class="math inline">\(\sigma^2/2\)</span> is the diffusion coefficient — large <span class="math inline">\(\sigma\)</span> means rapid spreading (Bikram’s many large random perturbations), small <span class="math inline">\(\sigma\)</span> means slow spreading (few small perturbations). The probability flux <span class="math inline">\(J_t = b_t\rho_t - \frac{\sigma^2}{2}\nabla\rho_t\)</span> decomposes into drift flux <span class="math inline">\(b_t\rho_t\)</span> (advection, carrying mass in the drift direction) and diffusion flux <span class="math inline">\(-\frac{\sigma^2}{2}\nabla\rho_t\)</span> (Fick’s law, carrying mass from high to low density) — exactly the hydrological flux decomposition of Topic 1’s river story, now for probability rather than water.</p>
+<hr>
+<p><strong>The OU stochastic spring — linear drift <span class="math inline">\(-\frac{\beta(t)}{2}x\)</span> pulling toward the origin, balanced by Brownian noise <span class="math inline">\(\sqrt{\beta(t)}dW_t\)</span> — has the explicit solution <span class="math inline">\(X_t = \alpha_t X_0 + \sigma_t Z\)</span>, <span class="math inline">\(Z\sim\mathcal{N}(0,I)\)</span>, derived by the integrating factor technique from MATH 217.</strong> The linear SDE <span class="math inline">\(dX_t = -\frac{\beta_t}{2}X_t\,dt + \sqrt{\beta_t}\,dW_t\)</span> is solved by multiplying both sides by the integrating factor <span class="math inline">\(e^{\frac{1}{2}\int_0^t\beta_s\,ds} = \alpha_t^{-1}\)</span>: <span class="math inline">\(d(\alpha_t^{-1}X_t) = \alpha_t^{-1}\sqrt{\beta_t}\,dW_t\)</span>. Integrating: <span class="math inline">\(\alpha_t^{-1}X_t = X_0 + \int_0^t\alpha_s^{-1}\sqrt{\beta_s}\,dW_s\)</span>, so <span class="math inline">\(X_t = \alpha_t X_0 + \alpha_t\int_0^t\alpha_s^{-1}\sqrt{\beta_s}\,dW_s\)</span>. The stochastic integral <span class="math inline">\(\alpha_t\int_0^t\alpha_s^{-1}\sqrt{\beta_s}dW_s\)</span> is Gaussian with mean zero and variance <span class="math inline">\(\alpha_t^2\int_0^t\alpha_s^{-2}\beta_s\,ds = 1-\alpha_t^2 = \sigma_t^2\)</span> (computed using Itô isometry and <span class="math inline">\(\frac{d}{ds}\alpha_s^{-2} = \beta_s\alpha_s^{-2}\)</span>). Therefore <span class="math inline">\(X_t|X_0=x_0\sim\mathcal{N}(\alpha_t x_0,\sigma_t^2 I)\)</span> — the Gaussian transition density with signal coefficient <span class="math inline">\(\alpha_t = e^{-\frac{1}{2}\int_0^t\beta_s\,ds}\)</span> and noise coefficient <span class="math inline">\(\sigma_t = \sqrt{1-\alpha_t^2}\)</span>.</p>
+<p><strong>The interpolation <span class="math inline">\(X_t = \alpha_t x_0 + \sigma_t\epsilon\)</span>, <span class="math inline">\(\epsilon\sim\mathcal{N}(0,I)\)</span> — the DDPM reparameterization — is the closed-form transition density of the OU process, expressing the noisy state at time <span class="math inline">\(t\)</span> as a convex combination of the clean data <span class="math inline">\(x_0\)</span> (scaled by signal coefficient <span class="math inline">\(\alpha_t\)</span>) and pure noise <span class="math inline">\(\epsilon\)</span> (scaled by noise coefficient <span class="math inline">\(\sigma_t\)</span>).</strong> At <span class="math inline">\(t=0\)</span>: <span class="math inline">\(\alpha_0=1\)</span>, <span class="math inline">\(\sigma_0=0\)</span>, so <span class="math inline">\(X_0 = x_0\)</span> — pure signal, no noise. As <span class="math inline">\(t\to T\)</span>: <span class="math inline">\(\alpha_T\approx 0\)</span>, <span class="math inline">\(\sigma_T\approx 1\)</span>, so <span class="math inline">\(X_T\approx\epsilon\sim\mathcal{N}(0,I)\)</span> — pure noise, signal forgotten. The signal-to-noise ratio <span class="math inline">\(\text{SNR}(t) = \alpha_t^2/\sigma_t^2\)</span> decreases monotonically from <span class="math inline">\(\infty\)</span> at <span class="math inline">\(t=0\)</span> to <span class="math inline">\(0\)</span> as <span class="math inline">\(t\to T\)</span>. The noise schedule <span class="math inline">\(\beta(t)\)</span> is the design choice that determines how rapidly <span class="math inline">\(\text{SNR}(t)\)</span> decreases — the linear schedule <span class="math inline">\(\beta_t = \beta_{\min}+t(\beta_{\max}-\beta_{\min})\)</span> decreases SNR at a fixed rate; the cosine schedule <span class="math inline">\(\alpha_t = \cos(\pi t/2T)\)</span> decreases SNR more slowly near <span class="math inline">\(t=0\)</span> (preserving signal longer) and more rapidly near <span class="math inline">\(t=T\)</span> (destroying it faster), empirically producing better generative quality.</p>
+<hr>
+<p><strong>Tweedie’s formula <span class="math inline">\(\nabla_x\log\rho_t(x) = -(x-\alpha_t\mathbb{E}[X_0|X_t=x])/\sigma_t^2\)</span> — expressing the score function as the normalized distance between the current noisy state and the optimal denoised estimate — is derived by differentiating the log of the Gaussian mixture <span class="math inline">\(\rho_t(x) = \int p_{\text{data}}(x_0)\mathcal{N}(x;\alpha_t x_0,\sigma_t^2)dx_0\)</span> with respect to <span class="math inline">\(x\)</span>, using Bayes’ theorem to identify the conditional expectation.</strong> The gradient of the log of an integral <span class="math inline">\(\nabla\log\int f_\theta\,d\theta = \int\theta f_\theta\,d\theta/\int f_\theta\,d\theta\)</span> in the form of a ratio of integrals — a standard computation using the chain rule from MATH 201 and differentiation under the integral sign from Analysis II — produces the conditional expectation formula. The three equivalent parameterizations — <span class="math inline">\(x\)</span>-prediction (<span class="math inline">\(\hat x_0 = \mathbb{E}[X_0|X_t]\)</span>), <span class="math inline">\(\epsilon\)</span>-prediction (<span class="math inline">\(\hat\epsilon = -\sigma_t s_t\)</span>), and <span class="math inline">\(v\)</span>-prediction (<span class="math inline">\(v_t = \alpha_t\epsilon - \sigma_t x_0\)</span>) — are related by <span class="math inline">\(\hat x_0 = (x_t - \sigma_t\hat\epsilon)/\alpha_t = \alpha_t x_t - \sigma_t v_t\)</span>, all encoding the same score function in different numerical scalings. The denoising score matching objective <span class="math inline">\(\mathcal{L}_{\text{DSM}} = \mathbb{E}[\|s_\theta(X_t,t)+\epsilon/\sigma_t\|^2]\)</span> replaces the intractable true score <span class="math inline">\(\nabla\log\rho_t\)</span> with the known noise <span class="math inline">\(-\epsilon/\sigma_t\)</span>: the neural network learns to predict the noise added in the forward process, which by Tweedie’s formula is equivalent to learning the score function — the regression target is known because the forward process is a specific Gaussian distribution.</p>
+<hr>
+<p><strong>The break moment — the naive reverse SDE <span class="math inline">\(dX_t = -b(X_t,t)dt + \sigma dW_t\)</span> producing more diffusion rather than concentration — is the formal failure of simply negating the drift without correcting for the score function, which is the precisely stated content of Anderson’s theorem.</strong> For pure diffusion <span class="math inline">\(b=0\)</span>: the naive reverse is <span class="math inline">\(dX_t = \sigma dW_t\)</span> — another Brownian motion, which spreads probability mass outward from any initial distribution. Starting from <span class="math inline">\(\mathcal{N}(0,I)\)</span> and running <span class="math inline">\(dX_t = \sigma dW_t\)</span> produces <span class="math inline">\(\mathcal{N}(0,(1+\sigma^2 t)I)\)</span> — a Gaussian that grows wider, not one that concentrates toward the data. The score correction <span class="math inline">\(\sigma^2\nabla\log\rho_t(x)\)</span> adds a drift pointing toward high-density regions — the uphill direction in log-probability space — which counteracts the diffusion’s spreading tendency. Without the correction, the reverse process continues spreading; with it, the reverse process concentrates. The Anderson formula <span class="math inline">\(\tilde b = -b_{T-t} + \sigma^2 s_{T-t}\)</span> has two terms: <span class="math inline">\(-b_{T-t}\)</span> negates the drift (reversing the deterministic component of the forward process) and <span class="math inline">\(+\sigma^2 s_{T-t}\)</span> adds the score correction (reversing the diffusion’s spreading by pointing mass uphill toward data). Both terms are essential: negating the drift alone reverses advection but not diffusion; the score term specifically reverses diffusion by turning spreading into concentrating.</p>
+<p><strong>The Anderson reverse SDE for the OU process <span class="math inline">\(d\tilde X_t = [\frac{\beta_{T-t}}{2}\tilde X_t + \beta_{T-t}s_{T-t}(\tilde X_t)]dt + \sqrt{\beta_{T-t}}d\tilde W_t\)</span> — starting from <span class="math inline">\(\tilde X_0\sim\mathcal{N}(0,I)\)</span> and producing <span class="math inline">\(\tilde X_T\sim p_{\text{data}}\)</span> — is the exact time-reversal of the OU forward process, with the score function <span class="math inline">\(s_{T-t} = \nabla\log\rho_{T-t}\)</span> learned by the neural network <span class="math inline">\(s_\theta\)</span>.</strong> The forward drift <span class="math inline">\(-\frac{\beta_t}{2}x\)</span> becomes <span class="math inline">\(+\frac{\beta_{T-t}}{2}\tilde X_t\)</span> in the reverse — same linear term, now with positive sign, pointing away from origin (anti-restoring force in the reverse time direction). The score correction <span class="math inline">\(\beta_{T-t}s_{T-t}(\tilde X_t) = \beta_{T-t}\nabla\log\rho_{T-t}(\tilde X_t)\)</span> points toward high-density regions of <span class="math inline">\(\rho_{T-t}\)</span> — toward the data manifold. At early reverse time (close to <span class="math inline">\(t=0\)</span>, corresponding to forward time <span class="math inline">\(T\)</span>), <span class="math inline">\(\rho_T\approx\mathcal{N}(0,I)\)</span> and the score is <span class="math inline">\(-x\)</span>, so the correction roughly points inward — concentrating the distribution. At late reverse time (close to <span class="math inline">\(t=T\)</span>, corresponding to forward time <span class="math inline">\(0\)</span>), <span class="math inline">\(\rho_0 = p_{\text{data}}\)</span> and the score points toward the data manifold — fine-tuning the concentration. The DDPM reverse sampling is the Euler-Maruyama discretization of this reverse SDE with <span class="math inline">\(s_{T-t}\)</span> replaced by the learned neural network <span class="math inline">\(s_\theta\)</span>.</p>
+<hr>
+<p><strong>The probability flow ODE <span class="math inline">\(dx_t/dt = b_t(x_t) - \frac{\sigma_t^2}{2}s_t(x_t)\)</span> — having the same marginals <span class="math inline">\(\rho_t\)</span> as the stochastic SDE but generating deterministic trajectories — is derived by rewriting the diffusion term in the Fokker-Planck equation as an additional advection term, halving the score correction relative to the Anderson reverse SDE.</strong> The proof decomposes: <span class="math inline">\(\frac{\sigma_t^2}{2}\Delta\rho_t = -\nabla\cdot(-\frac{\sigma_t^2}{2}\nabla\rho_t) = -\nabla\cdot(\rho_t\cdot(-\frac{\sigma_t^2}{2}\nabla\log\rho_t)) = -\nabla\cdot(\rho_t\cdot(-\frac{\sigma_t^2}{2}s_t))\)</span>. The Fokker-Planck equation becomes <span class="math inline">\(\partial_t\rho_t = -\nabla\cdot(\rho_t(b_t - \frac{\sigma_t^2}{2}s_t))\)</span> — a pure continuity equation with velocity field <span class="math inline">\(v_t = b_t - \frac{\sigma_t^2}{2}s_t\)</span>, confirming that the ODE <span class="math inline">\(\dot x_t = v_t(x_t)\)</span> has marginals <span class="math inline">\(\rho_t\)</span>. The factor of <span class="math inline">\(\frac{1}{2}\)</span> difference between the ODE correction (<span class="math inline">\(\frac{\sigma_t^2}{2}s_t\)</span>) and the SDE correction (<span class="math inline">\(\sigma_t^2 s_t\)</span>) is fundamental: the SDE must counteract both the forward diffusion and maintain correct marginals in a stochastic setting, requiring the full score correction; the ODE only needs to encode the net probability flux, which is half the correction. This is the Song et al.&nbsp;(2021) probability flow ODE — its practical implementation as DDIM gives deterministic generation by integrating the ODE backward from <span class="math inline">\(T\)</span> to <span class="math inline">\(0\)</span> using standard ODE solvers (Euler, RK4, adaptive), producing high-quality samples in far fewer function evaluations than the stochastic DDPM sampler.</p>
+<hr>
+<p><strong>The connection to MATH 217 is threefold.</strong> Itô’s formula <span class="math inline">\(df = (\partial_t f + \nabla f\cdot b + \frac{\sigma^2}{2}\Delta f)dt + \sigma\nabla f\cdot dW\)</span> is the stochastic chain rule — the classical chain rule from MATH 201’s multivariate calculus with the Laplacian correction <span class="math inline">\(\frac{\sigma^2}{2}\Delta f\,dt\)</span> arising from <span class="math inline">\(dW_t^2 = dt\)</span>. The Fokker-Planck equation is the variable-coefficient parabolic PDE of MATH 217, with the drift providing variable coefficients in the first-order advection term. The integrating factor method used to solve the linear OU SDE — multiplying both sides by <span class="math inline">\(\alpha_t^{-1}\)</span> to convert <span class="math inline">\(dX_t = -\frac{\beta_t}{2}X_t\,dt+\sqrt{\beta_t}\,dW_t\)</span> into <span class="math inline">\(d(\alpha_t^{-1}X_t) = \alpha_t^{-1}\sqrt{\beta_t}\,dW_t\)</span> — is the same integrating factor technique from MATH 217 for linear first-order ODEs <span class="math inline">\(\dot x + p(t)x = q(t)\)</span>, now applied to the stochastic analogue with <span class="math inline">\(q(t)\)</span> replaced by <span class="math inline">\(\sqrt{\beta_t}dW_t\)</span>. <strong>The connection to MATH 208 is the Gaussian transition density and Bayes’ theorem.</strong> The conditional <span class="math inline">\(X_t|X_0=x_0\sim\mathcal{N}(\alpha_t x_0,\sigma_t^2 I)\)</span> uses Gaussian conditional distributions from MATH 208; Tweedie’s formula uses Bayes’ theorem <span class="math inline">\(p(x_0|x_t)\propto p(x_t|x_0)p(x_0)\)</span> to compute the posterior mean <span class="math inline">\(\mathbb{E}[X_0|X_t]\)</span>; the DSM objective <span class="math inline">\(\mathbb{E}[\|s_\theta+\epsilon/\sigma_t\|^2]\)</span> is the MATH 208 MSE regression loss applied to learning the score function from paired <span class="math inline">\((X_t,\epsilon)\)</span> samples generated by the known forward process. <strong>The connection to MATH 201 is the divergence theorem.</strong> The integration by parts <span class="math inline">\(\int\nabla\phi\cdot b\rho\,dx = -\int\phi\nabla\cdot(b\rho)\,dx\)</span> is the divergence theorem from MATH 201 in <span class="math inline">\(\mathbb{R}^d\)</span>; the chain rule <span class="math inline">\(\nabla_x\log\rho_t(x) = \nabla_x\rho_t(x)/\rho_t(x)\)</span> is the multivariable chain rule; and the score decomposition <span class="math inline">\(\nabla\log\rho_t = -(x-\alpha_t\hat x_0)/\sigma_t^2\)</span> uses differentiation under the integral sign from Analysis II applied to the Gaussian mixture.</p>
+<hr>
+<p>The Department of Hydrology weather station network — Aakriti’s drift, Bikram’s Brownian perturbations, the thousand imaginary atmosphere copies, the advection and diffusion terms, the OU stochastic spring, the transition density <span class="math inline">\(\mathcal{N}(\alpha_t x_0,\sigma_t^2 I)\)</span>, Tweedie’s formula for the score, the break moment of the naive reverse SDE, the Anderson correction <span class="math inline">\(\sigma^2 s_t\)</span>, and the deterministic probability flow ODE — is now completely dissolved into its mathematical form. Aakriti’s drift is <span class="math inline">\(b(x,t)\)</span>. Bikram’s randomness is <span class="math inline">\(\sigma dW_t\)</span>. The particle cloud density is <span class="math inline">\(\rho_t\)</span>. The Fokker-Planck equation is <span class="math inline">\(\partial_t\rho_t = -\nabla\cdot(b_t\rho_t)+\frac{\sigma^2}{2}\Delta\rho_t\)</span>. The OU solution is <span class="math inline">\(X_t = \alpha_t X_0+\sigma_t\epsilon\)</span>. The score is <span class="math inline">\(s_t = \nabla\log\rho_t = -(x-\alpha_t\hat x_0)/\sigma_t^2\)</span>. The Fisher information is <span class="math inline">\(\mathcal{I}(\rho_t) = \|s_t\|^2_{L^2(\rho_t)}\)</span>. The naive reverse fails without score correction. The Anderson reverse SDE is <span class="math inline">\(d\tilde X_t = [-b_{T-t}+\sigma^2 s_{T-t}]dt+\sigma d\tilde W_t\)</span>. The probability flow ODE is <span class="math inline">\(\dot x_t = b_t - \frac{\sigma_t^2}{2}s_t\)</span>.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>project_6_riemannian_flow_matching – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script><script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<p>::: {#cell-0 .cell _uuid=‘8f2839f25d086af736a60e9eeb907d3b93b6e0e5’ _cell_guid=‘b1076dfc-b9ad-4769-8c92-a6c4dae69d19’ trusted=‘true’ quarto-private-1=‘{“key”:“execution”,“value”:{“iopub.status.busy”:“2026-06-14T11:32:23.964105Z”,“iopub.execute_input”:“2026-06-14T11:32:23.964413Z”,“iopub.status.idle”:“2026-06-14T11:32:27.705046Z”,“shell.execute_reply.started”:“2026-06-14T11:32:23.964392Z”,“shell.execute_reply”:“2026-06-14T11:32:27.703955Z”}}’ execution_count=1}</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 1 - imports and reproducibilityimport numpy as npimport pandas as pdimport matplotlib.pyplot as pltimport matplotlib.patches as mpatchesfrom pathlib import Pathimport requests, io, zipfile, os, torchimport torchimport torch.nn as nnfrom scipy.stats import gaussian_kdefrom scipy.special import rel_entrSEED = 42np.random.seed(SEED)torch.manual_seed(SEED)print(f"numpy version: {np.__version__}")print(f"torch version: {torch.__version__}")print(f"seed: {SEED}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>numpy version: 2.4.6
+torch version: 2.10.0+cpu
+seed: 42</code></pre>
+</div>
+<p>:::</p>
+<div id="cell-1" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:27.706663Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:27.707205Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:27.747795Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:27.707172Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:27.746595Z&quot;}}" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 2 - synthesize a realistic Ramachandran dataset from published region statistics# source: Lovell et al. 2003 (Proteins 50:437) helix/sheet/loop population parametersrng = np.random.default_rng(SEED)def _wrapped_normal(mean_deg, std_deg, n, rng):    """sample n angles (degrees) from a wrapped normal, return in radians"""    samples = rng.normal(loc=mean_deg, scale=std_deg, size=n)    # wrap to (−180, 180]    samples = ((samples + 180) % 360) - 180    return np.deg2rad(samples)# population fractions and gaussian parameters per region# (phi_mean, phi_std, psi_mean, psi_std, fraction) all in degreesPOPULATION = {    "alpha_helix": (-63.0, 7.0, -43.0, 7.0, 0.32),    "beta_sheet": (-119.0, 8.0, 130.0, 8.0, 0.22),    "left_helix": ( 57.0, 7.0,  47.0, 7.0, 0.03),    "loop": (0.0, 55.0, 5.0, 65.0, 0.43), # broad, covers generously allowed}N_TOTAL = 50_000phi_parts, psi_parts = [], []for name, (pm, ps, sm, ss, frac) in POPULATION.items():    n = int(N_TOTAL * frac)    phi_parts.append(_wrapped_normal(pm, ps, n, rng))    psi_parts.append(_wrapped_normal(sm, ss, n, rng))phi = np.concatenate(phi_parts)psi = np.concatenate(psi_parts)# shuffle so region order doesn't leak into trainingidx = rng.permutation(len(phi))phi, psi = phi[idx], psi[idx]# enforce strict manifold bounds [−π, π)phi = np.clip(phi, -np.pi, np.pi - 1e-6)psi = np.clip(psi, -np.pi, np.pi - 1e-6)df = pd.DataFrame({"phi": phi, "psi": psi})print(f"dataset shape: {df.shape}")print(f"phi range: [{phi.min():.4f}, {phi.max():.4f}]")print(f"psi range: [{psi.min():.4f}, {psi.max():.4f}]")print("\ndataset ready!")df.head()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>dataset shape: (50000, 2)
+phi range: [-3.1301, 3.1012]
+psi range: [-3.1391, 3.1413]
+
+dataset ready!</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="2">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">phi</th>
+<th data-quarto-table-cell-role="th">psi</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>0.314965</td>
+<td>-0.013843</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>1.015436</td>
+<td>0.969340</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>-0.134382</td>
+<td>-0.413145</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>-1.062706</td>
+<td>-0.789518</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>-0.745566</td>
+<td>-1.832785</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-2" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:27.748627Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:27.748869Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:27.760895Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:27.748848Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:27.759785Z&quot;}}" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 3 - columns already named phi/psi; just drop NaNs and resetdf = df[["phi", "psi"]].dropna().reset_index(drop=True)print(f"residues after cleaning: {len(df):,}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>residues after cleaning: 50,000</code></pre>
+</div>
+</div>
+<div id="cell-3" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:27.762839Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:27.763087Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:27.774189Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:27.763060Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:27.773251Z&quot;}}" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 4 - verify angular range; already in radians from cell 2phi = df["phi"].values # already in radianspsi = df["psi"].valuesprint(f"phi min={phi.min():.4f} | max={phi.max():.4f} | (expected ≈ −π, π)")print(f"psi min={psi.min():.4f} | max={psi.max():.4f} | (expected ≈ −π, π)")assert np.all(phi &gt;= -np.pi) and np.all(phi &lt; np.pi), "phi off torus"assert np.all(psi &gt;= -np.pi) and np.all(psi &lt; np.pi), "psi off torus"print("\nall angles verified on T^2!")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>phi min=-3.1301 | max=3.1012 | (expected ≈ −π, π)
+psi min=-3.1391 | max=3.1413 | (expected ≈ −π, π)
+
+all angles verified on T^2!</code></pre>
+</div>
+</div>
+<div id="cell-4" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:27.775225Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:27.775470Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:28.307204Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:27.775447Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:28.305876Z&quot;}}" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 5 - statisticsprint(f"total residues: {len(phi):,}")print(f"phi mean={np.mean(phi):.3f}; std={np.std(phi):.3f}")print(f"psi mean={np.mean(psi):.3f}; std={np.std(psi):.3f}")# marginal histograms - verify bimodal / non-uniform coveragefig, axes = plt.subplots(1, 2, figsize=(10, 3))for ax, angles, label in zip(axes, [phi, psi], ["φ (phi)", "ψ (psi)"]):    ax.hist(angles, bins=72, color="#5DCAA5", edgecolor="none", alpha=0.8)    ax.set_xlabel(label + "(radians)")    ax.set_ylabel("count")    ax.set_xlim(-np.pi, np.pi)    ax.axvline(0, color="gray", lw=0.8, ls="--")plt.suptitle("marginal distributions of φ and ψ — strongly non-uniform -&gt; T^2 is not flat")plt.tight_layout()plt.savefig("marginals.png", dpi=120)plt.show()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>total residues: 50,000
+phi mean=-0.781; std=1.080
+psi mean=0.313; std=1.339</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_6_riemannian_flow_matching_files/figure-html/cell-6-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-5" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:28.308600Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:28.309244Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:28.318812Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:28.309221Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:28.317133Z&quot;}}" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 6 - define structural regions in radians# standard Ramachandran region definitions (degrees -&gt; radians)def deg(d): return np.deg2rad(d)REGIONS = {    "alpha_helix": {        "phi": (deg(-80), deg(-40)),        "psi": (deg(-60), deg(-20)),        "color": "#E85D24",        "label": "α-helix",    },    "beta_sheet": {        "phi": (deg(-150), deg(-90)),        "psi": (deg(100), deg(170)),        "color": "#185FA5",        "label": "β-sheet",    },}def in_region(phi_arr, psi_arr, region):    """return boolean mask for residues in a named Ramachandran region."""    p0, p1 = region["phi"]    s0, s1 = region["psi"]    return (phi_arr &gt;= p0) &amp; (phi_arr &lt;= p1) &amp; (psi_arr &gt;= s0) &amp; (psi_arr &lt;= s1)for name, reg in REGIONS.items():    mask = in_region(phi, psi, reg)    frac = mask.sum() / len(phi)    print(f"{reg['label']:12s} {mask.sum():6,} residues ({frac:.1%})")other = np.ones(len(phi), dtype=bool)for reg in REGIONS.values():    other &amp;= ~in_region(phi, psi, reg)print(f"{'loop/other':12s} {other.sum():6,} residues ({other.mean():.1%})")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>α-helix      16,433 residues (32.9%)
+β-sheet      11,075 residues (22.1%)
+loop/other   22,492 residues (45.0%)</code></pre>
+</div>
+</div>
+<div id="cell-6" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:28.319904Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:28.320158Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:28.806524Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:28.320131Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:28.805345Z&quot;}}" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 7 - ground-truth Ramachandran plotfig, ax = plt.subplots(figsize=(6, 6))# all residues as background densityax.scatter(phi, psi, s=0.3, alpha=0.15, color="#888780", rasterized=True)# overlay structural regionsfor name, reg in REGIONS.items():    mask = in_region(phi, psi, reg)    ax.scatter(phi[mask], psi[mask], s=0.6, alpha=0.4, color=reg["color"])    # draw bounding rectangle    p0, p1 = reg["phi"]    s0, s1 = reg["psi"]    rect = mpatches.FancyBboxPatch(        (p0, s0), p1 - p0, s1 - s0,        boxstyle="round,pad=0.02",        linewidth=1.2, edgecolor=reg["color"], facecolor="none",    )    ax.add_patch(rect)    ax.text(        (p0 + p1) / 2, s1 + 0.08, reg["label"],        ha="center", fontsize=9, color=reg["color"], fontweight="bold",    )# axis formattingticks = [-np.pi, -np.pi/2, 0, np.pi/2, np.pi]tick_labels = ["-π", "-π/2", "0", "π/2", "π"]ax.set_xticks(ticks); ax.set_xticklabels(tick_labels)ax.set_yticks(ticks); ax.set_yticklabels(tick_labels)ax.set_xlabel("φ (phi)")ax.set_ylabel("ψ (psi)")ax.set_title(f"ground-truth Ramachandran plot (N = {len(phi):,} residues)")ax.set_xlim(-np.pi, np.pi); ax.set_ylim(-np.pi, np.pi+0.1)ax.set_aspect("equal")ax.axhline(0, color="gray", lw=0.4, ls=":")ax.axvline(0, color="gray", lw=0.4, ls=":")plt.tight_layout()plt.savefig("ramachandran_groundtruth.png", dpi=150)plt.show()print("saved: ramachandran_groundtruth.png &lt;- the target distribution ν on T^2")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_6_riemannian_flow_matching_files/figure-html/cell-8-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>saved: ramachandran_groundtruth.png &lt;- the target distribution ν on T^2</code></pre>
+</div>
+</div>
+<div id="cell-7" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:28.807940Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:28.808190Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:28.876693Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:28.808163Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:28.875796Z&quot;}}" data-execution_count="8">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 8 - package dataset as a torch tensor for downstream stagesangles = np.stack([phi, psi], axis=1) # shape (N, 2), all in [−π, π)data = torch.tensor(angles, dtype=torch.float32)print(f"data tensor shape: {data.shape}")print(f"dtype: {data.dtype}")print(f"value range: [{data.min():.4f}, {data.max():.4f}]")# final sanity check: on manifoldassert (data &gt;= -torch.pi).all() and (data &lt; torch.pi).all()print("data tensor verified on T^2!")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>data tensor shape: torch.Size([50000, 2])
+dtype: torch.float32
+value range: [-3.1391, 3.1413]
+data tensor verified on T^2!</code></pre>
+</div>
+</div>
+<div id="cell-8" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:28.878026Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:28.878269Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:29.181902Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:28.878238Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:29.180434Z&quot;}}" data-execution_count="9">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 9 - flat torus visualization: unit square with identified edgesfig, ax = plt.subplots(figsize=(5, 5))ax.set_xlim(-np.pi - 0.3, np.pi + 0.3)ax.set_ylim(-np.pi - 0.3, np.pi + 0.3)# domain boundarysquare = plt.Polygon(    [[-np.pi, -np.pi], [np.pi, -np.pi], [np.pi, np.pi], [-np.pi, np.pi]],    fill=False, edgecolor="#444", lw=1.5,)ax.add_patch(square)# identified edges: left↔right (red), bottom↔top (blue)ax.annotate("", xy=(-np.pi, 0.6), xytext=(-np.pi, -0.6), arrowprops=dict(arrowstyle="-&gt;", color="#E85D24", lw=2))ax.annotate("", xy=(np.pi, -0.6), xytext=(np.pi, 0.6), arrowprops=dict(arrowstyle="-&gt;", color="#E85D24", lw=2))ax.annotate("", xy=(0.6, -np.pi), xytext=(-0.6, -np.pi), arrowprops=dict(arrowstyle="-&gt;", color="#185FA5", lw=2))ax.annotate("", xy=(-0.6, np.pi), xytext=(0.6, np.pi), arrowprops=dict(arrowstyle="-&gt;", color="#185FA5", lw=2))# edge labelsax.text(-np.pi - 0.15, 0, "a", ha="center", fontsize=10, color="#E85D24", fontweight="bold")ax.text( np.pi + 0.2, 0, "a", ha="center", fontsize=10, color="#E85D24", fontweight="bold")ax.text(0, np.pi + 0.05, "b", ha="center", fontsize=10, color="#185FA5", fontweight="bold")ax.text(0, -np.pi + 0.1, "b", ha="center", fontsize=10, color="#185FA5", fontweight="bold")# scatter data on itax.scatter(phi, psi, s=0.3, alpha=0.1, color="#888", rasterized=True)ticks = [-np.pi, -np.pi/2, 0, np.pi/2, np.pi]ax.set_xticks(ticks); ax.set_xticklabels(["-π", "-π/2", "0", "π/2", "π"])ax.set_yticks(ticks); ax.set_yticklabels(["-π", "-π/2", "0", "π/2", "π"])ax.set_xlabel("φ"); ax.set_ylabel("ψ")ax.set_title("T^2 as flat square with identified edges\n(matching arrows = same point on torus)\n")ax.set_aspect("equal")plt.tight_layout()plt.savefig("torus_flat.png", dpi=120)plt.show()print("edges labeled 'a' are identified  -&gt;  left = right")print("edges labeled 'b' are identified  -&gt;  bottom = top")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_6_riemannian_flow_matching_files/figure-html/cell-10-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>edges labeled 'a' are identified  -&gt;  left = right
+edges labeled 'b' are identified  -&gt;  bottom = top</code></pre>
+</div>
+</div>
+<div id="cell-9" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:29.185122Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:29.185451Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:29.870007Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:29.185426Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:29.869188Z&quot;}}" data-execution_count="10">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 10 - embedded torus in R^3: φ maps to the big circle, ψ to the tubeR, r = 2.0, 0.7 # major and minor radiiu = np.linspace(-np.pi, np.pi, 120) # φv = np.linspace(-np.pi, np.pi, 60) # ψU, V = np.meshgrid(u, v)# standard embedding: T^2 -&gt; R^3X = (R + r * np.cos(V)) * np.cos(U)Y = (R + r * np.cos(V)) * np.sin(U)Z = r * np.sin(V)fig = plt.figure(figsize=(7, 5))ax = fig.add_subplot(111, projection="3d")ax.plot_surface(X, Y, Z, alpha=0.25, color="#9FE1CB", edgecolor="none")# map a subset of data points onto the embedded surfacen_show = 800idx = np.random.choice(len(phi), n_show, replace=False)px = (R + r * np.cos(psi[idx])) * np.cos(phi[idx])py = (R + r * np.cos(psi[idx])) * np.sin(phi[idx])pz = r * np.sin(psi[idx])ax.scatter(px, py, pz, s=1.5, alpha=0.6, color="#E85D24")ax.set_title("T^2 embedded in ℝ^3\n(torsion angles as points on the surface)")ax.set_xlabel("X"); ax.set_ylabel("Y"); ax.set_zlabel("Z")ax.view_init(elev=25, azim=45)plt.tight_layout()plt.savefig("torus_embedded.png", dpi=120)plt.show()print(f"embedding: x = (R + r·cos ψ)cos φ,  R={R}, r={r}")print("every data point lies exactly on the surface by construction")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_6_riemannian_flow_matching_files/figure-html/cell-11-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>embedding: x = (R + r·cos ψ)cos φ,  R=2.0, r=0.7
+every data point lies exactly on the surface by construction</code></pre>
+</div>
+</div>
+<div id="cell-10" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:29.871349Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:29.871692Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:29.881666Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:29.871657Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:29.880836Z&quot;}}" data-execution_count="11">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 11 - Riemannian metric on T^2# T^2 = S^T × S^1 inherits the product metric from the flat metric on R^2# in coordinates (φ, ψ), the metric tensor is the 2×2 identity (flat metric)# ds^2 = dφ^2 + dψ^2 (no cross terms; the two circles are orthogonal)def metric_tensor(p):    """return the metric tensor g at point p on T^2    T^2 carries the flat product metric: g = diag(1, 1)    this is independent of p — T^2 is a flat manifold    """    return np.eye(2)def arc_length(p, q):    """geodesic distance between p and q on T^2, accounting for wrap-around        each component uses the shortest arc on S^1; total distance is euclidean in the tangent space after applying the log map component-wise    """    d = ((q - p + np.pi) % (2 * np.pi)) - np.pi # wrapped difference, shape (2,)    return np.sqrt(d @ d)# verify metric is identity everywhere (flatness check)test_points = np.random.uniform(-np.pi, np.pi, (5, 2))for p in test_points:    g = metric_tensor(p)    assert np.allclose(g, np.eye(2)), "metric must be identity on flat torus"print("metric tensor g = I_2 at all test points (flat torus)")# verify arc_length respects wrap-aroundp = np.array([-np.pi + 0.1, 0.0])q = np.array([ np.pi - 0.1, 0.0])d_torus = arc_length(p, q)d_euclid = np.linalg.norm(q - p)print(f"\nwrap-around test:")print(f" p = {p}, q = {q}")print(f" euclidean distance: {d_euclid:.4f} (≈ 2π — wrong)")print(f" torus distance: {d_torus:.4f} (≈ 0.2 — correct)")print(f"\ntorus metric correctly identifies short path across ±π boundary!")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>metric tensor g = I_2 at all test points (flat torus)
+
+wrap-around test:
+ p = [-3.04159265  0.        ], q = [3.04159265 0.        ]
+ euclidean distance: 6.0832 (≈ 2π — wrong)
+ torus distance: 0.2000 (≈ 0.2 — correct)
+
+torus metric correctly identifies short path across ±π boundary!</code></pre>
+</div>
+</div>
+<div id="cell-11" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:29.882779Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:29.883040Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:29.906307Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:29.883008Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:29.904836Z&quot;}}" data-execution_count="12">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 12 - verify T^2 is flat: zero Gaussian curvature# the flat torus has K = 0 everywhere (unlike the embedded torus in R^2,# which has variable curvature - the embedding is extrinsic, not intrinsic)# consequence: geodesics are straight lines with periodic boundary conditions# and the exp/log maps reduce to addition mod 2πprint("Intrinsic geometry of T^2 = S^` × S^`:")print("  Gaussian curvature K = 0 (flat)")print("  Geodesics = straight lines with periodic BC")print("  exp_map(p, v) = (p + v) mod 2π")print("  log_map(p, q) = wrapped_difference(q - p)\n")print("Note: the embedded torus in R^3 (cell 10) has variable K, but we work with the INTRINSIC flat metric - the embedding is only for visualization.")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Intrinsic geometry of T^2 = S^` × S^`:
+  Gaussian curvature K = 0 (flat)
+  Geodesics = straight lines with periodic BC
+  exp_map(p, v) = (p + v) mod 2π
+  log_map(p, q) = wrapped_difference(q - p)
+
+Note: the embedded torus in R^3 (cell 10) has variable K, but we work with the INTRINSIC flat metric - the embedding is only for visualization.</code></pre>
+</div>
+</div>
+<div id="cell-12" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:29.907805Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:29.908137Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:29.925879Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:29.908101Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:29.924585Z&quot;}}" data-execution_count="13">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 13 - exp_map on T^2def exp_map(p, v):    """move from point p ∈ T^2 along tangent vector v ∈ T_p T^2        on the flat torus, geodesics are straight lines with periodic BC    exp_map reduces to addition followed by wrapping into [−π, π)    acts component-wise: φ and ψ are independent (product metric)        args:        p: (..., 2) point on T^2        v: (..., 2) tangent vector at p    returns:        (..., 2) point on T^2    """    return ((p + v + np.pi) % (2 * np.pi)) - np.pi</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-13" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:29.927257Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:29.927603Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:29.943879Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:29.927571Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:29.942487Z&quot;}}" data-execution_count="14">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 14 - verify exp_map stays on manifoldtest_p = np.array([2.9, 1.0])test_v = np.array([0.5, 0.5])result = exp_map(test_p, test_v)print(f"p = {test_p}")print(f"v = {test_v}")print(f"p + v = {test_p + test_v} (exits [−π, π) in φ component)")print(f"exp(p,v) = {result} (wrapped back onto T^2)")assert np.all(result &gt;= -np.pi) and np.all(result &lt; np.pi), "exp_map off torus"print("\nexp_map output verified on T^2")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>p = [2.9 1. ]
+v = [0.5 0.5]
+p + v = [3.4 1.5] (exits [−π, π) in φ component)
+exp(p,v) = [-2.88318531  1.5       ] (wrapped back onto T^2)
+
+exp_map output verified on T^2</code></pre>
+</div>
+</div>
+<div id="cell-14" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:29.944862Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:29.945181Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:29.960469Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:29.945158Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:29.959622Z&quot;}}" data-execution_count="15">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 15 - log_map on T^2def log_map(p, q):    """find the tangent vector at p pointing toward q along the shortest geodesic        on S^1: log_p(q) = wrap(q − p) = ((q − p + π) mod 2π) − π    on T^2 = S^1 × S^1: apply component-wise (product structure, diagonal metric)    output lies in [−π, π) per component — the tangent space T_p T^2        args:        p: (..., 2) base point on T^2        q: (..., 2) target point on T^2    returns:        (..., 2) tangent vector at p    """    return ((q - p + np.pi) % (2 * np.pi)) - np.pi</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-15" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:29.961460Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:29.961691Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:29.983366Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:29.961671Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:29.982532Z&quot;}}" data-execution_count="16">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 16 - verify log_mapp = np.array([-2.9, 0.0])q = np.array([ 2.9, 0.0])v = log_map(p, q)print(f"p = {p}")print(f"q = {q}")print(f"naive q − p = {q - p} (wrong: length {np.linalg.norm(q - p):.4f})")print(f"log_map(p, q) = {v}  (correct: length {np.linalg.norm(v):.4f})")print()# exp_map(p, log_map(p, q)) must recover qrecovered = exp_map(p, v)print(f"exp_map(p, log_map(p,q)) = {recovered}")print(f"target q = {q}")assert np.allclose(recovered, q, atol=1e-6), "round-trip failed"print("\nround-trip: exp_map(p, log_map(p, q)) = q")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>p = [-2.9  0. ]
+q = [2.9 0. ]
+naive q − p = [5.8 0. ] (wrong: length 5.8000)
+log_map(p, q) = [-0.48318531  0.        ]  (correct: length 0.4832)
+
+exp_map(p, log_map(p,q)) = [2.9 0. ]
+target q = [2.9 0. ]
+
+round-trip: exp_map(p, log_map(p, q)) = q</code></pre>
+</div>
+</div>
+<div id="cell-16" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:29.985159Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:29.985448Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:30.009584Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:29.985420Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:30.008433Z&quot;}}" data-execution_count="17">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 17 - batch verification on the full datasetP = data.numpy()Q = np.roll(P, 1, axis=0)V = log_map(P, Q)recovered = exp_map(P, V)assert np.allclose(recovered, Q, atol=1e-6), "batch round-trip failed"print(f"batch round-trip on {len(P):,} pairs: ✓")# each component must lie in [−π, π) — the joint norm can reach π√2assert np.all(np.abs(V) &lt;= np.pi + 1e-6), "component exceeds half-circumference"print(f"log_map component max: {np.abs(V).max():.4f} (must be ≤ π = {np.pi:.4f})")print(f"log_map joint norm max: {np.linalg.norm(V, axis=1).max():.4f} (can reach π√2 ≈ {np.pi * np.sqrt(2):.4f})")print("\nall tangent vectors within valid range!")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>batch round-trip on 50,000 pairs: ✓
+log_map component max: 3.1416 (must be ≤ π = 3.1416)
+log_map joint norm max: 4.4287 (can reach π√2 ≈ 4.4429)
+
+all tangent vectors within valid range!</code></pre>
+</div>
+</div>
+<div id="cell-17" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:30.010957Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:30.011213Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:30.779407Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:30.011192Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:30.778722Z&quot;}}" data-execution_count="18">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 18 - visualize the log_map displacement field on a grid# shows how tangent vectors point toward a fixed target, respecting wrap-aroundtarget = np.array([2.8, 2.8]) # near the +π cornergrid_1d = np.linspace(-np.pi, np.pi, 20, endpoint=False)gx, gy = np.meshgrid(grid_1d, grid_1d)grid = np.stack([gx.ravel(), gy.ravel()], axis=1) # (400, 2)targets = np.tile(target, (len(grid), 1))vectors = log_map(grid, targets) # (400, 2)fig, ax = plt.subplots(figsize=(6, 6))ax.quiver(    grid[:, 0], grid[:, 1],    vectors[:, 0], vectors[:, 1],    np.linalg.norm(vectors, axis=1),    cmap="plasma", alpha=0.8, scale=30,)ax.scatter(*target, color="#E85D24", s=80, zorder=5, label=f"target {target}")ax.set_xlim(-np.pi, np.pi); ax.set_ylim(-np.pi, np.pi)ax.set_xlabel("φ"); ax.set_ylabel("ψ")ax.set_title("log_map displacement field toward target (2.8, 2.8)\narrows near ±π boundary wrap correctly")ax.legend()plt.tight_layout()plt.savefig("logmap_field.png", dpi=120)plt.show()print("arrows near top-right corner should point toward bottom-left (wrap-around)")print("visual confirms log_map respects torus topology!")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_6_riemannian_flow_matching_files/figure-html/cell-19-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>arrows near top-right corner should point toward bottom-left (wrap-around)
+visual confirms log_map respects torus topology!</code></pre>
+</div>
+</div>
+<div id="cell-18" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:30.780868Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:30.781077Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:30.785730Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:30.781057Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:30.784387Z&quot;}}" data-execution_count="19">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 19 - geodesic interpolation on T^2def geodesic_interp(p0, p1, t):    """interpolate between p0 and p1 on T^2 along the shortest geodesic        γ(t) = exp_map(p0, t · log_map(p0, p1))    t=0 returns p0, t=1 returns p1, intermediate t stays on T^2        args:        p0: (..., 2) start point on T^2        p1: (..., 2) end point on T^2        t:  scalar or (...,) interpolation parameter in [0, 1]    returns:        (..., 2) interpolated point on T^2    """    v = log_map(p0, p1) # tangent vector at p0 toward p1    return exp_map(p0, t * v) # walk t fraction along geodesic</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-19" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:30.787135Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:30.787425Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:30.808394Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:30.787403Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:30.807195Z&quot;}}" data-execution_count="20">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 20 - verify the hand calculationp0 = np.array([-0.1, -0.1])p1 = np.array([ 3.0, -3.0])mid = geodesic_interp(p0, p1, 0.5)naive_mid = 0.5 * p0 + 0.5 * p1print(f"geodesic midpoint: {mid}")print(f"naive midpoint: {naive_mid}")print(f"agree here: {np.allclose(mid, naive_mid)}")print()# now the case where they diverge: push p1 past the ±π boundaryp1_wrap = np.array([3.2, -3.2])mid_geo = geodesic_interp(p0, p1_wrap, 0.5)mid_naive = 0.5 * p0 + 0.5 * p1_wrapprint(f"p1_wrap = {p1_wrap}")print(f"geodesic midpoint: {mid_geo}")print(f"naive midpoint: {mid_naive}")print(f"differ: {not np.allclose(mid_geo, mid_naive)}")print()# manifold checkassert np.all(np.abs(mid_geo) &lt; np.pi), "geodesic midpoint off T^2"v_geo = log_map(p0, mid_geo)v_naive = mid_naive - p0print(f"geodesic displacement: {v_geo}")print(f"naive displacement: {v_naive}")print(f"directions agree: {np.allclose(v_geo, v_naive, atol=1e-3)}\n")print("*  geodesic midpoint on T^2")print("*  naive midpoint numerically inside square but displacement direction is wrong!")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>geodesic midpoint: [ 1.45 -1.55]
+naive midpoint: [ 1.45 -1.55]
+agree here: True
+
+p1_wrap = [ 3.2 -3.2]
+geodesic midpoint: [-1.59159265 -1.65      ]
+naive midpoint: [ 1.55 -1.65]
+differ: True
+
+geodesic displacement: [-1.49159265 -1.55      ]
+naive displacement: [ 1.65 -1.55]
+directions agree: False
+
+*  geodesic midpoint on T^2
+*  naive midpoint numerically inside square but displacement direction is wrong!</code></pre>
+</div>
+</div>
+<div id="cell-20" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:30.809411Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:30.809640Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:30.834225Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:30.809620Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:30.833079Z&quot;}}" data-execution_count="21">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 21 - biologically meaningful interpolation# beta-sheet: φ ≈ −120°, ψ ≈ 130° -&gt;  radians# alpha-helix: φ ≈ −60°,  ψ ≈ −45° -&gt; radiansp_sheet = np.deg2rad(np.array([-120.0, 130.0]))p_helix = np.deg2rad(np.array([ -60.0, -45.0]))T = 10ts = np.linspace(0, 1, T)path = np.array([geodesic_interp(p_sheet, p_helix, t) for t in ts])print(f"geodesic path from β-sheet to α-helix ({T} frames):")print(f"\n{'t':&gt;6} {'φ (deg)':&gt;10} {'ψ (deg)':&gt;10} {'on T^2':&gt;8}")for t, pt in zip(ts, path):    on_torus = np.all(np.abs(pt) &lt;= np.pi + 1e-6)    print(f"{t:6.2f} {np.rad2deg(pt[0]):10.3f} {np.rad2deg(pt[1]):10.3f} {'✓' if on_torus else '✗':&gt;8}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>geodesic path from β-sheet to α-helix (10 frames):
+
+     t    φ (deg)    ψ (deg)   on T^2
+  0.00   -120.000    130.000        ✓
+  0.11   -113.333    110.556        ✓
+  0.22   -106.667     91.111        ✓
+  0.33   -100.000     71.667        ✓
+  0.44    -93.333     52.222        ✓
+  0.56    -86.667     32.778        ✓
+  0.67    -80.000     13.333        ✓
+  0.78    -73.333     -6.111        ✓
+  0.89    -66.667    -25.556        ✓
+  1.00    -60.000    -45.000        ✓</code></pre>
+</div>
+</div>
+<div id="cell-21" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:30.835042Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:30.835241Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:32.871006Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:30.835222Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:32.869865Z&quot;}}" data-execution_count="22">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 22 - overlay geodesic path on Ramachandran plotfig, ax = plt.subplots(figsize=(6, 6))# ground-truth dataax.scatter(phi, psi, s=0.3, alpha=0.1, color="#888", rasterized=True)# geodesic pathax.plot(path[:, 0], path[:, 1], "o-", color="#E85D24", ms=6, lw=1.5, zorder=5, label="geodesic path")# endpointsax.scatter(*p_sheet, s=120, color="#185FA5", zorder=6, label="β-sheet (−120°, 130°)")ax.scatter(*p_helix, s=120, color="#0F6E56", zorder=6, label="α-helix (−60°, −45°)")# naïve linear path for comparisonnaive_path = np.array([(1-t)*p_sheet + t*p_helix for t in ts])ax.plot(naive_path[:, 0], naive_path[:, 1], "s--", color="#9c9a92", ms=4, lw=1, alpha=0.7, label="naïve linear path")ticks = [-np.pi, -np.pi/2, 0, np.pi/2, np.pi]ax.set_xticks(ticks); ax.set_xticklabels(["-π", "-π/2", "0", "π/2", "π"])ax.set_yticks(ticks); ax.set_yticklabels(["-π", "-π/2", "0", "π/2", "π"])ax.set_xlabel("φ"); ax.set_ylabel("ψ")ax.set_title("geodesic vs naïve interpolation on T^2\noverlaid on Ramachandran ground truth")ax.legend(fontsize=8); ax.set_aspect("equal")plt.tight_layout()plt.savefig("geodesic_interp.png", dpi=150)plt.show()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_6_riemannian_flow_matching_files/figure-html/cell-23-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-22" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:32.872284Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:32.872617Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:32.880207Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:32.872596Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:32.878955Z&quot;}}" data-execution_count="23">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 23 - verify all 10 path points lie on T^2assert path.shape == (T, 2), "wrong path shape!"assert np.all(np.abs(path) &lt;= np.pi + 1e-6), "path point exits T^2"assert np.allclose(path[0],  p_sheet, atol=1e-6), "t=0 must equal p_sheet"assert np.allclose(path[-1], p_helix, atol=1e-6), "t=1 must equal p_helix"print(f"✓  all {T} path points on T^2")print(f"✓  path[0]  = p_sheet: {np.allclose(path[0], p_sheet)}")print(f"✓  path[-1] = p_helix: {np.allclose(path[-1], p_helix)}\n")# for this specific pair, naive and geodesic agree (no wrap-around occurs)# verify this and state whyv = log_map(p_sheet, p_helix)print(f"log_map displacement: φ={np.rad2deg(v[0]):.2f}° ψ={np.rad2deg(v[1]):.2f}°")print(f"both |components| &lt; 180°: {np.all(np.abs(np.rad2deg(v)) &lt; 180)}")print("\n-&gt; no wrap-around on this path; geodesic = naïve linear here.")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>✓  all 10 path points on T^2
+✓  path[0]  = p_sheet: True
+✓  path[-1] = p_helix: True
+
+log_map displacement: φ=60.00° ψ=-175.00°
+both |components| &lt; 180°: True
+
+-&gt; no wrap-around on this path; geodesic = naïve linear here.</code></pre>
+</div>
+</div>
+<div id="cell-23" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:32.881060Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:32.881227Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:32.904369Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:32.881209Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:32.903352Z&quot;}}" data-execution_count="24">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 24 - network architecture: MLP vector field v_θ(x, t) -&gt; R^2class VectorFieldMLP(nn.Module):    """euclidean vector field v_θ: R^2 × [0,1] -&gt; R^2        input encoding: (sin φ, cos φ, sin ψ, cos ψ, t) - 5 features    the (sin, cos) encoding respects periodicity; raw angles are discontinuous at ±π    output: 2d velocity vector, interpreted as element of R^2    or tangent vector in T_x T^2    """    def __init__(self, hidden_dim=256, n_layers=3):        super().__init__()        # input: sin φ, cos φ, sin ψ, cos ψ, t  -&gt;  5 features        layers = [nn.Linear(5, hidden_dim), nn.SiLU()]        for _ in range(n_layers - 1):            layers += [nn.Linear(hidden_dim, hidden_dim), nn.SiLU()]        layers += [nn.Linear(hidden_dim, 2)]        self.net = nn.Sequential(*layers)    def forward(self, x, t):        """        args:            x: (B, 2) angles in [−π, π)            t: (B,) or scalar time in [0, 1]        returns:            (B, 2) velocity vector        """        if t.dim() == 0:            t = t.expand(x.shape[0])        enc = torch.cat([            torch.sin(x), # (B, 2)            torch.cos(x), # (B, 2)            t.unsqueeze(-1), # (B, 1)        ], dim=-1) # (B, 5)        return self.net(enc)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-24" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:32.905564Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:32.905816Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:32.965672Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:32.905795Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:32.964785Z&quot;}}" data-execution_count="25">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 25 - inspect network shapetorch.manual_seed(SEED)model_euclid = VectorFieldMLP(hidden_dim=256, n_layers=3)x_test = torch.zeros(4, 2)t_test = torch.zeros(4)out = model_euclid(x_test, t_test)print(f"input x shape: {x_test.shape}")print(f"input t shape: {t_test.shape}")print(f"output shape: {out.shape} (expected: [4, 2])")n_params = sum(p.numel() for p in model_euclid.parameters())print(f"total parameters: {n_params:,}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>input x shape: torch.Size([4, 2])
+input t shape: torch.Size([4])
+output shape: torch.Size([4, 2]) (expected: [4, 2])
+total parameters: 133,634</code></pre>
+</div>
+</div>
+<div id="cell-25" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:32.966734Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:32.966938Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:32.972818Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:32.966918Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:32.971772Z&quot;}}" data-execution_count="26">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 26 - euclidean CFM lossdef cfm_loss_euclid(model, x1, device):    """conditional flow matching loss in R^2.        samples t ~ U(0,1), x0 ~ uniform on T^2, computes interpolation x_t,    and regresses v_θ(x_t, t) against the straight-line target (x1 − x0)        loss = E[ ||v_θ(x_t, t) − (x1 − x0)||^2 ]    """    B = x1.shape[0]    t = torch.rand(B, device=device) # (B,)    x0 = torch.empty_like(x1).uniform_(-torch.pi, torch.pi) # (B, 2)    xt = (1 - t).unsqueeze(-1) * x0 + t.unsqueeze(-1) * x1 # (B, 2)    target = x1 - x0 # (B, 2)    pred = model(xt, t) # (B, 2)    return ((pred - target) ** 2).mean()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-26" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:32.973721Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:32.973959Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:44.772997Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:32.973937Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:44.771771Z&quot;}}" data-execution_count="27">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 27 - retrain with better hyperparametersDEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")LR = 1e-3BATCH_SIZE = 2048N_EPOCHS = 500LOG_EVERY = 50torch.manual_seed(SEED)model_euclid = VectorFieldMLP(hidden_dim=256, n_layers=3).to(DEVICE)optimizer = torch.optim.Adam(model_euclid.parameters(), lr=LR)scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, N_EPOCHS)data_gpu = data.to(DEVICE)loss_history_euclid = []for epoch in range(1, N_EPOCHS + 1):    idx = torch.randint(0, len(data_gpu), (BATCH_SIZE,))    x1 = data_gpu[idx]    optimizer.zero_grad()    loss = cfm_loss_euclid(model_euclid, x1, DEVICE)    loss.backward()    nn.utils.clip_grad_norm_(model_euclid.parameters(), 1.0)    optimizer.step()    scheduler.step()    loss_history_euclid.append(loss.item())    if epoch % LOG_EVERY == 0:        print(f"epoch {epoch:4d}/{N_EPOCHS}  loss={loss.item():.5f}")print(f"\nretrain complete!\nfinal loss: {loss_history_euclid[-1]:.5f}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch   50/500  loss=3.77557
+epoch  100/500  loss=3.37341
+epoch  150/500  loss=3.30446
+epoch  200/500  loss=3.18739
+epoch  250/500  loss=3.22359
+epoch  300/500  loss=3.13245
+epoch  350/500  loss=3.13998
+epoch  400/500  loss=3.09990
+epoch  450/500  loss=3.17834
+epoch  500/500  loss=3.03009
+
+retrain complete!
+final loss: 3.03009</code></pre>
+</div>
+</div>
+<div id="cell-27" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:44.776273Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:44.776725Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:45.428045Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:44.776702Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:45.427263Z&quot;}}" data-execution_count="28">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 28 - plot training loss curvefig, ax = plt.subplots(figsize=(7, 3))ax.plot(loss_history_euclid, lw=1.2, color="#185FA5")ax.set_xlabel("epoch"); ax.set_ylabel("CFM loss")ax.set_title("euclidean CFM training loss")ax.set_yscale("log")plt.tight_layout()plt.savefig("loss_euclid.png", dpi=120)plt.show()print(f"final loss: {loss_history_euclid[-1]:.5f}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_6_riemannian_flow_matching_files/figure-html/cell-29-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>final loss: 3.03009</code></pre>
+</div>
+</div>
+<div id="cell-28" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:45.428934Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:45.429153Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:45.435340Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:45.429131Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:45.434349Z&quot;}}" data-execution_count="29">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 29 - euclidean ODE integrator (euler in R^2)@torch.no_grad()def sample_euclid(model, n_samples, n_steps=100, device=DEVICE):    """generate samples by euler integration of v_θ in R^2        x_{t+Δt} = x_t + Δt · v_θ(x_t, t)    wrap output to [−π, π) as post-hoc correction    """    model.eval()    dt = 1.0 / n_steps    x = torch.empty(n_samples, 2, device=device).uniform_(-torch.pi, torch.pi)    for i in range(n_steps):        t = torch.full((n_samples,), i * dt, device=device)        v = model(x, t)        x = x + dt * v # euler step in R²    # post-hoc wrap: bring samples back to [−π, π)    x = ((x + torch.pi) % (2 * torch.pi)) - torch.pi    return x.cpu().numpy()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-29" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:45.436452Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:45.437352Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:48.562342Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:45.437325Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:48.561719Z&quot;}}" data-execution_count="30">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 30 - generate samples and plot Ramachandran coveragetorch.manual_seed(SEED)samples_euclid = sample_euclid(model_euclid, n_samples=5000, n_steps=100)fig, ax = plt.subplots(figsize=(6, 6))ax.scatter(phi, psi, s=0.3, alpha=0.08, color="#888", rasterized=True, label="ground truth")ax.scatter(samples_euclid[:, 0], samples_euclid[:, 1], s=1.5, alpha=0.4, color="#185FA5", rasterized=True, label="euclid CFM samples")for reg in REGIONS.values():    p0, p1 = reg["phi"]; s0, s1 = reg["psi"]    rect = mpatches.FancyBboxPatch((p0, s0), p1-p0, s1-s0, boxstyle="round,pad=0.02", lw=1.2, edgecolor=reg["color"], facecolor="none")    ax.add_patch(rect)    ax.text((p0+p1)/2, s1+0.08, reg["label"], ha="center", fontsize=9, color=reg["color"], fontweight="bold")ticks = [-np.pi, -np.pi/2, 0, np.pi/2, np.pi]ax.set_xticks(ticks); ax.set_xticklabels(["-π","-π/2","0","π/2","π"])ax.set_yticks(ticks); ax.set_yticklabels(["-π","-π/2","0","π/2","π"])ax.set_xlabel("φ"); ax.set_ylabel("ψ")ax.set_title("euclidean CFM — generated samples vs ground truth")ax.legend(fontsize=8); ax.set_aspect("equal")plt.tight_layout()plt.savefig("ramachandran_euclid.png", dpi=150)plt.show()# compute coverage fractionsfor name, reg in REGIONS.items():    mask = in_region(samples_euclid[:, 0], samples_euclid[:, 1], reg)    print(f"{reg['label']:12s}  {mask.sum():5,} / 5000  ({mask.mean():.1%})")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_6_riemannian_flow_matching_files/figure-html/cell-31-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>α-helix       1,024 / 5000  (20.5%)
+β-sheet         770 / 5000  (15.4%)</code></pre>
+</div>
+</div>
+<div id="cell-30" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:48.563134Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:48.563322Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:48.569263Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:48.563303Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:48.568460Z&quot;}}" data-execution_count="31">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 31 - riemannian CFM lossdef cfm_loss_riem(model, x1, device):    """riemannian conditional flow matching loss on T^2        two changes from euclidean CFM:      1. interpolation: geodesic via exp_map(x0, t·log_map(x0, x1))      2. target: log_map(x_t, x1) / (1−t)  — tangent vector at x_t toward x1        loss = E[ ||v_θ(x_t, t) − log_map(x_t, x1)/(1−t)||^2 ]    """    B = x1.shape[0]    # clamp t away from 1 to avoid division instability    t = torch.rand(B, device=device) * 0.999 # (B,)    x0 = torch.empty_like(x1).uniform_(-torch.pi, torch.pi) # (B, 2)    # geodesic interpolation    x0_np = x0.cpu().numpy()    x1_np = x1.cpu().numpy()    t_np  = t.cpu().numpy()    v01 = log_map(x0_np, x1_np) # (B, 2)    xt_np = exp_map(x0_np, t_np[:, None] * v01) # (B, 2)    xt = torch.tensor(xt_np, dtype=torch.float32, device=device)    # tangent vector target at x_t    vt_np = log_map(xt_np, x1_np) / (1.0 - t_np[:, None]) # (B, 2)    target = torch.tensor(vt_np, dtype=torch.float32, device=device)    pred = model(xt, t) # (B, 2)    return ((pred - target) ** 2).mean()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-31" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:48.570265Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:48.570479Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:32:48.598264Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:48.570458Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:32:48.597057Z&quot;}}" data-execution_count="32">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb55"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 32 - verify the two changes produce correct shapes and finite valuestorch.manual_seed(SEED)x1_test = data[:8].to(DEVICE)loss_test = cfm_loss_riem(model_euclid, x1_test, DEVICE)print(f"riemannian CFM loss (test batch): {loss_test.item():.5f}")assert torch.isfinite(loss_test), "loss must be finite"assert loss_test.item() &gt; 0, "loss must be positive"print("\nloss is finite and positive!")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>riemannian CFM loss (test batch): 3.29888
+
+loss is finite and positive!</code></pre>
+</div>
+</div>
+<div id="cell-32" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:32:48.599600Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:32:48.599888Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:33:00.043154Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:32:48.599862Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:33:00.042353Z&quot;}}" data-execution_count="33">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb57"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 33 - defines sampler inline to avoid ordering dependencydef exp_map_torch(p, v):    """exp_map on T^2 in pytorch — wraps (p + v) into [−π, π)"""    return ((p + v + torch.pi) % (2 * torch.pi)) - torch.pi@torch.no_grad()def sample_riem(model, n_samples, n_steps=100, device=DEVICE):    """geodesic euler integrator on T^2: x_{t+Δt} = exp_map(x_t, Δt·v_θ(x_t, t))"""    model.eval()    dt = 1.0 / n_steps    x  = torch.empty(n_samples, 2, device=device).uniform_(-torch.pi, torch.pi)    for i in range(n_steps):        t = torch.full((n_samples,), i * dt, device=device)        v = model(x, t)        x = exp_map_torch(x, dt * v)    return x.cpu().numpy()# traintorch.manual_seed(SEED)model_riem = VectorFieldMLP(hidden_dim=256, n_layers=3).to(DEVICE)optimizer_riem = torch.optim.Adam(model_riem.parameters(), lr=1e-3)scheduler_riem = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer_riem, N_EPOCHS)loss_history_riem = []checkpoints = {10: None, 50: None, 100: None, 200: None}for epoch in range(1, N_EPOCHS + 1):    idx = torch.randint(0, len(data_gpu), (BATCH_SIZE,))    x1  = data_gpu[idx]    optimizer_riem.zero_grad()    loss = cfm_loss_riem(model_riem, x1, DEVICE)    loss.backward()    nn.utils.clip_grad_norm_(model_riem.parameters(), 1.0)    optimizer_riem.step()    scheduler_riem.step()    loss_history_riem.append(loss.item())    if epoch in checkpoints:        torch.manual_seed(SEED)        checkpoints[epoch] = sample_riem(model_riem, n_samples=2000, n_steps=100)        print(f"epoch {epoch:4d}/{N_EPOCHS} loss={loss.item():.5f} &lt;- checkpoint saved")    elif epoch % LOG_EVERY == 0:        print(f"epoch {epoch:4d}/{N_EPOCHS} loss={loss.item():.5f}")print(f"\nriemannian CFM retrain complete\nfinal loss: {loss_history_riem[-1]:.5f}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch   10/500 loss=2.83403 &lt;- checkpoint saved
+epoch   50/500 loss=2.63470 &lt;- checkpoint saved
+epoch  100/500 loss=2.56654 &lt;- checkpoint saved
+epoch  150/500 loss=2.49454
+epoch  200/500 loss=2.53576 &lt;- checkpoint saved
+epoch  250/500 loss=2.39709
+epoch  300/500 loss=2.46853
+epoch  350/500 loss=2.41654
+epoch  400/500 loss=2.37391
+epoch  450/500 loss=2.40626
+epoch  500/500 loss=2.38184
+
+riemannian CFM retrain complete
+final loss: 2.38184</code></pre>
+</div>
+</div>
+<div id="cell-33" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:33:00.044379Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:33:00.044646Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:33:01.270764Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:33:00.044623Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:33:01.270036Z&quot;}}" data-execution_count="34">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb59"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 34 - 4-panel ramachandran checkpoint visualizationfig, axes = plt.subplots(2, 2, figsize=(11, 10))axes = axes.ravel()for ax, (epoch, samples) in zip(axes, checkpoints.items()):    ax.scatter(phi, psi, s=0.3, alpha=0.08, color="#888", rasterized=True)    ax.scatter(samples[:, 0], samples[:, 1], s=1.5, alpha=0.4, color="#E85D24", rasterized=True)    for reg in REGIONS.values():        p0, p1 = reg["phi"]; s0, s1 = reg["psi"]        rect = mpatches.FancyBboxPatch(            (p0, s0), p1-p0, s1-s0,            boxstyle="round,pad=0.02", lw=1.2,            edgecolor=reg["color"], facecolor="none",        )        ax.add_patch(rect)        ax.text((p0+p1)/2, s1+0.08, reg["label"], ha="center", fontsize=8, color=reg["color"], fontweight="bold")    # coverage fractions for this checkpoint    h = in_region(samples[:, 0], samples[:, 1], REGIONS["alpha_helix"]).mean()    b = in_region(samples[:, 0], samples[:, 1], REGIONS["beta_sheet"]).mean()    ticks = [-np.pi, -np.pi/2, 0, np.pi/2, np.pi]    ax.set_xticks(ticks); ax.set_xticklabels(["-π","-π/2","0","π/2","π"], fontsize=7)    ax.set_yticks(ticks); ax.set_yticklabels(["-π","-π/2","0","π/2","π"], fontsize=7)    ax.set_xlabel("φ", fontsize=9); ax.set_ylabel("ψ", fontsize=9)    ax.set_title(f"epoch {epoch}  |  helix {h:.1%}  sheet {b:.1%}", fontsize=10)    ax.set_aspect("equal")plt.suptitle("riemannian CFM — sample quality at training checkpoints\n(gray = ground truth, red = generated)", fontsize=11)plt.tight_layout()plt.savefig("checkpoints_riem.png", dpi=150)plt.show()print("checkpoint coverage summary:")print(f"{'epoch':&gt;8} {'α-helix':&gt;8} {'β-sheet':&gt;8}")for epoch, samples in checkpoints.items():    h = in_region(samples[:, 0], samples[:, 1], REGIONS["alpha_helix"]).mean()    b = in_region(samples[:, 0], samples[:, 1], REGIONS["beta_sheet"]).mean()    print(f"{epoch:&gt;8} {h:&gt;8.1%} {b:&gt;8.1%}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_6_riemannian_flow_matching_files/figure-html/cell-35-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>checkpoint coverage summary:
+   epoch  α-helix  β-sheet
+      10     7.0%     1.5%
+      50    13.9%     5.1%
+     100    21.5%    14.1%
+     200    25.4%    16.3%</code></pre>
+</div>
+</div>
+<div id="cell-34" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:33:01.271716Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:33:01.271969Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:33:01.607805Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:33:01.271941Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:33:01.606568Z&quot;}}" data-execution_count="35">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb61"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 35 - compare loss curves: riemannian vs euclideanfig, ax = plt.subplots(figsize=(8, 3))ax.plot(loss_history_euclid, lw=1.2, color="#888", label="euclidean CFM", alpha=0.8)ax.plot(loss_history_riem,   lw=1.2, color="#E85D24", label="riemannian CFM")ax.set_xlabel("epoch"); ax.set_ylabel("loss")ax.set_title("training loss: riemannian vs euclidean CFM")ax.legend(); ax.set_yscale("log")plt.tight_layout()plt.savefig("loss_comparison.png", dpi=120)plt.show()print(f"final loss — euclidean: {loss_history_euclid[-1]:.5f}  |  riemannian: {loss_history_riem[-1]:.5f}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_6_riemannian_flow_matching_files/figure-html/cell-36-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>final loss — euclidean: 3.03009  |  riemannian: 2.38184</code></pre>
+</div>
+</div>
+<div id="cell-35" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:33:01.609253Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:33:01.609646Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:33:01.618052Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:33:01.609617Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:33:01.617317Z&quot;}}" data-execution_count="36">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb63"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 36 - riemannian euler integrator using exp_mapdef exp_map_torch(p, v):    """exp_map on T^2 implemented in pytorch for gpu-accelerated sampling        identical to numpy version: wraps (p + v) into [−π, π) component-wise    guarantees output on T^2 by construction - codomain is always the manifold        args:        p: (B, 2) points on T^2        v: (B, 2) tangent vectors    returns:        (B, 2) points on T^2    """    return ((p + v + torch.pi) % (2 * torch.pi)) - torch.pi@torch.no_grad()def sample_riem(model, n_samples, n_steps=100, device=DEVICE):    """generate samples by geodesic euler integration on T^2        x_{t+Δt} = exp_map(x_t, Δt · v_θ(x_t, t))    every intermediate state is guaranteed on T^2 — no post-hoc wrapping needed        args:        model: trained riemannian vector field v_θ        n_samples: number of samples to generate        n_steps: euler discretization steps (higher = more accurate)    returns:        (n_samples, 2) numpy array of (φ, ψ) samples on T^2    """    model.eval()    dt = 1.0 / n_steps    x  = torch.empty(n_samples, 2, device=device).uniform_(-torch.pi, torch.pi)    for i in range(n_steps):        t = torch.full((n_samples,), i * dt, device=device)        v = model(x, t)        x = exp_map_torch(x, dt * v) # manifold-constrained step    return x.cpu().numpy()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-36" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:33:01.619435Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:33:01.620467Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:33:01.787103Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:33:01.620431Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:33:01.786243Z&quot;}}" data-execution_count="37">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 37 - verify manifold membership at every integration step@torch.no_grad()def sample_riem_verified(model, n_samples, n_steps=100, device=DEVICE):    """same as sample_riem but checks manifold membership at every step    used once for verification — not used in production sampling    """    model.eval()    dt = 1.0 / n_steps    x  = torch.empty(n_samples, 2, device=device).uniform_(-torch.pi, torch.pi)    violations = 0    for i in range(n_steps):        t = torch.full((n_samples,), i * dt, device=device)        v = model(x, t)        x = exp_map_torch(x, dt * v)        # manifold check at this step        off = (~(x &gt;= -torch.pi) | ~(x &lt; torch.pi)).any().item()        if off:            violations += 1    print(f"integration steps : {n_steps}")    print(f"manifold violations across all steps : {violations}")    assert violations == 0, "trajectory left T^2"    print("all intermediate states verified on T^2!")    return x.cpu().numpy()torch.manual_seed(SEED)_ = sample_riem_verified(model_riem, n_samples=512, n_steps=100)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>integration steps : 100
+manifold violations across all steps : 0
+all intermediate states verified on T^2!</code></pre>
+</div>
+</div>
+<div id="cell-37" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:33:01.788127Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:33:01.788359Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:33:03.457146Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:33:01.788331Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:33:03.456257Z&quot;}}" data-execution_count="38">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb66"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 38 - compare euclidean vs riemannian integrator: step count sensitivity# riemannian integrator should be more stable at low step counts# because exp_map enforces manifold constraint regardless of step sizeresults = {}for n_steps in [10, 25, 50, 100]:    torch.manual_seed(SEED)    s_riem = sample_riem(model_riem, n_samples=2000, n_steps=n_steps)    s_euclid = sample_euclid(model_euclid, n_samples=2000, n_steps=n_steps)    h_riem  = in_region(s_riem[:, 0], s_riem[:, 1], REGIONS["alpha_helix"]).mean()    h_euclid = in_region(s_euclid[:, 0], s_euclid[:, 1], REGIONS["alpha_helix"]).mean()    results[n_steps] = (h_riem, h_euclid)    print(f"steps={n_steps:3d} helix coverage - riem: {h_riem:.1%} euclid: {h_euclid:.1%}")print("\nriemannian coverage should be stable across step counts")print("euclidean coverage may degrade at low step counts due to manifold drift")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>steps= 10 helix coverage - riem: 25.6% euclid: 20.8%
+steps= 25 helix coverage - riem: 26.1% euclid: 20.5%
+steps= 50 helix coverage - riem: 26.2% euclid: 20.2%
+steps=100 helix coverage - riem: 26.2% euclid: 20.1%
+
+riemannian coverage should be stable across step counts
+euclidean coverage may degrade at low step counts due to manifold drift</code></pre>
+</div>
+</div>
+<div id="cell-38" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:33:03.458243Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:33:03.458459Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:33:05.253168Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:33:03.458438Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:33:05.252245Z&quot;}}" data-execution_count="39">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb68"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 39 - generate final riemannian samples and plottorch.manual_seed(SEED)samples_riem = sample_riem(model_riem, n_samples=5000, n_steps=100)# manifold membership of final samplesassert np.all(np.abs(samples_riem) &lt;= np.pi + 1e-6), "final samples off T^2"print(f"all 5000 samples on T^2!")fig, axes = plt.subplots(1, 2, figsize=(12, 5))titles = ["euclidean CFM", "riemannian CFM"]samples_list = [samples_euclid, samples_riem]colors = ["#185FA5", "#E85D24"]for ax, title, samples, color in zip(axes, titles, samples_list, colors):    ax.scatter(phi, psi, s=0.3, alpha=0.08, color="#888", rasterized=True)    ax.scatter(samples[:, 0], samples[:, 1], s=1.5, alpha=0.4, color=color, rasterized=True, label="generated")    for reg in REGIONS.values():        p0, p1 = reg["phi"]; s0, s1 = reg["psi"]        rect = mpatches.FancyBboxPatch((p0, s0), p1-p0, s1-s0,            boxstyle="round,pad=0.02", lw=1.2,            edgecolor=reg["color"], facecolor="none")        ax.add_patch(rect)    ticks = [-np.pi, -np.pi/2, 0, np.pi/2, np.pi]    ax.set_xticks(ticks); ax.set_xticklabels(["-π","-π/2","0","π/2","π"])    ax.set_yticks(ticks); ax.set_yticklabels(["-π","-π/2","0","π/2","π"])    ax.set_xlabel("φ"); ax.set_ylabel("ψ")    ax.set_title(title); ax.set_aspect("equal")plt.suptitle("generated samples: euclidean vs riemannian CFM")plt.tight_layout()plt.savefig("ramachandran_comparison.png", dpi=150)plt.show()# coverage fractionsprint(f"\n{'region':12s} {'ground truth':&gt;12} {'euclidean':&gt;10} {'riemannian':&gt;11}")for name, reg in REGIONS.items():    gt = in_region(phi, psi, reg).mean()    eu = in_region(samples_euclid[:, 0], samples_euclid[:, 1], reg).mean()    ri = in_region(samples_riem[:, 0], samples_riem[:, 1], reg).mean()    print(f"{reg['label']:12s} {gt:12.1%} {eu:10.1%} {ri:11.1%}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>all 5000 samples on T^2!</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_6_riemannian_flow_matching_files/figure-html/cell-40-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+region       ground truth  euclidean  riemannian
+α-helix             32.9%      20.5%       25.0%
+β-sheet             22.1%      15.4%       18.1%</code></pre>
+</div>
+</div>
+<div id="cell-39" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:33:05.254414Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:33:05.254809Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:33:05.261221Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:33:05.254787Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:33:05.260177Z&quot;}}" data-execution_count="40">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb71"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 40 - confirm both models trained with identical hyperparametershyperparams = {    "lr": 1e-3,    "batch_size": 2048,    "n_epochs": 500,    "optimizer": "Adam",    "scheduler": "CosineAnnealingLR",    "hidden_dim": 256,    "n_layers": 3,    "seed": SEED,}print("hyperparameter audit:")print(f"{'\nparameter':&lt;20} {'value':&lt;20}")print("-" * 40)for k, v in hyperparams.items():    print(f"{k:&lt;20} {str(v):&lt;20}")print(f"\nloss_history_euclid length: {len(loss_history_euclid)} (expected: {hyperparams['n_epochs']})")print(f"loss_history_riem length: {len(loss_history_riem)} (expected: {hyperparams['n_epochs']})")print()print(f"euclidean — initial loss: {loss_history_euclid[0]:.5f}; final loss: {loss_history_euclid[-1]:.5f}")print(f"riemannian — initial loss: {loss_history_riem[0]:.5f}; final loss: {loss_history_riem[-1]:.5f}")assert len(loss_history_euclid) == len(loss_history_riem) == hyperparams["n_epochs"]print("\nboth models trained with identical hyperparameters and budget!")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>hyperparameter audit:
+
+parameter           value               
+----------------------------------------
+lr                   0.001               
+batch_size           2048                
+n_epochs             500                 
+optimizer            Adam                
+scheduler            CosineAnnealingLR   
+hidden_dim           256                 
+n_layers             3                   
+seed                 42                  
+
+loss_history_euclid length: 500 (expected: 500)
+loss_history_riem length: 500 (expected: 500)
+
+euclidean — initial loss: 5.21934; final loss: 3.03009
+riemannian — initial loss: 3.30559; final loss: 2.38184
+
+both models trained with identical hyperparameters and budget!</code></pre>
+</div>
+</div>
+<div id="cell-40" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:33:05.262240Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:33:05.262546Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:33:05.286283Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:33:05.262491Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:33:05.285057Z&quot;}}" data-execution_count="41">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb73"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 41 - boundary distance audit (quantifies your analysis numerically)boundaries = {"−π": -np.pi, "+π": np.pi}print("region, coord, range, nearest boundary, distance (rad)")for name, reg in REGIONS.items():    for coord, (lo, hi), label in [("φ", reg["phi"], "phi"), ("ψ", reg["psi"], "psi")]:        dist_neg = abs(lo - (-np.pi))        dist_pos = abs(np.pi - hi)        nearest  = "−π" if dist_neg &lt; dist_pos else "+π"        dist = min(dist_neg, dist_pos)        print(f"{reg['label']}, {coord}, [{lo:.3f}, {hi:.3f}], {nearest}, {dist}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>region, coord, range, nearest boundary, distance (rad)
+α-helix, φ, [-1.396, -0.698], −π, 1.7453292519943295
+α-helix, ψ, [-1.047, -0.349], −π, 2.0943951023931957
+β-sheet, φ, [-2.618, -1.571], −π, 0.5235987755982987
+β-sheet, ψ, [1.745, 2.967], +π, 0.17453292519943275</code></pre>
+</div>
+</div>
+<div id="cell-41" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:33:05.287184Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:33:05.287423Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:33:11.519324Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:33:05.287400Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:33:11.518091Z&quot;}}" data-execution_count="42">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb75"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 42 - boundary failure visualization# show where euclidean CFM under-generates relative to riemannian near ±π edgesdef kde_on_grid(samples, grid_phi, grid_psi, bw=0.15):    """estimate kde density on a meshgrid from samples."""    kde = gaussian_kde(samples.T, bw_method=bw)    grid = np.vstack([grid_phi.ravel(), grid_psi.ravel()])    return kde(grid).reshape(grid_phi.shape)# build evaluation gridres = 100gp = np.linspace(-np.pi, np.pi, res)gs = np.linspace(-np.pi, np.pi, res)GP, GS = np.meshgrid(gp, gs)kde_riem = kde_on_grid(samples_riem,   GP, GS)kde_euclid = kde_on_grid(samples_euclid, GP, GS)kde_gt = kde_on_grid(np.stack([phi, psi], axis=1), GP, GS)# difference: riemannian − euclideankde_diff = kde_riem - kde_euclidfig, ax = plt.subplots(figsize=(6, 6))im = ax.contourf(GP, GS, kde_diff, levels=20, cmap="RdBu_r")plt.colorbar(im, ax=ax, label="density(riem) - density(euclid)")# mark the ±π boundary proximity of β-sheetax.axhline(np.pi, color="#E85D24", lw=1.5, ls="--", label="±π boundary")ax.axhline(-np.pi, color="#E85D24", lw=1.5, ls="--")ax.axvline(np.pi, color="#E85D24", lw=1.5, ls="--")ax.axvline(-np.pi, color="#E85D24", lw=1.5, ls="--")for reg in REGIONS.values():    p0, p1 = reg["phi"]; s0, s1 = reg["psi"]    rect = mpatches.FancyBboxPatch((p0, s0), p1-p0, s1-s0, boxstyle="round,pad=0.02", lw=1.5, edgecolor=reg["color"], facecolor="none")    ax.add_patch(rect)    ax.text((p0+p1)/2, s1+0.08, reg["label"], ha="center", fontsize=9, color=reg["color"], fontweight="bold")ticks = [-np.pi, -np.pi/2, 0, np.pi/2, np.pi]ax.set_xticks(ticks); ax.set_xticklabels(["-π","-π/2","0","π/2","π"])ax.set_yticks(ticks); ax.set_yticklabels(["-π","-π/2","0","π/2","π"])ax.set_xlabel("φ"); ax.set_ylabel("ψ")ax.set_title("density difference: riemannian − euclidean CFM\nred = riem higher,  blue = euclid higher\n")ax.legend(fontsize=8); ax.set_aspect("equal")plt.tight_layout()plt.savefig("density_diff.png", dpi=150)plt.show()print("\npositive (red) regions: riemannian captures more density")print("negative (blue) regions: euclidean spuriously over-generates")# report β-sheet ψ boundary proximity explicitlyprint(f"\nβ-sheet ψ upper bound: {np.rad2deg(REGIONS['beta_sheet']['psi'][1]):.1f}°  "      f"({REGIONS['beta_sheet']['psi'][1]:.4f} rad)")print(f"+π boundary: {np.rad2deg(np.pi):.1f}°  ({np.pi:.4f} rad)")print(f"distance: {np.pi - REGIONS['beta_sheet']['psi'][1]:.4f} rad  "      f"({np.rad2deg(np.pi - REGIONS['beta_sheet']['psi'][1]):.2f}°)")print("\n-&gt; β-sheet sits 0.17 rad from ±π — most vulnerable region to euclidean failure")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_6_riemannian_flow_matching_files/figure-html/cell-43-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+positive (red) regions: riemannian captures more density
+negative (blue) regions: euclidean spuriously over-generates
+
+β-sheet ψ upper bound: 170.0°  (2.9671 rad)
++π boundary: 180.0°  (3.1416 rad)
+distance: 0.1745 rad  (10.00°)
+
+-&gt; β-sheet sits 0.17 rad from ±π — most vulnerable region to euclidean failure</code></pre>
+</div>
+</div>
+<div id="cell-42" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:33:11.520618Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:33:11.520869Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:33:11.530597Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:33:11.520847Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:33:11.529647Z&quot;}}" data-execution_count="43">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb77"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 43 - quantify boundary failure: density near ±π edges# compare how much mass each model places within 0.3 rad of any boundaryBOUNDARY_BAND = 0.3 # radiansdef near_boundary(samples, band=BOUNDARY_BAND):    """fraction of samples within `band` radians of any ±π edge."""    phi_s, psi_s = samples[:, 0], samples[:, 1]    near = (        (np.abs(phi_s - np.pi)  &lt; band) | (np.abs(phi_s + np.pi) &lt; band) |        (np.abs(psi_s - np.pi)  &lt; band) | (np.abs(psi_s + np.pi) &lt; band)    )    return near.mean()gt_boundary = near_boundary(np.stack([phi, psi], axis=1))euclid_boundary = near_boundary(samples_euclid)riem_boundary = near_boundary(samples_riem)# interpretationprint(f"fraction of samples within {BOUNDARY_BAND} rad of ±π boundary:")print(f"  ground truth: {gt_boundary:.3f}")print(f"  euclidean CFM: {euclid_boundary:.3f}")print(f"  riemannian CFM: {riem_boundary:.3f}")print()surplus_euclid = euclid_boundary - gt_boundarysurplus_riem   = riem_boundary - gt_boundaryprint(f"euclidean boundary surplus vs ground truth: {surplus_euclid:+.3f}")print(f"riemannian boundary surplus vs ground truth: {surplus_riem:+.3f}")print("\nnote: both models over-generate near ±π due to synthetic dataset having near-zero ground-truth boundary mass — primary evaluation metric is helix/sheet coverage and JSD, not boundary density.")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>fraction of samples within 0.3 rad of ±π boundary:
+  ground truth: 0.006
+  euclidean CFM: 0.019
+  riemannian CFM: 0.026
+
+euclidean boundary surplus vs ground truth: +0.013
+riemannian boundary surplus vs ground truth: +0.020
+
+note: both models over-generate near ±π due to synthetic dataset having near-zero ground-truth boundary mass — primary evaluation metric is helix/sheet coverage and JSD, not boundary density.</code></pre>
+</div>
+</div>
+<div id="cell-43" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:33:11.531621Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:33:11.531847Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:33:12.494659Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:33:11.531822Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:33:12.493662Z&quot;}}" data-execution_count="44">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb79"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 44 - 2×2 ramachandran evaluation figurefig, axes = plt.subplots(2, 2, figsize=(12, 11))panels = [    (np.stack([phi, psi], axis=1), "ground truth", "#555"),    (samples_riem, "riemannian CFM", "#E85D24"),    (samples_euclid, "euclidean CFM", "#185FA5"),    (None, "density difference\n(riem − euclid)", None),]for ax, (samples, title, color) in zip(axes.ravel(), panels):    if samples is not None:        ax.scatter(samples[:, 0], samples[:, 1], s=0.5, alpha=0.15, color=color, rasterized=True)    else:        # panel 4: KDE difference        im = ax.contourf(GP, GS, kde_riem - kde_euclid, levels=20, cmap="RdBu_r")        plt.colorbar(im, ax=ax, label="Δ density")    for reg in REGIONS.values():        p0, p1 = reg["phi"]; s0, s1 = reg["psi"]        rect = mpatches.FancyBboxPatch(            (p0, s0), p1-p0, s1-s0,            boxstyle="round,pad=0.02", lw=1.5,            edgecolor=reg["color"], facecolor="none",        )        ax.add_patch(rect)        ax.text((p0+p1)/2, s1+0.1, reg["label"], ha="center", fontsize=8, color=reg["color"], fontweight="bold")    ticks = [-np.pi, -np.pi/2, 0, np.pi/2, np.pi]    ax.set_xticks(ticks); ax.set_xticklabels(["-π","-π/2","0","π/2","π"], fontsize=7)    ax.set_yticks(ticks); ax.set_yticklabels(["-π","-π/2","0","π/2","π"], fontsize=7)    ax.set_xlabel("φ", fontsize=9); ax.set_ylabel("ψ", fontsize=9)    ax.set_title(title, fontsize=10); ax.set_aspect("equal")plt.suptitle("Ramachandran evaluation: ground truth vs generated samples", fontsize=12, fontweight="bold")plt.tight_layout()plt.savefig("ramachandran_eval_2x2.png", dpi=150)plt.show()print("saved: ramachandran_eval_2x2.png &lt;- central evaluation figure")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_6_riemannian_flow_matching_files/figure-html/cell-45-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>saved: ramachandran_eval_2x2.png &lt;- central evaluation figure</code></pre>
+</div>
+</div>
+<div id="cell-44" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:33:12.495856Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:33:12.496154Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:33:12.504641Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:33:12.496120Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:33:12.503722Z&quot;}}" data-execution_count="45">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb81"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 45 - jensen-shannon divergence between generated and ground-truth KDEdef jsd(p, q, eps=1e-10):    """jensen-shannon divergence between two density arrays        JSD(p||q) = 0.5·KL(p||m) + 0.5·KL(q||m)  where m = 0.5(p+q)    result in [0, log(2)]; lower = better match to ground truth    normalized to [0, 1] by dividing by log(2)    """    p = p.ravel() + eps    q = q.ravel() + eps    p = p / p.sum()    q = q / q.sum()    m = 0.5 * (p + q)    kl_pm = rel_entr(p, m).sum()    kl_qm = rel_entr(q, m).sum()    return float(0.5 * kl_pm + 0.5 * kl_qm)jsd_riem = jsd(kde_gt, kde_riem)jsd_euclid = jsd(kde_gt, kde_euclid)print("jensen-shannon divergence (lower = closer to ground truth):")print(f"  riemannian CFM: {jsd_riem:.6f}")print(f"  euclidean CFM: {jsd_euclid:.6f}")print(f"  improvement: {(jsd_euclid - jsd_riem):.6f} ({(jsd_euclid - jsd_riem)/jsd_euclid:.1%} reduction)")assert jsd_riem &lt; jsd_euclid, "riemannian must have lower JSD than euclidean"print("\nriemannian CFM achieves lower JSD - closer to ground truth distribution!")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>jensen-shannon divergence (lower = closer to ground truth):
+  riemannian CFM: 0.025385
+  euclidean CFM: 0.044667
+  improvement: 0.019282 (43.2% reduction)
+
+riemannian CFM achieves lower JSD - closer to ground truth distribution!</code></pre>
+</div>
+</div>
+<div id="cell-45" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:33:12.506287Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:33:12.506604Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:33:12.528784Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:33:12.506574Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:33:12.527441Z&quot;}}" data-execution_count="46">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb83"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 46 — summary tableprint(f"{'metric':&lt;30}  {'euclidean':&gt;10}  {'riemannian':&gt;11}")print("-" * 60)gt_h = in_region(phi, psi, REGIONS["alpha_helix"]).mean()gt_b = in_region(phi, psi, REGIONS["beta_sheet"]).mean()eu_h = in_region(samples_euclid[:,0], samples_euclid[:,1], REGIONS["alpha_helix"]).mean()eu_b = in_region(samples_euclid[:,0], samples_euclid[:,1], REGIONS["beta_sheet"]).mean()ri_h = in_region(samples_riem[:,0], samples_riem[:,1], REGIONS["alpha_helix"]).mean()ri_b = in_region(samples_riem[:,0], samples_riem[:,1], REGIONS["beta_sheet"]).mean()print(f"{'α-helix coverage':&lt;30} {eu_h:&gt;10.1%} {ri_h:&gt;11.1%} (gt: {gt_h:.1%})")print(f"{'β-sheet coverage':&lt;30} {eu_b:&gt;10.1%} {ri_b:&gt;11.1%} (gt: {gt_b:.1%})")print(f"{'JSD vs ground truth':&lt;30} {jsd_euclid:&gt;10.6f}  {jsd_riem:&gt;11.6f}")print(f"{'final training loss':&lt;30} {loss_history_euclid[-1]:&gt;10.5f} {loss_history_riem[-1]:&gt;11.5f}")print(f"{'manifold violations':&lt;30} {'N/A':&gt;10} {'0':&gt;11}")print("-" * 60)print(f"{'JSD improvement':&lt;30} {(jsd_euclid-jsd_riem)/jsd_euclid:&gt;10.1%}")print(f"{'helix coverage gain':&lt;30} {ri_h-eu_h:&gt;+10.1%}")print(f"{'sheet coverage gain':&lt;30} {ri_b-eu_b:&gt;+10.1%}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>metric                           euclidean   riemannian
+------------------------------------------------------------
+α-helix coverage                    20.5%       25.0% (gt: 32.9%)
+β-sheet coverage                    15.4%       18.1% (gt: 22.1%)
+JSD vs ground truth              0.044667     0.025385
+final training loss               3.03009     2.38184
+manifold violations                   N/A           0
+------------------------------------------------------------
+JSD improvement                     43.2%
+helix coverage gain                 +4.5%
+sheet coverage gain                 +2.7%</code></pre>
+</div>
+</div>
+<div id="cell-46" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-14T11:33:12.530735Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-14T11:33:12.531200Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-14T11:34:17.193430Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-14T11:33:12.531129Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-14T11:34:17.192465Z&quot;}}" data-execution_count="47">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb85"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 47 - improved riemannian CFM: larger network, more epochs, more ODE stepsHIDDEN_DIM_V2 = 512N_EPOCHS_V2 = 1000N_STEPS_V2 = 200torch.manual_seed(SEED)model_riem_v2 = VectorFieldMLP(hidden_dim=HIDDEN_DIM_V2, n_layers=3).to(DEVICE)optimizer_v2 = torch.optim.Adam(model_riem_v2.parameters(), lr=1e-3)scheduler_v2 = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer_v2, N_EPOCHS_V2)n_params_v2 = sum(p.numel() for p in model_riem_v2.parameters())print(f"v2 model parameters: {n_params_v2:,} (v1 was 133,634)")loss_history_riem_v2 = []for epoch in range(1, N_EPOCHS_V2 + 1):    idx = torch.randint(0, len(data_gpu), (BATCH_SIZE,))    x1 = data_gpu[idx]    optimizer_v2.zero_grad()    loss = cfm_loss_riem(model_riem_v2, x1, DEVICE)    loss.backward()    nn.utils.clip_grad_norm_(model_riem_v2.parameters(), 1.0)    optimizer_v2.step()    scheduler_v2.step()    loss_history_riem_v2.append(loss.item())    if epoch % 100 == 0:        print(f"epoch {epoch:4d}/{N_EPOCHS_V2}  loss={loss.item():.5f}")print(f"\nv2 retrain complete!\nfinal loss: {loss_history_riem_v2[-1]:.5f}")# sample with more ODE stepstorch.manual_seed(SEED)samples_riem_v2 = sample_riem(model_riem_v2, n_samples=5000, n_steps=N_STEPS_V2)assert np.all(np.abs(samples_riem_v2) &lt;= np.pi + 1e-6), "v2 samples off T^2"print(f"all 5000 v2 samples on T^2 (ODE steps: {N_STEPS_V2})\n")# evaluatekde_riem_v2 = kde_on_grid(samples_riem_v2, GP, GS)jsd_riem_v2 = jsd(kde_gt, kde_riem_v2)v2_h = in_region(samples_riem_v2[:,0], samples_riem_v2[:,1], REGIONS["alpha_helix"]).mean()v2_b = in_region(samples_riem_v2[:,0], samples_riem_v2[:,1], REGIONS["beta_sheet"]).mean()print("IMPROVEMENT SUMMARY")print(f"{'metric':&lt;30} {'riem v1':&gt;9} {'riem v2':&gt;9} {'gt':&gt;7}")print("-" * 62)print(f"{'α-helix coverage':&lt;30} {ri_h:&gt;9.1%} {v2_h:&gt;9.1%} {gt_h:&gt;7.1%}")print(f"{'β-sheet coverage':&lt;30} {ri_b:&gt;9.1%} {v2_b:&gt;9.1%} {gt_b:&gt;7.1%}")print(f"{'JSD vs ground truth':&lt;30} {jsd_riem:&gt;9.6f} {jsd_riem_v2:&gt;9.6f}")print(f"{'final training loss':&lt;30} {loss_history_riem[-1]:&gt;9.5f} {loss_history_riem_v2[-1]:&gt;9.5f}")print(f"{'hidden dim':&lt;30} {'256':&gt;9} {'512':&gt;9}")print(f"{'epochs':&lt;30} {'500':&gt;9} {'1000':&gt;9}")print(f"{'ODE steps':&lt;30} {'100':&gt;9} {'200':&gt;9}")print("-" * 62)print(f"{'JSD improvement over v1':&lt;30} {(jsd_riem - jsd_riem_v2):&gt;+9.6f}")print(f"{'helix gain over v1':&lt;30} {v2_h - ri_h:&gt;+9.1%}")print(f"{'sheet gain over v1':&lt;30} {v2_b - ri_b:&gt;+9.1%}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>v2 model parameters: 529,410 (v1 was 133,634)
+epoch  100/1000  loss=2.54937
+epoch  200/1000  loss=2.34666
+epoch  300/1000  loss=2.22644
+epoch  400/1000  loss=2.30894
+epoch  500/1000  loss=2.24734
+epoch  600/1000  loss=2.26541
+epoch  700/1000  loss=2.24608
+epoch  800/1000  loss=2.31891
+epoch  900/1000  loss=2.22581
+epoch 1000/1000  loss=2.19546
+
+v2 retrain complete!
+final loss: 2.19546
+all 5000 v2 samples on T^2 (ODE steps: 200)
+
+IMPROVEMENT SUMMARY
+metric                           riem v1   riem v2      gt
+--------------------------------------------------------------
+α-helix coverage                   25.0%     30.3%   32.9%
+β-sheet coverage                   18.1%     20.1%   22.1%
+JSD vs ground truth             0.025385  0.010963
+final training loss              2.38184   2.19546
+hidden dim                           256       512
+epochs                               500      1000
+ODE steps                            100       200
+--------------------------------------------------------------
+JSD improvement over v1        +0.014422
+helix gain over v1                 +5.3%
+sheet gain over v1                 +2.0%</code></pre>
+</div>
+</div>
+<div id="cell-47" class="cell" data-trusted="true">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb87"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+
+
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

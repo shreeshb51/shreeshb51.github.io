@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2026-06-09">
+
+<title>Topic 3 - The Integral - Lebesgue vs.&nbsp;Riemann Integration – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Topic 3 - The Integral - Lebesgue vs.&nbsp;Riemann Integration</li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#topic-3---the-integral" id="toc-topic-3---the-integral" class="nav-link active" data-scroll-target="#topic-3---the-integral">Topic 3 - The Integral</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  </ul></li>
+  <li><a href="#subtopic---lebesgue-vs.-riemann-integration" id="toc-subtopic---lebesgue-vs.-riemann-integration" class="nav-link" data-scroll-target="#subtopic---lebesgue-vs.-riemann-integration">Subtopic - Lebesgue vs.&nbsp;Riemann Integration</a>
+  <ul class="collapse">
+  <li><a href="#layer-1-story" id="toc-layer-1-story" class="nav-link" data-scroll-target="#layer-1-story">Layer 1 (Story)</a></li>
+  <li><a href="#layer-2-mathematics" id="toc-layer-2-mathematics" class="nav-link" data-scroll-target="#layer-2-mathematics">Layer 2 (Mathematics)</a></li>
+  <li><a href="#layer-3-bridge" id="toc-layer-3-bridge" class="nav-link" data-scroll-target="#layer-3-bridge">Layer 3 (Bridge)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Topic 3 - The Integral - Lebesgue vs.&nbsp;Riemann Integration</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">June 9, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="topic-3---the-integral" class="level1">
+<h1>Topic 3 - The Integral</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>You have now built the full scaffolding for integration. You know which subsets of a space are allowed to have a size — the Borel sets. You know how to assign sizes to them consistently — the Lebesgue measure. What remains is the payoff: using that size assignment to define a coherent, powerful notion of integration that goes strictly beyond what you learned in MATH 201.</p>
+<p>The integral is the machine that turns a measure and a function into a number. It answers the question: if mass is distributed across a space according to the measure <span class="math inline">\(\mu\)</span>, and the function <span class="math inline">\(f\)</span> assigns a value to each point, what is the total weighted mass? This question is so fundamental that it appears in every corner of the roadmap — as an expectation, as a cost functional, as a score matching objective, as a transport plan evaluation. Every one of those objects is an integral, and the framework you choose for defining that integral determines what you can and cannot prove rigorously.</p>
+<p>This topic has exactly one subtopic — Lebesgue vs.&nbsp;Riemann integration — and its purpose is to make the distinction between the two frameworks completely explicit. Not just the technical difference, but the philosophical one: why the Riemann framework, which served you well through all of MATH 201, is genuinely insufficient for the mathematics of probability and generative AI, and why the Lebesgue framework resolves every one of its failures.</p>
+<hr>
+</section>
+</section>
+<section id="subtopic---lebesgue-vs.-riemann-integration" class="level1">
+<h1>Subtopic - Lebesgue vs.&nbsp;Riemann Integration</h1>
+<section id="layer-1-story" class="level2">
+<h2 class="anchored" data-anchor-id="layer-1-story">Layer 1 (Story)</h2>
+<p>You are the head of the national census bureau of Nepal, and your task is to compute the total income of the entire population of Kathmandu valley. Every resident has an income — a non-negative real number — and you want to sum them all up in a way that gives a meaningful, consistent total. You have two junior statisticians on your team, and you assign them the same task independently, asking them to report back with their methodology and their answer.</p>
+<p>The first statistician — call him Riemann — comes back with the following approach. He divides the valley into a grid of small geographical blocks: Thamel block, Asan block, Patan block, and so on. Within each block, he picks a representative resident, records that resident’s income, and multiplies it by the number of residents in the block. He sums these products across all blocks to get the total. If the blocks are small enough and the income distribution is smooth enough — if nearby residents tend to have similar incomes — this approximation gets better and better as the blocks get finer, and in the limit it converges to the true total. Riemann’s method works beautifully when the income landscape is smooth and well-behaved.</p>
+<p>The second statistician — call her Lebesgue — comes back with a completely different approach. Instead of dividing the valley into geographical blocks, she divides the income axis into income brackets: residents earning between 0 and 10,000 rupees per month, between 10,000 and 20,000, between 20,000 and 30,000, and so on. For each bracket, she counts the number of residents whose income falls within it — not by geography, but by income level — and multiplies the bracket’s representative income by that count. She sums these products across all brackets to get the total. Her method does not care at all about where residents live. It only cares about how many people earn each level of income.</p>
+<hr>
+<p>Both methods seem reasonable. For a smoothly distributed population — one where income varies gradually across geography — they produce essentially the same answer. Riemann’s geographical blocks and Lebesgue’s income brackets are both valid approximation schemes, and both converge to the true total as the partitions get finer.</p>
+<p>But now the census bureau encounters three problem cases, one after another, and the difference between the two methods becomes stark.</p>
+<hr>
+<p><strong>Problem Case 1: The Segregated City.</strong></p>
+<p>Imagine that Kathmandu has become perfectly economically segregated. Every resident of Thamel earns exactly 100,000 rupees per month. Every resident of Patan earns exactly 30,000. Every resident of Bhaktapur earns exactly 15,000. The income function is piecewise constant — it jumps discontinuously at the boundary between neighborhoods, but within each neighborhood it is perfectly flat.</p>
+<p>Riemann handles this fine. His geographical blocks eventually align with the neighborhood boundaries, and the piecewise constant income function is Riemann integrable. No problem here.</p>
+<p>Lebesgue handles it even more elegantly. She simply identifies three income brackets — 100,000, 30,000, and 15,000 — multiplies each by the population of the corresponding neighborhood, and sums. She does not need fine blocks at all. Her method handles piecewise constant functions in a single step.</p>
+<p>Both methods agree. Neither struggles. The segregated city is an easy case.</p>
+<hr>
+<p><strong>Problem Case 2: The Fractal Neighborhood.</strong></p>
+<p>Now imagine a far stranger situation. A city planner with an unusual sense of humor has designed a new district whose residents are indexed by the rational numbers in <span class="math inline">\([0,1]\)</span> — an infinite, dense, but countable population scattered throughout the interval. Every rational-indexed resident earns 1,000 rupees. Every irrational-indexed resident earns 0 rupees. The income function is the indicator of the rationals — exactly the plot <span class="math inline">\(Q\)</span> from the previous subtopic.</p>
+<p>Riemann is immediately paralyzed. In every geographical block, no matter how small, there are both rational-indexed residents earning 1,000 and irrational-indexed residents earning 0. His upper sum — using the maximum income in each block — always gives a total proportional to 1,000 times the full population. His lower sum — using the minimum — always gives zero. The upper and lower sums never converge, no matter how fine the grid. Riemann cannot compute a total income for this district. His method breaks down completely.</p>
+<p>Lebesgue is unbothered. She looks at her income brackets. The bracket for 1,000 rupees contains exactly the rational-indexed residents — a countable set. She knows from the previous subtopic that a countable set has Lebesgue measure zero. So the number of residents in this bracket is, in the measure-theoretic sense, zero. The bracket for 0 rupees contains all the irrational-indexed residents — an uncountable set of full measure. The total income is <span class="math inline">\(1000 \times 0 + 0 \times 1 = 0\)</span>. Lebesgue computes the answer instantly, correctly, and without any ambiguity. The fractal neighborhood that paralyzed Riemann is trivial for Lebesgue, because her method operates on the income axis rather than the geography.</p>
+<hr>
+<p><strong>Problem Case 3: The Limit of Smooth Surveys.</strong></p>
+<p>Now imagine the census bureau needs to compute total income not from a single survey, but as the limit of a sequence of approximating surveys. Each year, a new survey <span class="math inline">\(f_n\)</span> is conducted — a smooth, well-behaved income function — and as <span class="math inline">\(n \to \infty\)</span>, the surveys converge pointwise to the true income function <span class="math inline">\(f\)</span>. You want to conclude that the total income computed from the approximate surveys converges to the true total income — that <span class="math inline">\(\lim_{n \to \infty} \int f_n \, d\mu = \int f \, d\mu\)</span>.</p>
+<p>Riemann can guarantee this only under a very strong condition: the convergence must be uniform. The survey functions <span class="math inline">\(f_n\)</span> must converge to <span class="math inline">\(f\)</span> at the same rate everywhere in the valley simultaneously. If the convergence is non-uniform — if some pockets of the valley converge slowly while others converge quickly — Riemann’s method gives no guarantee that the limit of the totals equals the total of the limit. The two operations — limit and integral — cannot generally be exchanged under Riemann’s framework.</p>
+<p>Lebesgue can guarantee this under a far weaker condition: the Dominated Convergence Theorem. As long as all the survey functions <span class="math inline">\(f_n\)</span> fit under a single integrable envelope — as long as no survey ever assigns any resident an income larger than some fixed integrable bound — the limit passes through the integral automatically, regardless of whether convergence is uniform. Non-uniform convergence, pointwise convergence, convergence almost everywhere — all of these suffice. The Lebesgue framework makes the exchange of limits and integrals legitimate under conditions that arise naturally in probability and analysis, where uniform convergence is almost never available.</p>
+<hr>
+<p>Here is the break moment. The naive assumption — and it is a deeply natural one, shared by most students who have only seen Riemann integration — is that the two frameworks are essentially equivalent, differing only in technical details that never matter in practice. After all, they agree on every continuous function. They agree on every piecewise smooth function. For the functions that arise in physics and engineering, they give the same number. Why learn a new framework?</p>
+<p>The break is this: the functions that arise in probability theory and machine learning are almost never continuous. A probability density is defined only up to a set of measure zero — it is an equivalence class of functions, not a single function, and two densities that agree almost everywhere are the same density regardless of their pointwise differences. A score function <span class="math inline">\(\nabla \log p(x)\)</span> may fail to exist on a null set. A neural network’s activation function — the ReLU — is not differentiable at zero, which is a single point, a null set. The Lebesgue framework handles all of these without hesitation, because it operates on equivalence classes of functions and ignores null sets by design. The Riemann framework does not have this flexibility. It is sensitive to the values of a function at individual points, which makes it the wrong tool for a mathematical universe where individual points have measure zero and therefore do not matter.</p>
+<p>More fundamentally: the Lebesgue framework is the one that makes <span class="math inline">\(L^p\)</span> spaces into Banach and Hilbert spaces. The Riemann framework cannot do this. The completion of the space of Riemann-integrable functions under the <span class="math inline">\(L^2\)</span> norm produces functions that are not Riemann-integrable — the completion process forces you out of the Riemann world and into the Lebesgue world. The Hilbert space <span class="math inline">\(L^2\)</span> that houses all the probability densities, score functions, and neural network outputs of the roadmap is a Lebesgue construction, not a Riemann one. There is no way to build it without Lebesgue integration.</p>
+<hr>
+<p>Hold this picture in your mind. Two statisticians, same task, completely different philosophies. Riemann slices geography and asks about local income levels. Lebesgue slices income levels and asks about the geography of each level. For smooth, well-behaved populations they agree. For fractal neighborhoods, limit operations, and the equivalence-class structure of probability densities, only Lebesgue’s method produces consistent, powerful, correct results. The census bureau that wants to handle every possible income distribution — including the ones that real-world probability theory generates — must hire Lebesgue, not Riemann.</p>
+<hr>
+</section>
+<section id="layer-2-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="layer-2-mathematics">Layer 2 (Mathematics)</h2>
+<p>We build the formalism in five stages: the precise construction of the Riemann integral, its exact failure conditions, the Lebesgue integral restated in full formal detail, the theorems that make Lebesgue integration superior for analysis, and finally the <span class="math inline">\(L^p\)</span> space structure that only the Lebesgue framework can produce.</p>
+<section id="the-riemann-integral" class="level3">
+<h3 class="anchored" data-anchor-id="the-riemann-integral">The Riemann Integral</h3>
+<p>Let <span class="math inline">\(f: [a,b] \to \mathbb{R}\)</span> be a bounded function. A <strong>partition</strong> of <span class="math inline">\([a,b]\)</span> is a finite collection of points:</p>
+<p><span class="math display">\[P = \{a = x_0 &lt; x_1 &lt; x_2 &lt; \cdots &lt; x_n = b\}\]</span></p>
+<p>The <strong>mesh</strong> of the partition is <span class="math inline">\(\|P\| = \max_{1 \leq k \leq n} (x_k - x_{k-1})\)</span> — the width of the widest subinterval. For each subinterval <span class="math inline">\([x_{k-1}, x_k]\)</span>, define the supremum and infimum of <span class="math inline">\(f\)</span> on that subinterval:</p>
+<p><span class="math display">\[M_k = \sup_{x \in [x_{k-1}, x_k]} f(x), \qquad m_k = \inf_{x \in [x_{k-1}, x_k]} f(x)\]</span></p>
+<p>The <strong>upper Darboux sum</strong> and <strong>lower Darboux sum</strong> are:</p>
+<p><span class="math display">\[U(f, P) = \sum_{k=1}^{n} M_k (x_k - x_{k-1}), \qquad L(f, P) = \sum_{k=1}^{n} m_k (x_k - x_{k-1})\]</span></p>
+<p>The <strong>upper Riemann integral</strong> and <strong>lower Riemann integral</strong> are:</p>
+<p><span class="math display">\[\overline{\int_a^b} f \, dx = \inf_P U(f,P), \qquad \underline{\int_a^b} f \, dx = \sup_P L(f,P)\]</span></p>
+<p>The function <span class="math inline">\(f\)</span> is <strong>Riemann integrable</strong> on <span class="math inline">\([a,b]\)</span> if and only if the upper and lower Riemann integrals agree:</p>
+<p><span class="math display">\[\overline{\int_a^b} f \, dx = \underline{\int_a^b} f \, dx\]</span></p>
+<p>and the common value is the <strong>Riemann integral</strong> <span class="math inline">\(\int_a^b f \, dx\)</span>.</p>
+<hr>
+</section>
+<section id="the-riemann-lebesgue-characterization-theorem" class="level3">
+<h3 class="anchored" data-anchor-id="the-riemann-lebesgue-characterization-theorem">The Riemann-Lebesgue Characterization Theorem</h3>
+<p>The precise condition under which a bounded function is Riemann integrable is given by the following theorem, which is the formal statement of exactly where Riemann integration succeeds and fails:</p>
+<p><strong>Theorem (Lebesgue’s Characterization of Riemann Integrability).</strong> A bounded function <span class="math inline">\(f: [a,b] \to \mathbb{R}\)</span> is Riemann integrable if and only if the set of its discontinuities has Lebesgue measure zero:</p>
+<p><span class="math display">\[f \text{ is Riemann integrable} \iff \lambda(\{x \in [a,b] : f \text{ is discontinuous at } x\}) = 0\]</span></p>
+<p>This theorem — proved by Lebesgue himself — is the precise diagnosis of the Riemann framework’s limitation. Riemann integration works exactly on functions that are continuous almost everywhere. The moment discontinuities accumulate on a set of positive measure, Riemann integration fails. The indicator function <span class="math inline">\(\mathbf{1}_\mathbb{Q}\)</span> of the rationals is discontinuous everywhere on <span class="math inline">\([0,1]\)</span> — its discontinuity set is all of <span class="math inline">\([0,1]\)</span>, which has measure 1 — so it is not Riemann integrable. This is not a deficiency of the particular function. It is a structural limitation of the approximation scheme.</p>
+<hr>
+</section>
+<section id="oscillation-and-the-failure-mechanism" class="level3">
+<h3 class="anchored" data-anchor-id="oscillation-and-the-failure-mechanism">Oscillation and the Failure Mechanism</h3>
+<p>The failure of Riemann integration can be made even more explicit using the concept of <strong>oscillation</strong>. The oscillation of <span class="math inline">\(f\)</span> at a point <span class="math inline">\(x\)</span> is:</p>
+<p><span class="math display">\[\text{osc}(f, x) = \lim_{r \to 0} \sup_{y,z \in B(x,r)} |f(y) - f(z)|\]</span></p>
+<p>It measures how wildly <span class="math inline">\(f\)</span> fluctuates near <span class="math inline">\(x\)</span>. The function <span class="math inline">\(f\)</span> is continuous at <span class="math inline">\(x\)</span> if and only if <span class="math inline">\(\text{osc}(f,x) = 0\)</span>. The connection to Riemann integrability is direct: the upper and lower Darboux sums differ by exactly:</p>
+<p><span class="math display">\[U(f,P) - L(f,P) = \sum_{k=1}^n \text{osc}(f, [x_{k-1}, x_k]) \cdot (x_k - x_{k-1})\]</span></p>
+<p>where <span class="math inline">\(\text{osc}(f, [x_{k-1},x_k]) = M_k - m_k\)</span> is the oscillation over the subinterval. For <span class="math inline">\(f\)</span> to be Riemann integrable, this difference must converge to zero as <span class="math inline">\(\|P\| \to 0\)</span>. This happens if and only if the total length of subintervals where the oscillation exceeds any fixed <span class="math inline">\(\varepsilon &gt; 0\)</span> goes to zero — which is precisely the condition that discontinuities form a null set.</p>
+<p>For <span class="math inline">\(\mathbf{1}_\mathbb{Q}\)</span>, the oscillation at every point of <span class="math inline">\([0,1]\)</span> is exactly 1 — there is no point where the function settles down — so <span class="math inline">\(U(f,P) - L(f,P) = 1\)</span> for every partition <span class="math inline">\(P\)</span>, regardless of mesh size. The gap never closes.</p>
+<hr>
+</section>
+<section id="the-lebesgue-integral-full-formal-construction" class="level3">
+<h3 class="anchored" data-anchor-id="the-lebesgue-integral-full-formal-construction">The Lebesgue Integral — Full Formal Construction</h3>
+<p>The Lebesgue integral was introduced in the previous subtopic, but we now state it in complete formal detail and contrast it step by step with the Riemann construction.</p>
+<p>Let <span class="math inline">\((\Omega, \mathcal{F}, \mu)\)</span> be a measure space and let <span class="math inline">\(f: \Omega \to \mathbb{R}\)</span> be a measurable function.</p>
+<p><strong>Step 1 — Simple Functions.</strong> A measurable function <span class="math inline">\(\phi: \Omega \to \mathbb{R}\)</span> is <strong>simple</strong> if it takes only finitely many distinct values <span class="math inline">\(c_1, \ldots, c_n \in \mathbb{R}\)</span>. Writing <span class="math inline">\(A_k = \phi^{-1}(\{c_k\}) = \{\omega : \phi(\omega) = c_k\}\)</span>, the canonical representation is:</p>
+<p><span class="math display">\[\phi = \sum_{k=1}^n c_k \mathbf{1}_{A_k}\]</span></p>
+<p>where <span class="math inline">\(A_1, \ldots, A_n\)</span> are disjoint measurable sets with <span class="math inline">\(\bigcup_k A_k = \Omega\)</span>. The Lebesgue integral of a non-negative simple function is:</p>
+<p><span class="math display">\[\int_\Omega \phi \, d\mu = \sum_{k=1}^n c_k \mu(A_k)\]</span></p>
+<p>with the convention <span class="math inline">\(0 \cdot \infty = 0\)</span>. This is the formal version of Lebesgue’s level-set idea: weight each output level <span class="math inline">\(c_k\)</span> by the measure of the set of inputs that produce it.</p>
+<p><strong>Step 2 — Non-negative Measurable Functions.</strong> For <span class="math inline">\(f \geq 0\)</span> measurable, define:</p>
+<p><span class="math display">\[\int_\Omega f \, d\mu = \sup\left\{ \int_\Omega \phi \, d\mu : \phi \text{ simple}, \; 0 \leq \phi \leq f \right\}\]</span></p>
+<p>The supremum is over all simple functions lying below <span class="math inline">\(f\)</span>. This is the formal analogue of the lower Riemann sum, but with two critical differences: the partition is of the range, not the domain, and the approximating functions are measurable rather than step functions on intervals.</p>
+<p><strong>Step 3 — General Measurable Functions.</strong> Decompose <span class="math inline">\(f = f^+ - f^-\)</span> where:</p>
+<p><span class="math display">\[f^+(x) = \max(f(x), 0), \qquad f^- (x) = \max(-f(x), 0)\]</span></p>
+<p>Both <span class="math inline">\(f^+\)</span> and <span class="math inline">\(f^-\)</span> are non-negative measurable functions. Then:</p>
+<p><span class="math display">\[\int_\Omega f \, d\mu = \int_\Omega f^+ \, d\mu - \int_\Omega f^- \, d\mu\]</span></p>
+<p>provided at least one of the two integrals is finite. The function <span class="math inline">\(f\)</span> is <strong>Lebesgue integrable</strong> — written <span class="math inline">\(f \in L^1(\mu)\)</span> — if both integrals are finite, equivalently if <span class="math inline">\(\int_\Omega |f| \, d\mu &lt; \infty\)</span>.</p>
+<hr>
+</section>
+<section id="the-three-convergence-theorems" class="level3">
+<h3 class="anchored" data-anchor-id="the-three-convergence-theorems">The Three Convergence Theorems</h3>
+<p>The superiority of Lebesgue integration over Riemann integration is most visible in the three convergence theorems — results that tell you when you can exchange a limit and an integral. These theorems have no satisfactory Riemann analogues.</p>
+<p><strong>Theorem 1 — Monotone Convergence Theorem (MCT).</strong> Let <span class="math inline">\((f_n)\)</span> be a sequence of non-negative measurable functions satisfying <span class="math inline">\(f_n \leq f_{n+1}\)</span> pointwise almost everywhere, and let <span class="math inline">\(f = \lim_{n \to \infty} f_n\)</span> pointwise. Then:</p>
+<p><span class="math display">\[\lim_{n \to \infty} \int_\Omega f_n \, d\mu = \int_\Omega f \, d\mu\]</span></p>
+<p>No boundedness condition is required — the result holds even if <span class="math inline">\(\int f \, d\mu = +\infty\)</span>. The proof uses the definition of the Lebesgue integral as a supremum over simple functions and the monotonicity of the approximation.</p>
+<p><strong>Theorem 2 — Fatou’s Lemma.</strong> For any sequence of non-negative measurable functions <span class="math inline">\((f_n)\)</span>:</p>
+<p><span class="math display">\[\int_\Omega \liminf_{n \to \infty} f_n \, d\mu \leq \liminf_{n \to \infty} \int_\Omega f_n \, d\mu\]</span></p>
+<p>This is the weaker but more general companion to the MCT. It requires no monotonicity and no convergence — only non-negativity. The inequality rather than equality reflects the fact that mass can escape to infinity in the limit, making the left side smaller than the right.</p>
+<p><strong>Theorem 3 — Dominated Convergence Theorem (DCT).</strong> Let <span class="math inline">\((f_n)\)</span> be a sequence of measurable functions converging pointwise almost everywhere to <span class="math inline">\(f\)</span>. Suppose there exists an integrable dominating function <span class="math inline">\(g \in L^1(\mu)\)</span> satisfying <span class="math inline">\(|f_n| \leq g\)</span> almost everywhere for all <span class="math inline">\(n\)</span>. Then <span class="math inline">\(f \in L^1(\mu)\)</span> and:</p>
+<p><span class="math display">\[\lim_{n \to \infty} \int_\Omega f_n \, d\mu = \int_\Omega f \, d\mu\]</span></p>
+<p>equivalently:</p>
+<p><span class="math display">\[\lim_{n \to \infty} \int_\Omega |f_n - f| \, d\mu = 0\]</span></p>
+<p>The dominating function <span class="math inline">\(g\)</span> is the envelope from the story — it prevents mass from escaping. Under Riemann integration, the corresponding result requires uniform convergence: <span class="math inline">\(\sup_x |f_n(x) - f(x)| \to 0\)</span>. Uniform convergence is a drastically stronger condition than dominated pointwise convergence, and it fails in almost every situation where the DCT is needed. The DCT is the reason Lebesgue integration is the correct framework for probability theory and machine learning.</p>
+<hr>
+</section>
+<section id="the-precise-comparison" class="level3">
+<h3 class="anchored" data-anchor-id="the-precise-comparison">The Precise Comparison</h3>
+<p>The relationship between Riemann and Lebesgue integration can now be stated exactly:</p>
+<p><span class="math display">\[f \text{ Riemann integrable on } [a,b] \implies f \text{ Lebesgue integrable on } [a,b] \text{ and } \int_a^b f \, dx = \int_{[a,b]} f \, d\lambda\]</span></p>
+<p>The converse is false. The Lebesgue integral is a strict extension of the Riemann integral: it agrees with Riemann wherever Riemann is defined, and it extends beyond. The extension is not a matter of degree — it is a matter of kind. The Lebesgue integral operates on a fundamentally different object: not a function evaluated pointwise, but an equivalence class of functions modulo null sets.</p>
+<hr>
+</section>
+<section id="the-lp-spaces-as-the-payoff" class="level3">
+<h3 class="anchored" data-anchor-id="the-lp-spaces-as-the-payoff">The <span class="math inline">\(L^p\)</span> Spaces as the Payoff</h3>
+<p>The deepest reason to prefer Lebesgue integration is not any single theorem but the entire structure it generates. For <span class="math inline">\(1 \leq p &lt; \infty\)</span>, the <strong><span class="math inline">\(L^p\)</span> space</strong> with respect to a measure <span class="math inline">\(\mu\)</span> on <span class="math inline">\((\Omega, \mathcal{F})\)</span> is:</p>
+<p><span class="math display">\[L^p(\Omega, \mathcal{F}, \mu) = \left\{ f: \Omega \to \mathbb{R} \text{ measurable} : \int_\Omega |f|^p \, d\mu &lt; \infty \right\} \Big/ \sim\]</span></p>
+<p>where <span class="math inline">\(f \sim g\)</span> if and only if <span class="math inline">\(f = g\)</span> <span class="math inline">\(\mu\)</span>-almost everywhere. The equivalence classes under <span class="math inline">\(\sim\)</span> are the elements of <span class="math inline">\(L^p\)</span>. The <span class="math inline">\(L^p\)</span> norm is:</p>
+<p><span class="math display">\[\|f\|_{L^p} = \left( \int_\Omega |f|^p \, d\mu \right)^{1/p}\]</span></p>
+<p>Three foundational inequalities govern these spaces. <strong>Hölder’s inequality</strong> states that for conjugate exponents <span class="math inline">\(p\)</span> and <span class="math inline">\(q\)</span> satisfying <span class="math inline">\(\frac{1}{p} + \frac{1}{q} = 1\)</span>:</p>
+<p><span class="math display">\[\int_\Omega |fg| \, d\mu \leq \|f\|_{L^p} \|g\|_{L^q}\]</span></p>
+<p><strong>Minkowski’s inequality</strong> states that the <span class="math inline">\(L^p\)</span> norm satisfies the triangle inequality:</p>
+<p><span class="math display">\[\|f + g\|_{L^p} \leq \|f\|_{L^p} + \|g\|_{L^p}\]</span></p>
+<p>which confirms that <span class="math inline">\(\|\cdot\|_{L^p}\)</span> is indeed a norm. The <strong>Riesz-Fischer Theorem</strong> — the deepest of the three — states that <span class="math inline">\(L^p(\mu)\)</span> is complete with respect to the <span class="math inline">\(L^p\)</span> norm for all <span class="math inline">\(1 \leq p \leq \infty\)</span>:</p>
+<p><span class="math display">\[L^p(\mu) \text{ is a Banach space for all } 1 \leq p \leq \infty\]</span></p>
+<p>and for <span class="math inline">\(p = 2\)</span> specifically:</p>
+<p><span class="math display">\[L^2(\mu) \text{ is a Hilbert space with inner product } \langle f, g \rangle = \int_\Omega fg \, d\mu\]</span></p>
+<p>This is the formal proof that the Hilbert space structure of <span class="math inline">\(L^2\)</span> — which houses all probability densities, score functions, and neural network outputs — requires the Lebesgue integral. The Riemann framework cannot produce a complete normed space, because the completion of the Riemann-integrable functions under the <span class="math inline">\(L^2\)</span> norm contains functions that are not Riemann integrable. Completeness forces you into the Lebesgue world. There is no escape.</p>
+<hr>
+</section>
+<section id="the-change-of-variables-formula" class="level3">
+<h3 class="anchored" data-anchor-id="the-change-of-variables-formula">The Change of Variables Formula</h3>
+<p>One final result deserves explicit statement because it appears constantly in probability and generative modeling. If <span class="math inline">\(T: \mathbb{R}^n \to \mathbb{R}^n\)</span> is a diffeomorphism — a smooth, invertible map with smooth inverse — and <span class="math inline">\(\mu\)</span> is the Lebesgue measure on <span class="math inline">\(\mathbb{R}^n\)</span>, then for any non-negative measurable function <span class="math inline">\(f\)</span>:</p>
+<p><span class="math display">\[\int_{\mathbb{R}^n} f(y) \, d\lambda(y) = \int_{\mathbb{R}^n} f(T(x)) |\det J_T(x)| \, d\lambda(x)\]</span></p>
+<p>where <span class="math inline">\(J_T(x)\)</span> is the Jacobian matrix of <span class="math inline">\(T\)</span> at <span class="math inline">\(x\)</span> and <span class="math inline">\(|\det J_T(x)|\)</span> is the absolute value of its determinant. This is the change of variables formula — the formal statement of how a transformation <span class="math inline">\(T\)</span> distorts volume elements. In generative modeling, <span class="math inline">\(T\)</span> is the generator — the map that transforms a simple noise distribution into a complex data distribution — and <span class="math inline">\(|\det J_T|\)</span> is the volume distortion factor that appears in the change-of-variables formula for probability densities:</p>
+<p><span class="math display">\[p_X(x) = p_Z(T^{-1}(x)) \cdot |\det J_{T^{-1}}(x)|\]</span></p>
+<p>This formula is the mathematical heart of normalizing flows, which are a class of generative models in Phase 3. It is a Lebesgue integral identity — it requires the full machinery of Lebesgue integration and the push-forward measure to state and prove correctly. The Riemann framework can handle it only for smooth, well-behaved maps, but the Lebesgue framework handles it in full generality.</p>
+<hr>
+</section>
+<section id="why-this-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-matters">WHY THIS MATTERS</h3>
+<p>In MATH 201 (Advanced Calculus), you proved the Fundamental Theorem of Calculus for Riemann integrals and computed integrals of continuous and piecewise smooth functions. Every one of those computations is valid within the Lebesgue framework — they agree numerically, and the Lebesgue integral subsumes them. In MATH 217 (ODEs and PDEs), the solution formulas you derived — Green’s functions, convolution integrals, Fourier series — are Lebesgue integrals, and their convergence properties rely on the DCT rather than uniform convergence. In MATH 208, every expectation, variance, and moment is a Lebesgue integral against a probability measure, and the DCT is what makes it legitimate to differentiate under the integral sign when computing moment generating functions — a step that MATH 208 likely took without justification.</p>
+<hr>
+</section>
+</section>
+<section id="layer-3-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="layer-3-bridge">Layer 3 (Bridge)</h2>
+<p>Every element of the census bureau story has a precise mathematical address. Let us walk through them one by one, until the two statisticians, the three problem cases, and the full formal apparatus are completely fused into a single picture.</p>
+<hr>
+<p><strong>The census bureau’s task — computing total income across the entire population — is integration itself.</strong> The population is the measure space <span class="math inline">\((\Omega, \mathcal{F}, \mu)\)</span>. Each resident is a point <span class="math inline">\(\omega \in \Omega\)</span>. The income function assigning a value to each resident is the measurable function <span class="math inline">\(f: \Omega \to \mathbb{R}\)</span>. The total income is the integral <span class="math inline">\(\int_\Omega f \, d\mu\)</span>. Every component of the story maps onto every component of the integral — the space, the measure, the function, and the number the integral produces.</p>
+<p><strong>Riemann’s geographical block method is the upper and lower Darboux sum construction.</strong> Dividing the valley into geographical blocks is partitioning the domain <span class="math inline">\([a,b]\)</span> into subintervals <span class="math inline">\([x_{k-1}, x_k]\)</span>. Picking the maximum income in each block is computing <span class="math inline">\(M_k = \sup_{x \in [x_{k-1},x_k]} f(x)\)</span>. Picking the minimum is computing <span class="math inline">\(m_k = \inf_{x \in [x_{k-1},x_k]} f(x)\)</span>. Multiplying by block size and summing is forming the upper sum <span class="math inline">\(U(f,P) = \sum_k M_k(x_k - x_{k-1})\)</span> and lower sum <span class="math inline">\(L(f,P) = \sum_k m_k(x_k - x_{k-1})\)</span>. The requirement that upper and lower sums converge to the same value as the mesh <span class="math inline">\(\|P\| \to 0\)</span> is Riemann integrability. When they do not converge — when the gap <span class="math inline">\(U(f,P) - L(f,P)\)</span> never closes — the Riemann integral does not exist.</p>
+<p><strong>Lebesgue’s income bracket method is the simple function approximation from below.</strong> Dividing the income axis into brackets is partitioning the range of <span class="math inline">\(f\)</span> into levels <span class="math inline">\(c_1, \ldots, c_n\)</span>. Counting the number of residents whose income falls within each bracket is computing <span class="math inline">\(\mu(A_k)\)</span> where <span class="math inline">\(A_k = f^{-1}([c_k, c_{k+1}))\)</span> is the preimage of the bracket — a measurable set because <span class="math inline">\(f\)</span> is measurable. Multiplying the bracket level by the resident count and summing is computing <span class="math inline">\(\int \phi \, d\mu = \sum_k c_k \mu(A_k)\)</span> for the simple function <span class="math inline">\(\phi = \sum_k c_k \mathbf{1}_{A_k}\)</span> that approximates <span class="math inline">\(f\)</span> from below. Taking the supremum over all such simple functions is the Lebesgue integral <span class="math inline">\(\int f \, d\mu = \sup\{\int \phi \, d\mu : \phi \text{ simple}, 0 \leq \phi \leq f\}\)</span>. The two statisticians are the two definitions — and their philosophical difference is exactly the difference between partitioning the domain and partitioning the range.</p>
+<hr>
+<p><strong>The segregated city — piecewise constant income, smooth handling by both methods — is the case where both Riemann and Lebesgue integrals exist and agree.</strong> A piecewise constant function has discontinuities only at finitely many boundary points — a finite set, which has Lebesgue measure zero. The Lebesgue characterization theorem therefore guarantees Riemann integrability: <span class="math inline">\(\lambda(\{\text{discontinuities}\}) = 0\)</span> implies Riemann integrable. Both integrals produce the same number. The segregated city is the regime where Riemann works perfectly — and the Lebesgue framework, being a strict extension, agrees with it there.</p>
+<p><strong>The fractal neighborhood — the indicator of the rationals — is the case where the oscillation never closes.</strong> The oscillation of <span class="math inline">\(\mathbf{1}_\mathbb{Q}\)</span> at every point of <span class="math inline">\([0,1]\)</span> is exactly 1, because every open ball around any real number contains both rationals and irrationals. Therefore <span class="math inline">\(U(f,P) - L(f,P) = \sum_k \text{osc}(f,[x_{k-1},x_k]) \cdot (x_k - x_{k-1}) = 1 \cdot 1 = 1\)</span> for every partition <span class="math inline">\(P\)</span> regardless of mesh size. The gap is permanently 1. The set of discontinuities is all of <span class="math inline">\([0,1]\)</span>, which has Lebesgue measure 1, not 0 — so the characterization theorem confirms non-integrability. Riemann is paralyzed because his approximation scheme operates on the domain, where rationals and irrationals are inseparable at every scale.</p>
+<p><strong>Lebesgue’s answer of zero for the fractal neighborhood is the simple function computation <span class="math inline">\(1 \cdot \lambda(\mathbb{Q} \cap [0,1]) + 0 \cdot \lambda(\mathbb{R} \setminus \mathbb{Q} \cap [0,1]) = 1 \cdot 0 + 0 \cdot 1 = 0\)</span>.</strong> The simple function decomposition of <span class="math inline">\(\mathbf{1}_\mathbb{Q}\)</span> is <span class="math inline">\(\phi = 1 \cdot \mathbf{1}_{\mathbb{Q}} + 0 \cdot \mathbf{1}_{\mathbb{Q}^c}\)</span>, which is itself the function — no approximation needed, it is already simple. The measure of the rational-income bracket is <span class="math inline">\(\mu(\mathbb{Q} \cap [0,1]) = 0\)</span> because the rationals are countable and every countable set has Lebesgue measure zero. The level-set philosophy instantly sees what the geographical philosophy cannot: the rational-indexed residents form a null set, contributing nothing to the total. The income bracket for 1,000 rupees has zero population in the measure-theoretic sense.</p>
+<hr>
+<p><strong>The limit of smooth surveys — the third problem case — is the DCT versus uniform convergence comparison.</strong> The sequence of survey functions <span class="math inline">\((f_n)\)</span> converging pointwise to <span class="math inline">\(f\)</span> is a sequence of measurable functions converging almost everywhere. The requirement that all surveys fit under a single integrable envelope <span class="math inline">\(g\)</span> — meaning <span class="math inline">\(|f_n| \leq g\)</span> almost everywhere for all <span class="math inline">\(n\)</span> — is the domination condition <span class="math inline">\(|f_n| \leq g \in L^1(\mu)\)</span>. The conclusion <span class="math inline">\(\lim_{n\to\infty} \int f_n \, d\mu = \int f \, d\mu\)</span> is the DCT. Riemann’s requirement of uniform convergence — <span class="math inline">\(\sup_x |f_n(x) - f(x)| \to 0\)</span> — is the condition that every pocket of the valley converges at the same rate simultaneously. This is the strong condition from the story, and it fails in almost every probabilistic setting because convergence in probability and convergence in distribution are both weaker than uniform convergence.</p>
+<p><strong>The Monotone Convergence Theorem is the special case where the surveys form an increasing sequence.</strong> If each new survey <span class="math inline">\(f_{n+1}\)</span> reports incomes at least as high as the previous survey <span class="math inline">\(f_n\)</span> at every point, the total incomes <span class="math inline">\(\int f_n \, d\mu\)</span> increase monotonically and converge to <span class="math inline">\(\int f \, d\mu\)</span> without any envelope condition. This is continuity from below applied to integrals rather than sets — the measure-theoretic and integral-theoretic continuity properties are both instances of the same underlying principle: monotone sequences of well-behaved objects have limits that behave as expected.</p>
+<p><strong>Fatou’s Lemma is the honest budget estimate when the surveys are chaotic.</strong> Even without monotonicity and without a dominating envelope, the total income of the limiting survey is at most the limit inferior of the total incomes of the approximate surveys: <span class="math inline">\(\int \liminf_n f_n \, d\mu \leq \liminf_n \int f_n \, d\mu\)</span>. The inequality rather than equality reflects the fact that some income mass may escape to infinity in the approximating surveys — residents whose reported incomes go to infinity along a subsequence but contribute nothing in the limit. Fatou’s Lemma is the safety net below the DCT: weaker hypotheses, weaker conclusion, but always valid.</p>
+<hr>
+<p><strong>The break moment — the false equivalence between Riemann and Lebesgue — finds its formal refutation in the Riesz-Fischer theorem.</strong> The claim that the two frameworks are essentially equivalent for practical purposes collapses the moment you try to build a complete normed space. The completion of the Riemann-integrable functions on <span class="math inline">\([0,1]\)</span> under the <span class="math inline">\(L^2\)</span> norm — the process of filling in the holes, exactly as <span class="math inline">\(\mathbb{R}\)</span> fills in the holes of <span class="math inline">\(\mathbb{Q}\)</span> — produces functions that are not Riemann integrable. The completion forces you out of the Riemann world. The Riesz-Fischer theorem states that <span class="math inline">\(L^2(\mu)\)</span> is complete — that the completion process stays within the Lebesgue world. Lebesgue integration is not a more convenient version of Riemann integration. It is the version that produces complete spaces. Riemann integration is the version that does not.</p>
+<p><strong>The equivalence classes in <span class="math inline">\(L^p\)</span> — functions identified when they agree almost everywhere — are the formal version of the registry’s almost everywhere language.</strong> Two survey functions <span class="math inline">\(f\)</span> and <span class="math inline">\(g\)</span> that report the same income for every resident except a null set of measure-zero residents are the same element of <span class="math inline">\(L^p\)</span>. Their <span class="math inline">\(L^p\)</span> norms are equal: <span class="math inline">\(\|f - g\|_{L^p} = (\int |f-g|^p \, d\mu)^{1/p} = 0\)</span>. The probability densities of Phase 3 are elements of <span class="math inline">\(L^1\)</span> — equivalence classes of integrable functions — not individual functions. A density <span class="math inline">\(p(x)\)</span> is only defined up to a null set, and the score function <span class="math inline">\(\nabla \log p(x)\)</span> is only defined almost everywhere. The almost everywhere language is not a technicality. It is the correct notion of equality for the objects the roadmap works with.</p>
+<hr>
+<p><strong>The change of variables formula — <span class="math inline">\(p_X(x) = p_Z(T^{-1}(x)) \cdot |\det J_{T^{-1}}(x)|\)</span> — is the census bureau’s income redistribution formula.</strong> The generator <span class="math inline">\(T\)</span> is the map that redistributes the population from a simple noise distribution <span class="math inline">\(p_Z\)</span> to a complex data distribution <span class="math inline">\(p_X\)</span>. The Jacobian determinant <span class="math inline">\(|\det J_{T^{-1}}(x)|\)</span> is the local distortion factor — how much volume the map <span class="math inline">\(T\)</span> stretches or compresses near the point <span class="math inline">\(x\)</span>. The formula says: the income density at output location <span class="math inline">\(x\)</span> equals the income density at the input location <span class="math inline">\(T^{-1}(x)\)</span>, scaled by how much the map distorts area near that point. This is the mathematical foundation of normalizing flows in Phase 3 — generative models that learn the map <span class="math inline">\(T\)</span> explicitly and use this formula to compute exact likelihoods.</p>
+<p><strong>Hölder’s inequality connecting <span class="math inline">\(L^p\)</span> and <span class="math inline">\(L^q\)</span> spaces is the census bureau’s budget constraint.</strong> The inequality <span class="math inline">\(\int |fg| \, d\mu \leq \|f\|_{L^p} \|g\|_{L^q}\)</span> for conjugate exponents <span class="math inline">\(\frac{1}{p} + \frac{1}{q} = 1\)</span> says that the total income weighted by any <span class="math inline">\(L^q\)</span> weighting scheme is bounded by the product of the <span class="math inline">\(L^p\)</span> norm of the income distribution and the <span class="math inline">\(L^q\)</span> norm of the weighting scheme. The special case <span class="math inline">\(p = q = 2\)</span> is the Cauchy-Schwarz inequality in <span class="math inline">\(L^2\)</span>: <span class="math inline">\(\int |fg| \, d\mu \leq \|f\|_{L^2} \|g\|_{L^2}\)</span>, which is the continuous analogue of the dot product inequality <span class="math inline">\(|x \cdot y| \leq \|x\|_2 \|y\|_2\)</span> from MATH 103.</p>
+<hr>
+<p><strong>The connection to MATH 201 (Advanced Calculus) is now complete in both directions.</strong> Every Riemann integral you computed — every area under a curve, every volume of revolution, every improper integral — is also a Lebesgue integral producing the same number. The Fundamental Theorem of Calculus holds in the Lebesgue framework as well, in a strengthened form: if <span class="math inline">\(f \in L^1([a,b])\)</span>, then <span class="math inline">\(F(x) = \int_a^x f(t) \, dt\)</span> is absolutely continuous and <span class="math inline">\(F'(x) = f(x)\)</span> almost everywhere. The “almost everywhere” qualification is necessary and correct — the derivative need not exist on a null set, and the Lebesgue framework handles this without discomfort. The Riemann version of the theorem requires stronger conditions on <span class="math inline">\(f\)</span> to guarantee the same conclusion.</p>
+<p><strong>The connection to MATH 217 (ODEs and PDEs) is equally direct.</strong> Every solution formula you derived — Fourier series, convolution with Green’s functions, integral transforms — is a Lebesgue integral. The convergence of Fourier series in <span class="math inline">\(L^2\)</span> is a consequence of the Riesz-Fischer theorem and the completeness of <span class="math inline">\(L^2\)</span>: the Fourier coefficients of an <span class="math inline">\(L^2\)</span> function form a sequence in <span class="math inline">\(\ell^2\)</span>, and the Parseval identity <span class="math inline">\(\|f\|_{L^2}^2 = \sum_n |\hat{f}_n|^2\)</span> is the statement that the Fourier transform is an isometry from <span class="math inline">\(L^2\)</span> to <span class="math inline">\(\ell^2\)</span>. This connection — between <span class="math inline">\(L^2\)</span> functions and their Fourier representations — is a Hilbert space statement that requires the Lebesgue framework to state and prove correctly.</p>
+<hr>
+<p><strong>Looking forward across the roadmap</strong>, the Lebesgue integral is the universal computational engine. In Phase 1, the Wasserstein distance between two distributions <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> is defined as <span class="math inline">\(W_p(\mu,\nu) = (\inf_\pi \int c(x,y) \, d\pi(x,y))^{1/p}\)</span>, where the infimum is over all couplings <span class="math inline">\(\pi\)</span> and the integral is a Lebesgue integral against the coupling measure. The Kantorovich duality expresses this as a supremum of Lebesgue integrals of potential functions. The Sinkhorn algorithm converges in <span class="math inline">\(L^1\)</span> norm — a Lebesgue convergence statement whose justification uses the DCT. In Phase 2, the graph Laplacian eigenmaps are defined by minimizing a Lebesgue integral of gradient squared over a manifold. In Phase 3, the score matching objective is <span class="math inline">\(\mathbb{E}[\|\nabla \log p_\theta(x) - \nabla \log p(x)\|^2] = \int \|\nabla \log p_\theta(x) - \nabla \log p(x)\|^2 p(x) \, d\lambda(x)\)</span> — a Lebesgue integral in <span class="math inline">\(L^2(p)\)</span>, the weighted <span class="math inline">\(L^2\)</span> space with measure <span class="math inline">\(p \, d\lambda\)</span>. The DCT is what makes it legitimate to differentiate this objective with respect to <span class="math inline">\(\theta\)</span> by passing the derivative through the integral.</p>
+<p>Every limit exchange in the roadmap is justified by the DCT. Every density function lives in <span class="math inline">\(L^1\)</span>. Every score function lives in <span class="math inline">\(L^2\)</span>. Every convergence proof uses the Riesz-Fischer completeness of <span class="math inline">\(L^p\)</span> spaces. The two statisticians — Riemann with his geographical blocks and Lebesgue with her income brackets — made a choice at the beginning that determined everything that came after. The roadmap lives entirely in Lebesgue’s world.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

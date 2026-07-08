@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2026-07-02">
+
+<title>Topic 2 - Spectral GNNs – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Topic 2 - Spectral GNNs</li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#topic-2---spectral-gnns-convolution-via-the-graph-laplacian" id="toc-topic-2---spectral-gnns-convolution-via-the-graph-laplacian" class="nav-link active" data-scroll-target="#topic-2---spectral-gnns-convolution-via-the-graph-laplacian">Topic 2 - Spectral GNNs: Convolution via the Graph Laplacian</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#layer-1-story" id="toc-layer-1-story" class="nav-link" data-scroll-target="#layer-1-story">Layer 1 (Story)</a></li>
+  <li><a href="#layer-2-mathematics" id="toc-layer-2-mathematics" class="nav-link" data-scroll-target="#layer-2-mathematics">Layer 2 (Mathematics)</a></li>
+  <li><a href="#layer-3-bridge" id="toc-layer-3-bridge" class="nav-link" data-scroll-target="#layer-3-bridge">Layer 3 (Bridge)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Topic 2 - Spectral GNNs</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">July 2, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="topic-2---spectral-gnns-convolution-via-the-graph-laplacian" class="level1">
+<h1>Topic 2 - Spectral GNNs: Convolution via the Graph Laplacian</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>Topic 1 gave you the spatial view of graph neural networks — the operational, hands-on framework where messages travel along edges, accumulate at nodes, and update representations round by round. The spatial framework is intuitive, flexible, and computationally efficient. It is also, in a precise sense, incomplete as a mathematical theory. It tells you what to compute but not why the specific operations work, what their frequency-domain interpretation is, or how they connect to the broader mathematical landscape of harmonic analysis and differential geometry that Phase 0 built and that Chapter 3 will require. The spatial framework is the engineering answer. The spectral framework is the mathematical foundation beneath it.</p>
+<p>The gap that the spectral framework fills is this. In signal processing, convolution is defined on grids — sequences, images, volumes — and its mathematical justification comes from the Fourier transform. The Fourier transform decomposes a signal into its frequency components, which are the eigenfunctions of the Laplace operator <span class="math inline">\(\Delta = -\nabla^2\)</span> on the grid. Convolution in the spatial domain becomes pointwise multiplication in the frequency domain — the convolution theorem. The convolutional neural network exploits this structure: a convolutional filter is a learned function in the frequency domain, applied by pointwise multiplication to the Fourier coefficients of the input signal and then transformed back to the spatial domain. The filter’s spatial locality corresponds to its smoothness in the frequency domain, and the filter’s translation equivariance is a direct consequence of the Fourier convolution theorem.</p>
+<p>Now you have a graph. The graph has no grid structure, no translation symmetry, no canonical Fourier transform. How do you define convolution on a graph? The answer begins with a single observation: the Laplace operator <span class="math inline">\(\Delta\)</span> on the grid has a direct analogue on the graph. The graph Laplacian <span class="math inline">\(L = D - A\)</span> is the discrete counterpart of the continuous Laplace operator, in a precise and non-metaphorical sense that you will see made exact in the mathematics layer. Just as the continuous Fourier transform is defined through the eigenfunctions of <span class="math inline">\(\Delta\)</span>, the graph Fourier transform is defined through the eigenvectors of <span class="math inline">\(L\)</span>. And just as convolution on the grid is pointwise multiplication in the Fourier domain, convolution on the graph is pointwise multiplication of graph Fourier coefficients. This is the spectral approach to graph convolution — mathematically rigorous, grounded in the same harmonic analysis that underlies classical signal processing, and directly connected to the differential geometry of manifolds that Chapter 3 requires.</p>
+<p>The spectral framework rests on three pillars that this topic develops in sequence.</p>
+<p>The first pillar is <strong>the Graph Laplacian and its spectral decomposition</strong>. The graph Laplacian <span class="math inline">\(L = D - A\)</span> is a positive semidefinite matrix — a fact you can prove using your knowledge of quadratic forms from MATH 302 (Matrix Theory). Because <span class="math inline">\(L\)</span> is real symmetric and positive semidefinite, the spectral theorem guarantees an orthonormal eigendecomposition <span class="math inline">\(L = U \Lambda U^\top\)</span>, where the columns of <span class="math inline">\(U \in \mathbb{R}^{n \times n}\)</span> are the graph Fourier basis vectors and <span class="math inline">\(\Lambda = \text{diag}(\lambda_1, \ldots, \lambda_n)\)</span> with <span class="math inline">\(0 = \lambda_1 \leq \lambda_2 \leq \ldots \leq \lambda_n\)</span> are the graph frequencies. The smallest eigenvalue <span class="math inline">\(\lambda_1 = 0\)</span> — with eigenvector <span class="math inline">\(\mathbf{1}/\sqrt{n}\)</span>, the constant signal — corresponds to the zero frequency. The larger eigenvalues correspond to higher graph frequencies — signals that vary rapidly across the graph. The graph Fourier transform of a node signal <span class="math inline">\(f \in \mathbb{R}^n\)</span> is <span class="math inline">\(\hat{f} = U^\top f\)</span>, and the inverse transform is <span class="math inline">\(f = U\hat{f}\)</span>. This is the complete analogue of the discrete Fourier transform, with the graph Laplacian eigenvectors playing the role of the Fourier basis functions <span class="math inline">\(e^{i\omega t}\)</span>.</p>
+<p>The second pillar is <strong>spectral graph convolution and its polynomial approximation via ChebNet</strong>. With the graph Fourier transform in hand, convolution on the graph is defined as pointwise multiplication in the Fourier domain: <span class="math inline">\((f \star g)_G = U((\hat{f}) \odot (\hat{g})) = U \text{diag}(\hat{g}) U^\top f\)</span>, where <span class="math inline">\(\hat{g} = U^\top g\)</span> is the Fourier transform of the filter <span class="math inline">\(g\)</span>. A learned spectral filter parameterizes <span class="math inline">\(\hat{g}\)</span> directly — a diagonal matrix of <span class="math inline">\(n\)</span> learnable parameters, one per graph frequency. This is mathematically clean but computationally catastrophic: every forward pass requires the full eigendecomposition of <span class="math inline">\(L\)</span>, which costs <span class="math inline">\(O(n^3)\)</span> and must be recomputed for every new graph. The ChebNet approximation of Defferrard, Bresson, and Vandergheynst resolves this by approximating the spectral filter as a polynomial in the graph Laplacian: <span class="math inline">\(g_\theta(L) = \sum_{k=0}^{K} \theta_k T_k(\tilde{L})\)</span>, where <span class="math inline">\(T_k\)</span> are Chebyshev polynomials and <span class="math inline">\(\tilde{L} = 2L/\lambda_{\max} - I\)</span> is the rescaled Laplacian. Because computing <span class="math inline">\(L^k f\)</span> requires only <span class="math inline">\(k\)</span> sparse matrix-vector products, ChebNet reduces the cost from <span class="math inline">\(O(n^3)\)</span> to <span class="math inline">\(O(K|E|)\)</span> — linear in the number of edges, the same asymptotic cost as the spatial GNN from Topic 1. The ChebNet approximation is simultaneously a spectral construction (it defines a filter in the frequency domain as a polynomial) and a spatial one (the degree-<span class="math inline">\(K\)</span> polynomial localizes the filter to the <span class="math inline">\(K\)</span>-hop neighborhood). This duality — spectral definition, spatial computation — is the bridge between Topic 1 and Topic 2.</p>
+<p>The third pillar is <strong>the connection to the GCN and the path forward to manifolds</strong>. The GCN of Kipf and Welling is a first-order special case of ChebNet — a degree-1 Chebyshev approximation with a single symmetric normalization. Viewed spectrally, the GCN is a low-pass filter: it attenuates high-frequency (rapidly varying) components of the node signal and amplifies low-frequency (smoothly varying) components. This is why deep GCNs over-smooth — they are iterative applications of a low-pass filter, which in the limit projects the signal onto the zero-frequency eigenvector <span class="math inline">\(\mathbf{1}\)</span>, destroying all variation. Over-smoothing is not a mysterious empirical phenomenon; it is the inevitable consequence of applying a low-pass filter repeatedly, a fact that the spectral view makes immediately transparent. The graph Laplacian <span class="math inline">\(L\)</span> is also the discrete approximation of the Laplace-Beltrami operator <span class="math inline">\(\Delta_\mathcal{M}\)</span> on a smooth manifold — the operator whose eigenfunctions are the Laplacian eigenmaps that Chapter 3 uses to embed high-dimensional manifold data into low-dimensional Euclidean space. The spectral framework is the mathematical thread that connects graph convolution in Chapter 2 to manifold learning in Chapter 3, and both to the harmonic analysis on <span class="math inline">\(S^2\)</span> — the sphere — that underlies the <span class="math inline">\(SO(3)\)</span>-equivariant molecular networks of Chapter 1’s group theory.</p>
+<p>The connection to your curriculum here is the most direct of any topic in Phase 2. Your MATH 302 course on Matrix Theory is the primary scaffold: the spectral theorem for symmetric matrices, eigendecomposition, positive semidefinite matrices, and the geometric interpretation of eigenvalues as stretching factors are all from MATH 302, and they are all exactly what you need to understand the graph Laplacian and its spectral decomposition. Your MATH 213 and MATH 325 courses on Analysis I and II introduced the Fourier series on <span class="math inline">\([-\pi, \pi]\)</span> as the expansion of a function in eigenfunctions of the Laplacian <span class="math inline">\(d^2/dx^2\)</span> — the graph Fourier transform is the discrete finite-dimensional analogue of exactly this construction, with the graph Laplacian eigenvectors replacing the continuous Fourier basis. Your COMP 323 course on Graph Theory introduced the Laplacian matrix, its eigenvalues, the Fiedler value, and the connection between spectral properties and graph connectivity — every one of those results appears here, now in the context of signal processing rather than combinatorics. The spectral framework is the intersection of your three strongest mathematical courses applied to the same object: the graph Laplacian.</p>
+<p>By the end of this topic, the GCN will no longer appear to be an architecture that someone cleverly designed and empirically validated. It will be the inevitable first-order approximation of a mathematically principled spectral filter on the graph, derived from the same harmonic analysis that underlies the Fourier transform, the spherical harmonics of Topic 1’s group theory, and the Laplacian eigenmaps of Chapter 3. The spectral and spatial views of graph convolution will feel not like two different theories but like two windows into the same mathematical structure — one looking from the frequency domain inward, the other looking from the spatial domain outward, both revealing the same object: the graph Laplacian and its eigenvectors, the natural harmonic analysis of graph-structured data.</p>
+<hr>
+</section>
+<section id="layer-1-story" class="level2">
+<h2 class="anchored" data-anchor-id="layer-1-story">Layer 1 (Story)</h2>
+<p>Imagine it is 1995. Nepal Telecom has just been commissioned to design the country’s first national radio broadcast network. The goal is not telephone communication — that is the postal system you built in Topic 1. This is something different. You are not trying to send a specific message from one village to another. You are trying to understand the natural frequencies at which information resonates across the entire national geography — the modes at which the whole network vibrates simultaneously, the patterns of signal variation that are stable and coherent across the landscape.</p>
+<p>Think of it this way. You stretch a drumhead across the Kathmandu Valley. When you strike it, it vibrates. But it does not vibrate randomly — it vibrates in specific patterns called normal modes. The first mode is the simplest: the entire drumhead moves up and down together, one unified pulse. The second mode splits the drumhead into two halves, one rising while the other falls. The higher modes produce increasingly fine-grained patterns of oscillation, with more and more regions alternating between peaks and troughs. Each mode is a natural frequency of the drumhead — determined entirely by the shape and tension of the membrane, not by how you strike it.</p>
+<p>Your radio broadcast network is the same idea, but instead of a continuous drumhead, you have a discrete graph of transmitter stations. The stations are the nodes. The transmission cables connecting them are the edges. And the question you want to answer is: what are the natural frequencies of this network? What are the patterns of signal values across the stations that are geometrically coherent — that vary smoothly across well-connected stations and sharply across poorly connected ones?</p>
+<hr>
+<p><strong>The problem of signal variation on a graph.</strong></p>
+<p>Nepal Telecom hands you a signal: a real number assigned to each transmitter station, representing the current broadcast power level. Some stations are broadcasting at high power, some at low power. The signal is a vector <span class="math inline">\(f \in \mathbb{R}^n\)</span> — one number per station.</p>
+<p>Your first question is: how much does this signal vary across the network? Not in an absolute sense, but in a geometric sense — how much do neighboring stations differ from each other? A signal that assigns the same power level to every station varies not at all. A signal that alternates between maximum and minimum power at every adjacent pair of stations varies as much as possible. A signal that varies smoothly — where stations connected by a cable have similar power levels — is a low-frequency signal. A signal that varies rapidly — where connected stations frequently have very different power levels — is a high-frequency signal.</p>
+<p>You need a mathematical object that measures this variation. The natural measure is the sum of squared differences across all edges:</p>
+<p>For every cable connecting station <span class="math inline">\(i\)</span> to station <span class="math inline">\(j\)</span>, you compute <span class="math inline">\((f_i - f_j)^2\)</span> — the squared difference in power levels at the two endpoints. You sum this over all cables in the network. The result is a single number that measures the total variation of the signal <span class="math inline">\(f\)</span> across the graph. If this number is small, the signal is smooth — it varies little between connected stations. If it is large, the signal is rough — it oscillates rapidly across connections.</p>
+<p>This quantity is called the Dirichlet energy of the signal on the graph. And the object that computes it as a quadratic form — the matrix <span class="math inline">\(L\)</span> such that <span class="math inline">\(f^\top L f\)</span> equals the sum of squared differences — is the graph Laplacian.</p>
+<hr>
+<p><strong>Building the graph Laplacian from physical intuition.</strong></p>
+<p>You are an engineer, so you think physically. Each cable between stations <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span> exerts a restoring force on the signal values, like a spring: if station <span class="math inline">\(i\)</span> has a higher signal value than station <span class="math inline">\(j\)</span>, the cable pulls <span class="math inline">\(f_i\)</span> down and pushes <span class="math inline">\(f_j\)</span> up, trying to equalize them. The net force on station <span class="math inline">\(i\)</span> from all its cables is:</p>
+<p><span class="math display">\[(\text{net force on } i) = \sum_{j \in \mathcal{N}(i)} (f_j - f_i) = \sum_{j \in \mathcal{N}(i)} f_j - \deg(i) \cdot f_i\]</span></p>
+<p>This is the discrete Laplacian of the signal at station <span class="math inline">\(i\)</span> — the difference between the average of neighboring values and the value at <span class="math inline">\(i\)</span> itself, scaled by the degree. In matrix form, the net force vector across all stations is:</p>
+<p><span class="math display">\[(Af - Df) = -(D - A)f = -Lf\]</span></p>
+<p>where <span class="math inline">\(A\)</span> is the adjacency matrix, <span class="math inline">\(D\)</span> is the degree matrix, and <span class="math inline">\(L = D - A\)</span> is the graph Laplacian. The graph Laplacian <span class="math inline">\(L\)</span> is the operator that computes the restoring force — the discrete version of the continuous Laplacian <span class="math inline">\(\Delta = -\nabla^2\)</span> that measures how much a function differs from its local average.</p>
+<p>The continuous Laplacian <span class="math inline">\(\Delta f = -\nabla^2 f\)</span> at a point <span class="math inline">\(x\)</span> measures how much <span class="math inline">\(f(x)\)</span> differs from the average of <span class="math inline">\(f\)</span> in a small ball around <span class="math inline">\(x\)</span>. The discrete graph Laplacian <span class="math inline">\((Lf)_i = \deg(i) f_i - \sum_{j \in \mathcal{N}(i)} f_j\)</span> measures how much <span class="math inline">\(f_i\)</span> differs from the sum of neighboring values. The analogy is exact and not metaphorical — you will see in the mathematics layer that the graph Laplacian converges to the continuous Laplacian as the graph becomes a denser and denser sampling of a smooth manifold.</p>
+<hr>
+<p><strong>The natural frequencies of the network: eigenvectors of the Laplacian.</strong></p>
+<p>You want to find the signals that are in equilibrium — the signals for which the restoring forces do not change the signal’s shape, only its magnitude. These are the eigenvectors of <span class="math inline">\(L\)</span>: signals <span class="math inline">\(u\)</span> satisfying <span class="math inline">\(Lu = \lambda u\)</span>, where <span class="math inline">\(\lambda\)</span> is the eigenvalue measuring how much the signal varies across the graph.</p>
+<p>The first eigenvector, with eigenvalue <span class="math inline">\(\lambda_1 = 0\)</span>, is the constant signal: <span class="math inline">\(u_1 = \mathbf{1}/\sqrt{n}\)</span>, every station at the same power level. This signal has zero variation across the graph — no cable exerts any restoring force because all connected stations are equal. The Dirichlet energy <span class="math inline">\(u_1^\top L u_1 = 0\)</span> confirms this. The zero eigenvalue always exists for a connected graph and corresponds to the zero-frequency mode — the DC component in electrical engineering terms, the uniform mode of the drumhead.</p>
+<p>The second eigenvector <span class="math inline">\(u_2\)</span>, with eigenvalue <span class="math inline">\(\lambda_2 &gt; 0\)</span> (the Fiedler vector from your Graph Theory course), is the smoothest non-constant signal on the graph — the signal that varies as little as possible while being orthogonal to the constant. It splits the network into two groups: stations with positive <span class="math inline">\(u_2\)</span> values and stations with negative <span class="math inline">\(u_2\)</span> values, with the cut between groups following the sparsest connections in the network. This is the graph’s fundamental mode — its lowest non-trivial frequency. The Fiedler value <span class="math inline">\(\lambda_2\)</span> measures the strength of this mode: a large <span class="math inline">\(\lambda_2\)</span> means the network is well-connected and the fundamental mode is highly constrained; a small <span class="math inline">\(\lambda_2\)</span> means the network is nearly disconnected at some bottleneck, and the fundamental mode exploits that bottleneck to achieve low variation.</p>
+<p>The higher eigenvectors <span class="math inline">\(u_3, u_4, \ldots, u_n\)</span> correspond to progressively higher frequencies — signals that oscillate more and more rapidly across the graph. The last eigenvector <span class="math inline">\(u_n\)</span>, with the largest eigenvalue <span class="math inline">\(\lambda_n\)</span>, is the most rapidly varying signal — it alternates as sharply as possible between connected stations, like a checkerboard pattern on the graph. Its Dirichlet energy <span class="math inline">\(u_n^\top L u_n = \lambda_n\)</span> is the maximum possible variation.</p>
+<p>These <span class="math inline">\(n\)</span> eigenvectors form a complete orthonormal basis for <span class="math inline">\(\mathbb{R}^n\)</span> — the graph Fourier basis. Just as any periodic signal can be decomposed into sine and cosine waves of different frequencies, any signal on the graph can be decomposed into a linear combination of these eigenvectors, each with a coefficient measuring how much that frequency is present in the signal.</p>
+<hr>
+<p><strong>The graph Fourier transform.</strong></p>
+<p>Any signal <span class="math inline">\(f \in \mathbb{R}^n\)</span> on the network can be written as:</p>
+<p><span class="math display">\[f = \sum_{k=1}^{n} \hat{f}_k u_k\]</span></p>
+<p>where <span class="math inline">\(\hat{f}_k = u_k^\top f\)</span> is the <span class="math inline">\(k\)</span>-th graph Fourier coefficient — how much of the <span class="math inline">\(k\)</span>-th frequency mode is present in the signal <span class="math inline">\(f\)</span>. The collection of coefficients <span class="math inline">\(\hat{f} = U^\top f \in \mathbb{R}^n\)</span> is the graph Fourier transform of <span class="math inline">\(f\)</span>, where <span class="math inline">\(U = [u_1 | u_2 | \cdots | u_n]\)</span> is the matrix of eigenvectors.</p>
+<p>In Kathmandu’s radio network: the graph Fourier transform decomposes the power level distribution across stations into its constituent frequency modes. The coefficient <span class="math inline">\(\hat{f}_1 = u_1^\top f = \mathbf{1}^\top f / \sqrt{n}\)</span> is the average power level across all stations — the DC component. The coefficient <span class="math inline">\(\hat{f}_2 = u_2^\top f\)</span> measures how much the power distribution follows the fundamental network split identified by the Fiedler vector. The higher coefficients measure the presence of increasingly fine-grained oscillation patterns in the signal.</p>
+<p>This is the graph Fourier transform — and it is not an analogy to the classical Fourier transform. It is the same mathematical construction, with the graph Laplacian eigenvectors playing the role of the complex exponentials <span class="math inline">\(e^{i\omega t}\)</span>, which are themselves eigenfunctions of the continuous Laplacian <span class="math inline">\(-d^2/dx^2\)</span> on the circle.</p>
+<hr>
+<p><strong>Filtering: the heart of the matter.</strong></p>
+<p>Now you understand frequency decomposition. What can you do with it?</p>
+<p>A filter is an operation that modifies the frequency content of a signal. A low-pass filter retains the low-frequency components and attenuates the high-frequency ones — it smooths the signal, making neighboring stations more similar. A high-pass filter does the opposite — it retains the rapid variations and removes the smooth baseline. A band-pass filter retains only a specific range of frequencies.</p>
+<p>In the graph Fourier domain, filtering is straightforward: multiply each Fourier coefficient <span class="math inline">\(\hat{f}_k\)</span> by a scalar <span class="math inline">\(\hat{g}(\lambda_k)\)</span> that specifies how much to amplify or attenuate that frequency. The filtered signal is:</p>
+<p><span class="math display">\[f_{\text{filtered}} = U \, \text{diag}(\hat{g}(\lambda_1), \ldots, \hat{g}(\lambda_n)) \, U^\top f\]</span></p>
+<p>where <span class="math inline">\(\hat{g}: \mathbb{R} \to \mathbb{R}\)</span> is the filter function evaluated at each graph frequency <span class="math inline">\(\lambda_k\)</span>. A learned spectral GNN parameterizes <span class="math inline">\(\hat{g}\)</span> as a learnable function — it learns which frequencies to amplify and which to attenuate for the task at hand.</p>
+<p>This is graph convolution. In the spatial domain, the filtered signal at station <span class="math inline">\(i\)</span> is a weighted combination of the signal values at all other stations, with weights determined by the filter function. In the frequency domain, it is pointwise multiplication of Fourier coefficients. These two descriptions are exactly the same operation — the graph convolution theorem, the analogue of the classical convolution theorem.</p>
+<hr>
+<p><strong>The problem with full spectral filtering: a naive assumption that breaks.</strong></p>
+<p>Your filter design seems complete. For each of the <span class="math inline">\(n\)</span> frequency modes, you learn one scalar parameter <span class="math inline">\(\hat{g}(\lambda_k)\)</span>. You transform the input signal to the Fourier domain, multiply by your <span class="math inline">\(n\)</span> learned parameters, and transform back. The learned filter adapts to the task.</p>
+<p>Here is the naive assumption: this is a good neural network layer.</p>
+<p>It breaks, badly, in three ways.</p>
+<p><strong>Break One: Computational cost.</strong> Computing the graph Fourier transform requires the full eigendecomposition of <span class="math inline">\(L\)</span>: <span class="math inline">\(L = U\Lambda U^\top\)</span>. For a graph with <span class="math inline">\(n\)</span> nodes, eigendecomposition costs <span class="math inline">\(O(n^3)\)</span> operations and <span class="math inline">\(O(n^2)\)</span> memory. For the Nepal Telecom network with hundreds of stations, this is manageable. For a molecular graph with thousands of atoms, a social network with millions of users, or a protein interaction network with tens of thousands of nodes, <span class="math inline">\(O(n^3)\)</span> is completely intractable.</p>
+<p><strong>Break Two: No generalization across graphs.</strong> You have <span class="math inline">\(n\)</span> learnable parameters — one per eigenvalue. But eigenvalues are properties of a specific graph. If you train the filter on the Nepal Telecom network and then try to apply it to a different network — say, the India Telecom network with a different number of stations and a completely different Laplacian spectrum — the learned parameters have no meaning. They were tuned to the specific frequencies <span class="math inline">\(\lambda_1, \ldots, \lambda_n\)</span> of the training graph and cannot transfer to a graph with different frequencies. A spectral GNN with <span class="math inline">\(n\)</span> free parameters per layer cannot generalize across graphs with different sizes and structures.</p>
+<p><strong>Break Three: Non-locality.</strong> In the spatial domain, the full spectral filter combines the signal values at all <span class="math inline">\(n\)</span> stations to compute the filtered value at each station — it is a global operation, not a local one. But meaningful graph signals are often locally structured: whether a particular transmitter station is malfunctioning depends on its local neighborhood, not on the power levels of stations on the other side of the country. A filter that aggregates globally wastes computational resources and ignores the inductive bias of locality.</p>
+<p>All three breaks point to the same fix: instead of parameterizing the filter freely with <span class="math inline">\(n\)</span> parameters in the spectral domain, parameterize it as a polynomial in the graph Laplacian. Polynomials in <span class="math inline">\(L\)</span> are local — a degree-<span class="math inline">\(K\)</span> polynomial in <span class="math inline">\(L\)</span> combines only <span class="math inline">\(K\)</span>-hop neighborhood information. Polynomials transfer across graphs — the same polynomial coefficients can be applied to any graph, regardless of its size. And polynomials can be computed without eigendecomposition — evaluating <span class="math inline">\(p(L)f = \sum_{k=0}^{K}\theta_k L^k f\)</span> requires only <span class="math inline">\(K\)</span> sparse matrix-vector products, costing <span class="math inline">\(O(K|E|)\)</span>.</p>
+<hr>
+<p><strong>ChebNet: the polynomial approximation.</strong></p>
+<p>The ChebNet architecture of Defferrard, Bresson, and Vandergheynst replaces the free spectral filter with a degree-<span class="math inline">\(K\)</span> Chebyshev polynomial approximation. The Chebyshev polynomials <span class="math inline">\(T_k: [-1,1] \to [-1,1]\)</span> are the optimal polynomial basis for approximating smooth functions on <span class="math inline">\([-1,1]\)</span> in the minimax sense — they minimize the maximum approximation error over the interval, and they are numerically stable because they are bounded between <span class="math inline">\(-1\)</span> and <span class="math inline">\(+1\)</span>.</p>
+<p>The filter is:</p>
+<p><span class="math display">\[g_\theta(\tilde{L}) = \sum_{k=0}^{K} \theta_k T_k(\tilde{L})\]</span></p>
+<p>where <span class="math inline">\(\tilde{L} = 2L/\lambda_{\max} - I\)</span> rescales the Laplacian so its eigenvalues lie in <span class="math inline">\([-1,1]\)</span>, <span class="math inline">\(T_k\)</span> is the <span class="math inline">\(k\)</span>-th Chebyshev polynomial applied to the matrix <span class="math inline">\(\tilde{L}\)</span>, and <span class="math inline">\(\theta = (\theta_0, \ldots, \theta_K) \in \mathbb{R}^{K+1}\)</span> are the learnable filter parameters. The filtered signal is <span class="math inline">\(g_\theta(\tilde{L})f\)</span>, computed by the recurrence <span class="math inline">\(T_0(\tilde{L})f = f\)</span>, <span class="math inline">\(T_1(\tilde{L})f = \tilde{L}f\)</span>, <span class="math inline">\(T_k(\tilde{L})f = 2\tilde{L}T_{k-1}(\tilde{L})f - T_{k-2}(\tilde{L})f\)</span> — each step requiring one sparse matrix-vector multiplication.</p>
+<p>The degree-<span class="math inline">\(K\)</span> Chebyshev filter is exactly <span class="math inline">\(K\)</span>-hop local: the filtered value at station <span class="math inline">\(i\)</span> depends only on signal values within <span class="math inline">\(K\)</span> hops of station <span class="math inline">\(i\)</span> in the graph. This is the spectral explanation for why the spatial GNN from Topic 1 is local: spatial locality and spectral polynomial filtering are two descriptions of the same constraint.</p>
+<hr>
+<p><strong>The GCN as a first-order special case.</strong></p>
+<p>Kipf and Welling observe that for many practical tasks, a <span class="math inline">\(K=1\)</span> Chebyshev approximation — two learnable parameters <span class="math inline">\(\theta_0\)</span> and <span class="math inline">\(\theta_1\)</span> — is sufficient, and further simplifications improve generalization. Setting <span class="math inline">\(K=1\)</span>, approximating <span class="math inline">\(\lambda_{\max} \approx 2\)</span> (so <span class="math inline">\(\tilde{L} \approx L - I\)</span>), and constraining <span class="math inline">\(\theta_0 = -\theta_1 = \theta\)</span> to reduce overfitting gives a filter of the form:</p>
+<p><span class="math display">\[g_\theta(L)f \approx \theta(I + D^{-1/2}AD^{-1/2})f\]</span></p>
+<p>Applying the renormalization trick <span class="math inline">\(I + D^{-1/2}AD^{-1/2} \to \tilde{D}^{-1/2}\tilde{A}\tilde{D}^{-1/2}\)</span> (where <span class="math inline">\(\tilde{A} = A + I\)</span>) for numerical stability gives exactly the GCN propagation rule <span class="math inline">\(H^{(k)} = \sigma(\hat{\tilde{A}}H^{(k-1)}W^{(k)})\)</span> from Topic 1.</p>
+<p>The GCN is not an architecture someone designed by intuition. It is the first-order Chebyshev polynomial approximation to a spectral graph filter, with a renormalization trick for numerical stability. Its spatial locality, its degree normalization, and its low-pass filtering behavior are all spectral facts, visible immediately once you understand the graph Fourier transform.</p>
+<hr>
+<p><strong>Over-smoothing, finally explained.</strong></p>
+<p>In Topic 1, you were told that deep GCNs over-smooth — that repeated application of the GCN propagation drives all node representations toward the same vector. Now you can see exactly why, from the spectral perspective.</p>
+<p>The GCN propagation matrix <span class="math inline">\(\hat{\tilde{A}} = \tilde{D}^{-1/2}\tilde{A}\tilde{D}^{-1/2}\)</span> is a low-pass filter: it has eigenvalue <span class="math inline">\(1\)</span> for the zero-frequency mode (the constant signal <span class="math inline">\(\mathbf{1}\)</span>) and eigenvalues strictly less than <span class="math inline">\(1\)</span> for all higher-frequency modes. Applying this filter <span class="math inline">\(K\)</span> times multiplies each frequency component by <span class="math inline">\(\lambda_k^K\)</span>. For <span class="math inline">\(\lambda_k &lt; 1\)</span>, the quantity <span class="math inline">\(\lambda_k^K \to 0\)</span> as <span class="math inline">\(K \to \infty\)</span>. For <span class="math inline">\(\lambda_1 = 1\)</span>, the zero-frequency component is preserved. In the limit, only the zero-frequency component survives — the signal collapses to its projection onto the constant eigenvector <span class="math inline">\(\mathbf{1}\)</span>, which is the same for every node. This is over-smoothing: it is iterative low-pass filtering, and it is the inevitable consequence of using a filter whose frequency response is below <span class="math inline">\(1\)</span> at all non-zero frequencies.</p>
+<p>The spectral view makes the remedy equally clear: use a filter that does not exclusively attenuate high frequencies. Residual connections add a term with eigenvalue <span class="math inline">\(1\)</span> at all frequencies — they prevent the complete collapse of high-frequency components. Jumping knowledge connections concatenate representations from all layers — they combine signals at all stages of the low-pass filtering process. Graph transformers use attention over all pairs of nodes rather than local aggregation — they implement a learned frequency-domain filter that is not constrained to be low-pass.</p>
+<hr>
+<p><strong>The bridge to manifolds: why this topic is the gateway to Chapter 3.</strong></p>
+<p>Hold one thought clearly as you move to the mathematics. The graph Laplacian <span class="math inline">\(L\)</span> is the discrete approximation of the Laplace-Beltrami operator <span class="math inline">\(\Delta_\mathcal{M}\)</span> on a smooth Riemannian manifold. If your graph is a dense sampling of points on a smooth manifold — the manifold hypothesis of geometric deep learning — then the eigenvectors of <span class="math inline">\(L\)</span> converge to the eigenfunctions of <span class="math inline">\(\Delta_\mathcal{M}\)</span> as the sampling becomes denser. The graph Fourier basis converges to the manifold harmonic basis. The spectral graph convolution converges to the spectral manifold convolution. The Laplacian eigenmaps of Chapter 3 — the method that embeds manifold-valued data into low-dimensional Euclidean space — are exactly the low-frequency eigenvectors of the graph Laplacian, used as a coordinate system for the manifold. Topic 2’s spectral framework is not an isolated chapter in the GNN story. It is the mathematical bridge between the discrete graph world of Chapter 2 and the continuous manifold world of Chapter 3, and the connection runs through the single object that governs both: the Laplacian and its spectrum.</p>
+<hr>
+</section>
+<section id="layer-2-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="layer-2-mathematics">Layer 2 (Mathematics)</h2>
+<p>We build the formalism in six stages: the graph Laplacian and its algebraic properties, the spectral decomposition and graph Fourier transform, spectral graph convolution, the Chebyshev polynomial approximation and ChebNet, the first-order approximation recovering GCN, and the normalized Laplacian’s connection to the continuous Laplace-Beltrami operator.</p>
+<section id="the-graph-laplacian-definition-and-algebraic-properties" class="level3">
+<h3 class="anchored" data-anchor-id="the-graph-laplacian-definition-and-algebraic-properties">The Graph Laplacian — Definition and Algebraic Properties</h3>
+<p><strong>Definition.</strong> Let <span class="math inline">\(G = (V, E)\)</span> be an undirected graph with <span class="math inline">\(n\)</span> nodes and <span class="math inline">\(m\)</span> edges, adjacency matrix <span class="math inline">\(A \in \{0,1\}^{n \times n}\)</span>, and degree matrix <span class="math inline">\(D = \text{diag}(d_1, \ldots, d_n)\)</span> where <span class="math inline">\(d_i = \sum_j A_{ij}\)</span>. The <strong>combinatorial graph Laplacian</strong> is:</p>
+<p><span class="math display">\[L = D - A \in \mathbb{R}^{n \times n}\]</span></p>
+<p>with entries:</p>
+<p><span class="math display">\[L_{ij} = \begin{cases} d_i &amp; \text{if } i = j \\ -1 &amp; \text{if } (i,j) \in E \\ 0 &amp; \text{otherwise} \end{cases}\]</span></p>
+<p><strong>Theorem (Positive Semidefiniteness).</strong> <span class="math inline">\(L\)</span> is symmetric positive semidefinite: <span class="math inline">\(f^\top L f \geq 0\)</span> for all <span class="math inline">\(f \in \mathbb{R}^n\)</span>.</p>
+<p><strong>Proof.</strong></p>
+<p><span class="math display">\[f^\top L f = f^\top (D - A) f = \sum_i d_i f_i^2 - \sum_{(i,j) \in E} 2f_i f_j = \sum_{(i,j) \in E} (f_i - f_j)^2 \geq 0\]</span></p>
+<p>The last equality uses <span class="math inline">\(\sum_i d_i f_i^2 = \sum_{(i,j)\in E}(f_i^2 + f_j^2)\)</span> for undirected graphs. The expression <span class="math inline">\(\sum_{(i,j)\in E}(f_i - f_j)^2\)</span> is the <strong>Dirichlet energy</strong> of signal <span class="math inline">\(f\)</span> on <span class="math inline">\(G\)</span> — the total squared variation across all edges. <span class="math inline">\(\square\)</span></p>
+<p><strong>Corollary.</strong> All eigenvalues of <span class="math inline">\(L\)</span> are non-negative: <span class="math inline">\(0 = \lambda_1 \leq \lambda_2 \leq \cdots \leq \lambda_n\)</span>.</p>
+<p><strong>Theorem (Zero eigenvalue and connectivity).</strong> <span class="math inline">\(\lambda_1 = 0\)</span> with eigenvector <span class="math inline">\(\mathbf{1} = (1,\ldots,1)^\top\)</span>. The multiplicity of eigenvalue <span class="math inline">\(0\)</span> equals the number of connected components of <span class="math inline">\(G\)</span>.</p>
+<p><strong>Proof.</strong> <span class="math inline">\(L\mathbf{1} = D\mathbf{1} - A\mathbf{1} = \mathbf{d} - \mathbf{d} = \mathbf{0}\)</span>. For a connected graph: <span class="math inline">\(f^\top Lf = 0 \Rightarrow f_i = f_j\)</span> for all <span class="math inline">\((i,j)\in E \Rightarrow f\)</span> is constant on each connected component <span class="math inline">\(\Rightarrow\)</span> for a single connected component, <span class="math inline">\(f \in \text{span}(\mathbf{1})\)</span>. <span class="math inline">\(\square\)</span></p>
+<p><strong>The normalized Laplacian.</strong> The <strong>symmetric normalized Laplacian</strong> is:</p>
+<p><span class="math display">\[\mathcal{L} = D^{-1/2}LD^{-1/2} = I - D^{-1/2}AD^{-1/2} = I - \hat{A}\]</span></p>
+<p>with eigenvalues <span class="math inline">\(\mu_k = 1 - \lambda_k^{\hat{A}}\)</span> where <span class="math inline">\(\lambda_k^{\hat{A}}\)</span> are eigenvalues of <span class="math inline">\(\hat{A} = D^{-1/2}AD^{-1/2}\)</span>. The normalized Laplacian has spectrum in <span class="math inline">\([0, 2]\)</span> for any graph, with <span class="math inline">\(\mu_1 = 0\)</span> and <span class="math inline">\(\mu_n \leq 2\)</span> (with equality iff <span class="math inline">\(G\)</span> is bipartite).</p>
+<p><strong>The random walk Laplacian</strong> is <span class="math inline">\(L_{\text{rw}} = D^{-1}L = I - D^{-1}A\)</span>, with <span class="math inline">\(D^{-1}A\)</span> being the random walk transition matrix.</p>
+<hr>
+</section>
+<section id="spectral-decomposition-and-the-graph-fourier-transform" class="level3">
+<h3 class="anchored" data-anchor-id="spectral-decomposition-and-the-graph-fourier-transform">Spectral Decomposition and the Graph Fourier Transform</h3>
+<p><strong>Spectral Theorem (applied to <span class="math inline">\(L\)</span>).</strong> Since <span class="math inline">\(L\)</span> is real symmetric positive semidefinite, it admits the eigendecomposition:</p>
+<p><span class="math display">\[L = U \Lambda U^\top\]</span></p>
+<p>where <span class="math inline">\(U = [u_1 | u_2 | \cdots | u_n] \in \mathbb{R}^{n \times n}\)</span> is orthogonal (<span class="math inline">\(U^\top U = UU^\top = I\)</span>) with columns <span class="math inline">\(u_k\)</span> the orthonormal eigenvectors, and <span class="math inline">\(\Lambda = \text{diag}(\lambda_1, \ldots, \lambda_n)\)</span> with <span class="math inline">\(0 = \lambda_1 \leq \lambda_2 \leq \cdots \leq \lambda_n\)</span>.</p>
+<p><strong>Definition (Graph Fourier Transform).</strong> The <strong>graph Fourier transform</strong> of a signal <span class="math inline">\(f \in \mathbb{R}^n\)</span> is:</p>
+<p><span class="math display">\[\hat{f} = U^\top f \in \mathbb{R}^n, \quad \hat{f}_k = u_k^\top f = \langle f, u_k \rangle\]</span></p>
+<p>The <strong>inverse graph Fourier transform</strong> is:</p>
+<p><span class="math display">\[f = U\hat{f} = \sum_{k=1}^{n} \hat{f}_k u_k\]</span></p>
+<p><strong>Parseval’s identity.</strong> Since <span class="math inline">\(U\)</span> is orthogonal:</p>
+<p><span class="math display">\[\|f\|^2 = f^\top f = f^\top UU^\top f = \hat{f}^\top \hat{f} = \|\hat{f}\|^2\]</span></p>
+<p>Energy is preserved under the graph Fourier transform.</p>
+<p><strong>Dirichlet energy in the Fourier domain.</strong></p>
+<p><span class="math display">\[f^\top L f = f^\top U\Lambda U^\top f = \hat{f}^\top \Lambda \hat{f} = \sum_{k=1}^{n} \lambda_k \hat{f}_k^2\]</span></p>
+<p>The Dirichlet energy is a weighted sum of squared Fourier coefficients, with graph frequencies <span class="math inline">\(\lambda_k\)</span> as weights. Signals concentrated at low frequencies (<span class="math inline">\(\hat{f}_k\)</span> large for small <span class="math inline">\(\lambda_k\)</span>) have low Dirichlet energy — they are smooth on the graph. Signals with energy at high frequencies have large Dirichlet energy — they vary rapidly across edges.</p>
+<p><strong>Spectral interpretation of Laplacian eigenvectors.</strong> The <span class="math inline">\(k\)</span>-th eigenvector <span class="math inline">\(u_k\)</span> is the signal of frequency <span class="math inline">\(\lambda_k\)</span> — it minimizes the Dirichlet energy subject to being orthogonal to all eigenvectors of lower frequency:</p>
+<p><span class="math display">\[u_k = \arg\min_{f: \|f\|=1,\, f \perp u_1,\ldots,u_{k-1}} f^\top L f = \arg\min_{f:\|f\|=1,\, f\perp u_1,\ldots,u_{k-1}} \sum_{(i,j)\in E}(f_i-f_j)^2\]</span></p>
+<p>This is the variational characterization of eigenvectors via the Courant-Fischer minimax theorem — a result from MATH 302.</p>
+<hr>
+</section>
+<section id="spectral-graph-convolution" class="level3">
+<h3 class="anchored" data-anchor-id="spectral-graph-convolution">Spectral Graph Convolution</h3>
+<p><strong>Classical convolution theorem (discrete).</strong> For signals <span class="math inline">\(f, g\)</span> on a cycle graph (equivalently, periodic discrete signals), the discrete Fourier transform satisfies:</p>
+<p><span class="math display">\[(f \star g)[n] = \sum_k f[k]g[n-k] \quad \Longleftrightarrow \quad \widehat{f \star g} = \hat{f} \odot \hat{g}\]</span></p>
+<p>Convolution in the spatial domain equals pointwise multiplication in the frequency domain.</p>
+<p><strong>Definition (Spectral graph convolution).</strong> The <strong>spectral convolution</strong> of signal <span class="math inline">\(f \in \mathbb{R}^n\)</span> with filter <span class="math inline">\(g \in \mathbb{R}^n\)</span> on graph <span class="math inline">\(G\)</span> is defined via the graph Fourier transform:</p>
+<p><span class="math display">\[(f \star_G g) = U(\hat{f} \odot \hat{g}) = U \, \text{diag}(\hat{g}) \, U^\top f\]</span></p>
+<p>where <span class="math inline">\(\hat{g} = U^\top g\)</span> is the graph Fourier transform of the filter and <span class="math inline">\(\odot\)</span> denotes pointwise multiplication.</p>
+<p><strong>Filter as a function of the Laplacian.</strong> Since <span class="math inline">\(\hat{g} = (\hat{g}(\lambda_1), \ldots, \hat{g}(\lambda_n))^\top\)</span> and the Laplacian acts as <span class="math inline">\(Lu_k = \lambda_k u_k\)</span>, the spectral convolution is equivalently:</p>
+<p><span class="math display">\[(f \star_G g) = g_\theta(L) f, \quad g_\theta(L) = U \, \text{diag}(g_\theta(\lambda_1), \ldots, g_\theta(\lambda_n)) \, U^\top\]</span></p>
+<p>where <span class="math inline">\(g_\theta: \mathbb{R} \to \mathbb{R}\)</span> is the <strong>spectral transfer function</strong> of the filter, parameterized by <span class="math inline">\(\theta\)</span>.</p>
+<p><strong>Learned spectral filter (non-parametric).</strong> The most general learned spectral filter has <span class="math inline">\(n\)</span> free parameters <span class="math inline">\(\theta = (\theta_1, \ldots, \theta_n)\)</span>:</p>
+<p><span class="math display">\[g_\theta(L) = U \, \text{diag}(\theta_1, \ldots, \theta_n) \, U^\top\]</span></p>
+<p><strong>Computational complexity:</strong> Eigendecomposition <span class="math inline">\(O(n^3)\)</span>, matrix-vector product <span class="math inline">\(O(n^2)\)</span> per signal. <strong>Non-transferable:</strong> <span class="math inline">\(\theta\)</span> is tied to the specific eigenvalues <span class="math inline">\(\lambda_1, \ldots, \lambda_n\)</span> of the training graph. <strong>Non-local:</strong> the filter couples all pairs of nodes.</p>
+<hr>
+</section>
+<section id="polynomial-filters-and-chebnet" class="level3">
+<h3 class="anchored" data-anchor-id="polynomial-filters-and-chebnet">Polynomial Filters and ChebNet</h3>
+<p><strong>Key insight.</strong> If <span class="math inline">\(g_\theta\)</span> is a polynomial of degree <span class="math inline">\(K\)</span>:</p>
+<p><span class="math display">\[g_\theta(\lambda) = \sum_{k=0}^{K} \theta_k \lambda^k\]</span></p>
+<p>then:</p>
+<p><span class="math display">\[g_\theta(L) = \sum_{k=0}^{K} \theta_k L^k\]</span></p>
+<p><strong>Locality of polynomial filters.</strong></p>
+<p><strong>Theorem.</strong> <span class="math inline">\((L^k)_{ij} = 0\)</span> whenever <span class="math inline">\(\text{dist}_G(i,j) &gt; k\)</span>, where <span class="math inline">\(\text{dist}_G(i,j)\)</span> is the shortest-path distance between nodes <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span> in <span class="math inline">\(G\)</span>.</p>
+<p><strong>Proof.</strong> By induction. <span class="math inline">\((L^1)_{ij} = L_{ij} \neq 0\)</span> only if <span class="math inline">\(i=j\)</span> or <span class="math inline">\((i,j)\in E\)</span>, i.e., <span class="math inline">\(\text{dist}_G(i,j)\leq 1\)</span>. If <span class="math inline">\((L^{k-1})_{ij}=0\)</span> for <span class="math inline">\(\text{dist}_G(i,j)&gt;k-1\)</span>, then <span class="math inline">\((L^k)_{ij} = \sum_l L_{il}(L^{k-1})_{lj}\)</span>. Since <span class="math inline">\(L_{il}\neq 0\)</span> only for <span class="math inline">\(\text{dist}_G(i,l)\leq 1\)</span>, and <span class="math inline">\((L^{k-1})_{lj}\neq 0\)</span> only for <span class="math inline">\(\text{dist}_G(l,j)\leq k-1\)</span>, by the triangle inequality <span class="math inline">\(\text{dist}_G(i,j)\leq \text{dist}_G(i,l)+\text{dist}_G(l,j)\leq k\)</span>. <span class="math inline">\(\square\)</span></p>
+<p><strong>Corollary.</strong> A degree-<span class="math inline">\(K\)</span> polynomial filter <span class="math inline">\(g_\theta(L)f\)</span> at node <span class="math inline">\(i\)</span> depends only on signal values <span class="math inline">\(f_j\)</span> with <span class="math inline">\(\text{dist}_G(i,j)\leq K\)</span> — the <span class="math inline">\(K\)</span>-hop neighborhood of <span class="math inline">\(i\)</span>.</p>
+<p><strong>Computational complexity of polynomial filters.</strong> Evaluating <span class="math inline">\(g_\theta(L)f\)</span> via Horner’s method or the three-term recurrence requires <span class="math inline">\(K\)</span> sparse matrix-vector multiplications, each costing <span class="math inline">\(O(m)\)</span> for a graph with <span class="math inline">\(m\)</span> edges. Total cost: <span class="math inline">\(O(Km)\)</span>. No eigendecomposition required.</p>
+<p><strong>Chebyshev polynomials.</strong> The Chebyshev polynomials of the first kind <span class="math inline">\(T_k: [-1,1]\to[-1,1]\)</span> are defined by:</p>
+<p><span class="math display">\[T_0(x) = 1, \quad T_1(x) = x, \quad T_k(x) = 2xT_{k-1}(x) - T_{k-2}(x)\]</span></p>
+<p>They satisfy <span class="math inline">\(T_k(\cos\theta) = \cos(k\theta)\)</span> and are the unique polynomials minimizing <span class="math inline">\(\max_{x\in[-1,1]}|p(x)|\)</span> among monic polynomials of degree <span class="math inline">\(k\)</span>. They form an orthogonal basis for <span class="math inline">\(L^2([-1,1], (1-x^2)^{-1/2}dx)\)</span>:</p>
+<p><span class="math display">\[\int_{-1}^{1} T_j(x) T_k(x) \frac{dx}{\sqrt{1-x^2}} = \begin{cases} 0 &amp; j \neq k \\ \pi/2 &amp; j = k \geq 1 \\ \pi &amp; j = k = 0 \end{cases}\]</span></p>
+<p><strong>ChebNet (Defferrard, Bresson, Vandergheynst 2016).</strong> Rescale the Laplacian to <span class="math inline">\([-1,1]\)</span>:</p>
+<p><span class="math display">\[\tilde{L} = \frac{2}{\lambda_{\max}} L - I\]</span></p>
+<p>with eigenvalues <span class="math inline">\(\tilde{\lambda}_k = 2\lambda_k/\lambda_{\max} - 1 \in [-1,1]\)</span>. The ChebNet filter is:</p>
+<p><span class="math display">\[g_\theta(\tilde{L}) = \sum_{k=0}^{K} \theta_k T_k(\tilde{L})\]</span></p>
+<p>Applied to a signal <span class="math inline">\(f\)</span>, computed via the recurrence:</p>
+<p><span class="math display">\[\bar{f}^{(0)} = f, \quad \bar{f}^{(1)} = \tilde{L}f, \quad \bar{f}^{(k)} = 2\tilde{L}\bar{f}^{(k-1)} - \bar{f}^{(k-2)}\]</span></p>
+<p><span class="math display">\[g_\theta(\tilde{L})f = \sum_{k=0}^{K} \theta_k \bar{f}^{(k)}\]</span></p>
+<p><strong>ChebNet layer (multi-channel).</strong> For input feature matrix <span class="math inline">\(H \in \mathbb{R}^{n \times d_{\text{in}}}\)</span> and <span class="math inline">\(d_{\text{out}}\)</span> output channels:</p>
+<p><span class="math display">\[H^{\text{out}} = \sigma\!\left(\sum_{k=0}^{K} \bar{H}^{(k)} \Theta_k\right)\]</span></p>
+<p>where <span class="math inline">\(\bar{H}^{(k)} \in \mathbb{R}^{n \times d_{\text{in}}}\)</span> is the <span class="math inline">\(k\)</span>-th Chebyshev recurrence applied column-wise to <span class="math inline">\(H\)</span>, <span class="math inline">\(\Theta_k \in \mathbb{R}^{d_{\text{in}} \times d_{\text{out}}}\)</span> is the learnable weight matrix for the <span class="math inline">\(k\)</span>-th Chebyshev order, and <span class="math inline">\(\sigma\)</span> is a pointwise nonlinearity.</p>
+<p><strong>Parameter count:</strong> <span class="math inline">\((K+1) \times d_{\text{in}} \times d_{\text{out}}\)</span> — independent of the number of nodes <span class="math inline">\(n\)</span>, enabling transfer across graphs.</p>
+<hr>
+</section>
+<section id="first-order-approximation-recovering-gcn" class="level3">
+<h3 class="anchored" data-anchor-id="first-order-approximation-recovering-gcn">First-Order Approximation: Recovering GCN</h3>
+<p><strong>Step 1: Set <span class="math inline">\(K=1\)</span>.</strong> The ChebNet filter becomes:</p>
+<p><span class="math display">\[g_\theta(\tilde{L})f = \theta_0 T_0(\tilde{L})f + \theta_1 T_1(\tilde{L})f = \theta_0 f + \theta_1 \tilde{L}f\]</span></p>
+<p>With <span class="math inline">\(\lambda_{\max} \approx 2\)</span> (approximation used by Kipf-Welling): <span class="math inline">\(\tilde{L} \approx L - I = -\hat{A}\)</span> where <span class="math inline">\(\hat{A} = D^{-1/2}AD^{-1/2}\)</span>. So:</p>
+<p><span class="math display">\[g_\theta(\tilde{L})f \approx \theta_0 f - \theta_1 \hat{A} f\]</span></p>
+<p><strong>Step 2: Constrain <span class="math inline">\(\theta_0 = -\theta_1 = \theta\)</span>.</strong> Setting <span class="math inline">\(\theta_0 = -\theta_1 = \theta\)</span> to reduce the number of parameters and mitigate overfitting:</p>
+<p><span class="math display">\[g_\theta f = \theta(I + \hat{A})f = \theta(I + D^{-1/2}AD^{-1/2})f\]</span></p>
+<p><strong>Step 3: Renormalization trick.</strong> The matrix <span class="math inline">\(I + D^{-1/2}AD^{-1/2}\)</span> has eigenvalues in <span class="math inline">\([0,2]\)</span>, which can cause numerical instability (exploding/vanishing gradients) when stacking layers. Apply the renormalization:</p>
+<p><span class="math display">\[I + D^{-1/2}AD^{-1/2} \to \tilde{D}^{-1/2}\tilde{A}\tilde{D}^{-1/2}\]</span></p>
+<p>where <span class="math inline">\(\tilde{A} = A + I\)</span> (add self-loops) and <span class="math inline">\(\tilde{D}_{ii} = \sum_j \tilde{A}_{ij} = d_i + 1\)</span>. This maps the eigenvalue range from <span class="math inline">\([0,2]\)</span> to <span class="math inline">\([0,1]\)</span>, stabilizing training.</p>
+<p><strong>GCN layer (Kipf and Welling 2017).</strong></p>
+<p><span class="math display">\[H^{(k)} = \sigma\!\left(\hat{\tilde{A}} H^{(k-1)} W^{(k)}\right), \quad \hat{\tilde{A}} = \tilde{D}^{-1/2}\tilde{A}\tilde{D}^{-1/2}\]</span></p>
+<p>This is the first-order Chebyshev spectral filter with the renormalization trick applied. The weight matrix <span class="math inline">\(W^{(k)} \in \mathbb{R}^{d_{k-1} \times d_k}\)</span> combines the channel mixing (the learnable part) with the fixed spectral filtering (the <span class="math inline">\(\hat{\tilde{A}}\)</span> multiplication).</p>
+<p><strong>Spectral interpretation of <span class="math inline">\(\hat{\tilde{A}}\)</span> as a low-pass filter.</strong></p>
+<p>The eigenvalues of <span class="math inline">\(\hat{\tilde{A}}\)</span> lie in <span class="math inline">\((0,1]\)</span> for a connected non-bipartite graph. In the graph Fourier basis:</p>
+<p><span class="math display">\[\hat{\tilde{A}} = U_{\tilde{A}} \Lambda_{\tilde{A}} U_{\tilde{A}}^\top, \quad (\Lambda_{\tilde{A}})_{kk} = \tilde{\lambda}_k \in (0,1]\]</span></p>
+<p>Repeated application <span class="math inline">\(\hat{\tilde{A}}^K\)</span> multiplies each Fourier coefficient by <span class="math inline">\(\tilde{\lambda}_k^K\)</span>. Since <span class="math inline">\(\tilde{\lambda}_1 = 1\)</span> (the zero-frequency mode) and <span class="math inline">\(\tilde{\lambda}_k &lt; 1\)</span> for <span class="math inline">\(k &gt; 1\)</span>:</p>
+<p><span class="math display">\[\lim_{K\to\infty} \hat{\tilde{A}}^K H = \mathbf{d}\,\mathbf{d}^\top H / \|\mathbf{d}\|^2\]</span></p>
+<p>confirming the over-smoothing analysis from Topic 1, now with the spectral mechanism fully explicit: all non-zero frequencies are attenuated to zero, leaving only the projection onto the dominant eigenvector.</p>
+<hr>
+</section>
+<section id="the-normalized-laplacian-and-the-laplace-beltrami-operator" class="level3">
+<h3 class="anchored" data-anchor-id="the-normalized-laplacian-and-the-laplace-beltrami-operator">The Normalized Laplacian and the Laplace-Beltrami Operator</h3>
+<p><strong>Discrete-to-continuous convergence.</strong> Let <span class="math inline">\(\mathcal{M}\)</span> be a compact Riemannian manifold and let <span class="math inline">\(\{x_1,\ldots,x_n\} \subset \mathcal{M}\)</span> be <span class="math inline">\(n\)</span> points sampled i.i.d. from a distribution with density <span class="math inline">\(p\)</span> on <span class="math inline">\(\mathcal{M}\)</span>. Construct the graph <span class="math inline">\(G_n\)</span> with Gaussian kernel weights:</p>
+<p><span class="math display">\[W_{ij} = \exp\!\left(-\frac{\|x_i - x_j\|^2}{2\sigma^2}\right)\]</span></p>
+<p>and degree <span class="math inline">\(d_i = \sum_j W_{ij}\)</span>.</p>
+<p><strong>Theorem (Belkin-Niyogi, 2003; Coifman-Lafon, 2006).</strong> Under appropriate conditions on <span class="math inline">\(\sigma = \sigma(n)\)</span> (specifically <span class="math inline">\(\sigma \to 0\)</span> and <span class="math inline">\(n\sigma^{d+2} \to \infty\)</span> where <span class="math inline">\(d = \dim\mathcal{M}\)</span>), the normalized graph Laplacian <span class="math inline">\(\mathcal{L}_n\)</span> converges pointwise to the Laplace-Beltrami operator <span class="math inline">\(\Delta_\mathcal{M}\)</span>:</p>
+<p><span class="math display">\[\frac{1}{\sigma^2}\mathcal{L}_n f(x_i) \xrightarrow{n\to\infty} \Delta_\mathcal{M} f(x_i)\]</span></p>
+<p><strong>Corollary.</strong> The eigenvectors of the graph Laplacian <span class="math inline">\(\mathcal{L}_n\)</span> converge to the eigenfunctions of <span class="math inline">\(\Delta_\mathcal{M}\)</span>, and the eigenvalues <span class="math inline">\(\lambda_k^{(n)}/\sigma^2\)</span> converge to the eigenvalues of <span class="math inline">\(\Delta_\mathcal{M}\)</span>.</p>
+<p><strong>The Laplace-Beltrami operator.</strong> On a Riemannian manifold <span class="math inline">\((\mathcal{M}, g)\)</span>, the Laplace-Beltrami operator is:</p>
+<p><span class="math display">\[\Delta_\mathcal{M} f = \text{div}(\text{grad}\, f) = \frac{1}{\sqrt{|g|}} \sum_{i,j} \partial_i\!\left(\sqrt{|g|}\, g^{ij} \partial_j f\right)\]</span></p>
+<p>where <span class="math inline">\(g^{ij}\)</span> are the components of the inverse metric tensor and <span class="math inline">\(|g| = \det(g_{ij})\)</span>. On flat Euclidean space <span class="math inline">\(\mathbb{R}^d\)</span> with <span class="math inline">\(g_{ij} = \delta_{ij}\)</span>, this reduces to <span class="math inline">\(\Delta f = \sum_i \partial^2 f/\partial x_i^2\)</span>, the standard Laplacian.</p>
+<p><strong>Eigenfunctions of <span class="math inline">\(\Delta_\mathcal{M}\)</span>:</strong> - On the circle <span class="math inline">\(S^1\)</span>: eigenfunctions <span class="math inline">\(e^{in\theta}\)</span>, eigenvalues <span class="math inline">\(n^2\)</span> — the Fourier basis. - On the sphere <span class="math inline">\(S^2\)</span>: eigenfunctions <span class="math inline">\(Y_\ell^m\)</span>, eigenvalues <span class="math inline">\(\ell(\ell+1)\)</span> — the spherical harmonics from Chapter 1. - On <span class="math inline">\(\mathbb{R}^d\)</span>: eigenfunctions <span class="math inline">\(e^{i\omega \cdot x}\)</span>, eigenvalues <span class="math inline">\(\|\omega\|^2\)</span> — the continuous Fourier basis.</p>
+<p>The graph Fourier transform is the discrete, finite-dimensional instance of this general spectral theory. All cases are special instances of the same mathematical structure: spectral analysis of the Laplacian operator on the relevant geometric space.</p>
+<hr>
+</section>
+<section id="laplacian-eigenmaps-preview-of-chapter-3" class="level3">
+<h3 class="anchored" data-anchor-id="laplacian-eigenmaps-preview-of-chapter-3">Laplacian Eigenmaps — Preview of Chapter 3</h3>
+<p><strong>Definition (Laplacian Eigenmap, Belkin-Niyogi 2003).</strong> Given a graph <span class="math inline">\(G\)</span> constructed from high-dimensional data points <span class="math inline">\(\{x_1,\ldots,x_n\} \subset \mathbb{R}^D\)</span>, the <strong>Laplacian eigenmap</strong> embedding into <span class="math inline">\(\mathbb{R}^d\)</span> (<span class="math inline">\(d \ll D\)</span>) is:</p>
+<p><span class="math display">\[\Phi: x_i \mapsto (u_2(i), u_3(i), \ldots, u_{d+1}(i)) \in \mathbb{R}^d\]</span></p>
+<p>using the <span class="math inline">\(d\)</span> eigenvectors of smallest nonzero eigenvalue of the graph Laplacian.</p>
+<p><strong>Optimization problem.</strong> The Laplacian eigenmap minimizes:</p>
+<p><span class="math display">\[\min_{Y \in \mathbb{R}^{n\times d},\, Y^\top D Y = I} \text{tr}(Y^\top L Y) = \min_{Y^\top D Y = I} \sum_{(i,j)\in E} W_{ij} \|y_i - y_j\|^2\]</span></p>
+<p>The constraint <span class="math inline">\(Y^\top DY = I\)</span> (degree-weighted orthonormality) prevents the trivial solution <span class="math inline">\(Y=0\)</span> and removes the arbitrary scaling and rotation of the embedding. The solution is given by the <span class="math inline">\(d\)</span> eigenvectors of the generalized eigenvalue problem <span class="math inline">\(Lu = \lambda Du\)</span>, corresponding to the <span class="math inline">\(d\)</span> smallest nonzero eigenvalues — equivalently, the <span class="math inline">\(d\)</span> smallest nonzero eigenvalues of the normalized Laplacian <span class="math inline">\(\mathcal{L} = D^{-1/2}LD^{-1/2}\)</span>.</p>
+<hr>
+</section>
+<section id="why-this-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-matters">WHY THIS MATTERS</h3>
+<p>In <strong>MATH 302 (Matrix Theory)</strong>, the spectral theorem for symmetric matrices — eigendecomposition <span class="math inline">\(L = U\Lambda U^\top\)</span> with orthogonal <span class="math inline">\(U\)</span> and real diagonal <span class="math inline">\(\Lambda\)</span> — is the foundational result that makes the entire graph Fourier transform well-defined. The Courant-Fischer minimax theorem from MATH 302 characterizes the <span class="math inline">\(k\)</span>-th eigenvalue as <span class="math inline">\(\lambda_k = \min_{\dim S = k}\max_{f\in S, \|f\|=1} f^\top Lf\)</span>, giving the variational interpretation of graph frequencies: the <span class="math inline">\(k\)</span>-th graph frequency is the minimum achievable Dirichlet energy for a signal constrained to be orthogonal to the first <span class="math inline">\(k-1\)</span> eigenvectors. The positive semidefiniteness proof <span class="math inline">\(f^\top Lf = \sum_{(i,j)\in E}(f_i-f_j)^2 \geq 0\)</span> is a direct application of the quadratic form analysis from MATH 302 — the Cholesky decomposition of <span class="math inline">\(L\)</span> exists because <span class="math inline">\(L\)</span> is PSD, and the incidence matrix <span class="math inline">\(B \in \mathbb{R}^{m\times n}\)</span> (one row per edge, <span class="math inline">\(B_{e,i}=1\)</span> and <span class="math inline">\(B_{e,j}=-1\)</span> for edge <span class="math inline">\(e=(i,j)\)</span>) gives <span class="math inline">\(L = B^\top B\)</span>, factoring the Laplacian as a Gram matrix.</p>
+<p>In <strong>MATH 213 and MATH 325 (Analysis I and II)</strong>, the Fourier series on <span class="math inline">\([-\pi,\pi]\)</span> — expanding <span class="math inline">\(f\)</span> in eigenfunctions <span class="math inline">\(e^{in\theta}\)</span> of <span class="math inline">\(-d^2/dx^2\)</span> — is the one-dimensional continuous instance of the same spectral decomposition. The graph Fourier transform <span class="math inline">\(\hat{f} = U^\top f\)</span> is the discrete analogue: <span class="math inline">\(U\)</span> plays the role of the Fourier matrix, <span class="math inline">\(\Lambda\)</span> plays the role of the frequency-squared diagonal, and Parseval’s identity <span class="math inline">\(\|f\|^2 = \|\hat{f}\|^2\)</span> is the discrete analogue of the Parseval-Plancherel theorem from Analysis. The Belkin-Niyogi convergence theorem — graph Laplacian eigenvectors converging to Laplace-Beltrami eigenfunctions — is an instance of the operator convergence results from functional analysis, where the spectral theory of self-adjoint operators on <span class="math inline">\(L^2(\mathcal{M})\)</span> (studied in the continuous setting in Analysis II) is recovered as a limit of finite-dimensional matrix spectral theory.</p>
+<p>In <strong>COMP 323 (Graph Theory)</strong>, the Fiedler value <span class="math inline">\(\lambda_2\)</span> — the algebraic connectivity measuring the graph’s bottleneck width — appears here as the frequency of the graph’s fundamental mode. The Cheeger inequality from spectral graph theory, <span class="math inline">\(h(G)^2/2 \leq \lambda_2 \leq 2h(G)\)</span> where <span class="math inline">\(h(G) = \min_{S\subset V}|E(S,\bar{S})|/\min(\text{vol}(S),\text{vol}(\bar{S}))\)</span> is the edge expansion ratio, connects the spectral gap to the graph’s combinatorial connectivity — a result from COMP 323 that now has a direct interpretation in terms of GNN expressive power: graphs with small spectral gap (poor connectivity, small <span class="math inline">\(\lambda_2\)</span>) over-smooth slowly and allow deep GNNs; graphs with large spectral gap (well-connected, large <span class="math inline">\(\lambda_2\)</span>) over-smooth rapidly and require shallow GNNs or residual connections.</p>
+<hr>
+</section>
+</section>
+<section id="layer-3-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="layer-3-bridge">Layer 3 (Bridge)</h2>
+<p>Every element of the Nepal Telecom radio broadcast story has a precise mathematical address. We walk through them completely — the signal variation across stations, the restoring force analogy, the drumhead normal modes, the graph Fourier decomposition, the three breaks of naive spectral filtering, the Chebyshev polynomial fix, the GCN as first-order approximation, the over-smoothing explanation, and the bridge to manifolds — until the story and the formalism are a single object seen from two angles.</p>
+<hr>
+<p><strong>The power level assigned to each transmitter station — a real number per node — is the signal <span class="math inline">\(f \in \mathbb{R}^n\)</span>, one component per station, the fundamental object of graph signal processing.</strong> The vector <span class="math inline">\(f \in \mathbb{R}^n\)</span> with <span class="math inline">\(f_i \in \mathbb{R}\)</span> being the broadcast power level of station <span class="math inline">\(i\)</span> is the node signal on the graph — the discrete analogue of a function <span class="math inline">\(f: \mathcal{M} \to \mathbb{R}\)</span> on a continuous manifold. In the GNN context, the columns of the node feature matrix <span class="math inline">\(H \in \mathbb{R}^{n \times d}\)</span> are <span class="math inline">\(d\)</span> such signals simultaneously — one per feature channel — and every spectral operation acts on each column independently before the learned weight matrix <span class="math inline">\(W\)</span> mixes the channels. The graph is the domain; the signal is the function defined on that domain; the graph Fourier transform is the harmonic analysis of that function.</p>
+<p><strong>The sum of squared differences across all cables — the total variation of the signal across the network — is the Dirichlet energy <span class="math inline">\(f^\top Lf = \sum_{(i,j)\in E}(f_i - f_j)^2\)</span>, and the matrix that computes it as a quadratic form is the graph Laplacian <span class="math inline">\(L = D - A\)</span>.</strong> The physical intuition of the story — add up the squared power difference across every cable — is the algebraic proof of positive semidefiniteness: <span class="math inline">\(f^\top Lf = f^\top(D-A)f = \sum_i d_i f_i^2 - 2\sum_{(i,j)\in E}f_if_j = \sum_{(i,j)\in E}(f_i-f_j)^2 \geq 0\)</span>. The inequality holds because every term is a squared real number. This proof, which you can reconstruct in three lines using the quadratic form analysis from MATH 302, establishes that <span class="math inline">\(L\)</span> is positive semidefinite — that all its eigenvalues are non-negative — which is the foundational property that makes the graph Fourier transform well-defined as a frequency decomposition, with low eigenvalues corresponding to smooth signals and high eigenvalues corresponding to rapidly varying ones.</p>
+<p><strong>The restoring force that each cable exerts on the signal — pulling <span class="math inline">\(f_i\)</span> toward the average of its neighbors — is the action of the graph Laplacian operator <span class="math inline">\((Lf)_i = d_i f_i - \sum_{j\in\mathcal{N}(i)} f_j\)</span>, the discrete analogue of the continuous Laplacian <span class="math inline">\(\Delta f = -\nabla^2 f\)</span>.</strong> The net force on station <span class="math inline">\(i\)</span> in the story is <span class="math inline">\(\sum_{j\in\mathcal{N}(i)}(f_j - f_i) = -( d_i f_i - \sum_{j\in\mathcal{N}(i)} f_j) = -(Lf)_i\)</span>. The minus sign is conventional: the graph Laplacian <span class="math inline">\(L\)</span> is positive semidefinite, so <span class="math inline">\(Lf\)</span> points in the direction of increasing variation, while the restoring force <span class="math inline">\(-Lf\)</span> points toward the smooth equilibrium. The continuous Laplacian <span class="math inline">\(\Delta f(x) = \lim_{r\to 0} \frac{2d}{r^2}\left(\frac{1}{|B_r(x)|}\int_{B_r(x)} f(y)dy - f(x)\right)\)</span> measures how much <span class="math inline">\(f(x)\)</span> differs from its local spherical average — exactly the continuous analogue of how much <span class="math inline">\(f_i\)</span> differs from its neighborhood average <span class="math inline">\((1/d_i)\sum_{j\in\mathcal{N}(i)}f_j\)</span>. The Belkin-Niyogi convergence theorem formalizes this analogy: as the graph becomes a denser sampling of the manifold, <span class="math inline">\(\mathcal{L}_n f(x_i)/\sigma^2 \to \Delta_\mathcal{M} f(x_i)\)</span> pointwise. The graph Laplacian is not a metaphor for the continuous Laplacian — it is its discrete approximation, converging to it in the limit of dense sampling.</p>
+<hr>
+<p><strong>The drumhead’s normal modes — the natural vibration patterns of the membrane, determined entirely by its shape — are the eigenvectors <span class="math inline">\(u_1, u_2, \ldots, u_n\)</span> of the graph Laplacian, with eigenvalues <span class="math inline">\(\lambda_1 \leq \lambda_2 \leq \cdots \leq \lambda_n\)</span> measuring the frequency of each mode.</strong> The eigenvector <span class="math inline">\(u_k\)</span> satisfying <span class="math inline">\(Lu_k = \lambda_k u_k\)</span> is the <span class="math inline">\(k\)</span>-th natural frequency mode of the network: it is the signal shape that the Laplacian merely scales, not rotates. The eigenvalue <span class="math inline">\(\lambda_k = u_k^\top L u_k = \sum_{(i,j)\in E}(u_k(i) - u_k(j))^2\)</span> is the Dirichlet energy of the <span class="math inline">\(k\)</span>-th mode — the total variation of that mode across all edges. The variational characterization from the Courant-Fischer theorem makes this precise: <span class="math inline">\(u_k\)</span> is the signal of unit norm, orthogonal to all lower modes, that minimizes variation across the graph. The lowest-frequency mode <span class="math inline">\(u_1 = \mathbf{1}/\sqrt{n}\)</span> with <span class="math inline">\(\lambda_1 = 0\)</span> is the constant signal — the drumhead moving uniformly, with zero variation across any edge. The highest-frequency mode <span class="math inline">\(u_n\)</span> with <span class="math inline">\(\lambda_n = \max_{\|f\|=1} f^\top Lf\)</span> is the most rapidly varying signal — the drumhead alternating as sharply as possible between adjacent nodes. Every signal on the network is a superposition of these modes, exactly as every drumhead vibration is a superposition of normal modes.</p>
+<p><strong>The constant signal <span class="math inline">\(u_1 = \mathbf{1}/\sqrt{n}\)</span> with eigenvalue <span class="math inline">\(\lambda_1 = 0\)</span> — every station at the same power level — corresponds to the zero-frequency DC component in electrical engineering, the proof that <span class="math inline">\(L\mathbf{1} = \mathbf{0}\)</span> following from <span class="math inline">\(D\mathbf{1} = \mathbf{d}\)</span> and <span class="math inline">\(A\mathbf{1} = \mathbf{d}\)</span>.</strong> The proof is one line: <span class="math inline">\((L\mathbf{1})_i = d_i \cdot 1 - \sum_{j\in\mathcal{N}(i)} 1 = d_i - d_i = 0\)</span>. The multiplicity of <span class="math inline">\(\lambda_1 = 0\)</span> — the dimension of the null space of <span class="math inline">\(L\)</span> — equals the number of connected components of the graph. For a connected graph the null space is one-dimensional, spanned by <span class="math inline">\(\mathbf{1}\)</span>: the only signals with zero variation across all edges are the constant signals. For a disconnected graph with <span class="math inline">\(c\)</span> components, the null space is <span class="math inline">\(c\)</span>-dimensional, spanned by the indicator vectors of the components — each component can have a different constant value with no variation across any edge, because no edges cross components. This is the algebraic connectivity result from your COMP 323 Graph Theory course, now embedded in the spectral theory of the graph Fourier transform.</p>
+<p><strong>The Fiedler vector <span class="math inline">\(u_2\)</span> with eigenvalue <span class="math inline">\(\lambda_2 &gt; 0\)</span> — the smoothest non-constant signal, splitting the network into two groups — is the graph’s fundamental mode, and <span class="math inline">\(\lambda_2\)</span> is the algebraic connectivity measuring the network’s bottleneck width.</strong> The Fiedler vector minimizes <span class="math inline">\(\sum_{(i,j)\in E}(f_i-f_j)^2\)</span> subject to <span class="math inline">\(\|f\|=1\)</span> and <span class="math inline">\(f\perp\mathbf{1}\)</span>. Its sign pattern — positive values on one side of the graph’s sparsest cut, negative values on the other — identifies the two communities that the spectral clustering algorithm uses. The Fiedler value <span class="math inline">\(\lambda_2\)</span> measures how much variation is unavoidable for any non-constant signal orthogonal to <span class="math inline">\(\mathbf{1}\)</span>: a large <span class="math inline">\(\lambda_2\)</span> means the graph is well-connected and even the smoothest non-constant signal must vary substantially across some edges; a small <span class="math inline">\(\lambda_2\)</span> means the graph has a bottleneck and the Fiedler vector can place very similar values on both sides of that bottleneck while varying significantly only across the few bottleneck edges. In the GNN context, <span class="math inline">\(\lambda_2\)</span> governs the over-smoothing rate: a large spectral gap <span class="math inline">\(1-|\tilde{\lambda}_2|\)</span> means the GCN’s low-pass filter attenuates the second frequency mode rapidly, causing fast over-smoothing; a small spectral gap means slow over-smoothing and the possibility of using deeper GNNs before information collapse.</p>
+<hr>
+<p><strong>The graph Fourier transform <span class="math inline">\(\hat{f} = U^\top f\)</span> — decomposing the signal into its frequency components <span class="math inline">\(\hat{f}_k = u_k^\top f = \langle f, u_k\rangle\)</span> — is the inner product of the signal with each eigenvector, measuring how much of the <span class="math inline">\(k\)</span>-th frequency mode is present in the signal <span class="math inline">\(f\)</span>.</strong> The coefficient <span class="math inline">\(\hat{f}_k = \langle f, u_k\rangle\)</span> in the story is the projection of the power distribution <span class="math inline">\(f\)</span> onto the <span class="math inline">\(k\)</span>-th normal mode <span class="math inline">\(u_k\)</span> — how much the power distribution resembles the <span class="math inline">\(k\)</span>-th vibration pattern. The average power <span class="math inline">\(\hat{f}_1 = \langle f, \mathbf{1}/\sqrt{n}\rangle = \|f\|_1/\sqrt{n}\)</span> is the DC component. The Fiedler coefficient <span class="math inline">\(\hat{f}_2 = \langle f, u_2\rangle\)</span> measures how much the power distribution follows the fundamental network split. The inverse transform <span class="math inline">\(f = \sum_k \hat{f}_k u_k = U\hat{f}\)</span> reconstructs the signal from its frequency components — the eigenvectors form a complete orthonormal basis for <span class="math inline">\(\mathbb{R}^n\)</span>, so every signal is uniquely expressible as a superposition of frequency modes. Parseval’s identity <span class="math inline">\(\|f\|^2 = \|\hat{f}\|^2\)</span> — energy is preserved under the graph Fourier transform — is the statement that <span class="math inline">\(U\)</span> is an orthogonal matrix, so the transform is an isometry. In the story: the total power in the network is the same whether measured in the spatial domain (sum of squared station power levels) or the frequency domain (sum of squared Fourier coefficients). The Dirichlet energy in the Fourier domain <span class="math inline">\(f^\top Lf = \sum_k \lambda_k \hat{f}_k^2\)</span> is the weighted sum of squared Fourier coefficients with graph frequencies as weights — low-frequency components contribute little to the total variation; high-frequency components contribute proportionally more.</p>
+<p><strong>Spectral graph convolution <span class="math inline">\((f\star_G g) = U(\hat{f}\odot\hat{g}) = U\,\text{diag}(\hat{g})\,U^\top f = g_\theta(L)f\)</span> — pointwise multiplication of Fourier coefficients — is the graph convolution theorem, the discrete analogue of the classical convolution theorem on the circle.</strong> The filter <span class="math inline">\(g_\theta\)</span> in the story is the postmaster’s frequency-domain instruction manual: for each frequency mode, it specifies a scalar amplification factor <span class="math inline">\(\hat{g}(\lambda_k)\)</span> that scales that mode’s contribution to the filtered signal. A low-pass filter sets <span class="math inline">\(\hat{g}(\lambda_k)\)</span> close to <span class="math inline">\(1\)</span> for small <span class="math inline">\(\lambda_k\)</span> and close to <span class="math inline">\(0\)</span> for large <span class="math inline">\(\lambda_k\)</span> — it retains the smooth components and attenuates the rapidly varying ones, making neighboring stations more similar. A high-pass filter does the opposite. The GCN’s propagation matrix <span class="math inline">\(\hat{\tilde{A}}\)</span> with eigenvalues in <span class="math inline">\((0,1]\)</span> is a low-pass filter in this sense: <span class="math inline">\(\hat{g}(\lambda_k) = \tilde{\lambda}_k \in (0,1]\)</span>, attenuating every non-zero frequency while preserving the zero-frequency mode exactly. This is the spectral fact that makes the spatial intuition of the GCN precise: the GCN smooths the node features across the graph, retaining the globally consistent (low-frequency) components and attenuating the locally idiosyncratic (high-frequency) components.</p>
+<hr>
+<p><strong>The three breaks of naive spectral filtering — <span class="math inline">\(O(n^3)\)</span> eigendecomposition, non-transferability across graphs, and non-locality — are three independent failures of the free spectral filter <span class="math inline">\(g_\theta(L) = U\,\text{diag}(\theta_1,\ldots,\theta_n)\,U^\top\)</span>, each requiring the polynomial filter restriction to resolve.</strong> The first break — eigendecomposition costs <span class="math inline">\(O(n^3)\)</span> — is resolved by the polynomial filter <span class="math inline">\(g_\theta(L) = \sum_{k=0}^K \theta_k L^k\)</span>, which evaluates as <span class="math inline">\(K\)</span> sparse matrix-vector products at cost <span class="math inline">\(O(Km)\)</span>. The second break — <span class="math inline">\(n\)</span> free parameters tied to specific eigenvalues of the training graph — is resolved by parameterizing <span class="math inline">\(\hat{g}\)</span> as a function of <span class="math inline">\(\lambda\)</span> rather than a free value per eigenvalue: the same polynomial coefficients <span class="math inline">\(\theta_0,\ldots,\theta_K\)</span> can be evaluated at any graph’s eigenvalues, giving a transferable filter. The third break — global coupling of all nodes — is resolved by the locality theorem: <span class="math inline">\((L^k)_{ij} = 0\)</span> for <span class="math inline">\(\text{dist}_G(i,j) &gt; k\)</span>, so a degree-<span class="math inline">\(K\)</span> polynomial filter computes a <span class="math inline">\(K\)</span>-hop local operation. The locality theorem’s proof by induction — <span class="math inline">\(L^k\)</span> has nonzero <span class="math inline">\((i,j)\)</span> entry only if there is a path of length at most <span class="math inline">\(k\)</span> from <span class="math inline">\(i\)</span> to <span class="math inline">\(j\)</span>, by the triangle inequality on shortest-path distances — is the precise spectral explanation for why the spatial GNN from Topic 1 is local. Spatial locality and spectral polynomial filtering are the same constraint, described from two different mathematical viewpoints.</p>
+<p><strong>The Chebyshev polynomial basis <span class="math inline">\(T_k\)</span> — optimal for approximating smooth functions on <span class="math inline">\([-1,1]\)</span> in the minimax sense — is the choice of polynomial basis that minimizes the maximum approximation error for any smooth spectral filter <span class="math inline">\(\hat{g}: [-1,1]\to\mathbb{R}\)</span>.</strong> The rescaling <span class="math inline">\(\tilde{L} = 2L/\lambda_{\max} - I\)</span> maps the Laplacian’s eigenvalues from <span class="math inline">\([0,\lambda_{\max}]\)</span> to <span class="math inline">\([-1,1]\)</span>, placing them in the domain where the Chebyshev polynomials are optimal. The recurrence <span class="math inline">\(T_k(\tilde{L})f = 2\tilde{L}T_{k-1}(\tilde{L})f - T_{k-2}(\tilde{L})f\)</span> — applied with <span class="math inline">\(T_0(\tilde{L})f = f\)</span> and <span class="math inline">\(T_1(\tilde{L})f = \tilde{L}f\)</span> — computes the Chebyshev-filtered signal using only sparse matrix-vector multiplications, with no eigendecomposition. The <span class="math inline">\(K+1\)</span> learnable parameters <span class="math inline">\(\theta_0,\ldots,\theta_K\)</span> are the Chebyshev expansion coefficients of the learned filter — the discrete analogue of the Fourier coefficients that represent a periodic function as a sum of harmonics, now representing a spectral filter as a sum of Chebyshev polynomials. The orthogonality of Chebyshev polynomials under the weight <span class="math inline">\((1-x^2)^{-1/2}\)</span> ensures that the learned coefficients are independent — tuning <span class="math inline">\(\theta_k\)</span> adjusts the filter at frequency scale <span class="math inline">\(k\)</span> without disturbing the other scales, giving the optimization landscape a diagonal Hessian structure in the Chebyshev basis.</p>
+<hr>
+<p><strong>The three steps recovering GCN from ChebNet — setting <span class="math inline">\(K=1\)</span>, constraining <span class="math inline">\(\theta_0 = -\theta_1 = \theta\)</span>, applying the renormalization trick — are three successive approximations that trade expressive power for computational efficiency and numerical stability.</strong> Setting <span class="math inline">\(K=1\)</span> restricts the filter to one-hop locality: the filtered value at station <span class="math inline">\(i\)</span> depends only on <span class="math inline">\(i\)</span> itself and its direct neighbors, not on two-hop or further nodes. This is the most aggressive spatial localization possible — a single message passing step. Constraining <span class="math inline">\(\theta_0 = -\theta_1 = \theta\)</span> halves the parameter count from two to one: the filter becomes <span class="math inline">\(\theta(I + \hat{A})f\)</span>, a self-weight and neighbor-aggregation combined in a single scalar. This is exactly the two-parameter family <span class="math inline">\(h_i \mapsto \alpha h_i + \beta\sum_{j\in\mathcal{N}(i)} h_j\)</span> from Chapter 1’s Schur’s lemma derivation, now with the additional constraint <span class="math inline">\(\alpha = \beta = \theta\)</span> imposed by the spectral approximation. The renormalization trick <span class="math inline">\(I + \hat{A} \to \hat{\tilde{A}}\)</span> — adding self-loops and renormalizing — maps eigenvalues from <span class="math inline">\([0,2]\)</span> to <span class="math inline">\((0,1]\)</span>, ensuring that the GCN propagation matrix is a contraction: no eigenvalue exceeds <span class="math inline">\(1\)</span>, preventing the exponential growth of activations across layers. The renormalization is numerically necessary but spectrally consequential: it shifts the filter’s passband slightly, making the GCN’s low-pass behavior more pronounced. The GCN layer <span class="math inline">\(H^{(k)} = \sigma(\hat{\tilde{A}}H^{(k-1)}W^{(k)})\)</span> is the unique neural network layer that results from applying all three approximations to the principled spectral convolution framework — it is derived, not designed.</p>
+<hr>
+<p><strong>The over-smoothing phenomenon — node representations converging to <span class="math inline">\(\mathbf{d}\mathbf{d}^\top H/\|\mathbf{d}\|^2\)</span> as depth increases — is iterative low-pass filtering, inevitable for any filter whose spectral transfer function satisfies <span class="math inline">\(|\hat{g}(\lambda_k)| &lt; 1\)</span> for all <span class="math inline">\(\lambda_k &gt; 0\)</span>.</strong> The eigenvalues of <span class="math inline">\(\hat{\tilde{A}}\)</span> lie in <span class="math inline">\((0,1]\)</span>, with <span class="math inline">\(\tilde{\lambda}_1 = 1\)</span> for the zero-frequency mode <span class="math inline">\(\mathbf{d}/\|\mathbf{d}\|\)</span> and <span class="math inline">\(\tilde{\lambda}_k &lt; 1\)</span> for all <span class="math inline">\(k &gt; 1\)</span>. Applying <span class="math inline">\(\hat{\tilde{A}}\)</span> repeatedly multiplies each Fourier coefficient <span class="math inline">\(\hat{h}_k\)</span> by <span class="math inline">\(\tilde{\lambda}_k^K\)</span>. As <span class="math inline">\(K\to\infty\)</span>, <span class="math inline">\(\tilde{\lambda}_k^K \to 0\)</span> for all <span class="math inline">\(k &gt; 1\)</span>, while <span class="math inline">\(\tilde{\lambda}_1^K = 1\)</span> is preserved. The signal collapses to its zero-frequency projection — the degree-weighted average of all node features — losing all structural information. In the story: after infinitely many rounds of letter exchange with the smoothing postmaster (who always averages toward neighbors), every station’s profile converges to the same degree-weighted national average, and no station retains any local identity. The spectral gap <span class="math inline">\(1 - \tilde{\lambda}_2\)</span> is the rate of this collapse: it governs how quickly the second frequency mode — the one carrying the most structural information after the constant — is attenuated. Residual connections <span class="math inline">\(h_i^{(k)} = h_i^{(k-1)} + \text{AGG}(\cdot)\)</span> add a term with eigenvalue <span class="math inline">\(1\)</span> at all frequencies — spectrally, they add the identity filter <span class="math inline">\(g(L) = I\)</span> (all frequencies preserved with unit gain) to the low-pass filter, creating a filter with <span class="math inline">\(\hat{g}(\lambda_k) = 1 + \tilde{\lambda}_k &gt; 1\)</span> for non-zero frequencies, which prevents the collapse. Jumping knowledge connections preserve the intermediate representations from all layers, concatenating signals at every stage of the low-pass filtering process and retaining the high-frequency information that early layers still carry before it is attenuated away.</p>
+<hr>
+<p><strong>The Laplace-Beltrami operator <span class="math inline">\(\Delta_\mathcal{M} = \text{div}(\text{grad}\,f)\)</span> — the generalization of the Euclidean Laplacian to curved Riemannian manifolds — is the object that the graph Laplacian approximates, and its eigenfunctions are the manifold analogues of the graph Fourier basis vectors.</strong> On the circle <span class="math inline">\(S^1\)</span>, <span class="math inline">\(\Delta_{S^1}\)</span> has eigenfunctions <span class="math inline">\(e^{in\theta}\)</span> with eigenvalues <span class="math inline">\(n^2\)</span> — these are the Fourier basis functions of classical signal processing. On the sphere <span class="math inline">\(S^2\)</span>, <span class="math inline">\(\Delta_{S^2}\)</span> has eigenfunctions <span class="math inline">\(Y_\ell^m\)</span> with eigenvalues <span class="math inline">\(\ell(\ell+1)\)</span> — these are the spherical harmonics of Chapter 1’s <span class="math inline">\(SO(3)\)</span> representation theory. On a general manifold, <span class="math inline">\(\Delta_\mathcal{M}\)</span> has eigenfunctions that form the manifold Fourier basis — the natural frequency decomposition of signals defined on that manifold. The Belkin-Niyogi convergence theorem <span class="math inline">\(\mathcal{L}_n f(x_i)/\sigma^2 \to \Delta_\mathcal{M}f(x_i)\)</span> is the mathematical bridge between discrete and continuous: it says that the graph Laplacian built from a dense point cloud sampling of a manifold converges to the Laplace-Beltrami operator of that manifold, so the graph Fourier transform converges to the manifold Fourier transform, and graph convolution converges to manifold convolution. This convergence is not merely theoretical — it is the justification for using graph-based methods on manifold-valued data, and it is the foundation of the Laplacian eigenmaps algorithm that Chapter 3 builds on.</p>
+<p><strong>The Laplacian eigenmap <span class="math inline">\(\Phi: x_i \mapsto (u_2(i), u_3(i), \ldots, u_{d+1}(i))\)</span> — embedding high-dimensional data into <span class="math inline">\(\mathbb{R}^d\)</span> using the <span class="math inline">\(d\)</span> lowest-frequency eigenvectors of the graph Laplacian — is the spectral solution to the manifold learning problem: find a low-dimensional representation that preserves the graph’s local geometric structure.</strong> The optimization <span class="math inline">\(\min_{Y^\top DY = I}\sum_{(i,j)\in E}W_{ij}\|y_i-y_j\|^2 = \min_{Y^\top DY=I}\text{tr}(Y^\top LY)\)</span> is solved by the <span class="math inline">\(d\)</span> eigenvectors of smallest nonzero eigenvalue — the <span class="math inline">\(d\)</span> smoothest non-constant signals on the graph, which change as little as possible across nearby data points. The embedding coordinates are the graph Fourier coefficients of the data points — the extent to which each point participates in each low-frequency mode. The constraint <span class="math inline">\(Y^\top DY = I\)</span> is the degree-weighted orthonormality that prevents the trivial collapsed solution and fixes the arbitrary scale and rotation of the embedding. Chapter 3 will build on exactly this construction, extending it from the static embedding setting to the dynamic setting where the manifold structure is learned jointly with the neural network’s feature representations.</p>
+<hr>
+<p><strong>The connection to MATH 302 is complete.</strong> The positive semidefiniteness proof <span class="math inline">\(f^\top Lf = \sum_{(i,j)\in E}(f_i-f_j)^2 \geq 0\)</span> is a direct application of quadratic form analysis — the Cholesky factorization <span class="math inline">\(L = B^\top B\)</span> (incidence matrix) is the explicit PSD factorization from MATH 302. The spectral theorem <span class="math inline">\(L = U\Lambda U^\top\)</span> is the eigendecomposition of a real symmetric matrix — the central result of MATH 302. The Courant-Fischer characterization of eigenvalues as minimax of the Rayleigh quotient <span class="math inline">\(\lambda_k = \min_{\dim S=k}\max_{f\in S,\|f\|=1}f^\top Lf/\|f\|^2\)</span> is the variational result from MATH 302 that gives the frequency interpretation of eigenvalues. <strong>The connection to MATH 213 and MATH 325 is equally complete.</strong> The graph Fourier transform <span class="math inline">\(\hat{f} = U^\top f\)</span> is the finite-dimensional analogue of the Fourier series projection <span class="math inline">\(\hat{f}_n = \langle f, e^{in\theta}\rangle_{L^2}\)</span> from Analysis — both decompose a function into eigenfunctions of the Laplacian on the relevant domain. Parseval’s identity is the same theorem in both settings. The Belkin-Niyogi convergence is operator convergence in the sense of functional analysis from Analysis II. <strong>The connection to COMP 323 is equally direct.</strong> The Fiedler value <span class="math inline">\(\lambda_2\)</span>, the Cheeger inequality <span class="math inline">\(h(G)^2/2 \leq \lambda_2 \leq 2h(G)\)</span>, and the spectral clustering algorithm are all from Graph Theory — now embedded in the GNN framework as the quantities governing over-smoothing rate and the information content of graph frequency modes.</p>
+<hr>
+<p>The Nepal Telecom radio network — its stations, cables, power levels, frequency modes, Fourier decomposition, polynomial filters, and Chebyshev approximation — is now completely dissolved into its mathematical form. The station power levels are <span class="math inline">\(f \in \mathbb{R}^n\)</span>. The total variation is <span class="math inline">\(f^\top Lf\)</span>. The Laplacian is <span class="math inline">\(L = D-A\)</span>. The normal modes are eigenvectors <span class="math inline">\(u_k\)</span> with frequencies <span class="math inline">\(\lambda_k\)</span>. The graph Fourier transform is <span class="math inline">\(\hat{f} = U^\top f\)</span>. Spectral convolution is <span class="math inline">\(g_\theta(L)f\)</span>. The three breaks demand polynomial filters. Chebyshev polynomials give ChebNet. First-order approximation plus renormalization gives GCN. Over-smoothing is iterative low-pass filtering. The graph Laplacian converges to the Laplace-Beltrami operator. The Laplacian eigenmaps are the low-frequency eigenvectors used as manifold coordinates.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

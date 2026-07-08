@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>manifolds – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#topic-1---manifolds" id="toc-topic-1---manifolds" class="nav-link active" data-scroll-target="#topic-1---manifolds">Topic 1 - Manifolds</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  </ul></li>
+  <li><a href="#subtopic---charts-atlases-and-smooth-maps" id="toc-subtopic---charts-atlases-and-smooth-maps" class="nav-link" data-scroll-target="#subtopic---charts-atlases-and-smooth-maps">Subtopic - Charts, Atlases, and Smooth Maps</a>
+  <ul class="collapse">
+  <li><a href="#layer-1-story" id="toc-layer-1-story" class="nav-link" data-scroll-target="#layer-1-story">Layer 1 (Story)</a></li>
+  <li><a href="#layer-2-mathematics" id="toc-layer-2-mathematics" class="nav-link" data-scroll-target="#layer-2-mathematics">Layer 2 (Mathematics)</a></li>
+  <li><a href="#layer-3-bridge" id="toc-layer-3-bridge" class="nav-link" data-scroll-target="#layer-3-bridge">Layer 3 (Bridge)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<section id="topic-1---manifolds" class="level1">
+<h1>Topic 1 - Manifolds</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>You have spent all of Chapter 1 and Chapter 2 working in <span class="math inline">\(\mathbb{R}^n\)</span> — flat, infinite, featureless Euclidean space. Every point has global coordinates. Every vector has a fixed meaning regardless of where you are. Every straight line stays straight forever. The geometry is the same everywhere, at every scale, in every direction. This flatness is not a feature of the world — it is an idealization that makes mathematics easier to set up and harder to apply correctly.</p>
+<p>The spaces that actually matter for the roadmap are not flat. The rotation group <span class="math inline">\(SO(3)\)</span> — the space of all ways to orient a rigid body in three dimensions — is a three-dimensional curved manifold that wraps around on itself, with no global coordinate system that does not distort the geometry somewhere. The space of all normalized probability distributions over <span class="math inline">\(\mathbb{R}^n\)</span> — the simplex, or its infinite-dimensional analogue — is a curved surface whose natural geometry is given by the Fisher information metric, not the Euclidean metric. The configuration space of a protein backbone — the space of all physically realizable backbone geometries — is a product of circles and tori, with periodicity and curvature built in. In every case, the space is locally flat — zoom in far enough and any small patch looks like a piece of <span class="math inline">\(\mathbb{R}^n\)</span> — but globally curved, with topology and geometry that cannot be captured by any single flat coordinate system.</p>
+<p>A manifold is the precise mathematical object that formalizes this idea: a space that is locally Euclidean but globally curved. The definition is built from three concepts — charts, atlases, and smooth maps — each one adding a layer of structure that makes the local-Euclidean intuition precise and computationally workable.</p>
+<p>A <strong>chart</strong> is a local coordinate system — a map from a patch of the manifold to a patch of <span class="math inline">\(\mathbb{R}^n\)</span> that lets you do calculus locally. Think of the individual pages of a road atlas of Nepal: each page covers a local region of the country with a flat grid, useful for navigating within that region, but incapable of representing the whole country consistently without distortion. The chart is the single page — the local flat representation. It assigns coordinates to every point in its patch, and these coordinates let you write down functions, compute derivatives, and apply all the tools of flat-space calculus within that patch.</p>
+<p>An <strong>atlas</strong> is the complete collection of charts covering the entire manifold — every page of the road atlas together, covering the whole country. Since the manifold is globally curved, no single chart can cover it without distortion or singularities. The atlas assembles many charts, each covering a local patch, with the crucial requirement that wherever two charts overlap — wherever two pages of the road atlas cover the same region — the transition between them is smooth. The overlap maps — called transition functions or change of coordinates maps — must be smooth invertible functions from <span class="math inline">\(\mathbb{R}^n\)</span> to <span class="math inline">\(\mathbb{R}^n\)</span>. This smoothness requirement is what makes the atlas coherent: you can move from one chart to another without any discontinuity or loss of differentiability, so calculus done in one chart is compatible with calculus done in another.</p>
+<p><strong>Smooth maps</strong> between manifolds are the functions that respect the smooth structure — functions that, when expressed in any pair of charts, are smooth in the ordinary calculus sense. A smooth map from one manifold to another is the curved-space generalization of a smooth function from <span class="math inline">\(\mathbb{R}^n\)</span> to <span class="math inline">\(\mathbb{R}^m\)</span>. The push-forward of a measure under a smooth map — which you studied in Topic 5 of Chapter 1 — is the push-forward of a measure under a smooth map between manifolds, and it requires the map to be smooth in exactly this chart-compatible sense. Every generative model in Phase 3 that operates on a manifold is a smooth map between manifolds — or an approximation to one — and the smooth map structure is what ensures that the push-forward density formula and the change of variables theorem apply.</p>
+<p>This topic has three subtopics corresponding to the three concepts.</p>
+<p>The first subtopic is <strong>Charts</strong> — the local coordinate systems that make calculus possible on a manifold. The key idea is that a chart is not the manifold itself but a window onto it, and the window can only be used locally. Different charts give different coordinate representations of the same point, and the same function can look very different in different charts.</p>
+<p>The second subtopic is <strong>Atlases</strong> — the global assembly of charts with smooth transition functions. The key idea is that the atlas is the complete specification of the manifold’s smooth structure — two atlases on the same topological space can give it different smooth structures, making it a different manifold in the differential-geometric sense.</p>
+<p>The third subtopic is <strong>Smooth Maps</strong> — the morphisms of the category of smooth manifolds, the functions that are compatible with the smooth structure. The key ideas are diffeomorphisms — smooth maps with smooth inverses, the curved-space generalization of linear isomorphisms — and immersions and embeddings — smooth maps that preserve the local structure of the domain manifold inside the target.</p>
+<p>By the end of this topic, when someone says “the data lies on a manifold,” you will not hear a vague metaphor about low-dimensional structure hidden in high-dimensional space. You will see the precise mathematical claim: there exists a manifold <span class="math inline">\(M\)</span> of dimension <span class="math inline">\(d &lt; n\)</span>, equipped with an atlas of charts and smooth transition functions, such that the data distribution is supported on <span class="math inline">\(M\)</span> as a subset of <span class="math inline">\(\mathbb{R}^n\)</span>, and every function computed on the data is a smooth map from <span class="math inline">\(M\)</span> to the output space. The manifold hypothesis — one of the foundational assumptions of modern machine learning — is a precise mathematical statement, and the tools of this topic are what make it precise.</p>
+<p><strong>ALL THREE SUBTOPICS ARE TREATED AS A SINGLE SUBTOPIC FOR EASY COMPREHENSION.</strong></p>
+<hr>
+</section>
+</section>
+<section id="subtopic---charts-atlases-and-smooth-maps" class="level1">
+<h1>Subtopic - Charts, Atlases, and Smooth Maps</h1>
+<section id="layer-1-story" class="level2">
+<h2 class="anchored" data-anchor-id="layer-1-story">Layer 1 (Story)</h2>
+<p>You are a cartographer working for the Survey Department of Nepal, and you have been given the most ambitious assignment in the department’s history: produce a complete, mathematically rigorous map of the entire Himalayan region — not just Nepal, but the full arc from the Karakoram in the northwest to the eastern Himalayas in Arunachal Pradesh. The region spans thousands of kilometres, rises from river valleys at 300 metres to Everest at 8,849 metres, curves with the surface of the Earth, and contains topological features — passes, ridges, cirques, glaciers — that no single flat sheet of paper can represent faithfully across its full extent.</p>
+<p>You know from the outset that the task is fundamentally impossible with a single map. The Earth’s surface is curved — it is a sphere, approximately — and a sphere cannot be flattened onto a plane without distortion. Every flat map of a large region distorts something: either areas, or angles, or distances, or all three simultaneously. The Mercator projection preserves angles but wildly distorts areas near the poles. The equal-area projections preserve areas but distort shapes. No single flat representation is faithful to all geometric properties of the curved surface simultaneously. This is not a limitation of technology or skill — it is a mathematical theorem, a consequence of the intrinsic curvature of the sphere.</p>
+<p>Your solution, developed over months of fieldwork and calculation, is to abandon the goal of a single faithful flat map and instead produce a collection of local maps — each one covering a manageable patch of the Himalayan arc, each one accurate within its patch, and each one connected to its neighbors by precise rules for translating between overlapping regions. Taken together, these local maps constitute a complete and rigorous representation of the curved surface.</p>
+<p>This collection of local maps, with its translation rules and its completeness, is an <strong>atlas</strong>. Each individual local map is a <strong>chart</strong>. And the functions that process geographic data consistently across the entire atlas — computing distances, finding shortest paths, modeling climate — are the <strong>smooth maps</strong> on the manifold.</p>
+<hr>
+<p>Let us build the story in layers, introducing each concept through the cartographic work.</p>
+<p><strong>The Survey Region and the Manifold</strong></p>
+<p>The Himalayan surface — the two-dimensional curved terrain that your department is mapping — is the manifold <span class="math inline">\(M\)</span>. It is a two-dimensional object: at every point, you can move in two independent directions — east-west and north-south, roughly — and these two directions span the local tangent plane to the surface. But it is not flat: the surface curves, rises, falls, wraps around peaks and descends into valleys. No single global coordinate system — no single choice of latitude and longitude, or easting and northing — faithfully represents the surface’s geometry across its full extent without distortion.</p>
+<p>The manifold <span class="math inline">\(M\)</span> is not defined by any particular coordinate system. It exists independently of how you choose to represent it. The coordinates are the tool you use to do calculations on <span class="math inline">\(M\)</span>, not the thing itself. This distinction — between the manifold as an intrinsic geometric object and the coordinate systems used to represent it — is the first and most important idea of differential geometry.</p>
+<p><strong>Charts — The Local Maps</strong></p>
+<p>Your survey team divides the Himalayan arc into overlapping patches — the Everest region, the Annapurna region, the Kangchenjunga region, and so on. For each patch, the team conducts a local survey and produces a flat map: a precise assignment of two-dimensional coordinates <span class="math inline">\((u, v)\)</span> — easting and northing in the local coordinate system — to every point in the patch. This assignment is the <strong>chart</strong>.</p>
+<p>Formally, a chart is a pair <span class="math inline">\((U, \phi)\)</span> where <span class="math inline">\(U\)</span> is an open patch of the manifold <span class="math inline">\(M\)</span> — the region covered by the local map — and <span class="math inline">\(\phi: U \to \mathbb{R}^2\)</span> is a function that assigns flat coordinates to every point in <span class="math inline">\(U\)</span>. The function <span class="math inline">\(\phi\)</span> must be a bijection onto its image — every point in <span class="math inline">\(U\)</span> gets a unique coordinate pair, and every coordinate pair in the image corresponds to a unique point in <span class="math inline">\(U\)</span>. It must also be continuous in both directions — small movements on the terrain correspond to small movements in the coordinate plane, and vice versa. The chart <span class="math inline">\(\phi\)</span> is the map-making operation: it flattens the local patch <span class="math inline">\(U\)</span> onto a piece of paper, assigning coordinates to every point.</p>
+<p>For a small enough patch — say, the area immediately around Everest Base Camp — the local flat map is accurate for all practical purposes. The curvature of the Earth is negligible at this scale, and the flat coordinate system faithfully represents distances, angles, and areas within the patch. But the patch cannot be extended indefinitely: push it far enough and the curvature accumulates, distortions appear, and the flat representation fails. Every chart is only valid locally — it is accurate within its patch and nowhere else.</p>
+<p><strong>The Atlas — The Complete Collection</strong></p>
+<p>No single chart covers the entire Himalayan arc. Your department needs many charts — overlapping local maps covering the full region, each accurate within its patch. The complete collection of charts <span class="math inline">\(\{(U_\alpha, \phi_\alpha)\}\)</span>, where the patches <span class="math inline">\(\{U_\alpha\}\)</span> together cover every point of the manifold, is the <strong>atlas</strong>.</p>
+<p>But the atlas is not merely a collection of independent maps. The maps must be consistent with each other wherever they overlap. Suppose the Everest chart and the Cho Oyu chart both cover a shared border region — the high plateau between the two massifs. A trekker’s position in this overlap region has two coordinate representations: one from the Everest chart, one from the Cho Oyu chart. The relationship between these two coordinate representations — the rule for converting from one chart’s coordinates to the other’s — is the <strong>transition function</strong> or <strong>change of coordinates map</strong>.</p>
+<p>For the atlas to be coherent — for calculations done in one chart to be compatible with calculations done in another — the transition functions must be smooth. If the Everest chart assigns coordinates <span class="math inline">\((u_1, v_1)\)</span> to a point <span class="math inline">\(p\)</span> in the overlap, and the Cho Oyu chart assigns coordinates <span class="math inline">\((u_2, v_2)\)</span> to the same point, the transition function <span class="math inline">\(\tau_{12}\)</span> satisfies <span class="math inline">\((u_2, v_2) = \tau_{12}(u_1, v_1)\)</span>. Smoothness of <span class="math inline">\(\tau_{12}\)</span> means: small movements in the Everest coordinates correspond to small, predictable movements in the Cho Oyu coordinates, with no jumps, kinks, or discontinuities. The transition function is smooth and invertible — it is a diffeomorphism from an open subset of <span class="math inline">\(\mathbb{R}^2\)</span> to another open subset of <span class="math inline">\(\mathbb{R}^2\)</span>.</p>
+<p>This smoothness requirement is what elevates a mere collection of local maps into a smooth manifold. Without it, you could have a perfectly good topological space — points with neighborhoods that look like <span class="math inline">\(\mathbb{R}^n\)</span> — but no consistent notion of differentiability. The smooth atlas is what makes calculus possible: it lets you take derivatives of functions on the manifold by working in any chart, with the guarantee that the answer does not depend on which chart you chose.</p>
+<hr>
+<p><strong>The Break Moment: The Sphere Cannot Be Covered by a Single Chart</strong></p>
+<p>Here is the break moment. The naive assumption is that for any manifold — any curved surface — you can find a single chart covering the entire thing. After all, for a small enough patch any surface looks flat, and if you just make your chart large enough, surely you can cover everything?</p>
+<p>This breaks for the simplest possible manifold: the sphere <span class="math inline">\(S^2\)</span>. Consider the unit sphere — the surface of a globe. Can you assign continuous, bijective flat coordinates to every point on the sphere simultaneously?</p>
+<p>No.&nbsp;The proof is topological: the sphere is compact — bounded and closed — but <span class="math inline">\(\mathbb{R}^2\)</span> is not compact. A continuous bijection from a compact space to a non-compact space cannot have a continuous inverse, so it cannot be a valid chart. More intuitively: imagine trying to flatten an orange peel into a flat sheet without tearing or overlapping. It is impossible — the curvature of the sphere prevents it. Any attempt to flatten the entire sphere onto a plane must either tear the surface (creating a discontinuity) or overlap some regions (failing bijectivity) or distort the boundary infinitely (failing the continuity of the inverse).</p>
+<p>The standard resolution uses two charts: the stereographic projection from the north pole covers the entire sphere except the north pole itself, and the stereographic projection from the south pole covers the entire sphere except the south pole. Together, these two charts cover every point of the sphere, with a smooth transition function in their overlap region — the sphere minus both poles. Two charts suffice for the sphere. The torus <span class="math inline">\(T^2\)</span> requires at least four charts. The projective plane requires at least two charts. Every curved manifold requires at least as many charts as its topology demands — and the minimum number of charts needed is a topological invariant, a property of the manifold’s global shape that no local description can see.</p>
+<p>This break moment crystallizes the central lesson: a manifold is fundamentally a multi-chart object. The requirement of a global coordinate system is too strong — the world simply does not have one. The atlas of overlapping local charts, with smooth transition functions, is the correct and minimal structure for doing calculus on curved spaces.</p>
+<hr>
+<p><strong>Smooth Maps — Functions Between Manifolds</strong></p>
+<p>Your survey department does not just make maps — it uses them. Climatologists model temperature and precipitation as functions on the Himalayan surface. Geologists model rock stress and fault orientation as vector fields on the surface. Trekking agencies compute shortest paths between points. All of these are mathematical functions defined on the manifold, and for them to be well-defined and computable, they must be compatible with the atlas — they must be smooth in the chart sense.</p>
+<p>A function <span class="math inline">\(f: M \to \mathbb{R}\)</span> — say, the temperature field over the Himalayas — is <strong>smooth</strong> if, in every chart <span class="math inline">\((U, \phi)\)</span>, the composition <span class="math inline">\(f \circ \phi^{-1}: \phi(U) \to \mathbb{R}\)</span> is a smooth function in the ordinary calculus sense. The composition <span class="math inline">\(f \circ \phi^{-1}\)</span> is the temperature field expressed in the local coordinates of the chart — it takes flat coordinates <span class="math inline">\((u,v)\)</span> and returns the temperature at the corresponding point. Smoothness of this composition, in every chart, is what it means for the temperature field to be smooth on the manifold. The definition is chart-independent: if <span class="math inline">\(f \circ \phi^{-1}\)</span> is smooth in one chart and the transition functions are smooth, then <span class="math inline">\(f \circ \psi^{-1}\)</span> is automatically smooth in every other chart <span class="math inline">\(\psi\)</span> overlapping with <span class="math inline">\(\phi\)</span>.</p>
+<p>More generally, a <strong>smooth map</strong> <span class="math inline">\(F: M \to N\)</span> between two manifolds is a function that, when expressed in any pair of charts <span class="math inline">\((U, \phi)\)</span> on <span class="math inline">\(M\)</span> and <span class="math inline">\((V, \psi)\)</span> on <span class="math inline">\(N\)</span>, gives a smooth function <span class="math inline">\(\psi \circ F \circ \phi^{-1}: \phi(U \cap F^{-1}(V)) \to \mathbb{R}^m\)</span> from an open subset of <span class="math inline">\(\mathbb{R}^n\)</span> to <span class="math inline">\(\mathbb{R}^m\)</span>. This is the chart-by-chart smoothness condition — the function is smooth in the manifold sense if and only if it is smooth in the flat-space sense when expressed in any valid pair of charts.</p>
+<p>The most important smooth maps for the roadmap are <strong>diffeomorphisms</strong> — smooth maps with smooth inverses. A diffeomorphism <span class="math inline">\(F: M \to N\)</span> is a bijection that is smooth in both directions. Diffeomorphisms are the isomorphisms of smooth manifolds — two manifolds related by a diffeomorphism are geometrically identical, differing only in the names of their points. The push-forward of a measure under a diffeomorphism — the foundational operation of every generative model — requires the map to be a diffeomorphism, because the change of variables formula for the push-forward density involves the Jacobian of the map, which only exists and is invertible when the map is a diffeomorphism.</p>
+<hr>
+<p><strong>The Manifold Hypothesis in Machine Learning</strong></p>
+<p>Your survey department’s situation is the exact situation of every machine learning model working with high-dimensional data. The raw data — images, molecules, protein backbones, audio waveforms — lives in a very high-dimensional space: an image with <span class="math inline">\(256 \times 256\)</span> pixels lives in <span class="math inline">\(\mathbb{R}^{65536}\)</span>. But the data does not fill this space uniformly. Images of natural scenes occupy a tiny, curved, low-dimensional submanifold of pixel space — the manifold of natural images. Protein backbone geometries occupy a curved submanifold of atomic coordinate space — the manifold of physically realizable backbones. Spoken language occupies a curved submanifold of audio waveform space.</p>
+<p>The <strong>manifold hypothesis</strong> is the claim that real-world data lies on or near a low-dimensional smooth manifold embedded in the high-dimensional ambient space. If this hypothesis is correct — and empirical evidence strongly supports it for natural images, speech, and biomolecular data — then the correct mathematical framework for working with this data is differential geometry, not flat Euclidean geometry. Distances should be measured along the manifold, not through the ambient space. Gradients should point along the manifold, not in the ambient space direction. Shortest paths should follow the manifold’s geodesics, not Euclidean straight lines that cut through the off-manifold void.</p>
+<p>The manifold hypothesis is why Phase 3 of the roadmap requires Riemannian flow matching on manifolds rather than flat-space flow matching. A diffusion model that operates in flat Euclidean space generates samples that spread through the full ambient space, wasting probability mass on off-manifold regions that contain no real data. A diffusion model that operates on the data manifold — respecting its curvature, its topology, its geodesic distances — concentrates probability mass exactly where the data lives and generates samples that are guaranteed to be on the manifold. The chart, atlas, and smooth map structure of this topic is the foundation that makes manifold-respecting generative models possible.</p>
+<hr>
+<p>Hold three pictures simultaneously. The cartographer’s atlas of the Himalayan arc: many overlapping local maps, each accurate within its patch, connected by smooth transition functions, together covering the entire curved terrain without any single map claiming to be globally faithful. The sphere that breaks the single-chart assumption: a closed curved surface that provably cannot be covered by any single coordinate system, requiring at least two charts, demonstrating that global coordinates are a luxury of flat spaces. And the machine learning data manifold: a low-dimensional curved surface hidden inside a high-dimensional ambient space, whose correct geometry requires the full apparatus of charts, atlases, and smooth maps to describe, and whose generative models require operations that respect that geometry rather than the ambient Euclidean structure.</p>
+<hr>
+</section>
+<section id="layer-2-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="layer-2-mathematics">Layer 2 (Mathematics)</h2>
+<p>We build the formalism in six stages: topological manifolds as the base structure, smooth atlases and the smooth manifold definition, smooth functions and maps between manifolds, diffeomorphisms and their properties, submanifolds and embeddings, and finally the tangent map induced by a smooth map — the construction that connects this topic to the next subtopic on tangent bundles.</p>
+<section id="topological-manifolds" class="level3">
+<h3 class="anchored" data-anchor-id="topological-manifolds">Topological Manifolds</h3>
+<p>Before introducing smoothness, we need the base topological structure.</p>
+<p>A <strong>topological manifold of dimension <span class="math inline">\(n\)</span></strong> is a topological space <span class="math inline">\(M\)</span> satisfying three conditions:</p>
+<p><span class="math display">\[\text{(i) } M \text{ is Hausdorff: any two distinct points have disjoint open neighborhoods}\]</span> <span class="math display">\[\text{(ii) } M \text{ is second countable: } M \text{ has a countable basis for its topology}\]</span> <span class="math display">\[\text{(iii) } M \text{ is locally Euclidean of dimension } n\text{: every point } p \in M \text{ has an open neighborhood homeomorphic to an open subset of } \mathbb{R}^n\]</span></p>
+<p>The Hausdorff condition prevents pathological identifications of distinct points. Second countability ensures the manifold is not too large — it rules out long line constructions and ensures partitions of unity exist. Local Euclidean-ness is the core condition: the manifold looks like <span class="math inline">\(\mathbb{R}^n\)</span> near every point.</p>
+<p>The integer <span class="math inline">\(n\)</span> is the <strong>dimension</strong> of <span class="math inline">\(M\)</span>, written <span class="math inline">\(\dim M = n\)</span>. It is a topological invariant — a property of the space that does not depend on any coordinate system and cannot be changed by any homeomorphism.</p>
+<hr>
+</section>
+<section id="charts-and-atlases" class="level3">
+<h3 class="anchored" data-anchor-id="charts-and-atlases">Charts and Atlases</h3>
+<p>A <strong>chart</strong> on a topological manifold <span class="math inline">\(M\)</span> is a pair <span class="math inline">\((U, \phi)\)</span> where:</p>
+<ul>
+<li><span class="math inline">\(U \subseteq M\)</span> is an open set — the <strong>coordinate domain</strong> or <strong>chart domain</strong></li>
+<li><span class="math inline">\(\phi: U \to \hat{U} \subseteq \mathbb{R}^n\)</span> is a homeomorphism from <span class="math inline">\(U\)</span> to an open subset <span class="math inline">\(\hat{U} = \phi(U)\)</span> of <span class="math inline">\(\mathbb{R}^n\)</span> — the <strong>coordinate map</strong></li>
+</ul>
+<p>The coordinates of a point <span class="math inline">\(p \in U\)</span> are the components of <span class="math inline">\(\phi(p) = (x^1(p), x^2(p), \ldots, x^n(p)) \in \mathbb{R}^n\)</span>. The functions <span class="math inline">\(x^i: U \to \mathbb{R}\)</span> defined by <span class="math inline">\(x^i(p) = (\phi(p))^i\)</span> are the <strong>coordinate functions</strong>.</p>
+<p>Two charts <span class="math inline">\((U, \phi)\)</span> and <span class="math inline">\((V, \psi)\)</span> are <strong>smoothly compatible</strong> if either <span class="math inline">\(U \cap V = \emptyset\)</span> or the <strong>transition map</strong>:</p>
+<p><span class="math display">\[\psi \circ \phi^{-1}: \phi(U \cap V) \to \psi(U \cap V)\]</span></p>
+<p>is a diffeomorphism — a smooth bijection with smooth inverse — between open subsets of <span class="math inline">\(\mathbb{R}^n\)</span>. The transition map converts from the coordinates of the first chart to the coordinates of the second chart in the overlap region.</p>
+<p>A <strong>smooth atlas</strong> on <span class="math inline">\(M\)</span> is a collection <span class="math inline">\(\mathcal{A} = \{(U_\alpha, \phi_\alpha)\}_{\alpha \in \Lambda}\)</span> of charts satisfying:</p>
+<p><span class="math display">\[\text{(i) The charts cover } M\text{: } \bigcup_{\alpha \in \Lambda} U_\alpha = M\]</span> <span class="math display">\[\text{(ii) Any two charts in } \mathcal{A} \text{ are smoothly compatible}\]</span></p>
+<p>A smooth atlas <span class="math inline">\(\mathcal{A}\)</span> is <strong>maximal</strong> if it contains every chart that is smoothly compatible with all charts in <span class="math inline">\(\mathcal{A}\)</span>. Every smooth atlas is contained in a unique maximal smooth atlas — obtained by adding all compatible charts — and two atlases define the same smooth structure if and only if their union is still a smooth atlas.</p>
+<p>A <strong>smooth manifold</strong> is a pair <span class="math inline">\((M, \mathcal{A})\)</span> where <span class="math inline">\(M\)</span> is a topological manifold and <span class="math inline">\(\mathcal{A}\)</span> is a maximal smooth atlas on <span class="math inline">\(M\)</span>. In practice, one specifies a smooth manifold by giving any smooth atlas — the maximal atlas is understood to be its completion.</p>
+<hr>
+</section>
+<section id="canonical-examples" class="level3">
+<h3 class="anchored" data-anchor-id="canonical-examples">Canonical Examples</h3>
+<p><strong>Euclidean space.</strong> <span class="math inline">\(\mathbb{R}^n\)</span> is a smooth manifold with the single global chart <span class="math inline">\((\mathbb{R}^n, \text{id})\)</span>. No transition maps are needed.</p>
+<p><strong>The <span class="math inline">\(n\)</span>-sphere.</strong> <span class="math inline">\(S^n = \{x \in \mathbb{R}^{n+1} : \|x\|_2 = 1\}\)</span> is a smooth <span class="math inline">\(n\)</span>-manifold. The standard atlas uses two stereographic projections:</p>
+<p><span class="math display">\[\phi_N: S^n \setminus \{N\} \to \mathbb{R}^n, \quad \phi_N(x^1,\ldots,x^{n+1}) = \frac{(x^1,\ldots,x^n)}{1-x^{n+1}}\]</span> <span class="math display">\[\phi_S: S^n \setminus \{S\} \to \mathbb{R}^n, \quad \phi_S(x^1,\ldots,x^{n+1}) = \frac{(x^1,\ldots,x^n)}{1+x^{n+1}}\]</span></p>
+<p>where <span class="math inline">\(N = (0,\ldots,0,1)\)</span> and <span class="math inline">\(S = (0,\ldots,0,-1)\)</span>. The transition map <span class="math inline">\(\phi_S \circ \phi_N^{-1}: \mathbb{R}^n \setminus \{0\} \to \mathbb{R}^n \setminus \{0\}\)</span> is <span class="math inline">\(u \mapsto u/\|u\|^2\)</span> — the inversion map — which is smooth on <span class="math inline">\(\mathbb{R}^n \setminus \{0\}\)</span>.</p>
+<p><strong>The <span class="math inline">\(n\)</span>-torus.</strong> <span class="math inline">\(T^n = S^1 \times \cdots \times S^1\)</span> (<span class="math inline">\(n\)</span> factors) is a smooth <span class="math inline">\(n\)</span>-manifold. It is the configuration space of <span class="math inline">\(n\)</span> independent angles — the natural domain of periodic functions.</p>
+<p><strong>The special orthogonal group.</strong> <span class="math inline">\(SO(n) = \{A \in \mathbb{R}^{n\times n} : A^TA = I, \det A = 1\}\)</span> is a smooth manifold of dimension <span class="math inline">\(n(n-1)/2\)</span>. For <span class="math inline">\(n=3\)</span>: <span class="math inline">\(SO(3)\)</span> is a 3-manifold — the configuration space of all orientations of a rigid body in three dimensions. It is diffeomorphic to the real projective space <span class="math inline">\(\mathbb{RP}^3\)</span>.</p>
+<p><strong>The space of positive definite matrices.</strong> <span class="math inline">\(\mathbb{S}^n_{++} = \{A \in \mathbb{R}^{n\times n} : A = A^T, A \succ 0\}\)</span> is a smooth manifold of dimension <span class="math inline">\(n(n+1)/2\)</span> — the space of covariance matrices of <span class="math inline">\(n\)</span>-dimensional Gaussian distributions.</p>
+<p><strong>The probability simplex.</strong> <span class="math inline">\(\Delta^{n-1} = \{p \in \mathbb{R}^n : p_i &gt; 0, \sum_i p_i = 1\}\)</span> is a smooth <span class="math inline">\((n-1)\)</span>-manifold — the interior of the standard simplex, the space of strictly positive probability distributions over <span class="math inline">\(n\)</span> outcomes.</p>
+<hr>
+</section>
+<section id="smooth-functions-and-maps" class="level3">
+<h3 class="anchored" data-anchor-id="smooth-functions-and-maps">Smooth Functions and Maps</h3>
+<p>Let <span class="math inline">\(M\)</span> and <span class="math inline">\(N\)</span> be smooth manifolds of dimensions <span class="math inline">\(m\)</span> and <span class="math inline">\(n\)</span> respectively.</p>
+<p>A function <span class="math inline">\(f: M \to \mathbb{R}\)</span> is <strong>smooth</strong> (written <span class="math inline">\(f \in C^\infty(M)\)</span>) if for every chart <span class="math inline">\((U, \phi)\)</span> of <span class="math inline">\(M\)</span>, the composition:</p>
+<p><span class="math display">\[f \circ \phi^{-1}: \phi(U) \to \mathbb{R}\]</span></p>
+<p>is smooth in the ordinary sense — infinitely differentiable as a function from an open subset of <span class="math inline">\(\mathbb{R}^m\)</span> to <span class="math inline">\(\mathbb{R}\)</span>.</p>
+<p>The definition is chart-independent: if <span class="math inline">\(f \circ \phi^{-1}\)</span> is smooth in one chart, the smoothness of transition maps guarantees <span class="math inline">\(f \circ \psi^{-1}\)</span> is smooth in every overlapping chart <span class="math inline">\(\psi\)</span>.</p>
+<p>A map <span class="math inline">\(F: M \to N\)</span> between smooth manifolds is <strong>smooth</strong> if for every chart <span class="math inline">\((U, \phi)\)</span> on <span class="math inline">\(M\)</span> and every chart <span class="math inline">\((V, \psi)\)</span> on <span class="math inline">\(N\)</span> with <span class="math inline">\(F(U) \cap V \neq \emptyset\)</span>, the <strong>coordinate representation</strong>:</p>
+<p><span class="math display">\[\hat{F} = \psi \circ F \circ \phi^{-1}: \phi(U \cap F^{-1}(V)) \to \psi(V) \subseteq \mathbb{R}^n\]</span></p>
+<p>is smooth as a map between open subsets of Euclidean spaces. The coordinate representation <span class="math inline">\(\hat{F}\)</span> is the local expression of <span class="math inline">\(F\)</span> — it is what the map looks like in flat coordinates, and all local computations with <span class="math inline">\(F\)</span> are performed through <span class="math inline">\(\hat{F}\)</span>.</p>
+<p>The collection of all smooth maps from <span class="math inline">\(M\)</span> to <span class="math inline">\(N\)</span> is written <span class="math inline">\(C^\infty(M, N)\)</span>.</p>
+<hr>
+</section>
+<section id="diffeomorphisms" class="level3">
+<h3 class="anchored" data-anchor-id="diffeomorphisms">Diffeomorphisms</h3>
+<p>A smooth map <span class="math inline">\(F: M \to N\)</span> is a <strong>diffeomorphism</strong> if it is bijective and its inverse <span class="math inline">\(F^{-1}: N \to M\)</span> is also smooth. Two smooth manifolds are <strong>diffeomorphic</strong> if there exists a diffeomorphism between them — they are geometrically identical as smooth manifolds, differing only in the labeling of points.</p>
+<p>Diffeomorphisms are the isomorphisms of the category of smooth manifolds — the structure-preserving bijections. If <span class="math inline">\(F: M \to N\)</span> is a diffeomorphism and <span class="math inline">\((V, \psi)\)</span> is a chart on <span class="math inline">\(N\)</span>, then <span class="math inline">\((F^{-1}(V), \psi \circ F)\)</span> is a chart on <span class="math inline">\(M\)</span>. Diffeomorphisms transport the entire smooth structure.</p>
+<p>The <strong>diffeomorphism group</strong> of <span class="math inline">\(M\)</span> is <span class="math inline">\(\text{Diff}(M) = \{F: M \to M : F \text{ is a diffeomorphism}\}\)</span> — the group of all self-diffeomorphisms of <span class="math inline">\(M\)</span> under composition. For the manifolds of generative AI, the learned transformation <span class="math inline">\(T_\theta\)</span> is a diffeomorphism from the data manifold to itself (or to a noise manifold), and the diffeomorphism group is the space of all such transformations over which the model optimizes.</p>
+<p><strong>Rank of a smooth map.</strong> For a smooth map <span class="math inline">\(F: M \to N\)</span> with coordinate representation <span class="math inline">\(\hat{F}\)</span>, the <strong>rank</strong> of <span class="math inline">\(F\)</span> at <span class="math inline">\(p \in M\)</span> is the rank of the Jacobian matrix <span class="math inline">\(D\hat{F}(\phi(p))\)</span> — the number of linearly independent columns of the Jacobian. The rank is well-defined — it does not depend on the choice of charts — because changing charts multiplies the Jacobian by invertible matrices on both sides.</p>
+<hr>
+</section>
+<section id="submanifolds-and-embeddings" class="level3">
+<h3 class="anchored" data-anchor-id="submanifolds-and-embeddings">Submanifolds and Embeddings</h3>
+<p>A subset <span class="math inline">\(S \subseteq M\)</span> is a <strong>smooth submanifold of dimension <span class="math inline">\(k\)</span></strong> if for every <span class="math inline">\(p \in S\)</span>, there exists a chart <span class="math inline">\((U, \phi)\)</span> of <span class="math inline">\(M\)</span> with <span class="math inline">\(p \in U\)</span> such that:</p>
+<p><span class="math display">\[\phi(U \cap S) = \phi(U) \cap (\mathbb{R}^k \times \{0\})\]</span></p>
+<p>In the chart, <span class="math inline">\(S\)</span> looks like the first <span class="math inline">\(k\)</span> coordinates — a flat <span class="math inline">\(k\)</span>-dimensional slice of the <span class="math inline">\(n\)</span>-dimensional coordinate domain. The chart <span class="math inline">\((U \cap S, \tilde{\phi})\)</span> where <span class="math inline">\(\tilde{\phi}(p) = (\phi(p)^1, \ldots, \phi(p)^k)\)</span> is a chart on <span class="math inline">\(S\)</span>, making <span class="math inline">\(S\)</span> itself a smooth <span class="math inline">\(k\)</span>-manifold.</p>
+<p>A smooth map <span class="math inline">\(F: M \to N\)</span> is an <strong>immersion</strong> if its rank equals <span class="math inline">\(\dim M\)</span> at every point — the Jacobian has full column rank everywhere. An immersion is locally injective but not necessarily globally injective.</p>
+<p>A smooth map <span class="math inline">\(F: M \to N\)</span> is an <strong>embedding</strong> if it is an injective immersion that is also a topological embedding — a homeomorphism onto its image. An embedding identifies <span class="math inline">\(M\)</span> with a submanifold <span class="math inline">\(F(M) \subseteq N\)</span>.</p>
+<p><strong>Whitney Embedding Theorem.</strong> Every smooth <span class="math inline">\(n\)</span>-manifold can be smoothly embedded in <span class="math inline">\(\mathbb{R}^{2n}\)</span>. This theorem guarantees that abstract manifolds — defined intrinsically by atlases — can always be realized as submanifolds of some Euclidean space. The data manifold hypothesis is the claim that the relevant embedding dimension is much smaller than the ambient data dimension — that data living in <span class="math inline">\(\mathbb{R}^{65536}\)</span> lies on a manifold of dimension much smaller than 65536.</p>
+<hr>
+</section>
+<section id="partitions-of-unity" class="level3">
+<h3 class="anchored" data-anchor-id="partitions-of-unity">Partitions of Unity</h3>
+<p>A powerful technical tool enabled by second countability and Hausdorffness is the <strong>partition of unity</strong> — a collection of smooth functions <span class="math inline">\(\{\rho_\alpha\}_{\alpha \in \Lambda}\)</span> on <span class="math inline">\(M\)</span> satisfying:</p>
+<p><span class="math display">\[\text{(i) } 0 \leq \rho_\alpha(p) \leq 1 \quad \forall p \in M, \forall \alpha\]</span> <span class="math display">\[\text{(ii) The support of } \rho_\alpha \text{ is contained in } U_\alpha\]</span> <span class="math display">\[\text{(iii) } \sum_\alpha \rho_\alpha(p) = 1 \quad \forall p \in M \text{ (locally finite sum)}\]</span></p>
+<p><strong>Theorem.</strong> For any smooth atlas <span class="math inline">\(\{(U_\alpha, \phi_\alpha)\}\)</span> of a smooth manifold <span class="math inline">\(M\)</span>, there exists a partition of unity subordinate to the atlas.</p>
+<p>Partitions of unity allow global constructions to be assembled from local chart-based constructions. For example, a Riemannian metric — defined locally in each chart as a matrix-valued function — can be assembled into a globally smooth Riemannian metric by averaging local metrics using a partition of unity. The existence of partitions of unity is the technical foundation that makes the global theory work from local pieces.</p>
+<hr>
+</section>
+<section id="the-tangent-map" class="level3">
+<h3 class="anchored" data-anchor-id="the-tangent-map">The Tangent Map</h3>
+<p>Every smooth map <span class="math inline">\(F: M \to N\)</span> induces a <strong>tangent map</strong> (or <strong>pushforward</strong>) <span class="math inline">\(dF_p: T_pM \to T_{F(p)}N\)</span> between tangent spaces at each point <span class="math inline">\(p \in M\)</span>. We will define tangent spaces precisely in the next subtopic, but we can state the tangent map’s properties now:</p>
+<p>In local coordinates — with <span class="math inline">\(\phi\)</span> a chart near <span class="math inline">\(p\)</span> on <span class="math inline">\(M\)</span> and <span class="math inline">\(\psi\)</span> a chart near <span class="math inline">\(F(p)\)</span> on <span class="math inline">\(N\)</span> — the tangent map is represented by the <strong>Jacobian matrix</strong> of the coordinate representation <span class="math inline">\(\hat{F} = \psi \circ F \circ \phi^{-1}\)</span>:</p>
+<p><span class="math display">\[dF_p \leftrightarrow D\hat{F}(\phi(p)) = \begin{pmatrix} \frac{\partial \hat{F}^1}{\partial x^1} &amp; \cdots &amp; \frac{\partial \hat{F}^1}{\partial x^m} \\ \vdots &amp; \ddots &amp; \vdots \\ \frac{\partial \hat{F}^n}{\partial x^1} &amp; \cdots &amp; \frac{\partial \hat{F}^n}{\partial x^m} \end{pmatrix}_{\phi(p)}\]</span></p>
+<p>The tangent map is the linear map that best approximates <span class="math inline">\(F\)</span> near <span class="math inline">\(p\)</span> — the curved-space generalization of the derivative. It satisfies the chain rule: if <span class="math inline">\(G: N \to P\)</span> is another smooth map, then <span class="math inline">\(d(G \circ F)_p = dG_{F(p)} \circ dF_p\)</span>.</p>
+<p>For a diffeomorphism <span class="math inline">\(F\)</span>, the tangent map <span class="math inline">\(dF_p\)</span> is a linear isomorphism at every point — the Jacobian is invertible everywhere. This is the curved-space content of the inverse function theorem: a smooth bijection with everywhere-invertible Jacobian is a local diffeomorphism.</p>
+<p>The <strong>rank theorem</strong> states: if <span class="math inline">\(F: M \to N\)</span> has constant rank <span class="math inline">\(k\)</span> near <span class="math inline">\(p\)</span>, then there exist charts around <span class="math inline">\(p\)</span> and <span class="math inline">\(F(p)\)</span> in which <span class="math inline">\(F\)</span> has the canonical form <span class="math inline">\((x^1,\ldots,x^m) \mapsto (x^1,\ldots,x^k, 0,\ldots,0)\)</span> — <span class="math inline">\(F\)</span> looks like a linear projection in appropriate coordinates. This is the fundamental local structure theorem for smooth maps.</p>
+<hr>
+</section>
+<section id="smooth-manifolds-in-probability-and-machine-learning" class="level3">
+<h3 class="anchored" data-anchor-id="smooth-manifolds-in-probability-and-machine-learning">Smooth Manifolds in Probability and Machine Learning</h3>
+<p>The spaces of probability distributions that appear throughout the roadmap are smooth manifolds, and their manifold structure is essential for the geometric operations of Phases 1 through 3.</p>
+<p><strong>The statistical manifold.</strong> The set of all probability densities of the form <span class="math inline">\(p_\theta(x) = p(x|\theta)\)</span> parameterized by <span class="math inline">\(\theta \in \Theta \subseteq \mathbb{R}^d\)</span> is a <span class="math inline">\(d\)</span>-dimensional smooth manifold — the <strong>statistical manifold</strong> of the parametric family. Charts are provided by the parameterization <span class="math inline">\(\theta \mapsto p_\theta\)</span>, and transition maps between different parameterizations are smooth because the density functions are smooth in the parameters.</p>
+<p><strong>The Wasserstein manifold.</strong> The space <span class="math inline">\(\mathcal{P}_2(\mathbb{R}^n)\)</span> of probability measures with finite second moment, equipped with the Wasserstein-2 metric, has the formal structure of an infinite-dimensional Riemannian manifold — the <strong>Wasserstein manifold</strong>. Its charts are provided by push-forward maps, and its geodesics are the displacement interpolations of Phase 1. This manifold structure is the geometric foundation of the JKO scheme and Riemannian flow matching in Phase 3.</p>
+<p><strong>Neural network function space.</strong> The set of functions representable by a fixed neural network architecture — with a fixed number of layers and neurons — parameterized by weight matrices <span class="math inline">\(\theta\)</span> is a smooth manifold (generically, away from degenerate weight configurations). The smooth map from parameter space <span class="math inline">\(\Theta\)</span> to function space is the architecture’s forward pass, and its tangent map at each <span class="math inline">\(\theta\)</span> is the Jacobian of the network with respect to weights — the object computed by backpropagation.</p>
+<hr>
+</section>
+<section id="why-this-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-matters">WHY THIS MATTERS</h3>
+<p>In MATH 201 (Advanced Calculus), you worked with smooth functions from <span class="math inline">\(\mathbb{R}^n\)</span> to <span class="math inline">\(\mathbb{R}^m\)</span> and computed their Jacobian matrices. The Jacobian is now recognized as the coordinate representation of the tangent map <span class="math inline">\(dF_p\)</span> — the local linear approximation to a smooth map between manifolds. In MATH 103 (Linear Algebra), you worked with linear maps between vector spaces — these are the tangent maps of smooth maps between manifolds, evaluated at a single point and expressed in coordinates. In MATH 213 (Analysis I), you proved the implicit function theorem and the inverse function theorem for smooth maps between Euclidean spaces — these theorems generalize directly to smooth maps between manifolds, providing the local canonical forms (rank theorem) that classify smooth maps up to diffeomorphism. In MSCS 202 (Numerical Methods), the coordinate representations of smooth maps — the functions <span class="math inline">\(\hat{F} = \psi \circ F \circ \phi^{-1}\)</span> expressed in charts — are the objects that numerical algorithms actually compute. Every numerical integration, differentiation, or optimization on a manifold is performed in a chart, and the atlas structure is what ensures the results are chart-independent.</p>
+<hr>
+</section>
+</section>
+<section id="layer-3-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="layer-3-bridge">Layer 3 (Bridge)</h2>
+<p>Every element of the Himalayan cartography story has a precise mathematical address. Let us walk through them one by one, until the survey department, the overlapping local maps, the transition rules, and the full formal apparatus are completely fused into a single picture.</p>
+<hr>
+<p><strong>The Himalayan surface itself — the curved two-dimensional terrain that the survey department is mapping — is the smooth manifold <span class="math inline">\(M\)</span>.</strong> It is a two-dimensional object: at every point, two independent directions of motion exist, spanning the local tangent plane to the surface. But it is not flat: the surface curves, rises into peaks, descends into valleys, and wraps around massifs in ways that no single flat coordinate system can faithfully represent. The manifold <span class="math inline">\(M\)</span> exists independently of any coordinate system — it is the terrain itself, not any particular map of it. The Hausdorff condition is satisfied because any two distinct points in the Himalayas have non-overlapping neighborhoods — you can always find a small enough region around each that they do not intersect. Second countability is satisfied because the terrain can be covered by countably many bounded patches. Local Euclidean-ness is satisfied because any sufficiently small patch of the terrain looks flat — the curvature of the Earth is negligible at the scale of a Base Camp survey.</p>
+<p><strong>The individual local survey maps — each covering a manageable patch of the terrain with a flat coordinate grid — are the charts <span class="math inline">\((U_\alpha, \phi_\alpha)\)</span>.</strong> The open set <span class="math inline">\(U_\alpha \subseteq M\)</span> is the patch of terrain covered by the local survey — an open region of the manifold. The coordinate map <span class="math inline">\(\phi_\alpha: U_\alpha \to \hat{U}_\alpha \subseteq \mathbb{R}^2\)</span> assigns flat easting-northing coordinates to every point in the patch. The map <span class="math inline">\(\phi_\alpha\)</span> is a homeomorphism: it is continuous in both directions — small movements on the terrain correspond to small movements in the coordinate plane, and vice versa. The image <span class="math inline">\(\hat{U}_\alpha = \phi_\alpha(U_\alpha)\)</span> is an open subset of <span class="math inline">\(\mathbb{R}^2\)</span> — the sheet of paper on which the local map is drawn. The coordinate functions <span class="math inline">\(x^1(p) = (\phi_\alpha(p))^1\)</span> and <span class="math inline">\(x^2(p) = (\phi_\alpha(p))^2\)</span> are the easting and northing of the point <span class="math inline">\(p\)</span> in the local survey coordinate system.</p>
+<p><strong>The complete collection of overlapping local maps covering the entire Himalayan arc — with consistent rules for converting between overlapping maps — is the smooth atlas <span class="math inline">\(\mathcal{A} = \{(U_\alpha, \phi_\alpha)\}_{\alpha \in \Lambda}\)</span>.</strong> The coverage condition <span class="math inline">\(\bigcup_\alpha U_\alpha = M\)</span> says every point of the terrain belongs to at least one local map — no region is left unsurveyed. The smooth compatibility condition says every pair of overlapping maps has a smooth transition function. The atlas is the complete specification of the terrain’s smooth structure — it tells you not just which regions are covered, but how to move between coordinate systems wherever coverage overlaps.</p>
+<hr>
+<p><strong>The conversion rule between two overlapping local maps — the formula for translating easting-northing coordinates from the Everest chart to the Cho Oyu chart in their shared border region — is the transition map <span class="math inline">\(\psi \circ \phi^{-1}: \phi(U \cap V) \to \psi(U \cap V)\)</span>.</strong> The transition map takes a point’s coordinates in the first chart <span class="math inline">\(\phi\)</span> and produces its coordinates in the second chart <span class="math inline">\(\psi\)</span>. The composition <span class="math inline">\(\psi \circ \phi^{-1}\)</span> first uses <span class="math inline">\(\phi^{-1}\)</span> to convert flat coordinates back to the terrain point, then uses <span class="math inline">\(\psi\)</span> to convert that terrain point to the second chart’s flat coordinates. This is the round trip: chart 1 coordinates <span class="math inline">\(\to\)</span> terrain point <span class="math inline">\(\to\)</span> chart 2 coordinates. The smoothness of the transition map — the requirement that <span class="math inline">\(\psi \circ \phi^{-1}\)</span> is a diffeomorphism between open subsets of <span class="math inline">\(\mathbb{R}^2\)</span> — is the consistency requirement: small movements in the Everest chart correspond to small, predictable movements in the Cho Oyu chart, with no jumps or kinks. If the transition map were not smooth, a surveyor crossing from one chart’s territory to another’s would see discontinuous jumps in coordinates — an incoherent atlas that cannot support consistent calculus.</p>
+<p><strong>The break moment — the sphere cannot be covered by a single chart — is the formal proof that the atlas structure is necessary, not merely convenient.</strong> The unit sphere <span class="math inline">\(S^2\)</span> is compact — it is bounded and closed as a subset of <span class="math inline">\(\mathbb{R}^3\)</span>. Any open subset of <span class="math inline">\(\mathbb{R}^2\)</span> is non-compact — it is either unbounded or not closed. A homeomorphism between a compact space and a non-compact space cannot exist — compactness is a topological invariant preserved by homeomorphisms. Therefore no single chart can cover <span class="math inline">\(S^2\)</span>. The atlas of two stereographic projections — from the north pole and from the south pole — is the minimal atlas for <span class="math inline">\(S^2\)</span>. The transition map between them is the inversion <span class="math inline">\(u \mapsto u/\|u\|^2\)</span> — smooth and invertible on <span class="math inline">\(\mathbb{R}^2 \setminus \{0\}\)</span>, which is the image of the overlap region <span class="math inline">\(S^2 \setminus \{N, S\}\)</span> under either projection. The cartographer’s intuition — that no single flat page can faithfully map the entire curved surface — is the topological theorem about compactness.</p>
+<hr>
+<p><strong>The temperature field over the Himalayas — a function assigning a temperature value to every terrain point — is a smooth function <span class="math inline">\(f: M \to \mathbb{R}\)</span>.</strong> Its smoothness means: in every local survey chart <span class="math inline">\((U_\alpha, \phi_\alpha)\)</span>, the composition <span class="math inline">\(f \circ \phi_\alpha^{-1}: \hat{U}_\alpha \to \mathbb{R}\)</span> — the temperature field expressed in local easting-northing coordinates — is smooth in the ordinary calculus sense. The definition is chart-independent: if <span class="math inline">\(f \circ \phi_\alpha^{-1}\)</span> is smooth in one chart and the transition maps are smooth, then <span class="math inline">\(f \circ \phi_\beta^{-1}\)</span> is automatically smooth in every overlapping chart. The smoothness of the transition maps propagates the smoothness of <span class="math inline">\(f\)</span> from any one chart to all others. This chart-independence is the key: the temperature field is a physical property of the terrain, not of any particular coordinate system, and its smoothness should not depend on which coordinate system you use to describe it.</p>
+<p><strong>The coordinate representation <span class="math inline">\(\hat{F} = \psi \circ F \circ \phi^{-1}\)</span> of a smooth map between manifolds — the local flat-space expression of a curved-space function — is how all actual computations with smooth maps are performed.</strong> In the cartography story: the geological stress field on the Himalayan surface is a smooth map <span class="math inline">\(F: M \to \mathbb{R}^2\)</span> assigning a two-dimensional stress vector to each terrain point. To compute the stress at a specific location, the geologist expresses <span class="math inline">\(F\)</span> in local chart coordinates — composing with <span class="math inline">\(\phi^{-1}\)</span> to go from flat coordinates to the terrain point, applying <span class="math inline">\(F\)</span> to get the stress vector, and composing with <span class="math inline">\(\psi\)</span> to express the output in flat coordinates. The resulting function <span class="math inline">\(\hat{F}: \hat{U} \to \hat{V}\)</span> is a smooth map between open subsets of Euclidean spaces — an object that can be differentiated, integrated, and numerically evaluated using all the tools of flat-space calculus. The chart is the window through which flat-space tools see the curved-space map.</p>
+<p><strong>Diffeomorphisms — smooth maps with smooth inverses — are the structure-preserving isomorphisms of smooth manifolds.</strong> In the cartography story: a reparameterization of the terrain — replacing easting-northing coordinates with a different local coordinate system, say polar coordinates centered at a summit — is a diffeomorphism from one chart domain to another. Two manifolds related by a diffeomorphism are geometrically indistinguishable as smooth manifolds. In the generative modeling context: the learned transformation <span class="math inline">\(T_\theta\)</span> in a normalizing flow is a diffeomorphism from the data manifold to the noise manifold — a smooth bijection with smooth inverse whose Jacobian is everywhere invertible. The push-forward density formula <span class="math inline">\(p_{T_\theta\#\mu}(y) = p_\mu(T_\theta^{-1}(y)) \cdot |\det J_{T_\theta^{-1}}(y)|\)</span> requires <span class="math inline">\(T_\theta\)</span> to be a diffeomorphism: the Jacobian <span class="math inline">\(J_{T_\theta^{-1}}\)</span> exists and is invertible everywhere precisely because <span class="math inline">\(T_\theta\)</span> is a diffeomorphism. The smooth map structure of this topic is the prerequisite for the push-forward density computation of Chapter 1.</p>
+<hr>
+<p><strong>The Whitney Embedding Theorem — every smooth <span class="math inline">\(n\)</span>-manifold embeds in <span class="math inline">\(\mathbb{R}^{2n}\)</span> — is the mathematical guarantee that the manifold hypothesis is self-consistent.</strong> The manifold hypothesis claims that data in <span class="math inline">\(\mathbb{R}^D\)</span> lies on a <span class="math inline">\(d\)</span>-dimensional manifold with <span class="math inline">\(d \ll D\)</span>. The Whitney theorem says this is always geometrically possible — there always exists an embedding of any abstract <span class="math inline">\(d\)</span>-manifold into <span class="math inline">\(\mathbb{R}^{2d}\)</span>. The data manifold is not a hypothetical object that might not exist as a submanifold of Euclidean space — it always does exist, for any abstract smooth manifold, in a sufficiently high-dimensional Euclidean space. The theorem does not say the embedding dimension is optimal — real data manifolds are often embeddable in much lower dimensions than <span class="math inline">\(2d\)</span> — but it guarantees existence. The cartographic analogy: any curved terrain can always be faithfully embedded in three-dimensional space as a surface, even if it cannot be faithfully flattened onto a two-dimensional plane.</p>
+<p><strong>Partitions of unity — collections of smooth bump functions summing to 1 subordinate to the atlas — are the tool that assembles global geometric structures from local chart-based constructions.</strong> In the cartography story: the survey department wants to define a single, globally consistent elevation function over the entire Himalayan arc, by assembling the locally measured elevation data from each chart. Each chart provides a smooth elevation function over its patch. Partitions of unity provide a smooth weighting scheme that blends the local elevation measurements from overlapping charts into a globally smooth elevation function — without jumps or inconsistencies at chart boundaries. In the roadmap, partitions of unity are used to assemble the Riemannian metric from local inner product definitions — the next topic’s central object — and to construct smooth cutoff functions needed for integration on manifolds.</p>
+<hr>
+<p><strong>The tangent map <span class="math inline">\(dF_p: T_pM \to T_{F(p)}N\)</span> — the linear approximation to a smooth map <span class="math inline">\(F\)</span> at a point <span class="math inline">\(p\)</span> — is represented in coordinates by the Jacobian matrix of the coordinate representation.</strong> In the cartography story: a smooth path <span class="math inline">\(\gamma: (-\epsilon, \epsilon) \to M\)</span> on the terrain — a trekker’s route through the mountains — has a velocity vector <span class="math inline">\(\gamma'(0) \in T_{\gamma(0)}M\)</span> at every moment. A smooth map <span class="math inline">\(F: M \to N\)</span> — say, the projection of the three-dimensional terrain surface onto a two-dimensional satellite image — pushes this velocity forward: the image path <span class="math inline">\(F \circ \gamma\)</span> has velocity <span class="math inline">\(dF_{\gamma(0)}(\gamma'(0)) \in T_{F(\gamma(0))}N\)</span>. The tangent map <span class="math inline">\(dF_p\)</span> is the linear map that converts velocities on <span class="math inline">\(M\)</span> at <span class="math inline">\(p\)</span> to velocities on <span class="math inline">\(N\)</span> at <span class="math inline">\(F(p)\)</span>. In coordinates, it is the Jacobian <span class="math inline">\(D\hat{F}(\phi(p))\)</span> — the matrix of partial derivatives of the coordinate representation. The chain rule <span class="math inline">\(d(G \circ F)_p = dG_{F(p)} \circ dF_p\)</span> is the chain rule for Jacobian matrices: the Jacobian of a composition is the product of the Jacobians. This is the same chain rule from MATH 201, now understood as a statement about tangent maps between manifolds.</p>
+<hr>
+<p><strong>The statistical manifold — the set of parameterized probability densities <span class="math inline">\(\{p_\theta : \theta \in \Theta\}\)</span> — is the smooth manifold that underlies all of information geometry and much of Phase 3.</strong> Each density <span class="math inline">\(p_\theta\)</span> is a point on the statistical manifold. The parameterization <span class="math inline">\(\theta \mapsto p_\theta\)</span> is a smooth map from the parameter space <span class="math inline">\(\Theta \subseteq \mathbb{R}^d\)</span> — a flat manifold — to the statistical manifold — a curved manifold in the infinite-dimensional space of probability densities. Charts on the statistical manifold are provided by the parameterization: the chart domain is a neighborhood of <span class="math inline">\(p_{\theta_0}\)</span> in the statistical manifold, and the chart map assigns coordinates <span class="math inline">\(\theta\)</span> to the density <span class="math inline">\(p_\theta\)</span>. Transition maps between different parameterizations — say, mean-variance parameterization and natural parameterization of the Gaussian — are smooth because the densities are smooth functions of the parameters. The Fisher information matrix <span class="math inline">\(I(\theta) = \mathbb{E}_{p_\theta}[\nabla_\theta \log p_\theta \cdot \nabla_\theta \log p_\theta^T]\)</span> is the Riemannian metric on the statistical manifold — the curved-space inner product that the next topic will formalize. The statistical manifold is not a flat space — its curvature, measured by the Fisher information metric, is the geometric reason why gradient descent on the log-likelihood does not always converge efficiently, and why natural gradient methods — which account for the manifold’s curvature — converge faster.</p>
+<p><strong>The Wasserstein manifold — the space of probability measures with finite second moment, equipped with the Wasserstein-2 metric — is the infinite-dimensional manifold on which all of Phase 1 and much of Phase 3 operate.</strong> A point on the Wasserstein manifold is a probability measure <span class="math inline">\(\mu \in \mathcal{P}_2(\mathbb{R}^n)\)</span>. Charts near a measure <span class="math inline">\(\mu_0\)</span> are provided by push-forward maps: for a diffeomorphism <span class="math inline">\(T\)</span> close to the identity, the measure <span class="math inline">\(T_\#\mu_0\)</span> is a nearby point on the manifold, and the chart coordinates of <span class="math inline">\(T_\#\mu_0\)</span> near <span class="math inline">\(\mu_0\)</span> are provided by the displacement field <span class="math inline">\(T - \text{id}\)</span>. The transition maps between different chart neighborhoods are smooth because push-forwards compose smoothly: if <span class="math inline">\(T_1\#\mu_0 = T_2\#\mu_0\)</span> for two different diffeomorphisms, the transition between their coordinate representations is the smooth map <span class="math inline">\(T_2 \circ T_1^{-1}\)</span>. The Wasserstein geodesics of Phase 1 — the displacement interpolations — are the geodesics of this infinite-dimensional Riemannian manifold, and the JKO scheme of Phase 3 is gradient descent on this manifold.</p>
+<hr>
+<p><strong>The connection to MATH 201 (Advanced Calculus) is now total.</strong> Every smooth function you differentiated in MATH 201 was a function from an open subset of <span class="math inline">\(\mathbb{R}^n\)</span> to <span class="math inline">\(\mathbb{R}^m\)</span> — the coordinate representation <span class="math inline">\(\hat{F} = \psi \circ F \circ \phi^{-1}\)</span> of a smooth map between manifolds, expressed in the trivial atlas of Euclidean space. Every Jacobian matrix you computed was the coordinate representation of a tangent map <span class="math inline">\(dF_p\)</span>. Every application of the chain rule was the composition rule for tangent maps: <span class="math inline">\(d(G \circ F)_p = dG_{F(p)} \circ dF_p\)</span> expressed in the coordinates of the trivial Euclidean atlas. The implicit function theorem and inverse function theorem of MATH 201 are the local structure theorems for smooth maps — they characterize when a smooth map is locally a diffeomorphism (invertible Jacobian) or locally a projection (constant-rank Jacobian). What you have now is the recognition that all of MATH 201’s calculus was always calculus on the simplest possible manifold — <span class="math inline">\(\mathbb{R}^n\)</span> with its single global chart — and that the manifold theory extends every one of those results to the curved spaces where the roadmap actually operates.</p>
+<p><strong>The connection to MATH 213 (Analysis I) runs through the topological foundations.</strong> The open sets, continuity, and convergence you studied in MATH 213 are the topological structure underlying the manifold definition. The Hausdorff condition is the separation axiom that you used in Analysis I to prove the uniqueness of limits. Second countability is what makes the Bolzano-Weierstrass theorem work — it guarantees that bounded sequences have convergent subsequences, which in the manifold context is what makes compact manifolds well-behaved. The local Euclidean condition is the precise statement of what it means to do calculus locally — the bridge between the topological structure of the manifold and the flat-space calculus of MATH 201.</p>
+<hr>
+<p><strong>Looking forward across the roadmap</strong>, the manifold structure is the foundation that every subsequent topic builds on. In this chapter, the tangent bundle — the next topic — is defined as a smooth manifold in its own right: it is the disjoint union of all tangent spaces <span class="math inline">\(\coprod_{p \in M} T_pM\)</span>, equipped with a smooth atlas derived from the atlas of <span class="math inline">\(M\)</span>. The Riemannian metric is a smooth map from <span class="math inline">\(M\)</span> to the space of positive definite inner products on tangent spaces — a smooth section of a tensor bundle, whose smoothness is defined in exactly the chart-by-chart sense of this topic. Geodesics are smooth curves on the manifold satisfying the geodesic ODE, and their existence and uniqueness follow from the ODE theory on smooth manifolds. In Phase 1, the Wasserstein manifold’s charts and smooth maps are the precise objects underlying displacement interpolation and the JKO scheme. In Phase 2, the equivariance conditions of graph neural networks are conditions on smooth maps between manifolds — the symmetry group acts by diffeomorphisms on the data manifold, and equivariant networks are smooth maps that intertwine these diffeomorphisms. In Phase 3, Riemannian flow matching learns a smooth map between the noise manifold and the data manifold — a diffeomorphism in the normalizing flow case, a stochastic smooth map in the diffusion case — and the correctness of the push-forward density formula relies on the smooth map structure of this topic.</p>
+<p>The survey department’s atlas of the Himalayan arc — many overlapping local maps, each accurate within its patch, connected by smooth transition functions, together constituting a complete and rigorous description of the curved terrain — is not a metaphor for the smooth manifold. It is the smooth manifold, told in the language of a job that requires exactly the mathematical structure the definition formalizes.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

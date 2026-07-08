@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2026-06-21">
+
+<title>Topic 3 - Positive Definite Matrices – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Topic 3 - Positive Definite Matrices</li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#topic-3---positive-definite-matrices-the-geometry-of-ellipses-and-covariance" id="toc-topic-3---positive-definite-matrices-the-geometry-of-ellipses-and-covariance" class="nav-link active" data-scroll-target="#topic-3---positive-definite-matrices-the-geometry-of-ellipses-and-covariance">Topic 3 - Positive Definite Matrices: The Geometry of Ellipses and Covariance</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#layer-1-story" id="toc-layer-1-story" class="nav-link" data-scroll-target="#layer-1-story">Layer 1 (Story)</a></li>
+  <li><a href="#layer-2-mathematics" id="toc-layer-2-mathematics" class="nav-link" data-scroll-target="#layer-2-mathematics">Layer 2 (Mathematics)</a></li>
+  <li><a href="#layer-3-bridge" id="toc-layer-3-bridge" class="nav-link" data-scroll-target="#layer-3-bridge">Layer 3 (Bridge)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Topic 3 - Positive Definite Matrices</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">June 21, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="topic-3---positive-definite-matrices-the-geometry-of-ellipses-and-covariance" class="level1">
+<h1>Topic 3 - Positive Definite Matrices: The Geometry of Ellipses and Covariance</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>You have now built the two main decomposition theorems of advanced linear algebra. The spectral theorem decomposed symmetric matrices into orthogonal eigenvectors and real eigenvalues, revealing the pure stretch structure in the natural coordinate system. The SVD decomposed arbitrary matrices into two orthogonal transformations and a diagonal stretch, revealing the preferred input and output directions and their associated stretching factors. Both theorems revealed matrices as geometric objects rather than arrays of numbers.</p>
+<p>The third topic of Chapter 4 is not another decomposition theorem. It is the study of a specific class of symmetric matrices — the positive definite matrices — whose geometric and algebraic properties are so pervasive throughout the roadmap that they deserve dedicated treatment. Positive definite matrices are not a curiosity. They are the matrices that appear everywhere: as Riemannian metrics, as covariance matrices, as Hessians of strictly convex functions, as Fisher information matrices, as the metric tensors of statistical manifolds, as the kernel matrices of kernel methods, and as the mass matrices and stiffness matrices of physical simulations. Understanding their geometry is not optional preparation for the roadmap — it is the direct prerequisite for understanding the spaces on which Optimal Transport, geometric deep learning, and generative AI operate.</p>
+<p>The roadmap names this topic with two precise descriptions: the geometry of ellipses and the geometry of covariance. Both are exact.</p>
+<p>The geometry of ellipses captures the shape of positive definite matrices. A symmetric positive definite matrix <span class="math inline">\(A\)</span> defines an ellipse — or more precisely an ellipsoid in <span class="math inline">\(n\)</span> dimensions — through its quadratic form: the set <span class="math inline">\(\{v \in \mathbb{R}^n : v^TAv \leq 1\}\)</span> is an ellipsoid whose principal axes are the eigenvectors of <span class="math inline">\(A\)</span> and whose axis half-lengths are the reciprocals of the square roots of the eigenvalues. Large eigenvalues produce short axes — the quadratic form grows quickly in those directions — and small eigenvalues produce long axes — the quadratic form grows slowly. The ellipsoid is the unit ball of the norm <span class="math inline">\(\|v\|_A = \sqrt{v^TAv}\)</span>, and understanding positive definite matrices means understanding the geometry of these ellipsoidal norms. Every Riemannian metric is locally an ellipsoidal norm at each point. Every Mahalanobis distance is an ellipsoidal distance. Every confidence region of a multivariate Gaussian is an ellipsoid.</p>
+<p>The geometry of covariance captures the probabilistic meaning of positive definite matrices. The covariance matrix <span class="math inline">\(\Sigma = \mathbb{E}[(X-\mu)(X-\mu)^T]\)</span> of a random vector <span class="math inline">\(X \in \mathbb{R}^n\)</span> is always symmetric positive semidefinite — positive definite when no linear combination of the components is deterministic. The covariance matrix encodes the entire second-order statistical structure of the distribution: its eigenvectors are the principal directions of variation, its eigenvalues are the variances in those directions, and its inverse <span class="math inline">\(\Sigma^{-1}\)</span> is the precision matrix that appears in the Gaussian density <span class="math inline">\(p(x) \propto e^{-\frac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)}\)</span>. The Mahalanobis distance <span class="math inline">\(d_\Sigma(x,y) = \sqrt{(x-y)^T\Sigma^{-1}(x-y)}\)</span> is the Riemannian distance defined by the precision matrix — the natural distance for a Gaussian distribution that accounts for the distribution’s shape.</p>
+<p>The topic has three subtopics that develop the theory of positive definite matrices in logical order.</p>
+<p>The first subtopic is <strong>the definition and characterization of positive definite matrices</strong> — the four equivalent conditions for positive definiteness (all eigenvalues positive, all leading principal minors positive, the Cholesky decomposition exists, the matrix defines a valid inner product), and why each condition captures the same geometric reality from a different angle. The Cholesky decomposition <span class="math inline">\(A = LL^T\)</span> — the positive definite matrix’s analogue of the square root — is particularly important: it is the computational tool for generating samples from multivariate Gaussians, for solving linear systems efficiently when the matrix is positive definite, and for parameterizing positive definite matrices in optimization.</p>
+<p>The second subtopic is <strong>the cone of positive definite matrices</strong> — the space <span class="math inline">\(\mathbb{S}^n_{++}\)</span> of all <span class="math inline">\(n \times n\)</span> positive definite matrices as a convex cone and as a Riemannian manifold. The space <span class="math inline">\(\mathbb{S}^n_{++}\)</span> is not a flat vector space — it is a curved manifold with a natural Riemannian metric, the affine-invariant metric <span class="math inline">\(\langle \Delta_1, \Delta_2\rangle_A = \text{tr}(A^{-1}\Delta_1 A^{-1}\Delta_2)\)</span>. Its geodesics are matrix exponential curves, and the Fréchet mean of positive definite matrices — used in diffusion tensor imaging, in computing mean covariance matrices, and in geometric deep learning — is the geometric mean <span class="math inline">\((\prod_i A_i)^{1/n}\)</span> computed via the matrix exponential and logarithm.</p>
+<p>The third subtopic is <strong>covariance matrices and the multivariate Gaussian</strong> — how the covariance matrix encodes the shape of the Gaussian distribution, how the Mahalanobis distance measures proximity relative to the distribution’s shape, how the Fisher information metric of the Gaussian family is expressed in terms of the covariance matrix, and how the Wasserstein-2 distance between Gaussians has a closed-form expression in terms of the covariance matrices and their matrix square roots. This last result — the Bures metric formula <span class="math inline">\(W_2^2(\mathcal{N}(\mu_1,\Sigma_1), \mathcal{N}(\mu_2,\Sigma_2)) = \|\mu_1-\mu_2\|_2^2 + \text{tr}(\Sigma_1 + \Sigma_2 - 2(\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})^{1/2})\)</span> — connects the positive definite matrix geometry of this topic to the Optimal Transport geometry of Phase 1, making the bridge between Chapter 4 and Phase 1 fully explicit.</p>
+<p>By the end of this topic, Chapter 4 is complete and Phase 0 is nearly complete. The positive definite matrix is the common geometric object underlying the Riemannian metric (a positive definite matrix at each point), the covariance matrix (a positive definite summary of a distribution), the Hessian (a positive definite certificate of convexity), the Fisher information (a positive definite Riemannian metric on the statistical manifold), and the Wasserstein-2 distance between Gaussians (expressed through the matrix square root of the covariance). It is the thread that connects every chapter of Phase 0 into a coherent whole.</p>
+<p><strong>ALL THREE SUBTOPICS ARE TREATED AS A SINGLE TOPIC FOR EASY COMPREHENSION.</strong></p>
+<hr>
+</section>
+<section id="layer-1-story" class="level2">
+<h2 class="anchored" data-anchor-id="layer-1-story">Layer 1 (Story)</h2>
+<p>You are the head of the risk assessment division at a microfinance bank in Kathmandu, and you have been handed a portfolio of one hundred loan applicants. Each applicant is described by five financial indicators: monthly income, outstanding debt, years of employment, number of dependents, and credit history score. Your job is to understand the joint financial health of the portfolio — not just the average values of these five indicators, but how they relate to each other, how they vary together, and what the portfolio’s most vulnerable directions of risk exposure are.</p>
+<p>Your chief data analyst places two objects on your desk. The first is a simple table of averages: the mean monthly income across all applicants, the mean outstanding debt, the mean years of employment, and so on. This is the portfolio’s center — where the average applicant sits in the five-dimensional space of financial indicators.</p>
+<p>The second object is a <span class="math inline">\(5 \times 5\)</span> matrix. It has entries on the diagonal measuring how much each indicator varies across applicants — the variance of monthly income, the variance of debt, and so on. And it has off-diagonal entries measuring how each pair of indicators varies together — when income is high, does debt tend to be low? When employment years are long, does credit score tend to be high? This matrix is the <strong>covariance matrix</strong> <span class="math inline">\(\Sigma\)</span> of the portfolio, and it is the complete second-order description of the portfolio’s financial risk structure.</p>
+<p>Your analyst tells you that this matrix has a remarkable property. Every number of the form <span class="math inline">\(v^T\Sigma v\)</span> is non-negative for any nonzero vector <span class="math inline">\(v \in \mathbb{R}^5\)</span>. She calls this property <strong>positive semidefiniteness</strong>, and when the inequality is strict — when <span class="math inline">\(v^T\Sigma v &gt; 0\)</span> for every nonzero <span class="math inline">\(v\)</span> — the matrix is <strong>positive definite</strong>. She says this property is not a coincidence or a special feature of your particular portfolio. It is a theorem: covariance matrices are always positive semidefinite, and they are positive definite whenever no financial indicator is an exact linear combination of the others.</p>
+<p>You ask her to explain why this property matters. She draws you three pictures.</p>
+<hr>
+<p><strong>The first picture: the ellipsoid of equal Mahalanobis distance</strong></p>
+<p>Your analyst takes the covariance matrix <span class="math inline">\(\Sigma\)</span> and draws the set of all applicant profiles <span class="math inline">\(v \in \mathbb{R}^5\)</span> that are equidistant from the portfolio average in the metric defined by <span class="math inline">\(\Sigma^{-1}\)</span>: the set <span class="math inline">\(\{v : (v-\mu)^T\Sigma^{-1}(v-\mu) = 1\}\)</span>. This is the level set of the <strong>Mahalanobis distance</strong> at value 1.</p>
+<p>In two dimensions — simplifying to just income and debt — this set is an ellipse. The ellipse is not a circle: it is stretched in the directions where the portfolio has high variance and compressed in the directions where the portfolio has low variance. If income varies a lot but debt varies a little, the ellipse is wide in the income direction and narrow in the debt direction. If income and debt are strongly positively correlated — borrowers with high income tend to have high debt — the ellipse is tilted, with its long axis running diagonally in the direction of the correlation.</p>
+<p>The axes of this ellipse are the eigenvectors of <span class="math inline">\(\Sigma\)</span>, and the half-lengths of the axes are the square roots of the eigenvalues. The first eigenvector points in the direction of maximum portfolio variance — the direction along which applicants differ most from each other. The last eigenvector points in the direction of minimum portfolio variance — the direction along which applicants are most similar.</p>
+<p>This ellipse is the portfolio’s natural shape. It is the curved shape that the covariance matrix imposes on the applicant space — replacing the round circles of Euclidean distance with the elongated, tilted ellipses of Mahalanobis distance. And it is the precise geometric content of the positive definite matrix: the condition <span class="math inline">\(v^T\Sigma v &gt; 0\)</span> for all nonzero <span class="math inline">\(v\)</span> is exactly the condition that the matrix <span class="math inline">\(\Sigma\)</span> defines a valid, non-degenerate ellipsoid. If <span class="math inline">\(\Sigma\)</span> were only positive semidefinite — if some eigenvalue were zero — the ellipsoid would be infinitely thin in the zero-eigenvalue direction, collapsing to a lower-dimensional ellipsoid in a hyperplane.</p>
+<p><strong>The second picture: the Cholesky decomposition</strong></p>
+<p>Your analyst now says: the covariance matrix <span class="math inline">\(\Sigma\)</span> can be written as <span class="math inline">\(\Sigma = LL^T\)</span> where <span class="math inline">\(L\)</span> is a lower triangular matrix with positive diagonal entries. This is the <strong>Cholesky decomposition</strong> — the positive definite matrix’s version of the square root.</p>
+<p>The Cholesky decomposition has an immediate financial interpretation. The matrix <span class="math inline">\(L\)</span> is a linear transformation that converts a vector of independent standard risks — uncorrelated random variables each with variance 1 — into the portfolio’s actual joint risk structure. If <span class="math inline">\(Z \in \mathbb{R}^5\)</span> is a vector of five independent standard normal random variables, then <span class="math inline">\(X = LZ + \mu\)</span> is a random vector with mean <span class="math inline">\(\mu\)</span> and covariance <span class="math inline">\(\mathbb{E}[(X-\mu)(X-\mu)^T] = L\mathbb{E}[ZZ^T]L^T = LIL^T = LL^T = \Sigma\)</span>. The Cholesky factor <span class="math inline">\(L\)</span> is the machine that takes simple, uncorrelated risks and generates the portfolio’s actual correlated financial risks.</p>
+<p>This is how you generate realistic simulated loan portfolios: compute the Cholesky factor once, then multiply random standard normal vectors by <span class="math inline">\(L\)</span> and shift by <span class="math inline">\(\mu\)</span>. The positive definiteness of <span class="math inline">\(\Sigma\)</span> is the condition that guarantees the Cholesky decomposition exists and is unique — that the lower triangular factor <span class="math inline">\(L\)</span> with positive diagonal entries can always be found. If <span class="math inline">\(\Sigma\)</span> were only positive semidefinite, some diagonal entry of <span class="math inline">\(L\)</span> would be zero, meaning some component of the risk is a deterministic function of the others, and the simulated portfolio would lie in a lower-dimensional subspace.</p>
+<p><strong>The third picture: the four equivalent conditions</strong></p>
+<p>Your analyst now lists four different ways of checking whether a symmetric matrix is positive definite, each illuminating a different aspect of the same geometric reality.</p>
+<p>The first condition is eigenvalue-based: <span class="math inline">\(\Sigma\)</span> is positive definite if and only if all its eigenvalues are strictly positive — <span class="math inline">\(\lambda_i &gt; 0\)</span> for all <span class="math inline">\(i\)</span>. This is the spectral theorem’s perspective: the matrix is a pure stretch in the eigenvector directions, and all stretches are positive.</p>
+<p>The second condition is determinant-based: <span class="math inline">\(\Sigma\)</span> is positive definite if and only if all its leading principal minors are strictly positive — the <span class="math inline">\(1\times 1\)</span> submatrix <span class="math inline">\(\sigma_{11} &gt; 0\)</span>, the <span class="math inline">\(2\times 2\)</span> submatrix <span class="math inline">\(\begin{vmatrix}\sigma_{11}&amp;\sigma_{12}\\\sigma_{21}&amp;\sigma_{22}\end{vmatrix} &gt; 0\)</span>, and so on. This is the Sylvester criterion — a computational test that checks positive definiteness by checking the signs of nested determinants.</p>
+<p>The third condition is factorization-based: <span class="math inline">\(\Sigma\)</span> is positive definite if and only if it has a Cholesky decomposition <span class="math inline">\(\Sigma = LL^T\)</span> with <span class="math inline">\(L\)</span> lower triangular and all diagonal entries of <span class="math inline">\(L\)</span> strictly positive. This is the constructive condition — positive definiteness is equivalent to the existence of the square root decomposition.</p>
+<p>The fourth condition is inner product-based: <span class="math inline">\(\Sigma\)</span> is positive definite if and only if <span class="math inline">\(\langle u, v\rangle_\Sigma = u^T\Sigma v\)</span> defines a valid inner product on <span class="math inline">\(\mathbb{R}^n\)</span>. This is the geometric condition — the matrix defines an ellipsoidal norm <span class="math inline">\(\|v\|_\Sigma = \sqrt{v^T\Sigma v}\)</span>, and positive definiteness is the condition that this norm is nondegenerate.</p>
+<p>All four conditions are equivalent, and each one is useful in different contexts.</p>
+<hr>
+<p><strong>The space of all positive definite matrices</strong></p>
+<p>Your analyst now tells you something surprising. The set of all <span class="math inline">\(5 \times 5\)</span> positive definite matrices — let us call it <span class="math inline">\(\mathbb{S}^5_{++}\)</span> — is not a flat vector space. You cannot simply add two positive definite matrices and guarantee the result is positive definite with the same interpretation. More precisely: <span class="math inline">\(\mathbb{S}^5_{++}\)</span> is a convex cone — if <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> are positive definite and <span class="math inline">\(\lambda &gt; 0\)</span>, then <span class="math inline">\(\lambda A + (1-\lambda)B\)</span> is positive definite for all <span class="math inline">\(\lambda \in (0,1)\)</span>. But it is also a curved manifold — it has nontrivial curvature, and the straight-line interpolation between two positive definite matrices is not the geometrically natural one.</p>
+<p>The natural interpolation between two covariance matrices <span class="math inline">\(\Sigma_1\)</span> and <span class="math inline">\(\Sigma_2\)</span> — the one that is invariant under coordinate changes, that treats the two matrices symmetrically, and that stays on the manifold of positive definite matrices — is the <strong>geometric mean</strong>:</p>
+<p><span class="math display">\[\Sigma_1 \#_t \Sigma_2 = \Sigma_1^{1/2}\left(\Sigma_1^{-1/2}\Sigma_2\Sigma_1^{-1/2}\right)^t \Sigma_1^{1/2}\]</span></p>
+<p>At <span class="math inline">\(t=0\)</span> this gives <span class="math inline">\(\Sigma_1\)</span>, at <span class="math inline">\(t=1\)</span> this gives <span class="math inline">\(\Sigma_2\)</span>, and at <span class="math inline">\(t=1/2\)</span> it gives the geometric mean <span class="math inline">\(\Sigma_1 \# \Sigma_2\)</span>. This interpolation is the geodesic on the Riemannian manifold <span class="math inline">\(\mathbb{S}^5_{++}\)</span> equipped with the affine-invariant metric. The straight-line interpolation <span class="math inline">\((1-t)\Sigma_1 + t\Sigma_2\)</span> — the arithmetic mean — is not the geodesic on this manifold. The geometric mean is.</p>
+<p>Your analyst uses this to explain something you have seen in practice but never understood theoretically: when you average covariance matrices from different time periods to estimate a stable long-run covariance, the arithmetic average often produces a matrix with larger eigenvalues than either of the inputs — the averaging swells the matrix. The geometric average does not have this problem: it stays close to the original matrices in the correct Riemannian sense, respecting the curved geometry of the positive definite cone.</p>
+<hr>
+<p><strong>The Wasserstein distance between Gaussians</strong></p>
+<p>Your analyst now reveals the connection that ties everything together. You want to measure how different two loan portfolios are — not just their averages, but their full distributional shapes. If portfolio 1 has Gaussian distribution <span class="math inline">\(\mathcal{N}(\mu_1, \Sigma_1)\)</span> and portfolio 2 has <span class="math inline">\(\mathcal{N}(\mu_2, \Sigma_2)\)</span>, what is the natural distance between them?</p>
+<p>The Euclidean distance between the mean vectors is <span class="math inline">\(\|\mu_1 - \mu_2\|_2\)</span> — it captures how far apart the portfolio centers are. But it ignores the covariance structure entirely.</p>
+<p>The correct distance, she says, is the Wasserstein-2 distance between the two Gaussian distributions. And it has a beautiful closed form:</p>
+<p><span class="math display">\[W_2^2(\mathcal{N}(\mu_1,\Sigma_1), \mathcal{N}(\mu_2,\Sigma_2)) = \|\mu_1-\mu_2\|_2^2 + \text{tr}\!\left(\Sigma_1 + \Sigma_2 - 2(\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})^{1/2}\right)\]</span></p>
+<p>The first term is the squared Euclidean distance between the means — how far apart the portfolio centers are. The second term is the <strong>Bures distance</strong> between the covariance matrices — it measures how different the portfolio shapes are, accounting for both the eigenvalue structure (the size of each risk direction) and the eigenvector alignment (the orientation of each risk direction). The matrix square root <span class="math inline">\(\Sigma_1^{1/2}\)</span> and the expression <span class="math inline">\((\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})^{1/2}\)</span> are the functional calculus of the spectral theorem applied to positive definite matrices.</p>
+<p>This formula is the bridge between Chapter 4 and Phase 1. The Wasserstein distance between two probability distributions — the foundational object of Optimal Transport — has a completely explicit, computable form when the distributions are Gaussian, and that form is entirely expressed in terms of the positive definite covariance matrices and their matrix square roots. Phase 1’s abstract theory of Optimal Transport produces this concrete formula when restricted to the Gaussian family, and the positive definite matrix geometry of this topic is what makes the formula tractable.</p>
+<hr>
+<p>Here is the break moment. The naive assumption is that the average of two covariance matrices — the arithmetic mean <span class="math inline">\(\frac{1}{2}(\Sigma_1 + \Sigma_2)\)</span> — is the natural midpoint between them, in the same way that the arithmetic mean of two numbers is the natural midpoint on the number line.</p>
+<p>This breaks in a specific and illuminating way. Consider two covariance matrices that represent the same underlying distribution viewed in two different coordinate systems. A coordinate change by an invertible matrix <span class="math inline">\(C\)</span> transforms <span class="math inline">\(\Sigma \mapsto C\Sigma C^T\)</span>. The arithmetic mean of <span class="math inline">\(C\Sigma_1 C^T\)</span> and <span class="math inline">\(C\Sigma_2 C^T\)</span> is <span class="math inline">\(C\frac{\Sigma_1+\Sigma_2}{2}C^T\)</span> — the arithmetic mean in the transformed coordinates equals the transformation of the arithmetic mean in the original coordinates. So far, arithmetic mean seems coordinate-invariant.</p>
+<p>But consider what happens to the eigenvalues. If <span class="math inline">\(\Sigma_1 = \begin{pmatrix}2&amp;0\\0&amp;\frac{1}{2}\end{pmatrix}\)</span> and <span class="math inline">\(\Sigma_2 = \begin{pmatrix}\frac{1}{2}&amp;0\\0&amp;2\end{pmatrix}\)</span> — two covariance matrices that are inverses of each other, representing distributions of the same total variance but with the variance in opposite directions — the arithmetic mean is <span class="math inline">\(\frac{\Sigma_1+\Sigma_2}{2} = \frac{5}{4}I\)</span>, a scalar multiple of the identity with eigenvalue <span class="math inline">\(\frac{5}{4}\)</span>. The geometric mean is <span class="math inline">\((\Sigma_1\Sigma_2)^{1/2} = (I)^{1/2} = I\)</span>, the identity with eigenvalue <span class="math inline">\(1\)</span>.</p>
+<p>The arithmetic mean has a larger eigenvalue than either input — it swells. The geometric mean has eigenvalue <span class="math inline">\(1\)</span>, exactly halfway between the eigenvalues <span class="math inline">\(2\)</span> and <span class="math inline">\(\frac{1}{2}\)</span> on the logarithmic scale, which is the correct notion of halfway for positive quantities. The arithmetic mean violates the intuition that the midpoint of two equal-variance distributions should also have equal variance. The geometric mean respects it. The curvature of the positive definite cone — the fact that <span class="math inline">\(\mathbb{S}^n_{++}\)</span> is not a flat vector space — is the reason arithmetic averaging is wrong, and the geodesic geometric mean is right.</p>
+<hr>
+<p>Hold four pictures simultaneously.</p>
+<p>The portfolio’s ellipse: the set <span class="math inline">\(\{v : v^T\Sigma^{-1}v = 1\}\)</span> traced by the covariance matrix, with principal axes aligned to the eigenvectors of <span class="math inline">\(\Sigma\)</span> and axis half-lengths equal to the square roots of the eigenvalues — the geometric fingerprint of positive definiteness.</p>
+<p>The Cholesky decomposition <span class="math inline">\(\Sigma = LL^T\)</span>: the factorization into a lower triangular matrix that converts independent risks into correlated risks, the existence of which is equivalent to positive definiteness.</p>
+<p>The positive definite cone <span class="math inline">\(\mathbb{S}^n_{++}\)</span> as a curved Riemannian manifold: arithmetic mean swells eigenvalues, geometric mean stays on the geodesic, and the correct interpolation respects the manifold’s curvature.</p>
+<p>The Bures-Wasserstein formula: the Wasserstein-2 distance between Gaussians expressed through the matrix square root of covariance matrices, bridging positive definite matrix geometry to Optimal Transport.</p>
+<hr>
+</section>
+<section id="layer-2-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="layer-2-mathematics">Layer 2 (Mathematics)</h2>
+<p>We build the formalism in six stages: the precise definitions and equivalent characterizations, the Cholesky decomposition, the cone <span class="math inline">\(\mathbb{S}^n_{++}\)</span> as a Riemannian manifold, the Mahalanobis distance and its geometry, the multivariate Gaussian and Fisher information, and the Bures-Wasserstein metric connecting to Phase 1.</p>
+<section id="definitions-and-equivalent-characterizations" class="level3">
+<h3 class="anchored" data-anchor-id="definitions-and-equivalent-characterizations">Definitions and Equivalent Characterizations</h3>
+<p>A symmetric matrix <span class="math inline">\(A \in \mathbb{R}^{n \times n}\)</span> is <strong>positive semidefinite</strong> (written <span class="math inline">\(A \succeq 0\)</span>) if:</p>
+<p><span class="math display">\[v^T A v \geq 0 \quad \forall v \in \mathbb{R}^n\]</span></p>
+<p>It is <strong>positive definite</strong> (written <span class="math inline">\(A \succ 0\)</span>) if:</p>
+<p><span class="math display">\[v^T A v &gt; 0 \quad \forall v \neq 0\]</span></p>
+<p>The following conditions are equivalent for a symmetric <span class="math inline">\(A\)</span>:</p>
+<p><strong>Theorem (Equivalent characterizations of positive definiteness).</strong> For <span class="math inline">\(A \in \mathbb{R}^{n \times n}\)</span> symmetric, the following are equivalent:</p>
+<p><span class="math display">\[\text{(i) } A \succ 0 \quad \text{(positive definite)}\]</span> <span class="math display">\[\text{(ii) All eigenvalues of } A \text{ are strictly positive: } \lambda_i(A) &gt; 0 \; \forall i\]</span> <span class="math display">\[\text{(iii) All leading principal minors are positive: } \det(A_k) &gt; 0 \; \text{for } k = 1,\ldots,n\]</span> <span class="math display">\[\text{(iv) } A = LL^T \text{ for a unique lower triangular } L \text{ with positive diagonal entries}\]</span> <span class="math display">\[\text{(v) } A \text{ defines a valid inner product: } \langle u,v\rangle_A = u^TAv \text{ satisfies all inner product axioms}\]</span></p>
+<p><strong>Proof of (i) <span class="math inline">\(\iff\)</span> (ii).</strong> By the spectral theorem <span class="math inline">\(A = Q\Lambda Q^T\)</span>, so <span class="math inline">\(v^TAv = (Q^Tv)^T\Lambda(Q^Tv) = \sum_i \lambda_i w_i^2\)</span> where <span class="math inline">\(w = Q^Tv\)</span>. This is positive for all nonzero <span class="math inline">\(v\)</span> iff <span class="math inline">\(\lambda_i &gt; 0\)</span> for all <span class="math inline">\(i\)</span>. <span class="math inline">\(\square\)</span></p>
+<p><strong>Proof of (ii) <span class="math inline">\(\implies\)</span> (iv).</strong> Existence follows by induction using the Schur complement, proved below. Uniqueness follows because if <span class="math inline">\(A = LL^T = MM^T\)</span> with both lower triangular and positive diagonal, then <span class="math inline">\(M^{-1}L\)</span> is both lower triangular and orthogonal, forcing <span class="math inline">\(M^{-1}L = I\)</span>. <span class="math inline">\(\square\)</span></p>
+<hr>
+</section>
+<section id="the-schur-complement" class="level3">
+<h3 class="anchored" data-anchor-id="the-schur-complement">The Schur Complement</h3>
+<p>The <strong>Schur complement</strong> is a fundamental tool for positive definiteness of block matrices. For a block symmetric matrix:</p>
+<p><span class="math display">\[M = \begin{pmatrix} A &amp; B \\ B^T &amp; C \end{pmatrix}\]</span></p>
+<p>with <span class="math inline">\(A \succ 0\)</span>, the <strong>Schur complement</strong> of <span class="math inline">\(A\)</span> in <span class="math inline">\(M\)</span> is:</p>
+<p><span class="math display">\[M/A = C - B^T A^{-1} B\]</span></p>
+<p><strong>Theorem.</strong> <span class="math inline">\(M \succ 0\)</span> if and only if <span class="math inline">\(A \succ 0\)</span> and <span class="math inline">\(M/A \succ 0\)</span>.</p>
+<p><strong>Proof.</strong> Factor: <span class="math inline">\(M = \begin{pmatrix}I &amp; 0 \\ B^TA^{-1} &amp; I\end{pmatrix}\begin{pmatrix}A &amp; 0 \\ 0 &amp; M/A\end{pmatrix}\begin{pmatrix}I &amp; A^{-1}B \\ 0 &amp; I\end{pmatrix}\)</span>. Since the outer factors are invertible, <span class="math inline">\(M \succ 0 \iff \begin{pmatrix}A &amp; 0 \\ 0 &amp; M/A\end{pmatrix} \succ 0 \iff A \succ 0\)</span> and <span class="math inline">\(M/A \succ 0\)</span>. <span class="math inline">\(\square\)</span></p>
+<p>The Schur complement drives the Cholesky algorithm and appears in Gaussian conditioning: if <span class="math inline">\((X,Y)\)</span> is jointly Gaussian with covariance <span class="math inline">\(\begin{pmatrix}\Sigma_{XX} &amp; \Sigma_{XY}\\\Sigma_{YX}&amp;\Sigma_{YY}\end{pmatrix}\)</span>, the conditional covariance of <span class="math inline">\(X|Y\)</span> is <span class="math inline">\(\Sigma_{XX} - \Sigma_{XY}\Sigma_{YY}^{-1}\Sigma_{YX}\)</span> — the Schur complement of <span class="math inline">\(\Sigma_{YY}\)</span>.</p>
+<hr>
+</section>
+<section id="the-cholesky-decomposition" class="level3">
+<h3 class="anchored" data-anchor-id="the-cholesky-decomposition">The Cholesky Decomposition</h3>
+<p><strong>Theorem (Cholesky).</strong> Every symmetric positive definite matrix <span class="math inline">\(A \in \mathbb{R}^{n\times n}\)</span> has a unique factorization <span class="math inline">\(A = LL^T\)</span> where <span class="math inline">\(L\)</span> is lower triangular with strictly positive diagonal entries.</p>
+<p><strong>Algorithm.</strong> For <span class="math inline">\(j = 1,\ldots,n\)</span>:</p>
+<p><span class="math display">\[l_{jj} = \sqrt{a_{jj} - \sum_{k=1}^{j-1} l_{jk}^2}\]</span></p>
+<p><span class="math display">\[l_{ij} = \frac{1}{l_{jj}}\left(a_{ij} - \sum_{k=1}^{j-1} l_{ik}l_{jk}\right), \quad i &gt; j\]</span></p>
+<p>The algorithm succeeds (all square roots are of positive numbers) if and only if <span class="math inline">\(A \succ 0\)</span>.</p>
+<p><strong>Computational complexity.</strong> The Cholesky decomposition costs <span class="math inline">\(O(n^3/3)\)</span> operations — half the cost of general LU decomposition — and is numerically stable without pivoting when <span class="math inline">\(A \succ 0\)</span>. It is the preferred algorithm for solving linear systems <span class="math inline">\(Ax = b\)</span> when <span class="math inline">\(A\)</span> is known to be positive definite.</p>
+<p><strong>Applications:</strong></p>
+<p>Solving <span class="math inline">\(Ax = b\)</span>: compute <span class="math inline">\(A = LL^T\)</span>, then solve <span class="math inline">\(Ly = b\)</span> (forward substitution) and <span class="math inline">\(L^Tx = y\)</span> (back substitution), each costing <span class="math inline">\(O(n^2)\)</span>.</p>
+<p>Sampling from <span class="math inline">\(\mathcal{N}(\mu, \Sigma)\)</span>: generate <span class="math inline">\(z \sim \mathcal{N}(0,I_n)\)</span>, then return <span class="math inline">\(x = Lz + \mu\)</span> where <span class="math inline">\(\Sigma = LL^T\)</span>.</p>
+<p>Checking positive definiteness: attempt Cholesky factorization; it succeeds iff <span class="math inline">\(A \succ 0\)</span>.</p>
+<hr>
+</section>
+<section id="the-cone-mathbbsn_-as-a-convex-cone" class="level3">
+<h3 class="anchored" data-anchor-id="the-cone-mathbbsn_-as-a-convex-cone">The Cone <span class="math inline">\(\mathbb{S}^n_{++}\)</span> as a Convex Cone</h3>
+<p>The set of <span class="math inline">\(n \times n\)</span> symmetric positive definite matrices:</p>
+<p><span class="math display">\[\mathbb{S}^n_{++} = \{A \in \mathbb{R}^{n \times n} : A = A^T, A \succ 0\}\]</span></p>
+<p>is an open convex cone in the vector space <span class="math inline">\(\mathbb{S}^n\)</span> of symmetric matrices (dimension <span class="math inline">\(\frac{n(n+1)}{2}\)</span>).</p>
+<p><strong>Convexity.</strong> For <span class="math inline">\(A, B \succ 0\)</span> and <span class="math inline">\(\lambda \in (0,1)\)</span>: <span class="math inline">\(v^T(\lambda A + (1-\lambda)B)v = \lambda v^TAv + (1-\lambda)v^TBv &gt; 0\)</span> for all <span class="math inline">\(v \neq 0\)</span>.</p>
+<p><strong>Cone property.</strong> For <span class="math inline">\(A \succ 0\)</span> and <span class="math inline">\(\alpha &gt; 0\)</span>: <span class="math inline">\(\alpha A \succ 0\)</span>.</p>
+<p><strong>Openness.</strong> The condition <span class="math inline">\(\lambda_{\min}(A) &gt; 0\)</span> is an open condition — small perturbations of <span class="math inline">\(A\)</span> preserve positive definiteness.</p>
+<p>The boundary <span class="math inline">\(\partial\mathbb{S}^n_{++} = \mathbb{S}^n_+ \setminus \mathbb{S}^n_{++}\)</span> consists of positive semidefinite matrices with at least one zero eigenvalue — the degenerate cases.</p>
+<hr>
+</section>
+<section id="the-riemannian-geometry-of-mathbbsn_" class="level3">
+<h3 class="anchored" data-anchor-id="the-riemannian-geometry-of-mathbbsn_">The Riemannian Geometry of <span class="math inline">\(\mathbb{S}^n_{++}\)</span></h3>
+<p>The <strong>affine-invariant metric</strong> on <span class="math inline">\(\mathbb{S}^n_{++}\)</span> is the Riemannian metric defined at <span class="math inline">\(A \in \mathbb{S}^n_{++}\)</span> for tangent vectors <span class="math inline">\(\Delta_1, \Delta_2 \in T_A\mathbb{S}^n_{++} \cong \mathbb{S}^n\)</span> by:</p>
+<p><span class="math display">\[\langle \Delta_1, \Delta_2\rangle_A = \text{tr}(A^{-1}\Delta_1 A^{-1}\Delta_2)\]</span></p>
+<p>This metric is invariant under congruence transformations: for any invertible <span class="math inline">\(C\)</span>, the map <span class="math inline">\(A \mapsto CAC^T\)</span> is an isometry of <span class="math inline">\((\mathbb{S}^n_{++}, g)\)</span>.</p>
+<p><strong>Geodesics.</strong> The geodesic starting at <span class="math inline">\(A\)</span> in direction <span class="math inline">\(\Delta \in \mathbb{S}^n\)</span> is:</p>
+<p><span class="math display">\[\gamma(t) = A^{1/2}\exp(tA^{-1/2}\Delta A^{-1/2})A^{1/2}\]</span></p>
+<p>The geodesic from <span class="math inline">\(A\)</span> to <span class="math inline">\(B\)</span> is:</p>
+<p><span class="math display">\[\gamma_{A,B}(t) = A^{1/2}(A^{-1/2}BA^{-1/2})^t A^{1/2}\]</span></p>
+<p>At <span class="math inline">\(t=0\)</span>: <span class="math inline">\(\gamma(0) = A\)</span>. At <span class="math inline">\(t=1\)</span>: <span class="math inline">\(\gamma(1) = B\)</span>. The midpoint <span class="math inline">\(t=1/2\)</span> is the <strong>geometric mean</strong> <span class="math inline">\(A \# B = A^{1/2}(A^{-1/2}BA^{-1/2})^{1/2}A^{1/2}\)</span>.</p>
+<p><strong>Geodesic distance.</strong> The Riemannian distance between <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> under the affine-invariant metric is:</p>
+<p><span class="math display">\[d(A,B) = \left\|\log(A^{-1/2}BA^{-1/2})\right\|_F = \sqrt{\sum_{i=1}^n \log^2(\lambda_i(A^{-1}B))}\]</span></p>
+<p>where <span class="math inline">\(\lambda_i(A^{-1}B)\)</span> are the generalized eigenvalues of the pencil <span class="math inline">\((B,A)\)</span>.</p>
+<p><strong>Fréchet mean.</strong> The Fréchet mean of positive definite matrices <span class="math inline">\(A_1,\ldots,A_k\)</span> under the affine-invariant metric is the unique minimizer of <span class="math inline">\(\sum_i d(A_i, X)^2\)</span> — the matrix geometric mean, computed via the fixed-point iteration:</p>
+<p><span class="math display">\[X_{t+1} = X_t^{1/2}\exp\!\left(\frac{1}{k}\sum_i \log(X_t^{-1/2}A_iX_t^{-1/2})\right)X_t^{1/2}\]</span></p>
+<p>converging to the geometric mean <span class="math inline">\(G = \#_i A_i\)</span>.</p>
+<hr>
+</section>
+<section id="the-mahalanobis-distance" class="level3">
+<h3 class="anchored" data-anchor-id="the-mahalanobis-distance">The Mahalanobis Distance</h3>
+<p>For <span class="math inline">\(A \succ 0\)</span>, the <strong><span class="math inline">\(A\)</span>-norm</strong> on <span class="math inline">\(\mathbb{R}^n\)</span> is:</p>
+<p><span class="math display">\[\|v\|_A = \sqrt{v^TAv}\]</span></p>
+<p>and the <strong>Mahalanobis distance</strong> with precision matrix <span class="math inline">\(A\)</span> is:</p>
+<p><span class="math display">\[d_A(x,y) = \|x-y\|_A = \sqrt{(x-y)^TA(x-y)}\]</span></p>
+<p>For a distribution with covariance <span class="math inline">\(\Sigma \succ 0\)</span>, the Mahalanobis distance uses <span class="math inline">\(A = \Sigma^{-1}\)</span>:</p>
+<p><span class="math display">\[d_\Sigma(x,y) = \sqrt{(x-y)^T\Sigma^{-1}(x-y)}\]</span></p>
+<p><strong>Geometric interpretation.</strong> The level set <span class="math inline">\(\{x : d_\Sigma(x,\mu) = 1\}\)</span> is an ellipsoid centered at <span class="math inline">\(\mu\)</span> with principal axes given by the eigenvectors <span class="math inline">\(q_i\)</span> of <span class="math inline">\(\Sigma\)</span> and half-lengths <span class="math inline">\(\sqrt{\lambda_i(\Sigma)}\)</span>. In the eigenvector coordinate system (via <span class="math inline">\(z = Q^T\Sigma^{-1/2}(x-\mu)\)</span>), the ellipsoid becomes the unit sphere.</p>
+<p><strong>Whitening transformation.</strong> The map <span class="math inline">\(x \mapsto \Sigma^{-1/2}x\)</span> converts Mahalanobis distance to Euclidean distance: <span class="math inline">\(d_\Sigma(x,y) = \|\Sigma^{-1/2}(x-y)\|_2\)</span>. The whitened variables <span class="math inline">\(z = \Sigma^{-1/2}(x-\mu)\)</span> have identity covariance: <span class="math inline">\(\mathbb{E}[zz^T] = \Sigma^{-1/2}\Sigma\Sigma^{-1/2} = I\)</span>.</p>
+<hr>
+</section>
+<section id="the-multivariate-gaussian-and-fisher-information" class="level3">
+<h3 class="anchored" data-anchor-id="the-multivariate-gaussian-and-fisher-information">The Multivariate Gaussian and Fisher Information</h3>
+<p>The <strong>multivariate Gaussian</strong> <span class="math inline">\(\mathcal{N}(\mu, \Sigma)\)</span> with mean <span class="math inline">\(\mu \in \mathbb{R}^n\)</span> and covariance <span class="math inline">\(\Sigma \succ 0\)</span> has density:</p>
+<p><span class="math display">\[p(x; \mu, \Sigma) = \frac{1}{(2\pi)^{n/2}\det(\Sigma)^{1/2}}\exp\!\left(-\frac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)\]</span></p>
+<p>The exponent is the squared Mahalanobis distance from <span class="math inline">\(x\)</span> to <span class="math inline">\(\mu\)</span> — the density is constant on ellipsoids of constant Mahalanobis distance.</p>
+<p><strong>Fisher information matrix.</strong> For the Gaussian family parameterized by <span class="math inline">\((\mu, \Sigma)\)</span>, the Fisher information has block structure. The Fisher information for the mean parameter <span class="math inline">\(\mu\)</span> alone (fixing <span class="math inline">\(\Sigma\)</span>) is:</p>
+<p><span class="math display">\[I_\mu = \Sigma^{-1}\]</span></p>
+<p>The precision matrix <span class="math inline">\(\Sigma^{-1}\)</span> is the Fisher information for the mean — it measures how informative observations are about the mean, accounting for the distribution’s shape. The natural gradient for mean estimation is:</p>
+<p><span class="math display">\[\tilde\nabla_\mu \mathcal{L} = I_\mu^{-1}\nabla_\mu\mathcal{L} = \Sigma\nabla_\mu\mathcal{L}\]</span></p>
+<p><strong>Full Fisher information.</strong> For the full parameter <span class="math inline">\(\theta = (\mu, \text{vech}(\Sigma))\)</span> (where <span class="math inline">\(\text{vech}\)</span> vectorizes the upper triangle), the Fisher information matrix is block diagonal with blocks <span class="math inline">\(\Sigma^{-1}\)</span> (for <span class="math inline">\(\mu\)</span>) and <span class="math inline">\(\frac{1}{2}D_n^T(\Sigma^{-1}\otimes\Sigma^{-1})D_n\)</span> (for <span class="math inline">\(\Sigma\)</span>, where <span class="math inline">\(D_n\)</span> is the duplication matrix). The positive definiteness of <span class="math inline">\(\Sigma\)</span> is precisely what makes the Fisher information nondegenerate.</p>
+<hr>
+</section>
+<section id="the-log-determinant-barrier" class="level3">
+<h3 class="anchored" data-anchor-id="the-log-determinant-barrier">The Log-Determinant Barrier</h3>
+<p>The function <span class="math inline">\(f: \mathbb{S}^n_{++} \to \mathbb{R}\)</span> defined by:</p>
+<p><span class="math display">\[f(A) = -\log\det(A) = -\sum_{i=1}^n \log\lambda_i(A)\]</span></p>
+<p>is strictly convex on <span class="math inline">\(\mathbb{S}^n_{++}\)</span>, with gradient and Hessian:</p>
+<p><span class="math display">\[\nabla f(A) = -A^{-1} \quad \text{(as a symmetric matrix)}\]</span></p>
+<p><span class="math display">\[\nabla^2 f(A)[\Delta, \Delta] = \text{tr}(A^{-1}\Delta A^{-1}\Delta) = \langle\Delta,\Delta\rangle_A\]</span></p>
+<p>The Hessian of <span class="math inline">\(-\log\det\)</span> is exactly the affine-invariant Riemannian metric on <span class="math inline">\(\mathbb{S}^n_{++}\)</span>. The log-determinant barrier is a <strong>self-concordant barrier</strong> for the positive semidefinite cone — the foundational object of interior point methods for semidefinite programming (SDP). The SDP feasibility condition <span class="math inline">\(A \succ 0\)</span> is maintained throughout the optimization by the barrier, which diverges to <span class="math inline">\(+\infty\)</span> as <span class="math inline">\(A\)</span> approaches the boundary <span class="math inline">\(\partial\mathbb{S}^n_{++}\)</span>.</p>
+<p>The log-determinant also appears in the Gaussian log-likelihood:</p>
+<p><span class="math display">\[\log p(x;\mu,\Sigma) = -\frac{n}{2}\log(2\pi) - \frac{1}{2}\log\det(\Sigma) - \frac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\]</span></p>
+<p>Maximizing the Gaussian log-likelihood over <span class="math inline">\(\Sigma\)</span> requires maximizing <span class="math inline">\(-\frac{1}{2}\log\det(\Sigma) - \frac{1}{2}\text{tr}(\Sigma^{-1}S)\)</span> where <span class="math inline">\(S = \frac{1}{N}\sum_i(x_i-\hat\mu)(x_i-\hat\mu)^T\)</span> is the sample covariance. The maximum likelihood estimator <span class="math inline">\(\hat\Sigma = S\)</span> is the sample covariance matrix — derived by differentiating the log-determinant.</p>
+<hr>
+</section>
+<section id="the-bures-wasserstein-metric" class="level3">
+<h3 class="anchored" data-anchor-id="the-bures-wasserstein-metric">The Bures-Wasserstein Metric</h3>
+<p>For Gaussian distributions <span class="math inline">\(\mathcal{N}(\mu_1,\Sigma_1)\)</span> and <span class="math inline">\(\mathcal{N}(\mu_2,\Sigma_2)\)</span>, the Wasserstein-2 distance has the closed-form <strong>Bures-Wasserstein formula</strong>:</p>
+<p><span class="math display">\[W_2^2(\mathcal{N}(\mu_1,\Sigma_1),\mathcal{N}(\mu_2,\Sigma_2)) = \|\mu_1-\mu_2\|_2^2 + \mathcal{B}(\Sigma_1,\Sigma_2)^2\]</span></p>
+<p>where the <strong>Bures metric</strong> between positive definite matrices is:</p>
+<p><span class="math display">\[\mathcal{B}(\Sigma_1,\Sigma_2)^2 = \text{tr}(\Sigma_1) + \text{tr}(\Sigma_2) - 2\text{tr}\!\left((\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})^{1/2}\right)\]</span></p>
+<p>The term <span class="math inline">\(\text{tr}((\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})^{1/2})\)</span> uses the matrix square root from the functional calculus of the spectral theorem. Equivalently:</p>
+<p><span class="math display">\[\mathcal{B}(\Sigma_1,\Sigma_2)^2 = \text{tr}(\Sigma_1+\Sigma_2) - 2\sum_{i=1}^n \sqrt{\lambda_i(\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})}\]</span></p>
+<p>where <span class="math inline">\(\lambda_i(\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})\)</span> are the eigenvalues of the positive semidefinite matrix <span class="math inline">\(\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2}\)</span>.</p>
+<p><strong>Proof sketch.</strong> The optimal transport map from <span class="math inline">\(\mathcal{N}(\mu_1,\Sigma_1)\)</span> to <span class="math inline">\(\mathcal{N}(\mu_2,\Sigma_2)\)</span> is the affine map <span class="math inline">\(T(x) = \mu_2 + A(x-\mu_1)\)</span> where <span class="math inline">\(A = \Sigma_1^{-1/2}(\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})^{1/2}\Sigma_1^{-1/2}\)</span> — the symmetric positive definite matrix solving <span class="math inline">\(A\Sigma_1 A = \Sigma_2\)</span> (the Gaussian Brenier map). Computing <span class="math inline">\(W_2^2 = \mathbb{E}[\|T(X)-X\|_2^2]\)</span> gives the Bures formula. <span class="math inline">\(\square\)</span></p>
+<p><strong>Properties of the Bures metric:</strong></p>
+<p>The Bures metric <span class="math inline">\(\mathcal{B}\)</span> is a genuine distance on <span class="math inline">\(\mathbb{S}^n_{++}\)</span>: symmetric, satisfies triangle inequality, and <span class="math inline">\(\mathcal{B}(\Sigma_1,\Sigma_2) = 0 \iff \Sigma_1 = \Sigma_2\)</span>.</p>
+<p>For diagonal <span class="math inline">\(\Sigma_1 = \text{diag}(\sigma_i^2)\)</span> and <span class="math inline">\(\Sigma_2 = \text{diag}(\tau_i^2)\)</span>: <span class="math inline">\(\mathcal{B}^2 = \sum_i(\sigma_i-\tau_i)^2\)</span> — the squared <span class="math inline">\(\ell_2\)</span> distance between the vectors of standard deviations.</p>
+<p>The Bures metric is a lower bound for the Riemannian distance on <span class="math inline">\(\mathbb{S}^n_{++}\)</span> under the affine-invariant metric.</p>
+<hr>
+</section>
+<section id="semidefinite-programming" class="level3">
+<h3 class="anchored" data-anchor-id="semidefinite-programming">Semidefinite Programming</h3>
+<p>A <strong>semidefinite program (SDP)</strong> is an optimization problem of the form:</p>
+<p><span class="math display">\[\min_{X \in \mathbb{S}^n} \langle C, X\rangle \quad \text{subject to} \quad \langle A_i, X\rangle = b_i \; \forall i, \quad X \succeq 0\]</span></p>
+<p>where <span class="math inline">\(\langle A, B\rangle = \text{tr}(A^TB)\)</span> is the Frobenius inner product. SDPs generalize linear programs (which have <span class="math inline">\(X\)</span> diagonal) and second-order cone programs. They are solved efficiently by interior point methods using the log-determinant barrier, with the positive semidefinite cone <span class="math inline">\(\mathbb{S}^n_+\)</span> playing the role of the non-negative orthant in LP.</p>
+<p>SDPs appear throughout the roadmap in the following forms:</p>
+<p>The <strong>Goemans-Williamson relaxation</strong> for graph MAX-CUT approximation is an SDP whose solution uses the spectral structure of the graph Laplacian.</p>
+<p>The <strong>SOS (sum of squares) relaxation</strong> converts polynomial optimization problems into SDPs by requiring the objective to be expressible as a sum of squares — a condition equivalent to a positive semidefinite moment matrix.</p>
+<p>The <strong>nuclear norm minimization</strong> problem for matrix completion — <span class="math inline">\(\min_X \|X\|_*\)</span> subject to linear constraints — is an SDP, because <span class="math inline">\(\|X\|_* = \min_{A,B \succeq 0, X = AB} \frac{1}{2}(\text{tr}(A)+\text{tr}(B))\)</span>.</p>
+<hr>
+</section>
+<section id="why-this-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-matters">WHY THIS MATTERS</h3>
+<p>In MATH 103 (Linear Algebra), you tested positive definiteness using the eigenvalue criterion and computed Gram matrices <span class="math inline">\(G_{ij} = \langle e_i,e_j\rangle\)</span> for inner products — both are special cases of the positive definite theory. The Gram matrix of any set of linearly independent vectors is positive definite, and positive definiteness of the Gram matrix is equivalent to the vectors being linearly independent. In MATH 208 (Statistics and Probability), the covariance matrix <span class="math inline">\(\Sigma = \mathbb{E}[(X-\mu)(X-\mu)^T]\)</span> is positive semidefinite by definition and positive definite when the components of <span class="math inline">\(X\)</span> are not perfectly linearly correlated — you used this in computing multivariate Gaussian densities and in the <span class="math inline">\(\chi^2\)</span> distribution of the Mahalanobis distance. In MATH 302 (Matrix Theory), you studied congruence transformations <span class="math inline">\(A \mapsto PAP^T\)</span> — the positive definite cone is invariant under congruence by any invertible <span class="math inline">\(P\)</span>: if <span class="math inline">\(A \succ 0\)</span> then <span class="math inline">\(PAP^T \succ 0\)</span>. Sylvester’s law of inertia for congruence transformations — the number of positive, negative, and zero eigenvalues is preserved — is the classification theorem for quadratic forms that underlies the second-order conditions for constrained optimization.</p>
+<hr>
+</section>
+</section>
+<section id="layer-3-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="layer-3-bridge">Layer 3 (Bridge)</h2>
+<p>Every element of the microfinance portfolio story has a precise mathematical address. Let us walk through them one by one, until the loan applicants, the covariance matrix, the risk ellipse, and the full formal apparatus are completely fused into a single picture.</p>
+<hr>
+<p><strong>The portfolio of one hundred loan applicants described by five financial indicators — the raw material of the risk assessment — is the data matrix <span class="math inline">\(X \in \mathbb{R}^{100 \times 5}\)</span>, and the portfolio’s financial structure is encoded in the covariance matrix <span class="math inline">\(\Sigma \in \mathbb{S}^5_{++}\)</span>.</strong> Each row of <span class="math inline">\(X\)</span> is one applicant’s five-dimensional financial profile. The mean <span class="math inline">\(\mu = \frac{1}{100}\sum_i x_i \in \mathbb{R}^5\)</span> is the average applicant — the portfolio’s center. The covariance matrix <span class="math inline">\(\Sigma = \frac{1}{99}\sum_i (x_i-\mu)(x_i-\mu)^T\)</span> is the outer product average of the centered profiles — it measures how each pair of financial indicators varies jointly across the portfolio. Every diagonal entry <span class="math inline">\(\Sigma_{kk}\)</span> is the variance of the <span class="math inline">\(k\)</span>-th indicator — how much it spreads. Every off-diagonal entry <span class="math inline">\(\Sigma_{kl}\)</span> is the covariance between indicators <span class="math inline">\(k\)</span> and <span class="math inline">\(l\)</span> — how they move together. The covariance matrix is positive semidefinite by construction: <span class="math inline">\(v^T\Sigma v = \frac{1}{99}\sum_i (v^T(x_i-\mu))^2 \geq 0\)</span> for all <span class="math inline">\(v\)</span>. It is positive definite whenever no nontrivial linear combination of the five indicators is constant across all applicants — the generic condition for real-world financial data.</p>
+<p><strong>The analyst’s claim that <span class="math inline">\(v^T\Sigma v &gt; 0\)</span> for all nonzero <span class="math inline">\(v\)</span> is not a coincidence but a theorem — the positive definiteness of the sample covariance matrix — is the equivalence of all five characterizations simultaneously.</strong> The eigenvalue characterization: all eigenvalues of <span class="math inline">\(\Sigma\)</span> are strictly positive, because <span class="math inline">\(v^T\Sigma v = \sum_i \lambda_i (q_i^Tv)^2\)</span> is a strictly positive convex combination of eigenvalues for any nonzero <span class="math inline">\(v\)</span>, which forces all <span class="math inline">\(\lambda_i &gt; 0\)</span>. The Sylvester criterion: all leading principal minors of <span class="math inline">\(\Sigma\)</span> are positive, testable by checking the <span class="math inline">\(1\times 1\)</span>, <span class="math inline">\(2\times 2\)</span>, <span class="math inline">\(3\times 3\)</span>, <span class="math inline">\(4\times 4\)</span>, and <span class="math inline">\(5\times 5\)</span> determinants in turn. The Cholesky criterion: the Cholesky factorization <span class="math inline">\(\Sigma = LL^T\)</span> succeeds with positive diagonal entries in <span class="math inline">\(L\)</span>, which is the computational test used in practice. The inner product criterion: <span class="math inline">\(\langle u,v\rangle_\Sigma = u^T\Sigma v\)</span> is a valid inner product on <span class="math inline">\(\mathbb{R}^5\)</span>, with the positive definiteness condition ensuring nondegeneracy. All five conditions say the same geometric thing: the covariance matrix defines a non-degenerate ellipsoidal geometry on the five-dimensional financial indicator space.</p>
+<hr>
+<p><strong>The risk ellipse — the set <span class="math inline">\(\{v : (v-\mu)^T\Sigma^{-1}(v-\mu) = 1\}\)</span> of applicant profiles at unit Mahalanobis distance from the mean — is the ellipsoid whose geometry completely encodes the portfolio’s risk structure.</strong> The level set of the Mahalanobis distance at value 1 is an ellipsoid in <span class="math inline">\(\mathbb{R}^5\)</span>. Its principal axes are the eigenvectors <span class="math inline">\(q_1,\ldots,q_5\)</span> of <span class="math inline">\(\Sigma\)</span> — the directions of maximum and minimum financial variation. Its axis half-lengths are <span class="math inline">\(\sqrt{\lambda_1(\Sigma)},\ldots,\sqrt{\lambda_5(\Sigma)}\)</span> — the standard deviations along each principal direction. The eigenvector with the largest eigenvalue is the direction of greatest portfolio variability — the direction in the five-dimensional financial space along which applicants differ most. The eigenvector with the smallest eigenvalue is the direction of least variability — the direction along which applicants are most similar. The ellipse is wide in the high-variance directions and narrow in the low-variance directions, and tilted whenever two indicators are strongly correlated, with the tilt angle determined by the off-diagonal entries of <span class="math inline">\(\Sigma\)</span>.</p>
+<p><strong>The Mahalanobis distance <span class="math inline">\(d_\Sigma(x,y) = \sqrt{(x-y)^T\Sigma^{-1}(x-y)}\)</span> — the portfolio’s natural notion of distance between applicant profiles — is the <span class="math inline">\(\Sigma^{-1}\)</span>-norm, the ellipsoidal norm induced by the precision matrix.</strong> Two applicant profiles are close in Mahalanobis distance if they differ little in the high-variance directions (where small differences are statistically unremarkable) and do not differ at all in the low-variance directions (where even small differences are statistically significant). The Euclidean distance <span class="math inline">\(\|x-y\|_2\)</span> ignores the portfolio’s covariance structure entirely — it treats a difference of 1 unit in monthly income (high variance) as equally significant as a difference of 1 unit in credit score (possibly very low variance). The Mahalanobis distance corrects for this: it measures distance in units of standard deviations in each principal direction, giving the statistically correct notion of proximity. The whitening transformation <span class="math inline">\(x \mapsto \Sigma^{-1/2}x\)</span> converts Mahalanobis distance to Euclidean distance: <span class="math inline">\(d_\Sigma(x,y) = \|\Sigma^{-1/2}(x-y)\|_2\)</span> — the whitened applicant profiles have identity covariance and are uniformly distributed in Euclidean distance.</p>
+<p><strong>The Cholesky decomposition <span class="math inline">\(\Sigma = LL^T\)</span> — the factorization into lower triangular <span class="math inline">\(L\)</span> with positive diagonal — is the risk machine that generates correlated financial profiles from independent risks.</strong> The factor <span class="math inline">\(L\)</span> is the matrix that converts a vector of five independent standard normal risks <span class="math inline">\(Z \sim \mathcal{N}(0,I)\)</span> into the portfolio’s actual correlated risks: <span class="math inline">\(X = LZ + \mu \sim \mathcal{N}(\mu,\Sigma)\)</span>. The first column of <span class="math inline">\(L\)</span> determines how the first risk affects all five financial indicators. The second column of <span class="math inline">\(L\)</span> — starting from the second entry, since <span class="math inline">\(L\)</span> is lower triangular — determines how the second risk affects indicators 2 through 5, given that the first risk’s contribution has been removed. The Cholesky decomposition is a sequential orthogonalization of the financial risks: it finds five independent risk factors, each affecting only the indicators below it, that together generate the portfolio’s full correlation structure. The positive diagonal of <span class="math inline">\(L\)</span> is the positivity of each risk factor’s variance — the condition that no risk factor is a deterministic function of the previous ones, equivalent to positive definiteness of <span class="math inline">\(\Sigma\)</span>.</p>
+<hr>
+<p><strong>The Schur complement <span class="math inline">\(\Sigma_{11} - \Sigma_{12}\Sigma_{22}^{-1}\Sigma_{21}\)</span> — the conditional covariance of the first indicator given all others — is the positive definiteness condition that ensures the conditioning leaves a nondegenerate distribution.</strong> For the block covariance matrix <span class="math inline">\(\Sigma = \begin{pmatrix}\Sigma_{11}&amp;\Sigma_{12}\\\Sigma_{21}&amp;\Sigma_{22}\end{pmatrix}\)</span>, the conditional covariance of <span class="math inline">\(X_1|X_2\)</span> is the Schur complement of <span class="math inline">\(\Sigma_{22}\)</span>. The positive definiteness of <span class="math inline">\(\Sigma\)</span> is equivalent to both <span class="math inline">\(\Sigma_{22} \succ 0\)</span> and the Schur complement <span class="math inline">\(\Sigma_{11} - \Sigma_{12}\Sigma_{22}^{-1}\Sigma_{21} \succ 0\)</span> — the conditional covariance is positive definite. This is the formal statement that conditioning on some financial indicators does not reduce the other indicators to deterministic functions — there is always genuine residual uncertainty even after conditioning.</p>
+<p><strong>The log-determinant barrier <span class="math inline">\(f(\Sigma) = -\log\det(\Sigma) = -\sum_i\log\lambda_i(\Sigma)\)</span> — the sum of negative log-eigenvalues — is the self-concordant barrier for the positive definite cone, diverging to <span class="math inline">\(+\infty\)</span> at the boundary <span class="math inline">\(\partial\mathbb{S}^5_{++}\)</span>.</strong> As any eigenvalue approaches zero — as the portfolio approaches a degenerate configuration where some indicator becomes an exact linear combination of others — <span class="math inline">\(-\log\lambda_i \to +\infty\)</span>, pushing the barrier to infinity. The Hessian of the log-determinant is <span class="math inline">\(\nabla^2(-\log\det)(A)[\Delta,\Delta] = \text{tr}(A^{-1}\Delta A^{-1}\Delta) = \langle\Delta,\Delta\rangle_A\)</span> — exactly the affine-invariant Riemannian metric on <span class="math inline">\(\mathbb{S}^n_{++}\)</span>. The log-determinant is not just a barrier function — it is the Riemannian distance squared from the identity, and its Hessian is the metric tensor. The portfolio’s log-determinant measures the total logarithmic volume of the risk ellipsoid — large <span class="math inline">\(\log\det(\Sigma)\)</span> means a large, spread-out portfolio, small <span class="math inline">\(\log\det(\Sigma)\)</span> means a concentrated, near-degenerate portfolio.</p>
+<hr>
+<p><strong>The break moment — the arithmetic mean of two covariance matrices swelling eigenvalues while the geometric mean does not — is the manifestation of the positive definite cone’s curvature.</strong> The specific example: <span class="math inline">\(\Sigma_1 = \begin{pmatrix}2&amp;0\\0&amp;\frac{1}{2}\end{pmatrix}\)</span> (high income variance, low debt variance) and <span class="math inline">\(\Sigma_2 = \begin{pmatrix}\frac{1}{2}&amp;0\\0&amp;2\end{pmatrix}\)</span> (low income variance, high debt variance). The arithmetic mean <span class="math inline">\(\frac{\Sigma_1+\Sigma_2}{2} = \frac{5}{4}I\)</span> has eigenvalue <span class="math inline">\(\frac{5}{4} &gt; 1\)</span> — larger than either input’s eigenvalues <span class="math inline">\(2\)</span> and <span class="math inline">\(\frac{1}{2}\)</span> on average, because <span class="math inline">\(\frac{2+1/2}{2} = \frac{5}{4}\)</span>. The geometric mean <span class="math inline">\(\Sigma_1\#\Sigma_2 = (\Sigma_1\Sigma_2)^{1/2} = I\)</span> has eigenvalue <span class="math inline">\(1 = \sqrt{2 \cdot \frac{1}{2}}\)</span> — the geometric mean of the eigenvalues, exactly halfway between <span class="math inline">\(2\)</span> and <span class="math inline">\(\frac{1}{2}\)</span> on the logarithmic scale. The arithmetic mean lies outside the geodesic on the manifold <span class="math inline">\(\mathbb{S}^n_{++}\)</span> and inflates the eigenvalues. The geometric mean follows the geodesic <span class="math inline">\(\gamma_{\Sigma_1,\Sigma_2}(1/2) = \Sigma_1^{1/2}(\Sigma_1^{-1/2}\Sigma_2\Sigma_1^{-1/2})^{1/2}\Sigma_1^{1/2}\)</span> and preserves the geometric midpoint of the eigenvalues. The swell of the arithmetic mean is the curvature of the positive definite cone — a direct consequence of the nonzero sectional curvature of <span class="math inline">\((\mathbb{S}^n_{++}, g)\)</span>.</p>
+<p><strong>The geodesic on <span class="math inline">\(\mathbb{S}^n_{++}\)</span> from <span class="math inline">\(\Sigma_1\)</span> to <span class="math inline">\(\Sigma_2\)</span> — the curve <span class="math inline">\(\gamma(t) = \Sigma_1^{1/2}(\Sigma_1^{-1/2}\Sigma_2\Sigma_1^{-1/2})^t\Sigma_1^{1/2}\)</span> — is the matrix exponential curve connecting two covariance matrices through the correct curved geometry.</strong> At <span class="math inline">\(t=0\)</span>: <span class="math inline">\(\gamma(0) = \Sigma_1\)</span>. At <span class="math inline">\(t=1\)</span>: <span class="math inline">\(\gamma(1) = \Sigma_2\)</span>. At <span class="math inline">\(t=1/2\)</span>: <span class="math inline">\(\gamma(1/2) = \Sigma_1\#\Sigma_2\)</span>, the geometric mean. The geodesic stays in <span class="math inline">\(\mathbb{S}^n_{++}\)</span> — it never passes through a degenerate matrix with zero eigenvalue — because the matrix <span class="math inline">\(\Sigma_1^{-1/2}\Sigma_2\Sigma_1^{-1/2}\)</span> is positive definite, its eigenvalues are positive, and raising them to the power <span class="math inline">\(t\)</span> keeps them positive for all <span class="math inline">\(t \in [0,1]\)</span>. The geodesic distance <span class="math inline">\(d(\Sigma_1,\Sigma_2) = \|\log(\Sigma_1^{-1/2}\Sigma_2\Sigma_1^{-1/2})\|_F = \sqrt{\sum_i \log^2\lambda_i(\Sigma_1^{-1}\Sigma_2)}\)</span> is the Riemannian length of this geodesic, measuring how different the two portfolios are in the correct geometric sense. For the example above: <span class="math inline">\(d = \sqrt{\log^2(\frac{2}{1/2}) + \log^2(\frac{1/2}{2})} = \sqrt{2}\log 4\)</span>, while the Euclidean distance is <span class="math inline">\(\|\Sigma_1-\Sigma_2\|_F = \sqrt{2}\cdot\frac{3}{2}\)</span> — different numbers encoding different geometric notions of proximity.</p>
+<p><strong>The Fréchet mean — the geometric mean of multiple covariance matrices computed by the fixed-point iteration <span class="math inline">\(X_{t+1} = X_t^{1/2}\exp(\frac{1}{k}\sum_i\log(X_t^{-1/2}A_iX_t^{-1/2}))X_t^{1/2}\)</span> — is the portfolio’s stable long-run covariance.</strong> When averaging covariance matrices across different time periods or different sub-portfolios, the Fréchet mean gives the correct answer: the positive definite matrix minimizing the sum of squared geodesic distances to all inputs. Unlike the arithmetic mean, the Fréchet mean respects the manifold’s geometry — it does not inflate eigenvalues, it is invariant under congruence transformations, and it lies on the geodesic connecting the input matrices in a sense that generalizes the scalar geometric mean <span class="math inline">\((\prod_i a_i)^{1/k}\)</span>. The fixed-point iteration is the Riemannian gradient descent on <span class="math inline">\(\mathbb{S}^n_{++}\)</span> for the Fréchet mean problem — gradient descent on the curved manifold converging to the unique global minimum by geodesic convexity of the sum-of-squared-distances functional.</p>
+<hr>
+<p><strong>The multivariate Gaussian density <span class="math inline">\(p(x;\mu,\Sigma) = \frac{1}{(2\pi)^{n/2}\det(\Sigma)^{1/2}}\exp(-\frac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu))\)</span> is the distribution whose level sets are the Mahalanobis ellipsoids.</strong> The exponent <span class="math inline">\(-\frac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\)</span> is the negative squared Mahalanobis distance from <span class="math inline">\(x\)</span> to the mean — the density is highest at the mean and decays along ellipsoidal level sets whose shape is determined by <span class="math inline">\(\Sigma^{-1}\)</span>. The normalizing constant <span class="math inline">\(\det(\Sigma)^{1/2}\)</span> is the square root of the determinant of <span class="math inline">\(\Sigma\)</span> — proportional to the volume of the Mahalanobis ellipsoid. The maximum likelihood estimator <span class="math inline">\(\hat\Sigma = S\)</span> (sample covariance) is found by differentiating <span class="math inline">\(\log\det(\Sigma) + \text{tr}(\Sigma^{-1}S)\)</span> with respect to <span class="math inline">\(\Sigma\)</span> and setting to zero using the identities <span class="math inline">\(\nabla_\Sigma\log\det\Sigma = \Sigma^{-T} = \Sigma^{-1}\)</span> and <span class="math inline">\(\nabla_\Sigma\text{tr}(\Sigma^{-1}S) = -\Sigma^{-1}S\Sigma^{-1}\)</span> — a direct application of the matrix calculus of the log-determinant.</p>
+<p><strong>The Fisher information matrix <span class="math inline">\(I_\mu = \Sigma^{-1}\)</span> — the precision matrix — is the Riemannian metric on the mean parameter space of the Gaussian family.</strong> The natural gradient <span class="math inline">\(\tilde\nabla_\mu\mathcal{L} = \Sigma\nabla_\mu\mathcal{L}\)</span> is the gradient covector converted to a tangent vector using the Fisher metric. In the portfolio context: the Fisher information <span class="math inline">\(\Sigma^{-1}\)</span> measures how informative an observation is about the mean — high precision in a direction (small ellipsoid axis) means each observation is very informative about the mean in that direction. The natural gradient corrects the ordinary gradient by the inverse Fisher information, scaling the gradient in high-precision directions down and scaling it in low-precision directions up, producing updates that are uniform in statistical information rather than uniform in parameter space.</p>
+<hr>
+<p><strong>The Bures-Wasserstein formula <span class="math inline">\(W_2^2(\mathcal{N}(\mu_1,\Sigma_1),\mathcal{N}(\mu_2,\Sigma_2)) = \|\mu_1-\mu_2\|_2^2 + \text{tr}(\Sigma_1+\Sigma_2-2(\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})^{1/2})\)</span> is the bridge between positive definite matrix geometry and Optimal Transport.</strong> The first term <span class="math inline">\(\|\mu_1-\mu_2\|_2^2\)</span> measures the squared distance between the portfolio centers — how far apart the average applicants are. The second term <span class="math inline">\(\mathcal{B}(\Sigma_1,\Sigma_2)^2 = \text{tr}(\Sigma_1+\Sigma_2) - 2\text{tr}((\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})^{1/2})\)</span> measures the Bures distance between the covariance structures — how different the portfolio shapes are, accounting for both eigenvalue sizes and eigenvector orientations.</p>
+<p><strong>The matrix <span class="math inline">\((\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})^{1/2}\)</span> — the symmetric matrix square root of the sandwiched covariance — is the functional calculus of the spectral theorem applied to positive definite matrices in service of Optimal Transport.</strong> Compute <span class="math inline">\(\Sigma_1^{1/2}\)</span> (the matrix square root from the functional calculus, the unique positive definite symmetric square root). Compute the product <span class="math inline">\(\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2}\)</span> — a positive definite matrix by congruence. Compute its matrix square root. Take the trace. This four-step computation is entirely an application of the spectral theorem’s functional calculus to positive definite matrices. The trace of the result measures the geometric overlap between the two covariance structures — how much the principal directions of <span class="math inline">\(\Sigma_1\)</span> align with those of <span class="math inline">\(\Sigma_2\)</span> and how well-matched the associated variances are.</p>
+<p><strong>The optimal transport map from <span class="math inline">\(\mathcal{N}(\mu_1,\Sigma_1)\)</span> to <span class="math inline">\(\mathcal{N}(\mu_2,\Sigma_2)\)</span> — the affine map <span class="math inline">\(T(x) = \mu_2 + A(x-\mu_1)\)</span> with <span class="math inline">\(A = \Sigma_1^{-1/2}(\Sigma_1^{1/2}\Sigma_2\Sigma_1^{1/2})^{1/2}\Sigma_1^{-1/2}\)</span> — is the Brenier map for Gaussians, expressed entirely through positive definite matrix operations.</strong> The matrix <span class="math inline">\(A\)</span> is the unique symmetric positive definite solution to the Riccati equation <span class="math inline">\(A\Sigma_1 A = \Sigma_2\)</span> — it is the matrix that deforms the covariance <span class="math inline">\(\Sigma_1\)</span> into <span class="math inline">\(\Sigma_2\)</span> most efficiently, minimizing the total squared transport cost. Computing <span class="math inline">\(A\)</span> requires the matrix square root (spectral theorem functional calculus) and the matrix inverse (spectral theorem applied to the inverse), both of which require the positive definiteness of <span class="math inline">\(\Sigma_1\)</span>.</p>
+<hr>
+<p><strong>The connection to MATH 103 (Linear Algebra) is now complete in both directions.</strong> The Gram matrix <span class="math inline">\(G_{ij} = \langle e_i, e_j\rangle\)</span> of an inner product is a positive definite matrix — the matrix representation of the inner product in a basis. The Cholesky decomposition <span class="math inline">\(G = LL^T\)</span> is the Gram-Schmidt orthogonalization of the basis: the columns of <span class="math inline">\(L^{-1}\)</span> are the orthonormal basis vectors obtained by Gram-Schmidt, and the entries of <span class="math inline">\(L\)</span> encode the original basis vectors’ components in the orthonormal basis. The positive definiteness of the Gram matrix is the linear independence of the original basis vectors — the condition that Gram-Schmidt succeeds without producing zero-norm vectors. Every inner product computation in MATH 103 was implicitly working with a positive definite Gram matrix, and the Cholesky decomposition was the implicit data structure behind the Gram-Schmidt algorithm.</p>
+<p><strong>The connection to MATH 208 (Statistics and Probability) closes through the multivariate Gaussian, the Mahalanobis distance, and the Cramér-Rao bound.</strong> The confidence ellipses you drew around multivariate Gaussian samples in MATH 208 are the level sets of the Mahalanobis distance — ellipsoids with axes aligned to the eigenvectors of <span class="math inline">\(\Sigma\)</span> and half-lengths proportional to <span class="math inline">\(\sqrt{\lambda_i(\Sigma)}\)</span>. The <span class="math inline">\(\chi^2\)</span> distribution of the Mahalanobis distance <span class="math inline">\(D^2 = (X-\mu)^T\Sigma^{-1}(X-\mu) \sim \chi^2_n\)</span> for <span class="math inline">\(X \sim \mathcal{N}(\mu,\Sigma)\)</span> is the distribution of the squared Euclidean norm of the whitened variable <span class="math inline">\(\Sigma^{-1/2}(X-\mu) \sim \mathcal{N}(0,I)\)</span>. The Cramér-Rao bound <span class="math inline">\(\text{Cov}(\hat\theta) \succeq I(\theta)^{-1} = \Sigma\)</span> for estimating the mean of a Gaussian is the positive semidefinite ordering on the cone <span class="math inline">\(\mathbb{S}^n_+\)</span> — the covariance of any estimator dominates the Fisher information inverse in the positive semidefinite sense.</p>
+<p><strong>The connection to MATH 302 (Matrix Theory) runs through Sylvester’s law of inertia and congruence invariance.</strong> The inertia of a symmetric matrix — the triple <span class="math inline">\((n_+, n_-, n_0)\)</span> of positive, negative, and zero eigenvalues — is invariant under congruence transformations <span class="math inline">\(A \mapsto PAP^T\)</span> for invertible <span class="math inline">\(P\)</span>. Positive definiteness (<span class="math inline">\(n_- = n_0 = 0\)</span>, <span class="math inline">\(n_+ = n\)</span>) is a congruence invariant: if <span class="math inline">\(\Sigma \succ 0\)</span> and <span class="math inline">\(C\)</span> is invertible, then <span class="math inline">\(C\Sigma C^T \succ 0\)</span>. This is the geometric statement that positive definiteness describes an intrinsic property of the quadratic form, not a property of any particular basis. The affine-invariant Riemannian metric on <span class="math inline">\(\mathbb{S}^n_{++}\)</span> is congruence-invariant by construction, which is the precise statement that the metric respects the intrinsic geometry of positive definite matrices rather than the extrinsic geometry inherited from the ambient vector space <span class="math inline">\(\mathbb{S}^n\)</span>.</p>
+<hr>
+<p><strong>Looking forward across the roadmap</strong>, positive definite matrices are the unifying thread connecting every chapter to every phase. In Phase 1, the Wasserstein-2 distance between Gaussians is the Bures metric on positive definite covariance matrices — the entire geometry of Optimal Transport for Gaussian distributions reduces to matrix square roots and trace computations. The Sinkhorn algorithm’s kernel matrix <span class="math inline">\(K_{ij} = e^{-c_{ij}/\varepsilon}\)</span> is positive definite when the cost matrix satisfies certain conditions, and the convergence analysis uses the spectral properties of this positive definite kernel matrix. In Phase 2, the graph Laplacian <span class="math inline">\(L = D-W\)</span> is symmetric positive semidefinite, and its spectral gap <span class="math inline">\(\lambda_2\)</span> — the smallest nonzero eigenvalue — controls both the convergence of diffusion processes on the graph and the quality of spectral graph embeddings. The feature covariance matrices of equivariant graph neural networks are positive definite, and their spectral structures determine the networks’ discriminative power. In Phase 3, the score function’s covariance — the Fisher information of the score-based model — is a positive definite operator on function space whose inverse governs natural gradient descent for score matching. The Fokker-Planck equation’s diffusion coefficient is a positive definite matrix governing the spreading of the distribution during forward diffusion, and the backward SDE’s drift depends on this matrix through the score function. The Riemannian metric on the Wasserstein manifold at each distribution <span class="math inline">\(\mu\)</span> is a positive definite operator on the tangent space <span class="math inline">\(T_\mu\mathcal{P}_2\)</span> — the JKO scheme’s gradient computation requires this operator and its inverse at every step.</p>
+<p>The risk ellipse in the microfinance office — the geometric fingerprint of the portfolio’s covariance structure, the Mahalanobis distance’s level set, the ellipsoid whose axes are eigenvectors and whose half-lengths are standard deviations — is not a visualization tool layered on top of the mathematics. It is the mathematics. The positive definite matrix is the ellipse, and the ellipse is the positive definite matrix.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2026-06-24">
+
+<title>Sliced Wasserstein for Scalable Distribution Alignment (Domain Adaptation) – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Sliced Wasserstein for Scalable Distribution Alignment (Domain Adaptation)</li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#sliced-wasserstein-distance-for-scalable-unsupervised-domain-adaptation-mnist-svhn" id="toc-sliced-wasserstein-distance-for-scalable-unsupervised-domain-adaptation-mnist-svhn" class="nav-link active" data-scroll-target="#sliced-wasserstein-distance-for-scalable-unsupervised-domain-adaptation-mnist-svhn">Sliced Wasserstein Distance for Scalable Unsupervised Domain Adaptation: MNIST → SVHN</a>
+  <ul class="collapse">
+  <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#intuitive-explanation" id="toc-intuitive-explanation" class="nav-link" data-scroll-target="#intuitive-explanation">Intuitive Explanation</a></li>
+  <li><a href="#mathematical-foundations" id="toc-mathematical-foundations" class="nav-link" data-scroll-target="#mathematical-foundations">Mathematical Foundations</a></li>
+  <li><a href="#sliced-wasserstein-distance-estimation-and-properties" id="toc-sliced-wasserstein-distance-estimation-and-properties" class="nav-link" data-scroll-target="#sliced-wasserstein-distance-estimation-and-properties">Sliced Wasserstein Distance: Estimation and Properties</a></li>
+  <li><a href="#entropic-optimal-transport-and-the-sinkhorn-algorithm" id="toc-entropic-optimal-transport-and-the-sinkhorn-algorithm" class="nav-link" data-scroll-target="#entropic-optimal-transport-and-the-sinkhorn-algorithm">Entropic Optimal Transport and the Sinkhorn Algorithm</a></li>
+  <li><a href="#unsupervised-domain-adaptation-pipeline" id="toc-unsupervised-domain-adaptation-pipeline" class="nav-link" data-scroll-target="#unsupervised-domain-adaptation-pipeline">Unsupervised Domain Adaptation Pipeline</a></li>
+  <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">Results</a></li>
+  <li><a href="#key-insights" id="toc-key-insights" class="nav-link" data-scroll-target="#key-insights">Key Insights</a></li>
+  <li><a href="#implementation-notes" id="toc-implementation-notes" class="nav-link" data-scroll-target="#implementation-notes">Implementation Notes</a></li>
+  <li><a href="#dependencies" id="toc-dependencies" class="nav-link" data-scroll-target="#dependencies">Dependencies</a></li>
+  <li><a href="#note" id="toc-note" class="nav-link" data-scroll-target="#note">Note</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Sliced Wasserstein for Scalable Distribution Alignment (Domain Adaptation)</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">GDL + COT</div>
+  </div>
+  </div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">June 24, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="sliced-wasserstein-distance-for-scalable-unsupervised-domain-adaptation-mnist-svhn" class="level1">
+<h1>Sliced Wasserstein Distance for Scalable Unsupervised Domain Adaptation: MNIST → SVHN</h1>
+<p><img src="https://img.shields.io/badge/PyTorch-2.3.1-ee4c2c?logo=pytorch" class="img-fluid" alt="PyTorch"> <img src="https://img.shields.io/badge/CUDA-12.1-76b900?logo=nvidia" class="img-fluid" alt="CUDA"> <img src="https://img.shields.io/badge/Source-MNIST-blue.png" class="img-fluid" alt="Source Dataset"> <img src="https://img.shields.io/badge/Target-SVHN-orange.png" class="img-fluid" alt="Target Dataset"> <img src="https://img.shields.io/badge/Max--SWD%20Best%20Acc-28.19%25-success" class="img-fluid" alt="Best Accuracy"> <img src="https://img.shields.io/badge/Parameters-357K-lightgrey.png" class="img-fluid" alt="Params"></p>
+<hr>
+<section id="overview" class="level2">
+<h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<p>This project implements Sliced Wasserstein Distance (SWD) and Max-Sliced Wasserstein Distance (Max-SWD) from scratch and deploys them as alignment losses for unsupervised domain adaptation (UDA): a shared ConvNet encoder is trained to classify MNIST digits while simultaneously aligning its MNIST and SVHN embeddings in feature space — without access to any SVHN labels. The core contribution is a rigorous empirical benchmark of three alignment strategies — SWD, Max-SWD, and full entropic OT (Sinkhorn) — evaluated on SVHN test accuracy, training stability, and wall-clock time per epoch, establishing that adversarial slicing via Max-SWD achieves the best accuracy-speed tradeoff among all methods tested. All distances are implemented from scratch in PyTorch with no reliance on POT or GeomLoss for the core training losses, and every implementation is verified against closed-form results or reference libraries before use.</p>
+<p><strong>Core implementations covered:</strong></p>
+<ul>
+<li><span class="math inline">\(W_1\)</span> and <span class="math inline">\(W_2^2\)</span> via sorted quantile formula (exact, <span class="math inline">\(O(n \log n)\)</span>, verified against POT)</li>
+<li>Sliced Wasserstein Distance from scratch — random projections on <span class="math inline">\(S^{d-1}\)</span>, <span class="math inline">\(\sqrt{d}\)</span> scaling correction for high-dimensional embeddings</li>
+<li>Max-Sliced Wasserstein Distance via projected gradient ascent on the unit sphere</li>
+<li>Sinkhorn algorithm in log-domain form from scratch — numerically stable, autograd-compatible</li>
+<li>Triangle inequality numerical verification across 1,000 random triplets</li>
+<li>Full UDA training pipeline: shared ConvNet encoder with optional alignment head, source-only classifier, plug-in alignment loss selector</li>
+<li>Projection ablation experiment — SWD convergence (CV vs L) across embedding dimensions <span class="math inline">\(d \in \{8, 32, 128\}\)</span></li>
+<li>Wall-clock scalability benchmark — Sinkhorn vs SWD across sample sizes <span class="math inline">\(n \in \{100, 500, 1000, 2000, 5000\}\)</span></li>
+</ul>
+<hr>
+</section>
+<section id="intuitive-explanation" class="level2">
+<h2 class="anchored" data-anchor-id="intuitive-explanation">Intuitive Explanation</h2>
+<p><strong>1. What is Unsupervised Domain Adaptation?</strong></p>
+<p>Imagine studying for an exam using a perfectly clean, neatly typeset textbook, then being tested on handwritten notes scrawled on napkins. You understand the material — but the presentation is so different that your pattern-matching instincts, tuned to the textbook, fail on the napkins. This is precisely the domain shift problem: a model trained on one data distribution (the source) is evaluated on a different but semantically related distribution (the target), and performance degrades not because the task changed, but because the statistics of the input changed.</p>
+<p>Formally, if <span class="math inline">\(\mu\)</span> denotes the MNIST source distribution and <span class="math inline">\(\nu\)</span> denotes the SVHN target distribution over feature space <span class="math inline">\(\mathbb{R}^d\)</span>, unsupervised domain adaptation seeks an encoder <span class="math inline">\(f_\theta\)</span> such that the pushed-forward distributions <span class="math inline">\(f_{\theta \#} \mu\)</span> and <span class="math inline">\(f_{\theta \#} \nu\)</span> are close under some probability metric — while <span class="math inline">\(f_\theta\)</span> simultaneously supports accurate classification on the labeled source domain. The word “unsupervised” means no target labels are available at any point during training; alignment must be achieved purely by minimizing a distributional distance between the two domains in embedding space.</p>
+<p>In this project, MNIST plays the role of the clean textbook: grayscale, centered, white digits on black backgrounds. SVHN plays the role of the napkin notes: RGB, cluttered, digits embedded in natural street-scene photographs. The per-channel mean alone reveals the gap quantitatively — MNIST has a mean pixel intensity of 0.130 across all channels, while SVHN averages 0.451. Closing this gap without target labels is the central challenge this project addresses.</p>
+<p><img src="label_distribution.png" class="img-fluid" alt="Label Distribution"> <em>Label distributions across MNIST (source) and SVHN (target) training sets. Both domains share the same 10-class digit label space, confirming that the adaptation challenge is purely distributional — not structural.</em></p>
+<p><img src="source_vs_target.png" class="img-fluid" alt="Source vs Target"> <em>5×5 sample grids from MNIST (left) and SVHN (right). MNIST digits are centered, grayscale, and clean; SVHN digits are embedded in cluttered natural street-scene photographs with rich color and background variation.</em></p>
+<p><img src="intensity_distribution.png" class="img-fluid" alt="Intensity Distribution"> <em>Per-channel pixel intensity distributions for MNIST (gray) and SVHN (color). MNIST has a mean intensity of 0.130 with high variance (bimodal: black background vs.&nbsp;white strokes); SVHN averages 0.451 with a unimodal natural image distribution across all three RGB channels.</em></p>
+<hr>
+<p><strong>2. What is Sliced Wasserstein Distance?</strong></p>
+<p>Imagine comparing two cities’ skylines. Directly comparing every building against every other building simultaneously is expensive — the cost grows quadratically with the number of buildings. Instead, you photograph both skylines from many random angles and, for each angle, compute how different the two profiles look. Average those differences over all angles and you have a reliable estimate of how distinct the two skylines are — at a fraction of the cost of a full pairwise comparison.</p>
+<p>This is precisely what Sliced Wasserstein Distance does. Given two distributions <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> in <span class="math inline">\(\mathbb{R}^d\)</span>, SWD projects both onto a collection of <span class="math inline">\(L\)</span> random unit directions <span class="math inline">\(\theta \in S^{d-1}\)</span>, computes the exact 1D Wasserstein distance along each projection (which reduces to sorting — <span class="math inline">\(O(n \log n)\)</span>), and averages the results. Formally:</p>
+<p><span class="math display">\[\text{SWD}(\mu, \nu) = \mathbb{E}_{\theta \sim \mathcal{U}(S^{d-1})}\left[W_2^2(\theta_\#\mu,\ \theta_\#\nu)\right]\]</span></p>
+<p>The key insight is that the 1D Wasserstein distance has a closed-form solution via quantile matching — no linear program, no Sinkhorn iterations. This reduces a hard <span class="math inline">\(d\)</span>-dimensional OT problem to a collection of trivially solvable 1D problems, making SWD practical as a per-batch training loss even for large batches. The price paid is that SWD is a lower bound on the true <span class="math inline">\(W_2^2\)</span>, not the exact distance — but it is a valid metric on distributions, satisfies the triangle inequality (verified at 100% pass rate across 1,000 random triplets), and converges to a stable estimate as <span class="math inline">\(L\)</span> grows.</p>
+<hr>
+<p><strong>3. What is Max-Sliced Wasserstein Distance?</strong></p>
+<p>Now instead of averaging across all random angles, imagine a sharp-eyed critic who ignores every angle where the two skylines look similar and seeks the single angle that reveals the maximum difference. This adversarial perspective is more informative: if two distributions differ primarily along one direction in feature space, averaging over all random projections dilutes that signal with many uninformative projections. Finding the worst-case direction concentrates the entire alignment signal into a single, maximally discriminative projection.</p>
+<p>This is Max-SWD. Rather than averaging over <span class="math inline">\(L\)</span> random directions, Max-SWD solves an optimization problem over the unit sphere:</p>
+<p><span class="math display">\[\text{Max-SWD}(\mu, \nu) = \max_{\theta \in S^{d-1}} W_2^2(\theta_\#\mu,\ \theta_\#\nu)\]</span></p>
+<p>The maximization is carried out via projected gradient ascent: initialize <span class="math inline">\(\theta\)</span> randomly on <span class="math inline">\(S^{d-1}\)</span>, take gradient steps to maximize <span class="math inline">\(W_2^2\)</span> along the current direction, and re-project onto the sphere after each step. This is directly analogous to a GAN discriminator — the optimal <span class="math inline">\(\theta^*\)</span> plays the role of the discriminator, finding the direction of maximum distributional divergence, while the encoder plays the role of the generator, trying to make the two distributions indistinguishable along that direction. In our experiments, Max-SWD achieves the highest target accuracy (28.19%) among all methods, at only 1.4 seconds per epoch of additional overhead over the no-adaptation baseline.</p>
+<hr>
+<p><strong>4. Why Align in Feature Space, Not Pixel Space?</strong></p>
+<p>Suppose you tried to make MNIST and SVHN look the same by directly manipulating pixels — blurring SVHN, colorizing MNIST, rescaling intensities. You might reduce the raw pixel statistics gap, but the result would be meaningless: a blurred street photograph is not the same as a clean digit, and a colorized MNIST image is not the same as a natural scene. Pixel-level alignment confuses presentation with meaning.</p>
+<p>A trained encoder <span class="math inline">\(f_\theta\)</span> solves this by mapping both domains into a shared semantic embedding space <span class="math inline">\(\mathbb{R}^d\)</span>, where proximity reflects semantic similarity rather than pixel similarity. In this space, the embedding of the digit “3” from MNIST and the embedding of the digit “3” from SVHN should be close — not because they look alike in pixels, but because the encoder has learned to extract digit identity as the dominant feature. Once embeddings live in this shared space, applying SWD or Max-SWD to align <span class="math inline">\(f_{\theta \#} \mu\)</span> with <span class="math inline">\(f_{\theta \#} \nu\)</span> is geometrically meaningful: we are asking the encoder to arrange both domains so that their digit-class structures overlap in <span class="math inline">\(\mathbb{R}^d\)</span>. The <span class="math inline">\(L_2\)</span> normalization applied to all embeddings further ensures that alignment distances are not dominated by magnitude differences but reflect genuine directional divergence between the two distributions.</p>
+<hr>
+</section>
+<section id="mathematical-foundations" class="level2">
+<h2 class="anchored" data-anchor-id="mathematical-foundations">Mathematical Foundations</h2>
+<section id="the-kantorovich-primal-problem" class="level3">
+<h3 class="anchored" data-anchor-id="the-kantorovich-primal-problem">The Kantorovich Primal Problem</h3>
+<p>The Wasserstein distance between two probability distributions is defined as the solution to an optimal transport problem: find the most efficient way to “move” one distribution into another, where efficiency is measured by the total transport cost. Given two probability measures <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> on <span class="math inline">\(\mathbb{R}^d\)</span>, the squared 2-Wasserstein distance is:</p>
+<p><span class="math display">\[
+W_2^2(\mu, \nu) = \inf_{\pi \in \Pi(\mu, \nu)} \int_{\mathbb{R}^d \times \mathbb{R}^d} \|x - y\|^2 \, d\pi(x, y)
+\]</span></p>
+<p>where <span class="math inline">\(\Pi(\mu, \nu)\)</span> denotes the set of all joint probability measures (transport plans) on <span class="math inline">\(\mathbb{R}^d \times \mathbb{R}^d\)</span> whose marginals are <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> respectively. The transport plan <span class="math inline">\(\pi(x, y)\)</span> specifies how much mass at location <span class="math inline">\(x\)</span> under <span class="math inline">\(\mu\)</span> is transported to location <span class="math inline">\(y\)</span> under <span class="math inline">\(\nu\)</span>, and the cost of moving a unit of mass is the squared Euclidean distance <span class="math inline">\(\|x - y\|^2\)</span>.</p>
+<p>The marginal constraints that define <span class="math inline">\(\Pi(\mu, \nu)\)</span> are:</p>
+<p><span class="math display">\[
+\int_{\mathbb{R}^d} d\pi(x, y) = d\nu(y), \qquad \int_{\mathbb{R}^d} d\pi(x, y) = d\mu(x)
+\]</span></p>
+<p>The first constraint ensures that all mass arriving at target location <span class="math inline">\(y\)</span> sums to <span class="math inline">\(\nu(y)\)</span>; the second ensures that all mass leaving source location <span class="math inline">\(x\)</span> sums to <span class="math inline">\(\mu(x)\)</span>. Together they guarantee that <span class="math inline">\(\pi\)</span> is a valid coupling — a joint distribution consistent with both marginals. In the empirical setting with <span class="math inline">\(n\)</span> samples, <span class="math inline">\(\pi\)</span> becomes an <span class="math inline">\(n \times n\)</span> matrix and the infimum becomes a finite linear program.</p>
+<hr>
+</section>
+<section id="d-wasserstein-distance-via-quantile-functions" class="level3">
+<h3 class="anchored" data-anchor-id="d-wasserstein-distance-via-quantile-functions">1D Wasserstein Distance via Quantile Functions</h3>
+<p>In one dimension, the Kantorovich problem has a celebrated closed-form solution that bypasses the linear program entirely. For two 1D probability measures <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> with cumulative distribution functions <span class="math inline">\(F_\mu\)</span> and <span class="math inline">\(F_\nu\)</span>, the squared 2-Wasserstein distance reduces to:</p>
+<p><span class="math display">\[
+W_2^2(\mu, \nu) = \int_0^1 \left( F_\mu^{-1}(t) - F_\nu^{-1}(t) \right)^2 dt
+\]</span></p>
+<p>where <span class="math inline">\(F^{-1}(t) = \inf\{x : F(x) \geq t\}\)</span> is the quantile function (generalized inverse CDF). The optimal transport plan in 1D is the monotone rearrangement — sort both distributions and match them rank-by-rank. No mass ever crosses: the <span class="math inline">\(i\)</span>-th smallest point in <span class="math inline">\(\mu\)</span> is transported to the <span class="math inline">\(i\)</span>-th smallest point in <span class="math inline">\(\nu\)</span>.</p>
+<p>For two empirical distributions with <span class="math inline">\(n\)</span> samples each, this reduces to:</p>
+<p><span class="math display">\[
+W_2^2(\hat{\mu}_n, \hat{\nu}_n) = \frac{1}{n} \sum_{i=1}^{n} \left( x_{(i)} - y_{(i)} \right)^2
+\]</span></p>
+<p>where <span class="math inline">\(x_{(1)} \leq x_{(2)} \leq \cdots \leq x_{(n)}\)</span> and <span class="math inline">\(y_{(1)} \leq y_{(2)} \leq \cdots \leq y_{(n)}\)</span> are the order statistics of the two samples. The entire computation requires only two sorts — <span class="math inline">\(\mathcal{O}(n \log n)\)</span> — making it orders of magnitude faster than solving the full linear program. This formula is the computational engine behind every projection step in SWD and Max-SWD.</p>
+<hr>
+</section>
+<section id="the-radon-transform-and-the-slicing-principle" class="level3">
+<h3 class="anchored" data-anchor-id="the-radon-transform-and-the-slicing-principle">The Radon Transform and the Slicing Principle</h3>
+<p>The theoretical foundation connecting 1D Wasserstein distances to their d-dimensional counterpart is the Radon transform. For a probability measure <span class="math inline">\(\mu\)</span> on <span class="math inline">\(\mathbb{R}^d\)</span> and a unit direction <span class="math inline">\(\theta \in S^{d-1}\)</span>, the push-forward <span class="math inline">\(\theta_\#\mu\)</span> is the 1D measure obtained by projecting <span class="math inline">\(\mu\)</span> onto the line defined by <span class="math inline">\(\theta\)</span>:</p>
+<p><span class="math display">\[
+(\theta_\#\mu)(B) = \mu\left(\{x \in \mathbb{R}^d : \langle x, \theta \rangle \in B\}\right), \quad B \subseteq \mathbb{R}
+\]</span></p>
+<p>The Sliced Wasserstein Distance is then defined as the average of 1D Wasserstein distances over all possible projection directions, distributed uniformly on the unit sphere:</p>
+<p><span class="math display">\[
+\text{SWD}_2^2(\mu, \nu) = \int_{S^{d-1}} W_2^2\!\left(\theta_\#\mu,\ \theta_\#\nu\right) d\sigma(\theta)
+\]</span></p>
+<p>where <span class="math inline">\(\sigma\)</span> denotes the uniform (Haar) measure on <span class="math inline">\(S^{d-1}\)</span>. This is not merely a computational convenience — it is a theoretically grounded metric. SWD satisfies all three metric axioms:</p>
+<p><strong>Non-negativity and identity:</strong> <span class="math inline">\(\text{SWD}(\mu, \nu) \geq 0\)</span>, with equality if and only if <span class="math inline">\(\mu = \nu\)</span>.</p>
+<p><strong>Symmetry:</strong> <span class="math inline">\(\text{SWD}(\mu, \nu) = \text{SWD}(\nu, \mu)\)</span>, since <span class="math inline">\(W_2^2\)</span> is symmetric and integration is symmetric.</p>
+<p><strong>Triangle inequality:</strong> For any three distributions <span class="math inline">\(\mu, \nu, \rho\)</span>:</p>
+<p><span class="math display">\[
+\text{SWD}(\mu, \rho) \leq \text{SWD}(\mu, \nu) + \text{SWD}(\nu, \rho)
+\]</span></p>
+<p>This follows from the triangle inequality of <span class="math inline">\(W_2\)</span> applied pointwise under the integral over <span class="math inline">\(S^{d-1}\)</span>. Numerically, this was verified across 1,000 random triplets in <span class="math inline">\(\mathbb{R}^8\)</span> with zero violations at <span class="math inline">\(L = 500\)</span> projections, and zero violations at <span class="math inline">\(L \geq 100\)</span> across 500 triplets — confirming that the Monte Carlo estimator inherits the metric structure of the true SWD for sufficiently large <span class="math inline">\(L\)</span>.</p>
+<hr>
+</section>
+<section id="max-sliced-wasserstein-distance" class="level3">
+<h3 class="anchored" data-anchor-id="max-sliced-wasserstein-distance">Max-Sliced Wasserstein Distance</h3>
+<p>Where SWD averages over all projection directions, Max-SWD identifies the single direction of maximum distributional divergence:</p>
+<p><span class="math display">\[
+\text{Max-SWD}(\mu, \nu) = \max_{\theta \in S^{d-1}} W_2^2\!\left(\theta_\#\mu,\ \theta_\#\nu\right)
+\]</span></p>
+<p>Since <span class="math inline">\(W_2^2(\theta_\#\mu, \theta_\#\nu)\)</span> is a continuous function of <span class="math inline">\(\theta\)</span> on the compact set <span class="math inline">\(S^{d-1}\)</span>, the maximum is always attained. The optimal direction <span class="math inline">\(\theta^*\)</span> is the projection that maximally separates the two distributions — it concentrates the entire alignment signal into a single 1D problem. By construction:</p>
+<p><span class="math display">\[
+\text{Max-SWD}(\mu, \nu) \geq \text{SWD}(\mu, \nu)
+\]</span></p>
+<p>since the maximum over a set is always at least as large as the average over that set. In our toy experiment with <span class="math inline">\(d = 8\)</span> and separation confined to dimension 0, Max-SWD recovered <span class="math inline">\(\theta^*\)</span> with alignment <span class="math inline">\(|\theta^* \cdot e_0| = 0.9990\)</span> — near-perfect identification of the true separation axis — while SWD underestimated the gap by a factor of 8 (0.48 vs 4.03).</p>
+<hr>
+</section>
+</section>
+<section id="sliced-wasserstein-distance-estimation-and-properties" class="level2">
+<h2 class="anchored" data-anchor-id="sliced-wasserstein-distance-estimation-and-properties">Sliced Wasserstein Distance: Estimation and Properties</h2>
+<p>SWD replaces the intractable integral over <span class="math inline">\(S^{d-1}\)</span> with a Monte Carlo estimator, reduces each 1D subproblem to a sort, and averages the results. This section covers the estimator, its convergence behavior, the high-dimensional scaling correction required for normalized embeddings, and the numerical verification of its metric properties.</p>
+<section id="monte-carlo-estimator" class="level3">
+<h3 class="anchored" data-anchor-id="monte-carlo-estimator">Monte Carlo Estimator</h3>
+<p>In practice, the integral over <span class="math inline">\(S^{d-1}\)</span> is approximated by drawing <span class="math inline">\(L\)</span> unit vectors <span class="math inline">\(\{\theta_l\}_{l=1}^L\)</span> uniformly at random from <span class="math inline">\(S^{d-1}\)</span> — achieved by normalizing i.i.d. Gaussian draws — and averaging the resulting 1D Wasserstein distances:</p>
+<p><span class="math display">\[
+\widehat{\text{SWD}}_L(\mu, \nu) = \frac{1}{L} \sum_{l=1}^{L} W_2^2\!\left(\theta_{l\#}\mu,\ \theta_{l\#}\nu\right)
+\]</span></p>
+<p>For empirical distributions with <span class="math inline">\(n\)</span> samples each, each term in the sum is computed as:</p>
+<p><span class="math display">\[
+W_2^2\!\left(\theta_{l\#}\hat{\mu}_n,\ \theta_{l\#}\hat{\nu}_n\right) = \frac{1}{n} \sum_{i=1}^{n} \left( \langle x_{(i)}^l, \theta_l \rangle - \langle y_{(i)}^l, \theta_l \rangle \right)^2
+\]</span></p>
+<p>where <span class="math inline">\(\langle x_{(i)}^l, \theta_l \rangle\)</span> denotes the <span class="math inline">\(i\)</span>-th order statistic of the projected source samples along direction <span class="math inline">\(\theta_l\)</span>. The full estimator is computed in three vectorized operations: a matrix multiply <span class="math inline">\((n \times d) \cdot (d \times L) \to (n \times L)\)</span> to project all samples onto all directions simultaneously, a sort along the sample axis, and a mean squared difference — making the implementation both simple and GPU-efficient.</p>
+<p>By the law of large numbers, <span class="math inline">\(\widehat{\text{SWD}}_L \to \text{SWD}\)</span> as <span class="math inline">\(L \to \infty\)</span>. The convergence rate is <span class="math inline">\(\mathcal{O}(1/\sqrt{L})\)</span> by the central limit theorem, since each term is an i.i.d. random variable with finite variance. This was confirmed empirically: at <span class="math inline">\(d = 128\)</span>, the coefficient of variation (CV = std/mean) decreases from 0.383 at <span class="math inline">\(L = 10\)</span> to 0.016 at <span class="math inline">\(L = 5000\)</span>, consistent with a <span class="math inline">\(\sqrt{500} \approx 22\)</span>-fold reduction vs the observed 24-fold reduction.</p>
+<hr>
+</section>
+<section id="high-dimensional-scaling-correction" class="level3">
+<h3 class="anchored" data-anchor-id="high-dimensional-scaling-correction">High-Dimensional Scaling Correction</h3>
+<p>When source and target embeddings are <span class="math inline">\(L_2\)</span>-normalized (as in this project, where all encoder outputs satisfy <span class="math inline">\(\|z\| = 1\)</span>), projections onto random unit directions <span class="math inline">\(\theta \in S^{d-1}\)</span> concentrate around zero by the geometry of high-dimensional spheres. Specifically, for a unit vector <span class="math inline">\(z \in S^{d-1}\)</span>, the projected value <span class="math inline">\(\langle z, \theta \rangle\)</span> has expected squared magnitude:</p>
+<p><span class="math display">\[
+\mathbb{E}_\theta\!\left[\langle z, \theta \rangle^2\right] = \frac{1}{d}
+\]</span></p>
+<p>This means that in <span class="math inline">\(d = 128\)</span> dimensions, each projection shrinks the signal by a factor of <span class="math inline">\(1/\sqrt{128} \approx 0.088\)</span> relative to the original embedding magnitude. Without correction, the alignment loss <span class="math inline">\(\widehat{\text{SWD}}_L\)</span> becomes negligibly small compared to the cross-entropy loss, and the encoder receives no meaningful gradient signal from the alignment term.</p>
+<p>To correct for this, all projected values are scaled by <span class="math inline">\(\sqrt{d}\)</span> before computing the squared difference:</p>
+<p><span class="math display">\[
+\widetilde{W}_2^2\!\left(\theta_{l\#}\hat{\mu}_n,\ \theta_{l\#}\hat{\nu}_n\right) = \frac{d}{n} \sum_{i=1}^{n} \left( \langle x_{(i)}^l, \theta_l \rangle - \langle y_{(i)}^l, \theta_l \rangle \right)^2
+\]</span></p>
+<p>This restores the alignment loss to a magnitude comparable with the cross-entropy loss, enabling the method-specific <span class="math inline">\(\lambda\)</span> values (<span class="math inline">\(\lambda_{\text{SWD}} = 0.08\)</span>, <span class="math inline">\(\lambda_{\text{Max-SWD}} = 0.04\)</span>) to function as genuine regularization strength hyperparameters rather than near-zero multipliers.</p>
+<hr>
+</section>
+<section id="convergence-of-the-estimator-projection-ablation" class="level3">
+<h3 class="anchored" data-anchor-id="convergence-of-the-estimator-projection-ablation">Convergence of the Estimator: Projection Ablation</h3>
+<p>To determine the minimum number of projections required for a reliable estimate, we ran an ablation over <span class="math inline">\(L \in \{10, 50, 100, 500, 1000, 2000, 5000\}\)</span> at embedding dimensions <span class="math inline">\(d \in \{8, 32, 128\}\)</span>, using <span class="math inline">\(n = 500\)</span> samples and 20 independent trials per setting. The coefficient of variation (CV = std/mean) was used as the convergence criterion, with a practical threshold of CV <span class="math inline">\(&lt; 5\%\)</span>.</p>
+<p><strong>Projection ablation results (<span class="math inline">\(d = 128\)</span>, <span class="math inline">\(n = 500\)</span>, 20 trials):</strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>L</th>
+<th>Mean SWD</th>
+<th>Std</th>
+<th>CV</th>
+<th>Time (ms)</th>
+<th>Converged (CV &lt; 5%)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>10</td>
+<td>0.2464</td>
+<td>0.0944</td>
+<td>0.3833</td>
+<td>1.10</td>
+<td>no</td>
+</tr>
+<tr class="even">
+<td>50</td>
+<td>0.2674</td>
+<td>0.0367</td>
+<td>0.1371</td>
+<td>3.45</td>
+<td>no</td>
+</tr>
+<tr class="odd">
+<td>100</td>
+<td>0.2547</td>
+<td>0.0286</td>
+<td>0.1124</td>
+<td>3.90</td>
+<td>no</td>
+</tr>
+<tr class="even">
+<td>500</td>
+<td>0.2505</td>
+<td>0.0131</td>
+<td>0.0522</td>
+<td>17.38</td>
+<td>no</td>
+</tr>
+<tr class="odd">
+<td>1,000</td>
+<td>0.2520</td>
+<td>0.0099</td>
+<td>0.0395</td>
+<td>35.56</td>
+<td><strong>YES</strong></td>
+</tr>
+<tr class="even">
+<td>2,000</td>
+<td>0.2537</td>
+<td>0.0090</td>
+<td>0.0355</td>
+<td>75.28</td>
+<td>YES</td>
+</tr>
+<tr class="odd">
+<td>5,000</td>
+<td>0.2564</td>
+<td>0.0040</td>
+<td>0.0156</td>
+<td>211.62</td>
+<td>YES</td>
+</tr>
+</tbody>
+</table>
+<p><img src="convergence_plots.png" class="img-fluid" alt="SWD Convergence"> <em>Left: SWD mean ± std vs.&nbsp;number of projections <span class="math inline">\(L\)</span> for embedding dimensions <span class="math inline">\(d \in \{8, 32, 128\}\)</span>. Right: Coefficient of variation (CV = std/mean) vs.&nbsp;<span class="math inline">\(L\)</span>. The dashed line marks the CV = 5% practical convergence threshold, reached at <span class="math inline">\(L = 1{,}000\)</span> for <span class="math inline">\(d = 128\)</span>.</em></p>
+<p><strong>Minimum <span class="math inline">\(L\)</span> for CV <span class="math inline">\(&lt; 5\%\)</span> by dimension:</strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th><span class="math inline">\(d\)</span></th>
+<th>Min <span class="math inline">\(L\)</span></th>
+<th>CV at convergence</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>8</td>
+<td>500</td>
+<td>0.0485</td>
+</tr>
+<tr class="even">
+<td>32</td>
+<td>1,000</td>
+<td>0.0339</td>
+</tr>
+<tr class="odd">
+<td>128</td>
+<td>1,000</td>
+<td>0.0395</td>
+</tr>
+</tbody>
+</table>
+<p>The convergence threshold is reached at <span class="math inline">\(L = 1{,}000\)</span> for <span class="math inline">\(d \in \{32, 128\}\)</span> and <span class="math inline">\(L = 500\)</span> for <span class="math inline">\(d = 8\)</span>. Critically, higher dimensionality does not dramatically worsen convergence — the CV at <span class="math inline">\(L = 500\)</span> is 4.85% for <span class="math inline">\(d = 8\)</span> and 5.22% for <span class="math inline">\(d = 128\)</span> — a difference of less than 0.4 percentage points. This is consistent with concentration of measure on high-dimensional spheres: random projections become increasingly uniform as <span class="math inline">\(d\)</span> grows, which partially compensates for the larger space being averaged over.</p>
+<hr>
+</section>
+<section id="triangle-inequality-verification" class="level3">
+<h3 class="anchored" data-anchor-id="triangle-inequality-verification">Triangle Inequality Verification</h3>
+<p>To confirm that the Monte Carlo SWD estimator preserves the metric structure of the true SWD, we tested the triangle inequality across 1,000 randomly generated distribution triplets <span class="math inline">\((\mu, \nu, \rho)\)</span> in <span class="math inline">\(\mathbb{R}^8\)</span>, each consisting of 200 samples drawn from isotropic Gaussians centered at random locations. Independent random seeds were used for each pair to stress-test the estimator under worst-case Monte Carlo noise.</p>
+<p><span class="math display">\[
+\widehat{\text{SWD}}(\mu, \rho) \leq \widehat{\text{SWD}}(\mu, \nu) + \widehat{\text{SWD}}(\nu, \rho)
+\]</span></p>
+<p><strong>Results:</strong> 0 violations out of 1,000 triplets at <span class="math inline">\(L = 500\)</span>. Mean margin: <span class="math inline">\(-4.131\)</span> (negative = satisfied with slack). Max violation: <span class="math inline">\(0.000\)</span>.</p>
+<p><strong>Violation rate vs <span class="math inline">\(L\)</span>:</strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th><span class="math inline">\(L\)</span></th>
+<th>Violation Rate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>10</td>
+<td>2.0%</td>
+</tr>
+<tr class="even">
+<td>50</td>
+<td>0.2%</td>
+</tr>
+<tr class="odd">
+<td>100</td>
+<td>0.0%</td>
+</tr>
+<tr class="even">
+<td>500</td>
+<td>0.0%</td>
+</tr>
+<tr class="odd">
+<td>1,000</td>
+<td>0.0%</td>
+</tr>
+</tbody>
+</table>
+<p>Violations at <span class="math inline">\(L = 10\)</span> and <span class="math inline">\(L = 50\)</span> are purely Monte Carlo artifacts — finite-sample noise in the estimator creates apparent violations of an inequality that holds exactly for the true SWD. At <span class="math inline">\(L \geq 100\)</span>, the estimator is reliable enough that the triangle inequality is never violated, confirming that <span class="math inline">\(\widehat{\text{SWD}}_{100}\)</span> can safely be used as a metric in any downstream application.</p>
+<hr>
+</section>
+<section id="max-swd-via-projected-gradient-ascent" class="level3">
+<h3 class="anchored" data-anchor-id="max-swd-via-projected-gradient-ascent">Max-SWD via Projected Gradient Ascent</h3>
+<p>Max-SWD requires solving a non-convex maximization over the unit sphere. We use projected gradient ascent: starting from a random initialization <span class="math inline">\(\theta_0 \in S^{d-1}\)</span>, we iterate:</p>
+<p><span class="math display">\[
+\tilde{\theta}_{t+1} = \theta_t + \eta \cdot \nabla_\theta W_2^2\!\left(\theta_\#\hat{\mu}_n,\ \theta_\#\hat{\nu}_n\right)\Big|_{\theta = \theta_t}
+\]</span></p>
+<p><span class="math display">\[
+\theta_{t+1} = \frac{\tilde{\theta}_{t+1}}{\|\tilde{\theta}_{t+1}\|}
+\]</span></p>
+<p>The gradient <span class="math inline">\(\nabla_\theta W_2^2\)</span> is computed via PyTorch autograd — the sort operation is differentiable with respect to the projected values, and the chain rule propagates gradients back to <span class="math inline">\(\theta\)</span>. The projection step <span class="math inline">\(\theta \mapsto \theta / \|\theta\|\)</span> ensures the iterate remains on <span class="math inline">\(S^{d-1}\)</span> after each gradient step.</p>
+<p>In standalone experiments with <span class="math inline">\(d = 8\)</span>, the algorithm converges at 100 steps (<span class="math inline">\(\text{lr} = 0.01\)</span>): Max-SWD stabilizes at 4.0349 from step 100 onward, recovering the true separation direction with <span class="math inline">\(|\theta^* \cdot e_0| = 0.9990\)</span>. In the training loop, only 10 ascent steps are used (<span class="math inline">\(\text{lr} = 0.05\)</span>) — a deliberate efficiency tradeoff that reduces per-batch overhead while preserving the adversarial alignment signal. The resulting epoch time of 21.0s represents only a 1.4s overhead over the no-adaptation baseline (19.6s), demonstrating that the adversarial optimization is computationally lightweight in practice.</p>
+<hr>
+</section>
+</section>
+<section id="entropic-optimal-transport-and-the-sinkhorn-algorithm" class="level2">
+<h2 class="anchored" data-anchor-id="entropic-optimal-transport-and-the-sinkhorn-algorithm">Entropic Optimal Transport and the Sinkhorn Algorithm</h2>
+<p>Full optimal transport — solving the Kantorovich linear program exactly — is the gold-standard alignment measure but scales as <span class="math inline">\(\mathcal{O}(n^3)\)</span> in general and <span class="math inline">\(\mathcal{O}(n^2)\)</span> in memory even for the cost matrix alone. This makes it completely impractical as a per-batch training loss in a neural network, where <span class="math inline">\(n\)</span> is the batch size and the distance must be recomputed at every gradient step. Entropic regularization, introduced by Cuturi (2013), transforms the hard linear program into a smooth, strictly convex problem solvable by the Sinkhorn-Knopp algorithm — but the <span class="math inline">\(\mathcal{O}(n^2)\)</span> cost matrix remains, and the method still hits a scalability wall well before the batch sizes typical in deep learning. This section derives the regularized problem, the Sinkhorn updates, their numerically stable log-domain form, and the empirical scalability benchmark that motivates the use of SWD as the primary training loss.</p>
+<hr>
+<section id="entropic-regularization" class="level3">
+<h3 class="anchored" data-anchor-id="entropic-regularization">Entropic Regularization</h3>
+<p>The entropic regularization of the Kantorovich primal adds a negative entropy penalty on the transport plan <span class="math inline">\(\pi\)</span>, controlled by a regularization parameter <span class="math inline">\(\varepsilon &gt; 0\)</span>:</p>
+<p><span class="math display">\[
+W_\varepsilon^2(\mu, \nu) = \inf_{\pi \in \Pi(\mu, \nu)} \int \|x - y\|^2 \, d\pi(x, y) + \varepsilon \, \text{KL}(\pi \| \mu \otimes \nu)
+\]</span></p>
+<p>where the KL divergence term is:</p>
+<p><span class="math display">\[
+\text{KL}(\pi \| \mu \otimes \nu) = \int \log\!\left(\frac{d\pi}{d(\mu \otimes \nu)}\right) d\pi
+\]</span></p>
+<p>The entropy term <span class="math inline">\(-\text{KL}(\pi \| \mu \otimes \nu)\)</span> penalizes transport plans that are too sparse or deterministic, smoothing the optimal plan toward the joint product measure <span class="math inline">\(\mu \otimes \nu\)</span>. This regularization has three important consequences: (1) the problem becomes strictly convex, guaranteeing a unique solution; (2) the optimal plan takes the Gibbs form <span class="math inline">\(\pi^* \propto \exp(-C/\varepsilon)\)</span>, where <span class="math inline">\(C_{ij} = \|x_i - y_j\|^2\)</span>; and (3) the solution can be found by iterative matrix scaling rather than a linear program, enabling the Sinkhorn algorithm.</p>
+<p>As <span class="math inline">\(\varepsilon \to 0\)</span>, <span class="math inline">\(W_\varepsilon^2 \to W_2^2\)</span> and the plan recovers the exact sparse OT solution. As <span class="math inline">\(\varepsilon \to \infty\)</span>, the plan converges to the independent coupling <span class="math inline">\(\mu \otimes \nu\)</span> and <span class="math inline">\(W_\varepsilon^2 \to 0\)</span> regardless of the true distance between <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span>. The choice of <span class="math inline">\(\varepsilon\)</span> therefore controls a fundamental tradeoff between transport plan sharpness and algorithmic stability.</p>
+<hr>
+</section>
+<section id="sinkhorn-knopp-iterations" class="level3">
+<h3 class="anchored" data-anchor-id="sinkhorn-knopp-iterations">Sinkhorn-Knopp Iterations</h3>
+<p>The unique solution to the regularized problem takes the form:</p>
+<p><span class="math display">\[
+\pi^* = \text{diag}(u) \, K \, \text{diag}(v)
+\]</span></p>
+<p>where <span class="math inline">\(K = \exp(-C/\varepsilon)\)</span> is the Gibbs kernel and <span class="math inline">\(u \in \mathbb{R}^n\)</span>, <span class="math inline">\(v \in \mathbb{R}^m\)</span> are scaling vectors determined by the marginal constraints. The Sinkhorn-Knopp algorithm alternately enforces the two marginal constraints by updating <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span>:</p>
+<p><span class="math display">\[
+u^{(t+1)} = \frac{a}{K v^{(t)}}
+\]</span></p>
+<p><span class="math display">\[
+v^{(t+1)} = \frac{b}{K^\top u^{(t+1)}}
+\]</span></p>
+<p>where <span class="math inline">\(a = \mathbf{1}_n / n\)</span> and <span class="math inline">\(b = \mathbf{1}_m / m\)</span> are the uniform source and target marginals respectively. Each iteration is a matrix-vector multiply followed by an elementwise division — simple, parallelizable, and differentiable. The algorithm converges linearly, with convergence rate depending on the spectral gap of <span class="math inline">\(K\)</span>, which in turn depends on <span class="math inline">\(\varepsilon\)</span>: larger <span class="math inline">\(\varepsilon\)</span> gives faster convergence but a more regularized (blurred) plan.</p>
+<p>The entropic OT cost is recovered from the converged scaling vectors as:</p>
+<p><span class="math display">\[
+W_\varepsilon^2(\hat{\mu}_n, \hat{\nu}_n) = \sum_{i,j} \pi^*_{ij} C_{ij} = u^\top (K \odot C) v
+\]</span></p>
+<hr>
+</section>
+<section id="log-domain-sinkhorn-for-numerical-stability" class="level3">
+<h3 class="anchored" data-anchor-id="log-domain-sinkhorn-for-numerical-stability">Log-Domain Sinkhorn for Numerical Stability</h3>
+<p>The standard Sinkhorn iterations involve repeated multiplication by the Gibbs kernel <span class="math inline">\(K = \exp(-C/\varepsilon)\)</span>. When <span class="math inline">\(\varepsilon\)</span> is small, entries of <span class="math inline">\(K\)</span> approach zero and underflow to machine epsilon, causing division by zero in the scaling updates. The log-domain formulation avoids materializing <span class="math inline">\(K\)</span> entirely by working with the log-scaling variables <span class="math inline">\(f = \varepsilon \log u\)</span> and <span class="math inline">\(g = \varepsilon \log v\)</span>, which are the dual potentials of the regularized problem.</p>
+<p>The log-domain updates are:</p>
+<p><span class="math display">\[
+f_i^{(t+1)} = \varepsilon \log a_i - \varepsilon \log \sum_j \exp\!\left(\frac{g_j^{(t)} - C_{ij}}{\varepsilon}\right)
+\]</span></p>
+<p><span class="math display">\[
+g_j^{(t+1)} = \varepsilon \log b_j - \varepsilon \log \sum_i \exp\!\left(\frac{f_i^{(t+1)} - C_{ij}}{\varepsilon}\right)
+\]</span></p>
+<p>Using the numerically stable log-sum-exp operator:</p>
+<p><span class="math display">\[
+\text{LSE}(z_1, \ldots, z_n) = \log \sum_{i=1}^n e^{z_i} = z_{\max} + \log \sum_{i=1}^n e^{z_i - z_{\max}}
+\]</span></p>
+<p>the updates become:</p>
+<p><span class="math display">\[
+f_i^{(t+1)} = \varepsilon \log a_i - \varepsilon \cdot \text{LSE}_j\!\left(\frac{g_j^{(t)} - C_{ij}}{\varepsilon}\right)
+\]</span></p>
+<p><span class="math display">\[
+g_j^{(t+1)} = \varepsilon \log b_j - \varepsilon \cdot \text{LSE}_i\!\left(\frac{f_i^{(t+1)} - C_{ij}}{\varepsilon}\right)
+\]</span></p>
+<p>The transport plan and primal cost are recovered as:</p>
+<p><span class="math display">\[
+\log \pi^*_{ij} = \frac{f_i + g_j - C_{ij}}{\varepsilon}, \qquad W_\varepsilon^2 = \sum_{i,j} \pi^*_{ij} C_{ij}
+\]</span></p>
+<p>This implementation was verified against POT with absolute error <span class="math inline">\(3.51 \times 10^{-6}\)</span>, and marginal constraint errors of <span class="math inline">\(2.51 \times 10^{-8}\)</span> (rows) and <span class="math inline">\(1.96 \times 10^{-8}\)</span> (columns) — both well within floating-point precision.</p>
+<hr>
+</section>
+<section id="scalability-wall-sinkhorn-vs-swd" class="level3">
+<h3 class="anchored" data-anchor-id="scalability-wall-sinkhorn-vs-swd">Scalability Wall: Sinkhorn vs SWD</h3>
+<p>Despite the algorithmic elegance of Sinkhorn, the <span class="math inline">\(\mathcal{O}(n^2)\)</span> cost matrix <span class="math inline">\(C \in \mathbb{R}^{n \times n}\)</span> is computed and stored at every forward pass. For a batch of <span class="math inline">\(n = 256\)</span> samples in a typical training loop, this is manageable — but training convergence typically requires iterating over tens of thousands of batches, and the quadratic scaling quickly becomes the dominant bottleneck as batch size grows.</p>
+<p>The following benchmark was measured on GPU with <span class="math inline">\(d = 32\)</span> dimensional embeddings, averaged over 5 runs:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th><span class="math inline">\(n\)</span></th>
+<th>Sinkhorn (ms)</th>
+<th>SWD <span class="math inline">\(L=100\)</span> (ms)</th>
+<th>Speedup</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>100</td>
+<td>24.44</td>
+<td>1.39</td>
+<td>~18×</td>
+</tr>
+<tr class="even">
+<td>500</td>
+<td>311.29</td>
+<td>3.71</td>
+<td>~84×</td>
+</tr>
+<tr class="odd">
+<td>1,000</td>
+<td>1,190.21</td>
+<td>7.51</td>
+<td>~158×</td>
+</tr>
+<tr class="even">
+<td>2,000</td>
+<td>6,615.90</td>
+<td>15.80</td>
+<td>~419×</td>
+</tr>
+<tr class="odd">
+<td>5,000</td>
+<td>40,542.28</td>
+<td>48.37</td>
+<td>~838×</td>
+</tr>
+</tbody>
+</table>
+<p>At <span class="math inline">\(n = 256\)</span> (the batch size used in training), Sinkhorn already takes approximately 50–80ms per batch — translating to 26.3 seconds per epoch versus 19.6 seconds for no-adaptation. At <span class="math inline">\(n = 1{,}000\)</span>, Sinkhorn is 158× slower than SWD at <span class="math inline">\(L = 100\)</span>, and at <span class="math inline">\(n = 5{,}000\)</span> the gap reaches 838×. For any neural network training loop where the alignment loss must be evaluated hundreds of times per epoch, Sinkhorn is simply not competitive with SWD as a scalable alternative — a conclusion that the training results confirm empirically, where Sinkhorn also produces less stable alignment dynamics despite its higher computational cost.</p>
+<hr>
+</section>
+</section>
+<section id="unsupervised-domain-adaptation-pipeline" class="level2">
+<h2 class="anchored" data-anchor-id="unsupervised-domain-adaptation-pipeline">Unsupervised Domain Adaptation Pipeline</h2>
+<p>The domain adaptation pipeline connects the distributional alignment theory developed in the previous sections to a concrete training objective. A shared convolutional encoder maps both MNIST and SVHN images into a common embedding space; a classifier head trained exclusively on labeled MNIST source samples learns to associate embeddings with digit classes; and an alignment loss — SWD, Max-SWD, or Sinkhorn — regularizes the encoder to produce embeddings whose source and target distributions are close. This section describes the architecture, the training objective, and the design decisions that make the pipeline stable and reproducible.</p>
+<hr>
+<section id="shared-encoder-architecture" class="level3">
+<h3 class="anchored" data-anchor-id="shared-encoder-architecture">Shared Encoder Architecture</h3>
+<p>The encoder <span class="math inline">\(f_\theta : \mathbb{R}^{3 \times 32 \times 32} \to S^{d-1}\)</span> is a small convolutional network that processes both domains identically. Both MNIST and SVHN images are preprocessed to the same format — 3-channel, <span class="math inline">\(32 \times 32\)</span>, normalized to <span class="math inline">\([-1, 1]\)</span> — before being passed through the encoder. The architecture is:</p>
+<p><span class="math display">\[
+f_\theta(x) = \frac{h_\theta(x)}{\|h_\theta(x)\|_2}
+\]</span></p>
+<p>where <span class="math inline">\(h_\theta\)</span> consists of three convolutional blocks followed by a fully connected projection:</p>
+<p><span class="math display">\[
+h_\theta : \underbrace{\text{Conv}(3 \to 32)}_{\text{block 1}} \to \underbrace{\text{Conv}(32 \to 64)}_{\text{block 2}} \to \underbrace{\text{Conv}(64 \to 128)}_{\text{block 3}} \to \text{Linear}(2048 \to d)
+\]</span></p>
+<p>Each convolutional block applies a <span class="math inline">\(3 \times 3\)</span> convolution, batch normalization, ReLU activation, and <span class="math inline">\(2 \times 2\)</span> max pooling, reducing the spatial dimensions from <span class="math inline">\(32 \times 32\)</span> to <span class="math inline">\(4 \times 4\)</span> across three pooling steps. The final L2 normalization maps all embeddings onto the unit hypersphere <span class="math inline">\(S^{d-1} \subset \mathbb{R}^d\)</span>, ensuring that alignment distances reflect directional divergence between the two distributions rather than magnitude differences.</p>
+<p>The encoder has two forward paths:</p>
+<ul>
+<li><code>forward(x)</code>: used for source classification — passes through the main FC branch and L2-normalizes.</li>
+<li><code>forward_align(x)</code>: used for alignment loss computation — passes through a separate <code>align_head</code> branch (Linear → BatchNorm → ReLU → L2-normalize) for SWD and Max-SWD, or through the main branch for Sinkhorn.</li>
+</ul>
+<p>The separate <code>align_head</code> for SWD and Max-SWD was introduced to prevent feature drift: without it, the alignment gradient directly modifies the same representation used for classification, destabilizing the CE loss. The batch normalization layer in <code>align_head</code> further stabilizes the distribution of alignment embeddings across batches.</p>
+<p><strong>Parameter counts:</strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Encoder (conv + FC)</td>
+<td>355,968</td>
+</tr>
+<tr class="even">
+<td>Classifier head</td>
+<td>1,290</td>
+</tr>
+<tr class="odd">
+<td><strong>Total</strong></td>
+<td><strong>357,258</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="training-objective" class="level3">
+<h3 class="anchored" data-anchor-id="training-objective">Training Objective</h3>
+<p>The total training loss combines a supervised source classification term with an unsupervised alignment regularization term:</p>
+<p><span class="math display">\[
+\mathcal{L}(\theta) = \mathcal{L}_{\text{CE}}\!\left(f_\theta(X_s), Y_s\right) + \lambda \cdot D\!\left(f_\theta^{\text{align}}(X_s),\ f_\theta^{\text{align}}(X_t)\right)
+\]</span></p>
+<p>where <span class="math inline">\(X_s, Y_s\)</span> are source (MNIST) images and their labels, <span class="math inline">\(X_t\)</span> are target (SVHN) images with no labels, <span class="math inline">\(f_\theta^{\text{align}}\)</span> denotes the alignment head path, and <span class="math inline">\(D\)</span> is the chosen alignment distance — <span class="math inline">\(\widehat{\text{SWD}}_L\)</span>, Max-SWD, or <span class="math inline">\(W_\varepsilon^2\)</span> (Sinkhorn).</p>
+<p>The cross-entropy loss uses label smoothing with <span class="math inline">\(\alpha = 0.1\)</span>:</p>
+<p><span class="math display">\[
+\mathcal{L}_{\text{CE}}(z, y) = -(1 - \alpha) \log p_y(z) - \frac{\alpha}{K} \sum_{k=1}^{K} \log p_k(z)
+\]</span></p>
+<p>where <span class="math inline">\(p_k(z) = \text{softmax}(\text{clf}(z))_k\)</span> and <span class="math inline">\(K = 10\)</span>. Label smoothing prevents the classifier from becoming overconfident on source samples, which would suppress the CE gradient and allow the alignment term to dominate.</p>
+<p>The <span class="math inline">\(\lambda\)</span> values were chosen so that <span class="math inline">\(\lambda \cdot D / \mathcal{L}_{\text{CE}} &lt; 0.5\)</span> throughout training — verified by a diagnostic epoch before the full run:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 12%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 40%">
+<col style="width: 13%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th><span class="math inline">\(\lambda\)</span></th>
+<th>Align head</th>
+<th><span class="math inline">\(n_{\text{proj}}\)</span> / steps</th>
+<th>Scaling</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>none</td>
+<td>0.0</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>SWD</td>
+<td>0.08</td>
+<td>Yes</td>
+<td><span class="math inline">\(n_{\text{proj}} = 200\)</span></td>
+<td><span class="math inline">\(\times\sqrt{d}\)</span></td>
+</tr>
+<tr class="odd">
+<td>Max-SWD</td>
+<td>0.04</td>
+<td>Yes</td>
+<td>10 steps, lr=0.05</td>
+<td><span class="math inline">\(\times\sqrt{d}\)</span></td>
+</tr>
+<tr class="even">
+<td>Sinkhorn</td>
+<td>0.05</td>
+<td>No</td>
+<td><span class="math inline">\(\varepsilon = 1.0\)</span>, 50 iter</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="optimization-and-training-protocol" class="level3">
+<h3 class="anchored" data-anchor-id="optimization-and-training-protocol">Optimization and Training Protocol</h3>
+<p>All experiments use the same optimizer, scheduler, and regularization settings to ensure fair comparison:</p>
+<p><span class="math display">\[
+\theta_{t+1} = \theta_t - \eta_t \cdot \nabla_\theta \mathcal{L}(\theta_t), \quad \eta_t = \eta_0 \cdot \frac{1 + \cos(\pi t / T)}{2}
+\]</span></p>
+<p>where <span class="math inline">\(\eta_0 = 3 \times 10^{-4}\)</span> is the initial learning rate and <span class="math inline">\(T = 20\)</span> is the total number of epochs (cosine annealing schedule). The optimizer is Adam with weight decay <span class="math inline">\(10^{-3}\)</span>. Gradients are clipped to <span class="math inline">\(\|\nabla\|_2 \leq 5.0\)</span> before each parameter update to prevent occasional large gradient spikes from the alignment loss from destabilizing the encoder.</p>
+<p>The full training protocol:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Hyperparameter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Optimizer</td>
+<td>Adam</td>
+</tr>
+<tr class="even">
+<td>Learning rate</td>
+<td><span class="math inline">\(3 \times 10^{-4}\)</span></td>
+</tr>
+<tr class="odd">
+<td>Weight decay</td>
+<td><span class="math inline">\(10^{-3}\)</span></td>
+</tr>
+<tr class="even">
+<td>LR schedule</td>
+<td>CosineAnnealingLR (<span class="math inline">\(T_{\max} = 20\)</span>)</td>
+</tr>
+<tr class="odd">
+<td>Epochs</td>
+<td>20</td>
+</tr>
+<tr class="even">
+<td>Batch size</td>
+<td>256</td>
+</tr>
+<tr class="odd">
+<td>Label smoothing</td>
+<td>0.1</td>
+</tr>
+<tr class="even">
+<td>Gradient clip</td>
+<td>5.0</td>
+</tr>
+<tr class="odd">
+<td>Embedding dim <span class="math inline">\(d\)</span></td>
+<td>128</td>
+</tr>
+<tr class="even">
+<td>Random seed</td>
+<td>42</td>
+</tr>
+</tbody>
+</table>
+<p>At each training step, one batch of MNIST images (<span class="math inline">\(X_s\)</span>, <span class="math inline">\(Y_s\)</span>) and one batch of SVHN images (<span class="math inline">\(X_t\)</span>) are drawn from their respective loaders. The SVHN loader is cycled independently — when exhausted, it is reset — ensuring that the source and target batch sizes remain equal at 256 throughout all 234 MNIST batches per epoch. The <code>drop_last=True</code> flag on both loaders guarantees fixed batch sizes, which is essential for the alignment loss: a variable-length batch would change the effective marginal distributions passed to SWD or Sinkhorn.</p>
+<hr>
+</section>
+<section id="why-feature-space-alignment-works" class="level3">
+<h3 class="anchored" data-anchor-id="why-feature-space-alignment-works">Why Feature Space Alignment Works</h3>
+<p>Applying SWD directly to raw pixels would be geometrically meaningless. MNIST pixels are predominantly zero (black background) with sparse nonzero values at digit strokes, while SVHN pixels are dense natural image values with complex spatial correlations. The pixel distributions <span class="math inline">\(\mu_{\text{pixel}}\)</span> and <span class="math inline">\(\nu_{\text{pixel}}\)</span> live in <span class="math inline">\(\mathbb{R}^{3 \times 32 \times 32} = \mathbb{R}^{3072}\)</span> and differ not only in their marginal statistics but in their entire geometric structure — aligning them in pixel space would require transforming SVHN into something that looks like MNIST, destroying the target domain’s semantic content entirely.</p>
+<p>The encoder <span class="math inline">\(f_\theta\)</span> solves this by learning a nonlinear map that disentangles digit identity from domain-specific appearance. Once both domains are embedded in <span class="math inline">\(\mathbb{R}^{128}\)</span> and L2-normalized, the alignment loss <span class="math inline">\(D(f_\theta^{\text{align}}(X_s), f_\theta^{\text{align}}(X_t))\)</span> measures and minimizes the distributional gap in a space where the geometry is semantically meaningful. The encoder is simultaneously incentivized by <span class="math inline">\(\mathcal{L}_{\text{CE}}\)</span> to make MNIST embeddings class-discriminative, and by <span class="math inline">\(\lambda \cdot D\)</span> to make the joint embedding distribution domain-invariant. The tension between these two objectives is what the <span class="math inline">\(\lambda\)</span> hyperparameter controls: too large and the alignment term overwhelms the classifier signal; too small and the encoder ignores the target domain entirely.</p>
+<hr>
+</section>
+</section>
+<section id="results" class="level2">
+<h2 class="anchored" data-anchor-id="results">Results</h2>
+<section id="findings" class="level3">
+<h3 class="anchored" data-anchor-id="findings">Findings</h3>
+<p>All three alignment methods outperform the no-adaptation baseline, confirming that distributional alignment in feature space is a principled and effective strategy for unsupervised domain adaptation on the MNIST→SVHN benchmark. Max-SWD achieves the highest best accuracy at 28.19%, representing a 4.92 percentage point improvement over the no-adaptation baseline of 23.27%, while adding only 1.4 seconds per epoch of computational overhead — less than 7% above baseline training time. SWD delivers a more modest gain of 1.33 percentage points at effectively zero additional cost, running at 19.9 seconds per epoch versus 19.6 seconds for no adaptation. Sinkhorn achieves an intermediate best accuracy of 27.07% but is the least stable method, peaking at epoch 2 and degrading continuously to a final accuracy of 18.48% — nearly as low as the no-adaptation final accuracy of 11.59%. These results establish a clear Pareto frontier: Max-SWD dominates all other methods on both accuracy and stability, SWD dominates on speed, and Sinkhorn is Pareto-dominated by Max-SWD on every metric that matters for practical deployment.</p>
+<hr>
+</section>
+<section id="benchmark-table" class="level3">
+<h3 class="anchored" data-anchor-id="benchmark-table">Benchmark Table</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 13%">
+<col style="width: 15%">
+<col style="width: 21%">
+<col style="width: 38%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Best Acc</th>
+<th>Final Acc</th>
+<th>Avg Time/Epoch</th>
+<th><span class="math inline">\(\lambda \cdot\)</span> Align (avg)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>No Adaptation</td>
+<td>23.27%</td>
+<td>11.59%</td>
+<td>19.6s</td>
+<td>0.00000</td>
+</tr>
+<tr class="even">
+<td>SWD (<span class="math inline">\(n_{\text{proj}}=200\)</span>)</td>
+<td>24.60%</td>
+<td>21.08%</td>
+<td>19.9s</td>
+<td>0.00058</td>
+</tr>
+<tr class="odd">
+<td>Max-SWD</td>
+<td><strong>28.19%</strong></td>
+<td><strong>24.61%</strong></td>
+<td>21.0s</td>
+<td>0.00144</td>
+</tr>
+<tr class="even">
+<td>Sinkhorn (<span class="math inline">\(\varepsilon=1.0\)</span>)</td>
+<td>27.07%</td>
+<td>18.48%</td>
+<td>26.3s</td>
+<td>0.03994</td>
+</tr>
+</tbody>
+</table>
+<p>The gap between best accuracy and final accuracy is a direct measure of training stability. The no-adaptation baseline collapses from its peak of 23.27% at epoch 2 to 11.59% by epoch 20 — a drop of 11.7 percentage points — as the encoder progressively overfits the source domain in the absence of any alignment signal. SWD and Max-SWD both exhibit stable plateaus after their respective peaks at epoch 9, with drops of only 3.5 and 3.6 percentage points respectively, confirming that the alignment regularization acts as a stabilizer against source domain overfitting. Sinkhorn’s drop of 8.6 percentage points indicates that at <span class="math inline">\(\varepsilon = 1.0\)</span>, the transport plan is too heavily smoothed to provide a sustained alignment signal beyond the first few epochs — the method essentially behaves like no-adaptation after epoch 5.</p>
+<hr>
+</section>
+<section id="accuracy-trajectory" class="level3">
+<h3 class="anchored" data-anchor-id="accuracy-trajectory">Accuracy Trajectory</h3>
+<p>The per-epoch target accuracy trajectories reveal distinct behavioral signatures for each method:</p>
+<p><strong>No Adaptation</strong> peaks at epoch 2 (23.3%) and collapses monotonically, settling near random-chance level (<span class="math inline">\(\sim\)</span> 11.6%) by epoch 20. Without any alignment signal, the encoder learns a representation tuned exclusively to MNIST statistics, which transfers poorly to SVHN.</p>
+<p><strong>SWD</strong> maintains a stable accuracy band between 19% and 25% throughout training, peaking at epoch 9 (24.6%) and plateauing near 21% for epochs 10–20. The alignment gradient from 200 random projections is weak relative to the CE loss (average ratio <span class="math inline">\(\lambda \cdot \text{align} / \mathcal{L}_{\text{CE}} \approx 0.001\)</span>) but sufficient to prevent the source-domain collapse seen in the baseline.</p>
+<p><strong>Max-SWD</strong> exhibits the most consistent upward trend in the first 9 epochs, reaching its peak of 28.19% at epoch 9 before settling into a stable plateau around 24–25% for epochs 10–20. The adversarial projection finds the most informative alignment direction at each step, providing a stronger and more targeted gradient signal than SWD despite using fewer projections.</p>
+<p><strong>Sinkhorn</strong> peaks early at epoch 2 (27.07%) — the same epoch as the no-adaptation baseline — and degrades steadily thereafter. The high regularization parameter <span class="math inline">\(\varepsilon = 1.0\)</span> produces an over-smoothed transport plan whose gradient signal provides broad, unfocused alignment pressure in the early epochs but rapidly diminishes as the encoder adjusts.</p>
+<p><img src="learning_curves.png" class="img-fluid" alt="Learning Curves"> <em>Left: Target accuracy on SVHN test set per epoch for all four methods. Center: Cross-entropy loss on MNIST source per epoch. Right: <span class="math inline">\(\lambda \times\)</span> alignment loss per epoch. No-adaptation collapses after epoch 2; SWD and Max-SWD maintain stable plateaus; Sinkhorn degrades after its early peak.</em></p>
+<hr>
+</section>
+<section id="accuracy-speed-tradeoff-interpretation" class="level3">
+<h3 class="anchored" data-anchor-id="accuracy-speed-tradeoff-interpretation">Accuracy-Speed Tradeoff Interpretation</h3>
+<p>The results reveal a clear accuracy-speed tradeoff across the three alignment methods, with Max-SWD occupying the optimal position on the Pareto frontier. SWD at <span class="math inline">\(n_{\text{proj}} = 200\)</span> adds negligible computational overhead — a mere 0.3 seconds per epoch, or less than 2% above the no-adaptation baseline — yet delivers consistent alignment that prevents encoder collapse and improves best accuracy by 1.33 percentage points. Max-SWD pays a slightly larger but still modest cost of 1.4 seconds per epoch (7% overhead) in exchange for a 4.92 percentage point accuracy gain, driven by its adversarial projection mechanism that concentrates the alignment gradient onto the single most discriminative direction in embedding space. Sinkhorn, by contrast, incurs the largest time penalty at 6.7 seconds per epoch (34% overhead) while producing the most unstable training dynamics — its best accuracy of 27.07% is achieved transiently at epoch 2 and never recovered, making it an unreliable choice for practical domain adaptation despite its theoretical status as the gold-standard OT distance.</p>
+<p>Regarding the convergence of SWD with respect to the number of projections <span class="math inline">\(L\)</span>: the projection ablation at <span class="math inline">\(d = 128\)</span> shows that the practical convergence threshold of CV <span class="math inline">\(&lt; 5\%\)</span> is reached at <span class="math inline">\(L = 1{,}000\)</span> (CV = 3.95%, 35.56ms per call). The training loop uses <span class="math inline">\(n_{\text{proj}} = 200\)</span>, which sits at CV <span class="math inline">\(\approx\)</span> 8–11% — a deliberate speed-over-variance tradeoff that keeps alignment overhead negligible while still providing a reliable directional signal. Increasing to <span class="math inline">\(L = 1{,}000\)</span> in the training loop would reduce estimator variance at the cost of approximately 35ms per batch, which may yield marginal accuracy improvements but is unlikely to close the gap to Max-SWD given that the fundamental limitation of SWD is signal dilution across uninformative projections, not estimator variance. Max-SWD addresses this limitation directly — by design, it requires only a single projection direction and finds it adversarially — which explains why it achieves higher accuracy than SWD at any <span class="math inline">\(L\)</span> while remaining computationally competitive. The conclusion is unambiguous: for practitioners seeking the best accuracy-speed tradeoff in feature-space domain adaptation, Max-SWD is the recommended method.</p>
+<hr>
+</section>
+<section id="projection-ablation" class="level3">
+<h3 class="anchored" data-anchor-id="projection-ablation">Projection Ablation</h3>
+<p><strong>SWD convergence vs <span class="math inline">\(L\)</span> (<span class="math inline">\(d = 128\)</span>, <span class="math inline">\(n = 500\)</span>, 20 trials):</strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th><span class="math inline">\(L\)</span></th>
+<th>Mean SWD</th>
+<th>Std</th>
+<th>CV</th>
+<th>Time (ms)</th>
+<th>Converged (CV <span class="math inline">\(&lt;\)</span> 5%)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>10</td>
+<td>0.2464</td>
+<td>0.0944</td>
+<td>0.3833</td>
+<td>1.10</td>
+<td>no</td>
+</tr>
+<tr class="even">
+<td>50</td>
+<td>0.2674</td>
+<td>0.0367</td>
+<td>0.1371</td>
+<td>3.45</td>
+<td>no</td>
+</tr>
+<tr class="odd">
+<td>100</td>
+<td>0.2547</td>
+<td>0.0286</td>
+<td>0.1124</td>
+<td>3.90</td>
+<td>no</td>
+</tr>
+<tr class="even">
+<td>500</td>
+<td>0.2505</td>
+<td>0.0131</td>
+<td>0.0522</td>
+<td>17.38</td>
+<td>no</td>
+</tr>
+<tr class="odd">
+<td>1,000</td>
+<td>0.2520</td>
+<td>0.0099</td>
+<td>0.0395</td>
+<td>35.56</td>
+<td><strong>YES</strong></td>
+</tr>
+<tr class="even">
+<td>2,000</td>
+<td>0.2537</td>
+<td>0.0090</td>
+<td>0.0355</td>
+<td>75.28</td>
+<td>YES</td>
+</tr>
+<tr class="odd">
+<td>5,000</td>
+<td>0.2564</td>
+<td>0.0040</td>
+<td>0.0156</td>
+<td>211.62</td>
+<td>YES</td>
+</tr>
+</tbody>
+</table>
+<p><img src="target_accuracy_and_swd_vs_L.png" class="img-fluid" alt="Target Accuracy and SWD vs L"> <em>Left: Best target accuracy on SVHN test set by alignment method. Max-SWD achieves 28.19%, the highest among all methods, followed by Sinkhorn (27.07%), SWD (24.60%), and no adaptation (23.27%). Right: SWD coefficient of variation vs.&nbsp;<span class="math inline">\(L\)</span> at <span class="math inline">\(d = 128\)</span>, with the CV = 5% convergence threshold marked.</em></p>
+<p>The CV decays approximately as <span class="math inline">\(\mathcal{O}(1/\sqrt{L})\)</span>, consistent with the Monte Carlo central limit theorem. At <span class="math inline">\(L = 1{,}000\)</span>, the estimator achieves CV = 3.95% at 35.56ms — still 33× faster than Sinkhorn at equivalent sample size (<span class="math inline">\(n = 1{,}000\)</span>: 1,190ms). The practical recommendation for production use is <span class="math inline">\(L = 1{,}000\)</span> for reliable estimates, or <span class="math inline">\(L = 200\)</span>–<span class="math inline">\(500\)</span> when speed is the primary constraint and moderate variance is acceptable.</p>
+<hr>
+</section>
+<section id="verification-summary" class="level3">
+<h3 class="anchored" data-anchor-id="verification-summary">Verification Summary</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 55%">
+<col style="width: 44%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Quantity</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(W_1\)</span> vs POT (500 samples)</td>
+<td>err = <span class="math inline">\(1.23 \times 10^{-6}\)</span> ✓</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(W_2^2\)</span> shift-by-1 test</td>
+<td>1.000000 ✓</td>
+</tr>
+<tr class="odd">
+<td>Sinkhorn vs POT (<span class="math inline">\(\varepsilon = 0.5\)</span>)</td>
+<td>err = <span class="math inline">\(3.51 \times 10^{-6}\)</span> ✓</td>
+</tr>
+<tr class="even">
+<td>Sinkhorn row marginal error</td>
+<td><span class="math inline">\(2.51 \times 10^{-8}\)</span> ✓</td>
+</tr>
+<tr class="odd">
+<td>Sinkhorn col marginal error</td>
+<td><span class="math inline">\(1.96 \times 10^{-8}\)</span> ✓</td>
+</tr>
+<tr class="even">
+<td>Triangle inequality pass rate</td>
+<td>100.00% (1,000 triplets) ✓</td>
+</tr>
+<tr class="odd">
+<td>Max-SWD direction recovery <span class="math inline">\(\lvert\theta^* \cdot e_0\rvert\)</span></td>
+<td>0.9990 ✓</td>
+</tr>
+<tr class="even">
+<td>All alignment methods beat baseline</td>
+<td>PASS ✓</td>
+</tr>
+<tr class="odd">
+<td>No CE collapse by epoch 10</td>
+<td>PASS ✓</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="key-insights" class="level2">
+<h2 class="anchored" data-anchor-id="key-insights">Key Insights</h2>
+<p><strong>1. Why Max-SWD Outperforms Average SWD Despite Using Fewer Projections</strong></p>
+<p>The fundamental limitation of average SWD as an alignment loss is signal dilution. In a 128-dimensional embedding space, the vast majority of random projection directions <span class="math inline">\(\theta \in S^{d-1}\)</span> are approximately orthogonal to the true axis of distributional divergence between source and target domains. Projecting onto these uninformative directions yields near-zero 1D Wasserstein distances, and averaging over <span class="math inline">\(L\)</span> such projections dilutes the few informative directions into a small mean signal — reflected in the low average alignment term <span class="math inline">\(\lambda \cdot \text{align} \approx 0.00058\)</span> observed throughout SWD training. Max-SWD eliminates this dilution entirely by solving the adversarial problem: find the single direction <span class="math inline">\(\theta^*\)</span> that maximizes <span class="math inline">\(W_2^2(\theta_\#\hat{\mu}_n, \theta_\#\hat{\nu}_n)\)</span>. This direction concentrates the entire distributional gap into one 1D distance, producing a gradient signal that is both stronger and more geometrically targeted than the average-SWD gradient. The analogy to a GAN discriminator is precise: <span class="math inline">\(\theta^*\)</span> plays the role of the optimal discriminator, identifying the most informative direction along which the encoder has failed to align the two domains, while the encoder update plays the role of the generator, adjusting its weights to reduce the gap along that direction. The result is a 4.92 percentage point accuracy improvement over the no-adaptation baseline versus only 1.33 points for SWD — achieved at <span class="math inline">\(L = 1\)</span> effective projection rather than <span class="math inline">\(L = 200\)</span>, and with only 1.4 seconds of additional per-epoch overhead.</p>
+<hr>
+<p><strong>2. Why Sinkhorn Fails as a Sustained Training Loss</strong></p>
+<p>Sinkhorn peaks at epoch 2 — the same epoch as the no-adaptation baseline — and degrades continuously for the remaining 18 epochs, finishing at 18.48% versus 11.59% for no adaptation. This behavior has a precise mechanistic explanation rooted in the choice of <span class="math inline">\(\varepsilon = 1.0\)</span>. At this regularization level, the entropic transport plan <span class="math inline">\(\pi^* \propto \exp(-C/\varepsilon)\)</span> is heavily smoothed toward the independent coupling <span class="math inline">\(\mu \otimes \nu\)</span>, meaning that most source samples are mapped to most target samples with nearly equal weight regardless of their actual proximity in embedding space. The gradient of <span class="math inline">\(W_\varepsilon^2\)</span> with respect to the encoder parameters therefore points in a diffuse, unfocused direction — it nudges all embeddings slightly toward the global mean rather than aligning the specific structural features of the two distributions. This produces a brief alignment benefit in the first few epochs when the two distributions are far apart and even a diffuse signal has directional value, but as the encoder adapts and the distributions begin to overlap, the over-smoothed plan loses its discriminative power and the alignment gradient becomes effectively uninformative. A smaller <span class="math inline">\(\varepsilon\)</span> would sharpen the transport plan but would require many more Sinkhorn iterations to converge and risks numerical instability — the fundamental dilemma of entropic OT as a training loss that SWD sidesteps entirely by construction.</p>
+<hr>
+<p><strong>3. The <span class="math inline">\(\sqrt{d}\)</span> Scaling Correction is Necessary, Not Optional</strong></p>
+<p>When all encoder embeddings are L2-normalized to lie on <span class="math inline">\(S^{d-1} \subset \mathbb{R}^{128}\)</span>, the projection of any unit vector <span class="math inline">\(z\)</span> onto a random direction <span class="math inline">\(\theta \in S^{d-1}\)</span> has expected squared magnitude <span class="math inline">\(\mathbb{E}[\langle z, \theta \rangle^2] = 1/d\)</span>. In <span class="math inline">\(d = 128\)</span> dimensions, this means each projected value is approximately <span class="math inline">\(1/\sqrt{128} \approx 0.088\)</span> times the original embedding magnitude. Without the <span class="math inline">\(\sqrt{d}\)</span> correction, the SWD alignment loss in the training loop would be on the order of <span class="math inline">\(10^{-3}\)</span> to <span class="math inline">\(10^{-4}\)</span> — negligibly small compared to the cross-entropy loss, which starts near 1.9 and decays to approximately 0.5 over 20 epochs. A negligible alignment loss produces a negligible gradient with respect to the encoder parameters, meaning the encoder receives effectively no domain alignment signal regardless of the <span class="math inline">\(\lambda\)</span> value chosen. The <span class="math inline">\(\sqrt{d}\)</span> correction restores the projected values to unit scale, ensuring that the alignment loss magnitude is commensurate with the CE loss and that the <span class="math inline">\(\lambda\)</span> hyperparameter functions as a genuine regularization strength control. This is not a heuristic patch but a principled correction derived from the geometry of random projections on high-dimensional spheres — and it is precisely the correction that makes SWD and Max-SWD viable as training losses in normalized embedding spaces.</p>
+<hr>
+<p><strong>4. Convergence Rate of the SWD Estimator and Its Implications for Training</strong></p>
+<p>The Monte Carlo SWD estimator converges at rate <span class="math inline">\(\mathcal{O}(1/\sqrt{L})\)</span> by the central limit theorem, since each projection direction yields an independent, finite-variance estimate of the 1D Wasserstein distance. This was confirmed empirically at <span class="math inline">\(d = 128\)</span>: CV drops from 0.383 at <span class="math inline">\(L = 10\)</span> to 0.016 at <span class="math inline">\(L = 5{,}000\)</span>, a reduction factor of approximately 24, consistent with the theoretical <span class="math inline">\(\sqrt{5000/10} \approx 22\)</span>-fold prediction. The practical implication for training is that the <span class="math inline">\(n_{\text{proj}} = 200\)</span> setting used in the training loop operates at CV <span class="math inline">\(\approx 10\%\)</span> — acceptable for a stochastic gradient signal but not for a precise distance measurement. This means that the SWD value computed at each training step is a noisy estimate of the true SWD, adding a stochastic component to the alignment gradient on top of the already stochastic mini-batch gradient. Paradoxically, this extra noise may act as implicit regularization, similar in spirit to dropout, preventing the encoder from overfitting to a fixed set of alignment directions. The triangle inequality verification further shows that this level of noise is benign from a metric perspective: zero violations are observed at <span class="math inline">\(L \geq 100\)</span> across 1,000 independent triplets, confirming that the estimator reliably preserves the metric structure of the true SWD at training-relevant projection counts.</p>
+<hr>
+<p><strong>5. The Accuracy-Speed Pareto Frontier and When to Prefer Max-SWD over SWD</strong></p>
+<p>The three alignment methods occupy distinct positions on the accuracy-speed Pareto frontier, and the choice between them should be driven by the computational budget and the severity of the domain gap. SWD at <span class="math inline">\(n_{\text{proj}} = 200\)</span> is the right choice when training time is the binding constraint: it adds less than 2% overhead per epoch while providing stable alignment that prevents source-domain collapse — a free lunch relative to no adaptation. Max-SWD is the right choice when accuracy is the primary objective and a modest time budget is available: its 7% per-epoch overhead is negligible on any modern GPU, and its adversarial projection mechanism reliably finds the most informative alignment direction regardless of the geometry of the domain gap. Sinkhorn should be avoided as a primary training loss in any setting where training stability and speed both matter — its <span class="math inline">\(\mathcal{O}(n^2)\)</span> scaling, sensitivity to <span class="math inline">\(\varepsilon\)</span>, and tendency to produce transient alignment signals make it strictly dominated by Max-SWD on the Pareto frontier for the batch sizes and embedding dimensions typical in domain adaptation. The deeper geometric reason to prefer Max-SWD over SWD scales with the intrinsic dimensionality of the domain gap: when the distributional divergence between source and target is concentrated along a small number of directions in embedding space — as is typical when both domains share the same label space and differ primarily in appearance — the average over random projections in SWD underestimates the true gap by a factor proportional to <span class="math inline">\(d / d_{\text{gap}}\)</span>, where <span class="math inline">\(d_{\text{gap}}\)</span> is the effective dimension of the divergence. Max-SWD, by finding <span class="math inline">\(\theta^*\)</span> directly, bypasses this underestimation entirely and provides an alignment gradient that is always proportional to the true worst-case distributional gap.</p>
+<hr>
+</section>
+<section id="implementation-notes" class="level2">
+<h2 class="anchored" data-anchor-id="implementation-notes">Implementation Notes</h2>
+<ul>
+<li><p><strong>All core distances implemented from scratch.</strong> <span class="math inline">\(W_1\)</span>, <span class="math inline">\(W_2^2\)</span>, SWD, Max-SWD, and Sinkhorn are all implemented in pure PyTorch with no reliance on POT or GeomLoss for the training losses. POT is used exclusively as a verification reference in Stages 2 and 6 to confirm correctness before the implementations are deployed in the training pipeline.</p></li>
+<li><p><strong><span class="math inline">\(\sqrt{d}\)</span> scaling correction for normalized embeddings.</strong> All encoder outputs are L2-normalized onto <span class="math inline">\(S^{d-1}\)</span>, which causes random projections to shrink by <span class="math inline">\(1/\sqrt{d}\)</span> in expectation. Without the <span class="math inline">\(\sqrt{d}\)</span> correction applied to all projected values in SWD and Max-SWD, the alignment loss becomes negligibly small relative to the cross-entropy loss in <span class="math inline">\(d = 128\)</span> dimensions, and the encoder receives no meaningful domain alignment gradient.</p></li>
+<li><p><strong>Separate alignment head with batch normalization.</strong> SWD and Max-SWD use a dedicated <code>align_head</code> branch (Linear <span class="math inline">\(\to\)</span> BatchNorm <span class="math inline">\(\to\)</span> ReLU <span class="math inline">\(\to\)</span> L2-normalize) separate from the classification path. This prevents alignment gradients from directly modifying the classification representation, stabilizing the CE loss throughout training. Sinkhorn uses the main encoder path, as its smoother gradient does not require this separation.</p></li>
+<li><p><strong>Max-SWD uses 10 ascent steps in the training loop.</strong> The standalone Max-SWD experiment converges at 100 gradient ascent steps (<span class="math inline">\(\text{lr} = 0.01\)</span>). In the training loop, only 10 steps are used (<span class="math inline">\(\text{lr} = 0.05\)</span>) to keep per-batch overhead minimal. This reduces the per-epoch time to 21.0 seconds — only 1.4 seconds above the no-adaptation baseline — while preserving the adversarial alignment signal. The direction recovery experiment confirms that 10 steps at a higher learning rate reaches sufficient proximity to <span class="math inline">\(\theta^*\)</span> for practical alignment.</p></li>
+<li><p><strong>Sinkhorn regularization parameter <span class="math inline">\(\varepsilon = 1.0\)</span>.</strong> A larger <span class="math inline">\(\varepsilon\)</span> was chosen over the more common <span class="math inline">\(\varepsilon = 0.1\)</span> to ensure numerical stability in the log-domain updates during training. Smaller <span class="math inline">\(\varepsilon\)</span> sharpens the transport plan but requires significantly more iterations to converge and produces larger gradient magnitudes that can destabilize the encoder. The tradeoff is that <span class="math inline">\(\varepsilon = 1.0\)</span> over-smooths the plan, which contributes to Sinkhorn’s instability beyond epoch 2.</p></li>
+<li><p><strong>Log-domain Sinkhorn throughout.</strong> The Gibbs kernel <span class="math inline">\(K = \exp(-C/\varepsilon)\)</span> is never explicitly materialized. All Sinkhorn iterations operate on the log-dual potentials <span class="math inline">\(f\)</span> and <span class="math inline">\(g\)</span> via the log-sum-exp operator, avoiding numerical underflow at any <span class="math inline">\(\varepsilon\)</span> value. This is essential for autograd compatibility, as the log-domain formulation maintains differentiability with respect to the input embeddings.</p></li>
+<li><p><strong>Label smoothing and gradient clipping for training stability.</strong> Label smoothing (<span class="math inline">\(\alpha = 0.1\)</span>) prevents the classifier from becoming overconfident on source samples, which would suppress the CE gradient and allow the alignment term to dominate. Gradient clipping (max norm = 5.0) is applied jointly to encoder and classifier parameters at every step, guarding against occasional large gradient spikes from the alignment loss — particularly relevant for Sinkhorn, whose gradient magnitude varies significantly across training.</p></li>
+<li><p><strong><code>drop_last=True</code> on both data loaders.</strong> Both the MNIST and SVHN loaders discard the final incomplete batch each epoch. This guarantees that every batch passed to the alignment loss contains exactly 256 samples, ensuring consistent marginal distributions for SWD and Sinkhorn. Variable batch sizes would change the effective per-sample weight in the uniform marginals <span class="math inline">\(a = b = \mathbf{1}_n / n\)</span>, introducing subtle inconsistencies in the alignment gradient.</p></li>
+<li><p><strong>Independent SVHN loader cycling.</strong> The SVHN training loader (286 batches/epoch) is longer than the MNIST loader (234 batches/epoch). The SVHN iterator is reset mid-epoch when exhausted, ensuring that every MNIST batch is paired with a valid SVHN batch. This means the SVHN dataset is sampled with slight repetition each epoch, but the shuffle at loader initialization ensures different pairings across epochs.</p></li>
+<li><p><strong>Fixed global seed with full determinism.</strong> Seed 42 is applied to Python’s <code>random</code>, NumPy, PyTorch CPU, and PyTorch CUDA before every experiment. <code>torch.backends.cudnn.deterministic = True</code> and <code>torch.backends.cudnn.benchmark = False</code> are set globally to ensure bit-exact reproducibility across runs on the same hardware.</p></li>
+</ul>
+<hr>
+</section>
+<section id="dependencies" class="level2">
+<h2 class="anchored" data-anchor-id="dependencies">Dependencies</h2>
+<pre><code>torch==2.3.1+cu121
+torchvision==0.18.1+cu121
+numpy                        # array operations and random sampling
+matplotlib                   # all plots and learning curve visualizations
+pandas                       # benchmark table formatting
+scipy                        # not directly used; pulled in by POT
+POT                          # verification reference only — not used in training losses
+tqdm                         # training loop progress bars</code></pre>
+<p><strong>INSTALL COMMANDS [Kaggle Notebook <span class="math inline">\(\rightarrow\)</span> Add-ons <span class="math inline">\(\rightarrow\)</span> Install Dependencies]</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install torch==2.3.1+cu121 torchvision==0.18.1+cu121 <span class="dt">\</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">--index-url</span> https://download.pytorch.org/whl/cu121</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install torch-geometric==2.5.3</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install pyg_lib==0.4.0 torch_scatter==2.1.2 <span class="dt">\</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    torch_sparse==0.6.18 torch_cluster==1.6.3 <span class="dt">\</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">-f</span> https://data.pyg.org/whl/torch-2.3.0+cu121.html</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+<section id="note" class="level2">
+<h2 class="anchored" data-anchor-id="note">Note</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 100%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: center;">The notebook was developed and tested on a Kaggle environment with a NVIDIA P100 16GB GPU, Python 3.12, and CUDA 12.1. All cells run end-to-end from a clean kernel without any external dependencies beyond those listed above.</th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+<hr>
+<hr>
+<ul>
+<li><a href="">Project Notebook (Code)</a></li>
+<li><a href="../../projects/Sliced Wasserstein for Scalable Distribution Alignment (Domain Adaptation)/mathematical_framework.html">Mathematical Framework</a></li>
+<li><a href="../../projects/Sliced Wasserstein for Scalable Distribution Alignment (Domain Adaptation)/solving_anchor_example.html">Solving an Anchor Example</a></li>
+<li><a href="technical_report.pdf">Technical Report</a></li>
+</ul>
+<hr>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

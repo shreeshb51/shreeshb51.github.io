@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>log_sum_exp – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#topic-3---the-log-sum-exp-trick-numerical-stability-for-small-varepsilon" id="toc-topic-3---the-log-sum-exp-trick-numerical-stability-for-small-varepsilon" class="nav-link active" data-scroll-target="#topic-3---the-log-sum-exp-trick-numerical-stability-for-small-varepsilon">Topic 3 - The Log-Sum-Exp Trick: Numerical Stability for Small <span class="math inline">\(\varepsilon\)</span></a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#layer-1-story" id="toc-layer-1-story" class="nav-link" data-scroll-target="#layer-1-story">Layer 1 (Story)</a></li>
+  <li><a href="#layer-2-mathematics" id="toc-layer-2-mathematics" class="nav-link" data-scroll-target="#layer-2-mathematics">Layer 2 (Mathematics)</a></li>
+  <li><a href="#layer-3-bridge" id="toc-layer-3-bridge" class="nav-link" data-scroll-target="#layer-3-bridge">Layer 3 (Bridge)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<section id="topic-3---the-log-sum-exp-trick-numerical-stability-for-small-varepsilon" class="level1">
+<h1>Topic 3 - The Log-Sum-Exp Trick: Numerical Stability for Small <span class="math inline">\(\varepsilon\)</span></h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>Topics 1 and 2 built the complete theoretical and algorithmic picture of entropic optimal transport. The regularized problem has a unique Gibbs-structured solution. The Sinkhorn iterations find it by alternating KL projections, converging geometrically with complexity <span class="math inline">\(O(n^2)\)</span> per iteration. The theory is airtight.</p>
+<p>The implementation is not — and for a reason that has nothing to do with mathematics.</p>
+<p>The Gibbs kernel <span class="math inline">\(K_{ij} = e^{-C_{ij}/\varepsilon}\)</span> is the object around which everything revolves. For <span class="math inline">\(\varepsilon\)</span> in a reasonable range, this kernel is well-behaved. But the practical demands of machine learning push <span class="math inline">\(\varepsilon\)</span> small — small enough that the regularized solution is a faithful approximation to the true Wasserstein distance, small enough that the geometry is preserved. And for small <span class="math inline">\(\varepsilon\)</span>, the exponential function catastrophically destroys numerical information. Entries of <span class="math inline">\(K\)</span> that are mathematically distinct and nonzero become computationally indistinguishable from zero. The Sinkhorn iterations divide by these zeros, produce NaN, and the algorithm dies — not because the mathematical problem is ill-posed, but because floating-point arithmetic cannot represent the numbers involved.</p>
+<p>This topic is about fixing that failure completely and permanently.</p>
+<p>The log-sum-exp trick is the numerical technique that resolves the instability. It works by recognizing that the Sinkhorn iterations never actually need the kernel entries <span class="math inline">\(K_{ij}\)</span> individually — they only need the log-sum-exp aggregations <span class="math inline">\(\log\sum_j e^{(g_j - C_{ij})/\varepsilon}\)</span> and <span class="math inline">\(\log\sum_i e^{(f_i - C_{ij})/\varepsilon}\)</span>. By working directly with the log-domain potentials <span class="math inline">\(f = \varepsilon\log u\)</span> and <span class="math inline">\(g = \varepsilon\log v\)</span> — and by stabilizing every log-sum-exp computation via a max-subtraction trick — the algorithm avoids ever explicitly constructing the kernel <span class="math inline">\(K\)</span> at all. The exponential is applied only to differences of potentials, not to raw costs divided by <span class="math inline">\(\varepsilon\)</span>, and these differences remain in a numerically representable range regardless of how small <span class="math inline">\(\varepsilon\)</span> is.</p>
+<p>This topic has one bullet point in the roadmap’s syllabus — the log-sum-exp trick itself — but its scope is broader than that single phrase suggests. A complete treatment requires four interconnected components.</p>
+<p>The first is <strong>the numerical failure mode in precise detail</strong> — exactly how and why the standard Sinkhorn iterations break for small <span class="math inline">\(\varepsilon\)</span>, tracing the failure through IEEE 754 double-precision arithmetic, identifying the specific operations that produce underflow, overflow, NaN, and Inf, and understanding why more iterations cannot rescue a collapsed computation. The failure is not merely slow convergence — it is outright algorithmic death, and understanding exactly where the death occurs is prerequisite to understanding why the fix works.</p>
+<p>The second is <strong>the log-sum-exp stabilization identity</strong> — the algebraic manipulation <span class="math inline">\(\log\sum_j e^{x_j} = \max_j x_j + \log\sum_j e^{x_j - \max_j x_j}\)</span> that shifts the argument of the exponential by its maximum before summing, guaranteeing that at least one term in the sum is <span class="math inline">\(e^0 = 1\)</span> and all others are at most <span class="math inline">\(1\)</span>. This prevents both overflow (no term exceeds <span class="math inline">\(e^0 = 1\)</span> after shifting) and underflow-dominated sums (the largest term is always exactly <span class="math inline">\(1\)</span>, so the sum is always at least <span class="math inline">\(1\)</span> and the log is always at least <span class="math inline">\(0\)</span>). The identity is algebraically exact — no approximation is introduced — so the stabilized computation produces the same mathematical result as the unstabilized version, in exact arithmetic.</p>
+<p>The third is <strong>the full log-domain Sinkhorn algorithm</strong> — the complete reformulation of the Sinkhorn iterations in terms of the potentials <span class="math inline">\(f \in \mathbb{R}^m\)</span> and <span class="math inline">\(g \in \mathbb{R}^n\)</span> rather than the scaling vectors <span class="math inline">\(u \in \mathbb{R}^m_{++}\)</span> and <span class="math inline">\(v \in \mathbb{R}^n_{++}\)</span>, with every operation expressed as a stabilized log-sum-exp. The log-domain algorithm never constructs the Gibbs kernel <span class="math inline">\(K\)</span> explicitly, never stores or manipulates exponentially small numbers, and is numerically stable for all <span class="math inline">\(\varepsilon &gt; 0\)</span> down to machine precision. The cost matrix <span class="math inline">\(C\)</span> enters the computation only through differences with the current potentials, and these differences are always numerically benign.</p>
+<p>The fourth is <strong>the soft-minimum interpretation</strong> — the observation that the log-sum-exp function <span class="math inline">\(\text{LSE}(x) = \log\sum_j e^{x_j}\)</span> is a smooth approximation to the maximum function <span class="math inline">\(\max_j x_j\)</span>, with approximation error controlled by <span class="math inline">\(\varepsilon\)</span>. The log-domain Sinkhorn update <span class="math inline">\(f_i \leftarrow -\varepsilon\,\text{LSE}_j((g_j - C_{ij})/\varepsilon)\)</span> is a soft minimum over destinations — a smooth, differentiable approximation to the hard minimum that would arise in the <span class="math inline">\(\varepsilon \to 0\)</span> limit. As <span class="math inline">\(\varepsilon \to 0\)</span>, the soft minimum sharpens to the hard minimum, and the log-domain Sinkhorn iterations converge to the auction algorithm for the exact assignment problem — making the <span class="math inline">\(\varepsilon \to 0\)</span> limit of the log-domain Sinkhorn a direct bridge between the regularized and exact OT problems.</p>
+<p>By the end of this topic, you will have a complete, production-ready implementation of the Sinkhorn algorithm that is numerically stable across the full range of practically relevant <span class="math inline">\(\varepsilon\)</span> values, differentiable end-to-end for use as a neural network loss, and efficient enough to run inside a training loop at machine learning scale. The gap between the mathematics of Topic 1 and Topic 2 and the working code of the Phase 1 checkpoint project closes here.</p>
+<hr>
+</section>
+<section id="layer-1-story" class="level2">
+<h2 class="anchored" data-anchor-id="layer-1-story">Layer 1 (Story)</h2>
+<p>You are the night-shift supervisor at Nepal Telecom’s main data centre in Jawalakhel, and tonight you are staring at a crisis on your monitoring dashboard.</p>
+<p>Your team runs a distributed logging system that collects signal-strength measurements from thousands of cell towers across the country. Every hour, the system computes a stability score for each tower cluster by aggregating the log-likelihood of the received signals — a sum of the form <span class="math inline">\(\log\sum_j e^{x_j}\)</span>, where each <span class="math inline">\(x_j\)</span> is the log-probability of receiving a particular signal pattern from tower <span class="math inline">\(j\)</span>. This aggregation tells you which cluster is most likely generating a given interference pattern, and it feeds directly into the network’s automated fault-detection pipeline.</p>
+<p>Tonight, the pipeline has crashed. The fault-detection output is a spreadsheet of NaN values. Every cluster score is undefined. The automated alerts are firing. Your senior engineer is asleep. You are alone with the logs and a deadline.</p>
+<p>You open the raw computation logs and trace the failure step by step.</p>
+<hr>
+<p><strong>Tracing the failure: how NaN is born</strong></p>
+<p>The pipeline receives a vector of log-probabilities <span class="math inline">\(x = (x_1, x_2, \ldots, x_n)\)</span> — one per tower in the cluster. These are negative numbers, because they are logarithms of probabilities less than one. For a well-functioning cluster, the values are moderate: <span class="math inline">\(x_j \approx -5\)</span> to <span class="math inline">\(-20\)</span>. The computation <span class="math inline">\(\log\sum_j e^{x_j}\)</span> is straightforward — the exponentials are small but representable, the sum is positive, the logarithm is finite. No problem.</p>
+<p>But tonight, one cluster has extremely weak signals. The log-probabilities are not <span class="math inline">\(-20\)</span>. They are <span class="math inline">\(-850, -912, -1043, -798\)</span>. These are not unusual in physics — they correspond to genuinely improbable signal patterns from distant towers. Mathematically, <span class="math inline">\(\log\sum_j e^{x_j}\)</span> for these values is a perfectly well-defined real number. Computationally, the pipeline attempts to evaluate <span class="math inline">\(e^{-850}\)</span>, <span class="math inline">\(e^{-912}\)</span>, <span class="math inline">\(e^{-1043}\)</span>, <span class="math inline">\(e^{-798}\)</span>.</p>
+<p>IEEE 754 double-precision floating point can represent numbers as small as approximately <span class="math inline">\(5 \times 10^{-324}\)</span>, corresponding to <span class="math inline">\(e^{-745}\)</span> approximately. Beyond that, the representation underflows to exactly zero. So the pipeline computes: <span class="math inline">\(e^{-850} = 0.0\)</span>, <span class="math inline">\(e^{-912} = 0.0\)</span>, <span class="math inline">\(e^{-1043} = 0.0\)</span>, <span class="math inline">\(e^{-798} = 0.0\)</span>. The sum is <span class="math inline">\(0.0\)</span>. The logarithm of zero is <span class="math inline">\(-\infty\)</span>. The stability score is <span class="math inline">\(-\infty\)</span>, and downstream operations that subtract two such scores produce $-- (-) = $ NaN. The entire fault-detection pipeline outputs NaN for every cluster that passed through this computation path.</p>
+<p>The mathematics is not wrong. The numbers are not wrong. The floating-point representation simply cannot hold them.</p>
+<hr>
+<p><strong>The first naive fix and why it breaks</strong></p>
+<p>Your first instinct is to clip the input values. If <span class="math inline">\(x_j &lt; -700\)</span>, replace it with <span class="math inline">\(-700\)</span> before exponentiating. This prevents underflow. The exponentials are now representable.</p>
+<p>But this breaks the computation in a different way. You have silently discarded the information that <span class="math inline">\(x_j = -850\)</span> is different from <span class="math inline">\(x_j = -700\)</span>. The clipped values are not the true log-probabilities — they are truncated approximations. For a single cluster, this might seem harmless. But your pipeline computes differences between cluster scores to rank towers. If two clusters both have all values below <span class="math inline">\(-700\)</span> and get clipped to the same truncated inputs, their scores become identical, and the ranking is destroyed. Towers that should be flagged as faulty are indistinguishable from towers that should be flagged as healthy.</p>
+<p>Clipping introduces error. The error is not small and not controlled. It corrupts the downstream ranking.</p>
+<hr>
+<p><strong>The correct fix: the max-subtraction identity</strong></p>
+<p>Your most junior engineer — a recent graduate who took a numerical methods course last semester — walks in early and looks at your screen for thirty seconds. She writes one line on the whiteboard:</p>
+<p><span class="math display">\[\log\sum_j e^{x_j} = M + \log\sum_j e^{x_j - M}, \quad \text{where } M = \max_j x_j\]</span></p>
+<p>This is the log-sum-exp identity. It is algebraically exact — no approximation, no clipping, no information loss. Let us verify it for the failing cluster.</p>
+<p>The values are <span class="math inline">\(x = (-850, -912, -1043, -798)\)</span>. The maximum is <span class="math inline">\(M = -798\)</span>. Subtract <span class="math inline">\(M\)</span> from every value: <span class="math inline">\(x - M = (-52, -114, -245, 0)\)</span>. Now exponentiate: <span class="math inline">\(e^{-52} \approx 1.7 \times 10^{-23}\)</span>, <span class="math inline">\(e^{-114} \approx 4.0 \times 10^{-50}\)</span>, <span class="math inline">\(e^{-245} \approx 10^{-107}\)</span>, <span class="math inline">\(e^{0} = 1.0\)</span>. All of these are representable in double precision. Sum them: approximately <span class="math inline">\(1.0 + 1.7\times 10^{-23} + \text{tiny} + \text{tiny} \approx 1.0\)</span>. Take the logarithm: <span class="math inline">\(\log(1.0) \approx 0\)</span>. Add back <span class="math inline">\(M\)</span>: <span class="math inline">\(-798 + 0 = -798\)</span>.</p>
+<p>The pipeline now outputs <span class="math inline">\(-798\)</span> instead of NaN. The fault-detection ranking works. The alerts are correct.</p>
+<p>The key observation: after subtracting <span class="math inline">\(M\)</span>, every shifted value <span class="math inline">\(x_j - M \leq 0\)</span>, so every exponential <span class="math inline">\(e^{x_j - M} \leq 1\)</span>. No overflow is possible. And at least one shifted value is exactly <span class="math inline">\(0\)</span> — the one achieving the maximum — so <span class="math inline">\(e^0 = 1\)</span> guarantees the sum is at least <span class="math inline">\(1\)</span> and the logarithm is at least <span class="math inline">\(0\)</span>. No underflow-dominated sum is possible — the sum always has at least one term of magnitude <span class="math inline">\(1\)</span>. The identity is numerically perfect.</p>
+<hr>
+<p><strong>Bringing this back to Sinkhorn: the same failure, the same fix</strong></p>
+<p>Now your engineer points to the Sinkhorn algorithm running in the adjacent pipeline — the one computing optimal transport distances between network traffic distributions at different times of day, used for anomaly detection.</p>
+<p>The Sinkhorn iterations in scaling-vector form are:</p>
+<p><span class="math display">\[u_i \leftarrow \frac{a_i}{\sum_j K_{ij} v_j} = \frac{a_i}{\sum_j e^{-C_{ij}/\varepsilon} v_j}\]</span></p>
+<p>For small <span class="math inline">\(\varepsilon = 0.01\)</span> and cost values <span class="math inline">\(C_{ij}\)</span> ranging from <span class="math inline">\(1\)</span> to <span class="math inline">\(100\)</span>, the kernel entries are <span class="math inline">\(e^{-C_{ij}/0.01} = e^{-100}\)</span> to <span class="math inline">\(e^{-10000}\)</span>. The value <span class="math inline">\(e^{-10000}\)</span> is so astronomically small that it underflows to zero in every floating-point system ever built. The matrix <span class="math inline">\(K\)</span> is a table of zeros. The denominator <span class="math inline">\(\sum_j K_{ij}v_j = 0\)</span> for every row <span class="math inline">\(i\)</span>. The update produces <span class="math inline">\(u_i = a_i / 0 = \text{Inf}\)</span>. On the next iteration, <span class="math inline">\(v_j = b_j / (K^\top u)_j = b_j / \text{Inf} = 0\)</span>. Then <span class="math inline">\(u_i = a_i / 0 = \text{Inf}\)</span> again. The algorithm oscillates between Inf and zero and never converges.</p>
+<p>This is exactly the same failure as the fault-detection pipeline. The exponential function applied to large negative numbers underflows. The fix is the same: stop working with <span class="math inline">\(K\)</span> directly, and instead work in log-space.</p>
+<hr>
+<p><strong>The log-domain reformulation: potentials instead of scaling vectors</strong></p>
+<p>Define the log-domain potentials <span class="math inline">\(f = \varepsilon \log u \in \mathbb{R}^m\)</span> and <span class="math inline">\(g = \varepsilon \log v \in \mathbb{R}^n\)</span>. These are the Kantorovich-style dual potentials from Topic 4 — the same objects, now serving as the primary variables of the algorithm instead of derived quantities.</p>
+<p>In terms of <span class="math inline">\(f\)</span> and <span class="math inline">\(g\)</span>, the coupling matrix is:</p>
+<p><span class="math display">\[P_{ij} = e^{(f_i + g_j - C_{ij})/\varepsilon}\]</span></p>
+<p>This replaces <span class="math inline">\(P_{ij} = u_i K_{ij} v_j = e^{f_i/\varepsilon} \cdot e^{-C_{ij}/\varepsilon} \cdot e^{g_j/\varepsilon}\)</span> — the same expression, rewritten as a single exponential of a sum. The key difference: instead of computing three separately tiny numbers and multiplying them, you compute their sum in the exponent and exponentiate once. The sum <span class="math inline">\(f_i + g_j - C_{ij}\)</span> is a difference of moderate-sized numbers — it does not underflow.</p>
+<p>The Sinkhorn row-update <span class="math inline">\(u_i \leftarrow a_i / (Kv)_i\)</span> becomes, in log-domain:</p>
+<p><span class="math display">\[f_i \leftarrow \varepsilon \log a_i - \varepsilon \log \sum_j e^{(g_j - C_{ij})/\varepsilon}\]</span></p>
+<p>The problematic term is <span class="math inline">\(\log\sum_j e^{(g_j - C_{ij})/\varepsilon}\)</span> — a log-sum-exp over the arguments <span class="math inline">\((g_j - C_{ij})/\varepsilon\)</span>. Apply the max-subtraction identity with <span class="math inline">\(M_i = \max_j (g_j - C_{ij})/\varepsilon\)</span>:</p>
+<p><span class="math display">\[\log\sum_j e^{(g_j - C_{ij})/\varepsilon} = M_i + \log\sum_j e^{(g_j - C_{ij})/\varepsilon - M_i}\]</span></p>
+<p>Every term in the stabilized sum is at most <span class="math inline">\(e^0 = 1\)</span>. No underflow. No overflow. The computation is numerically safe for all values of <span class="math inline">\(\varepsilon\)</span>, all values of <span class="math inline">\(C_{ij}\)</span>, all values of <span class="math inline">\(g_j\)</span>.</p>
+<p>The column-update is identical in structure:</p>
+<p><span class="math display">\[g_j \leftarrow \varepsilon \log b_j - \varepsilon \log \sum_i e^{(f_i - C_{ij})/\varepsilon}\]</span></p>
+<p>stabilized by subtracting <span class="math inline">\(M_j = \max_i (f_i - C_{ij})/\varepsilon\)</span> before summing.</p>
+<p>The stabilized log-domain Sinkhorn algorithm never constructs the kernel <span class="math inline">\(K\)</span> explicitly. It never computes <span class="math inline">\(e^{-C_{ij}/\varepsilon}\)</span> for any individual <span class="math inline">\((i,j)\)</span>. It works entirely with the potentials <span class="math inline">\(f\)</span> and <span class="math inline">\(g\)</span>, which are moderate-sized real numbers, updating them via stabilized log-sum-exp operations that are safe in double precision for all practically relevant parameter regimes.</p>
+<hr>
+<p><strong>The soft-minimum interpretation: what the log-domain update is really computing</strong></p>
+<p>Your engineer draws one more thing on the whiteboard. The log-domain row-update:</p>
+<p><span class="math display">\[f_i \leftarrow \varepsilon\log a_i - \varepsilon\log\sum_j e^{(g_j - C_{ij})/\varepsilon}\]</span></p>
+<p>can be rewritten as:</p>
+<p><span class="math display">\[f_i \leftarrow \varepsilon\log a_i + \text{softmin}_j^\varepsilon(C_{ij} - g_j)\]</span></p>
+<p>where <span class="math inline">\(\text{softmin}_j^\varepsilon(z_j) = -\varepsilon\log\sum_j e^{-z_j/\varepsilon}\)</span> is the <strong>soft minimum</strong> — a smooth approximation to <span class="math inline">\(\min_j z_j\)</span> that, as <span class="math inline">\(\varepsilon \to 0\)</span>, sharpens into the hard minimum.</p>
+<p>This is revealing. The row-update is computing: the optimal potential <span class="math inline">\(f_i\)</span> is approximately the minimum cost of reaching any destination from source <span class="math inline">\(i\)</span>, corrected by the current destination potentials <span class="math inline">\(g_j\)</span>. As <span class="math inline">\(\varepsilon \to 0\)</span>, the soft minimum becomes the hard minimum, and the update becomes:</p>
+<p><span class="math display">\[f_i \leftarrow \min_j (C_{ij} - g_j)\]</span></p>
+<p>This is exactly the update rule of the <strong>auction algorithm</strong> — the classical algorithm for the exact assignment problem, which you can derive from the KKT conditions of the discrete Kantorovich LP in MATH 304. The log-domain Sinkhorn algorithm in the limit <span class="math inline">\(\varepsilon \to 0\)</span> becomes the auction algorithm for the exact OT problem. The soft minimum of the regularized problem is the smoothed interpolation between the diffuse Gibbs distribution of large <span class="math inline">\(\varepsilon\)</span> and the sharp assignment of the exact problem at <span class="math inline">\(\varepsilon = 0\)</span>.</p>
+<hr>
+<p><strong>The break moment</strong></p>
+<p>Here is the naive assumption that breaks.</p>
+<p>You might think: the log-sum-exp stabilization fixes the numerical problem completely and unconditionally. Work in log-domain, apply the max-subtraction identity, and the algorithm is numerically safe for all <span class="math inline">\(\varepsilon &gt; 0\)</span>, no matter how small.</p>
+<p>This is almost true, but breaks at one precise point.</p>
+<p>The stabilization prevents underflow in the exponentials. But it does not prevent a different failure: for extremely small <span class="math inline">\(\varepsilon\)</span>, the arguments <span class="math inline">\((g_j - C_{ij})/\varepsilon\)</span> are enormous in magnitude — even after subtracting the maximum, the second-largest term can be <span class="math inline">\(e^{-\Delta/\varepsilon}\)</span> where <span class="math inline">\(\Delta\)</span> is the gap between the largest and second-largest argument. For <span class="math inline">\(\varepsilon = 10^{-10}\)</span> and <span class="math inline">\(\Delta = 1\)</span>, this is <span class="math inline">\(e^{-10^{10}}\)</span> — still zero in double precision. The sum is dominated entirely by the single maximum term: <span class="math inline">\(\sum_j e^{x_j - M} \approx 1\)</span>. The log-sum-exp returns exactly <span class="math inline">\(M + \log(1) = M\)</span>. This is numerically correct! The soft minimum has sharpened to the hard minimum, and the algorithm is computing the auction update exactly.</p>
+<p>The break is not numerical — it is convergence-theoretic. For such small <span class="math inline">\(\varepsilon\)</span>, the log-domain Sinkhorn iterations converge to the exact assignment solution, but the number of iterations required diverges as <span class="math inline">\(O(e^{\Delta C/\varepsilon})\)</span> as derived in Topic 2. The stabilization resolves the floating-point failure completely, but cannot overcome the fundamental algorithmic slowdown for very small <span class="math inline">\(\varepsilon\)</span>. The log-sum-exp trick makes the algorithm numerically correct for all <span class="math inline">\(\varepsilon\)</span>; it does not make it fast for all <span class="math inline">\(\varepsilon\)</span>. For very small <span class="math inline">\(\varepsilon\)</span>, you must either accept slow convergence, use warm-starting from a larger <span class="math inline">\(\varepsilon\)</span>, or switch to the exact assignment algorithm directly. The log-sum-exp trick is a necessary condition for a working implementation — but not a sufficient condition for an efficient one at all scales.</p>
+<hr>
+<p>Hold four pictures simultaneously as you move to the mathematics.</p>
+<p>The Jawalakhel data centre: a log-sum-exp computation crashing to NaN because the exponential of large negative numbers underflows to zero in IEEE 754 double precision — the identical failure mode that kills the standard Sinkhorn iterations for small <span class="math inline">\(\varepsilon\)</span>.</p>
+<p>The max-subtraction identity: <span class="math inline">\(\log\sum_j e^{x_j} = M + \log\sum_j e^{x_j - M}\)</span>, algebraically exact, numerically safe, guaranteeing that the largest term in the stabilized sum is always <span class="math inline">\(e^0 = 1\)</span> — preventing both underflow and overflow.</p>
+<p>The log-domain Sinkhorn algorithm: potentials <span class="math inline">\(f\)</span> and <span class="math inline">\(g\)</span> as primary variables, coupling <span class="math inline">\(P_{ij} = e^{(f_i+g_j-C_{ij})/\varepsilon}\)</span> reconstructed only at the end, updates expressed entirely as stabilized log-sum-exp operations that never construct <span class="math inline">\(K\)</span> explicitly.</p>
+<p>The soft-minimum interpretation: the log-domain update as a smooth approximation to the hard minimum of the auction algorithm, sharpening as <span class="math inline">\(\varepsilon \to 0\)</span>, bridging the regularized and exact OT problems through the temperature parameter.</p>
+<hr>
+</section>
+<section id="layer-2-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="layer-2-mathematics">Layer 2 (Mathematics)</h2>
+<p>We build the formalism in five stages: the precise characterization of floating-point failure in the standard Sinkhorn iterations, the log-sum-exp identity and its numerical guarantees, the complete log-domain Sinkhorn algorithm, the soft-minimum and its connection to the <span class="math inline">\(c\)</span>-transform, and the <span class="math inline">\(\varepsilon\)</span>-scaling heuristic for practical implementation.</p>
+<section id="floating-point-failure-precise-characterization" class="level3">
+<h3 class="anchored" data-anchor-id="floating-point-failure-precise-characterization">Floating-Point Failure — Precise Characterization</h3>
+<p>IEEE 754 double-precision floating point represents numbers in the range <span class="math inline">\([5 \times 10^{-324}, 1.8 \times 10^{308}]\)</span>. Numbers below the underflow threshold <span class="math inline">\(\approx e^{-745}\)</span> are rounded to exactly <span class="math inline">\(0.0\)</span>. Numbers above the overflow threshold <span class="math inline">\(\approx e^{+709}\)</span> are rounded to <span class="math inline">\(\pm\infty\)</span>.</p>
+<p><strong>Failure in the standard Sinkhorn iterations.</strong> The Gibbs kernel entry is <span class="math inline">\(K_{ij} = e^{-C_{ij}/\varepsilon}\)</span>. For cost range <span class="math inline">\(\Delta C = \max_{ij} C_{ij} - \min_{ij} C_{ij}\)</span> and regularization <span class="math inline">\(\varepsilon\)</span>:</p>
+<p><span class="math display">\[K_{ij} \text{ underflows to } 0 \iff C_{ij}/\varepsilon \gtrsim 745\]</span></p>
+<p>For <span class="math inline">\(\Delta C = 10\)</span> (a modest cost range), underflow occurs when <span class="math inline">\(\varepsilon \lesssim 0.013\)</span>. For <span class="math inline">\(\Delta C = 100\)</span>, underflow occurs when <span class="math inline">\(\varepsilon \lesssim 0.13\)</span>. These are not pathologically small values of <span class="math inline">\(\varepsilon\)</span> — they are the regime where the regularized solution is a useful approximation to the true Wasserstein distance.</p>
+<p><strong>Cascade of failures.</strong> Once underflow occurs:</p>
+<p><span class="math display">\[\text{Step 1: } K_{ij} = 0 \text{ for most } (i,j) \implies (Kv)_i = \sum_j K_{ij}v_j = 0\]</span> <span class="math display">\[\text{Step 2: } u_i = a_i / (Kv)_i = a_i / 0 = +\infty\]</span> <span class="math display">\[\text{Step 3: } (K^\top u)_j = \sum_i K_{ij} u_i = 0 \cdot \infty = \text{NaN}\]</span> <span class="math display">\[\text{Step 4: } v_j = b_j / \text{NaN} = \text{NaN}\]</span></p>
+<p>All subsequent iterates are NaN. The algorithm is dead after a single iteration. Increasing the iteration count does not help — NaN propagates through all subsequent operations. The failure is not gradual degradation but catastrophic immediate collapse.</p>
+<hr>
+</section>
+<section id="the-log-sum-exp-identity-derivation-and-guarantees" class="level3">
+<h3 class="anchored" data-anchor-id="the-log-sum-exp-identity-derivation-and-guarantees">The Log-Sum-Exp Identity — Derivation and Guarantees</h3>
+<p><strong>Definition.</strong> For <span class="math inline">\(x = (x_1, \ldots, x_n) \in \mathbb{R}^n\)</span>, the <strong>log-sum-exp function</strong> is:</p>
+<p><span class="math display">\[\text{LSE}(x) = \log \sum_{j=1}^n e^{x_j}\]</span></p>
+<p><strong>The stabilized identity.</strong> For any <span class="math inline">\(M \in \mathbb{R}\)</span>:</p>
+<p><span class="math display">\[\text{LSE}(x) = M + \log \sum_{j=1}^n e^{x_j - M}\]</span></p>
+<p><strong>Proof.</strong> <span class="math inline">\(M + \log\sum_j e^{x_j - M} = M + \log\left(e^{-M}\sum_j e^{x_j}\right) = M - M + \log\sum_j e^{x_j} = \text{LSE}(x)\)</span>. <span class="math inline">\(\square\)</span></p>
+<p><strong>Standard choice:</strong> <span class="math inline">\(M = \max_j x_j\)</span>. With this choice:</p>
+<ol type="1">
+<li><span class="math inline">\(x_j - M \leq 0\)</span> for all <span class="math inline">\(j\)</span>, so <span class="math inline">\(e^{x_j - M} \leq 1\)</span> — <strong>no overflow possible</strong>.</li>
+<li><span class="math inline">\(\exists j^* : x_{j^*} = M\)</span>, so <span class="math inline">\(e^{x_{j^*} - M} = e^0 = 1\)</span> — <strong>sum is always <span class="math inline">\(\geq 1\)</span>, so <span class="math inline">\(\log\)</span> is always <span class="math inline">\(\geq 0\)</span>, no underflow-dominated result</strong>.</li>
+<li>Terms with <span class="math inline">\(x_j \ll M\)</span> underflow to <span class="math inline">\(0\)</span> but are numerically negligible — their true value is exponentially smaller than the dominant term, so dropping them introduces relative error at most <span class="math inline">\(e^{-(M - x_j^{(2)})/1}\)</span> where <span class="math inline">\(x_j^{(2)}\)</span> is the second-largest value.</li>
+</ol>
+<p><strong>Numerical error bound.</strong> Let <span class="math inline">\(\widehat{\text{LSE}}(x)\)</span> denote the computed value using the stabilized identity in double precision with machine epsilon <span class="math inline">\(\epsilon_{\text{mach}} \approx 2.2 \times 10^{-16}\)</span>. Then:</p>
+<p><span class="math display">\[|\widehat{\text{LSE}}(x) - \text{LSE}(x)| \leq n \cdot \epsilon_{\text{mach}} \cdot \frac{\sum_j e^{x_j - M}}{\sum_j e^{x_j - M}} + O(\epsilon_{\text{mach}}^2) = O(n \cdot \epsilon_{\text{mach}})\]</span></p>
+<p>The error is proportional to <span class="math inline">\(n\)</span> times machine epsilon — independent of the magnitude of <span class="math inline">\(x\)</span> and independent of <span class="math inline">\(\varepsilon\)</span>. This is the optimal error bound for any floating-point summation algorithm.</p>
+<hr>
+</section>
+<section id="the-log-domain-sinkhorn-algorithm" class="level3">
+<h3 class="anchored" data-anchor-id="the-log-domain-sinkhorn-algorithm">The Log-Domain Sinkhorn Algorithm</h3>
+<p><strong>Variable substitution.</strong> Define log-domain potentials:</p>
+<p><span class="math display">\[f_i = \varepsilon \log u_i \in \mathbb{R}, \qquad g_j = \varepsilon \log v_j \in \mathbb{R}\]</span></p>
+<p>The coupling matrix in terms of potentials:</p>
+<p><span class="math display">\[P_{ij} = u_i K_{ij} v_j = e^{f_i/\varepsilon} \cdot e^{-C_{ij}/\varepsilon} \cdot e^{g_j/\varepsilon} = e^{(f_i + g_j - C_{ij})/\varepsilon}\]</span></p>
+<p>The argument <span class="math inline">\((f_i + g_j - C_{ij})/\varepsilon\)</span> is a difference of moderate-sized numbers — numerically safe for all <span class="math inline">\(\varepsilon &gt; 0\)</span>.</p>
+<p><strong>Derivation of log-domain updates.</strong> The row marginal constraint <span class="math inline">\(\sum_j P_{ij} = a_i\)</span> gives:</p>
+<p><span class="math display">\[\sum_j e^{(f_i + g_j - C_{ij})/\varepsilon} = a_i\]</span> <span class="math display">\[e^{f_i/\varepsilon} \sum_j e^{(g_j - C_{ij})/\varepsilon} = a_i\]</span> <span class="math display">\[f_i = \varepsilon \log a_i - \varepsilon \log \sum_j e^{(g_j - C_{ij})/\varepsilon}\]</span> <span class="math display">\[\boxed{f_i \leftarrow \varepsilon \log a_i - \varepsilon \cdot \text{LSE}_j\left(\frac{g_j - C_{ij}}{\varepsilon}\right)}\]</span></p>
+<p>where <span class="math inline">\(\text{LSE}_j\)</span> denotes log-sum-exp over index <span class="math inline">\(j\)</span> with stabilization constant <span class="math inline">\(M_i = \max_j (g_j - C_{ij})/\varepsilon\)</span>.</p>
+<p>Similarly, the column marginal constraint gives:</p>
+<p><span class="math display">\[\boxed{g_j \leftarrow \varepsilon \log b_j - \varepsilon \cdot \text{LSE}_i\left(\frac{f_i - C_{ij}}{\varepsilon}\right)}\]</span></p>
+<p>with stabilization constant <span class="math inline">\(M_j = \max_i (f_i - C_{ij})/\varepsilon\)</span>.</p>
+<p><strong>Complete log-domain Sinkhorn algorithm.</strong></p>
+<pre><code>Initialize: f = zeros(m), g = zeros(n)
+For ℓ = 1, 2, ..., L:
+    For each i: M_i = max_j (g_j - C_ij) / ε
+                f_i ← ε·log(a_i) - M_i·ε - ε·log Σ_j exp((g_j - C_ij)/ε - M_i)
+    For each j: M_j = max_i (f_i - C_ij) / ε
+                g_j ← ε·log(b_j) - M_j·ε - ε·log Σ_i exp((f_i - C_ij)/ε - M_j)
+Return: P_ij = exp((f_i + g_j - C_ij)/ε)  [only if P is needed explicitly]
+        OT_ε = Σ_i f_i · a_i + Σ_j g_j · b_j  [the dual objective value]</code></pre>
+<p><strong>Key properties of the log-domain algorithm:</strong></p>
+<ol type="1">
+<li>The kernel matrix <span class="math inline">\(K\)</span> is <strong>never explicitly constructed</strong> — <span class="math inline">\(C\)</span> enters only through the differences <span class="math inline">\(g_j - C_{ij}\)</span> and <span class="math inline">\(f_i - C_{ij}\)</span>.</li>
+<li>Every LSE computation is stabilized by subtracting the row/column maximum before exponentiating.</li>
+<li>The potentials <span class="math inline">\(f\)</span> and <span class="math inline">\(g\)</span> remain <span class="math inline">\(O(\|C\|_\infty)\)</span> in magnitude throughout — no accumulation of large values.</li>
+<li>The coupling <span class="math inline">\(P\)</span> is reconstructed only when needed, as a single pass of <span class="math inline">\(e^{(f_i + g_j - C_{ij})/\varepsilon}\)</span>.</li>
+<li>The dual objective <span class="math inline">\(\text{OT}_\varepsilon = \langle f, a\rangle + \langle g, b\rangle\)</span> is available directly from the converged potentials.</li>
+</ol>
+<hr>
+</section>
+<section id="the-soft-minimum-and-the-c-transform" class="level3">
+<h3 class="anchored" data-anchor-id="the-soft-minimum-and-the-c-transform">The Soft-Minimum and the <span class="math inline">\(c\)</span>-Transform</h3>
+<p><strong>Definition (soft-minimum).</strong> The <strong>soft-minimum</strong> with temperature <span class="math inline">\(\varepsilon &gt; 0\)</span> is:</p>
+<p><span class="math display">\[\text{softmin}_j^\varepsilon(z_j) = -\varepsilon \log \sum_j e^{-z_j/\varepsilon}\]</span></p>
+<p><strong>Properties:</strong></p>
+<p><span class="math display">\[\text{softmin}_j^\varepsilon(z_j) \leq \min_j z_j \quad \forall \varepsilon &gt; 0\]</span> <span class="math display">\[\lim_{\varepsilon \to 0} \text{softmin}_j^\varepsilon(z_j) = \min_j z_j\]</span> <span class="math display">\[\lim_{\varepsilon \to \infty} \text{softmin}_j^\varepsilon(z_j) = -\varepsilon \log n + \frac{1}{n}\sum_j z_j \approx \text{mean}_j z_j - \varepsilon\log n\]</span></p>
+<p>The soft-minimum is a smooth, strictly increasing (in <span class="math inline">\(-\varepsilon\)</span>) approximation to the minimum, with approximation error bounded by <span class="math inline">\(\varepsilon \log n\)</span>.</p>
+<p><strong>The log-domain update as a soft <span class="math inline">\(c\)</span>-transform.</strong> Rewrite the row update:</p>
+<p><span class="math display">\[f_i \leftarrow \varepsilon \log a_i - \varepsilon \log \sum_j e^{(g_j - C_{ij})/\varepsilon} = \varepsilon \log a_i + \text{softmin}_j^\varepsilon(C_{ij} - g_j)\]</span></p>
+<p>Define the <strong>soft <span class="math inline">\(c\)</span>-transform</strong> of <span class="math inline">\(g\)</span>:</p>
+<p><span class="math display">\[g^{\bar{c},\varepsilon}(x_i) = \text{softmin}_j^\varepsilon(C_{ij} - g_j) = -\varepsilon \log \sum_j e^{(g_j - C_{ij})/\varepsilon}\]</span></p>
+<p>Then the log-domain row update is:</p>
+<p><span class="math display">\[f_i \leftarrow \varepsilon \log a_i + g^{\bar{c},\varepsilon}(x_i)\]</span></p>
+<p><strong>Convergence to the exact <span class="math inline">\(c\)</span>-transform.</strong> As <span class="math inline">\(\varepsilon \to 0\)</span>:</p>
+<p><span class="math display">\[g^{\bar{c},\varepsilon}(x_i) \to \min_j (C_{ij} - g_j) = g^{\bar{c}}(x_i)\]</span></p>
+<p>the exact <span class="math inline">\(c\)</span>-transform from Topic 4 of Chapter 1. The log-domain Sinkhorn iteration at <span class="math inline">\(\varepsilon \to 0\)</span> becomes:</p>
+<p><span class="math display">\[f_i \leftarrow g^{\bar{c}}(x_i), \qquad g_j \leftarrow f^c(y_j)\]</span></p>
+<p>These are exactly the <strong>competitive equilibrium updates of the auction algorithm</strong> — the classical <span class="math inline">\(O(n^2 \log n)\)</span> algorithm for exact optimal assignment. The log-domain Sinkhorn is the smooth interpolation between the diffuse entropic regime (<span class="math inline">\(\varepsilon\)</span> large) and the sharp combinatorial regime (<span class="math inline">\(\varepsilon \to 0\)</span>).</p>
+<hr>
+</section>
+<section id="the-varepsilon-scaling-heuristic" class="level3">
+<h3 class="anchored" data-anchor-id="the-varepsilon-scaling-heuristic">The <span class="math inline">\(\varepsilon\)</span>-Scaling Heuristic</h3>
+<p>A practical technique for computing accurate Sinkhorn solutions at small <span class="math inline">\(\varepsilon\)</span> is <strong><span class="math inline">\(\varepsilon\)</span>-scaling</strong> (also called <strong>annealing</strong>): solve a sequence of regularized problems <span class="math inline">\(\varepsilon_1 &gt; \varepsilon_2 &gt; \cdots &gt; \varepsilon_T = \varepsilon_{\text{target}}\)</span>, using the converged potentials from <span class="math inline">\(\varepsilon_k\)</span> as the warm start for <span class="math inline">\(\varepsilon_{k+1}\)</span>.</p>
+<p><strong>Why this works.</strong> The Birkhoff contraction coefficient <span class="math inline">\(\eta(K_\varepsilon) \to 1\)</span> as <span class="math inline">\(\varepsilon \to 0\)</span>, making direct Sinkhorn slow for small <span class="math inline">\(\varepsilon\)</span>. But the distance from the warm-started potentials to the true solution <span class="math inline">\(\|(f^{(\varepsilon_{k+1},0)}, g^{(\varepsilon_{k+1},0)}) - (f^*, g^*)\|\)</span> is small when <span class="math inline">\(\varepsilon_{k+1}\)</span> is close to <span class="math inline">\(\varepsilon_k\)</span>. The product of small initialization distance and slow contraction can still give fast practical convergence.</p>
+<p><strong>Geometric schedule.</strong> A common choice is <span class="math inline">\(\varepsilon_k = \varepsilon_1 \cdot \rho^{k-1}\)</span> for <span class="math inline">\(\rho \in (0,1)\)</span>, with <span class="math inline">\(\varepsilon_1 = \|C\|_\infty\)</span> (large enough that the Sinkhorn iterations converge in <span class="math inline">\(O(1)\)</span> steps) and <span class="math inline">\(\varepsilon_T = \varepsilon_{\text{target}}\)</span>. The total number of Sinkhorn iterations across all stages is <span class="math inline">\(O(\log(\varepsilon_1/\varepsilon_T) \cdot \log(1/\delta) / |\log \rho|)\)</span> — polylogarithmic in the ratio <span class="math inline">\(\varepsilon_1/\varepsilon_T\)</span>, far better than the <span class="math inline">\(O(e^{\Delta C / \varepsilon_T})\)</span> iterations required without warm-starting.</p>
+<hr>
+</section>
+<section id="why-this-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-matters">WHY THIS MATTERS</h3>
+<p>In MSCS 202 (Numerical Methods), the <strong>condition number</strong> of a matrix <span class="math inline">\(A\)</span> is <span class="math inline">\(\kappa(A) = \|A\|\|A^{-1}\|\)</span>, and the relative error in the computed solution of <span class="math inline">\(Ax = b\)</span> is bounded by <span class="math inline">\(\kappa(A) \cdot \epsilon_{\text{mach}}\)</span>. For the Gibbs kernel <span class="math inline">\(K\)</span> with small <span class="math inline">\(\varepsilon\)</span>, the condition number is <span class="math inline">\(\kappa(K) \approx e^{\Delta C/\varepsilon}\)</span> — exponentially large. The standard Sinkhorn iterations are equivalent to solving a linear system with this condition number, making the computed solution dominated by floating-point error. The log-domain reformulation is the numerical analyst’s response: instead of working with the ill-conditioned <span class="math inline">\(K\)</span> directly, factor the computation into operations on the logarithm of <span class="math inline">\(K\)</span>, reducing the effective condition number to <span class="math inline">\(O(\Delta C / \varepsilon)\)</span> — polynomial rather than exponential in <span class="math inline">\(1/\varepsilon\)</span>.</p>
+<p>In MATH 304 (Computational Operations Research), the <strong>auction algorithm</strong> for the assignment problem updates dual variables via <span class="math inline">\(f_i \leftarrow \min_j (C_{ij} - g_j)\)</span> and <span class="math inline">\(g_j \leftarrow \min_i (C_{ij} - f_i)\)</span> — exact hard minima over the cost matrix. The log-domain Sinkhorn updates <span class="math inline">\(f_i \leftarrow \varepsilon\log a_i + \text{softmin}_j^\varepsilon(C_{ij} - g_j)\)</span> are the regularized soft-minimum versions of exactly these auction updates. The log-domain Sinkhorn algorithm is the smooth entropic generalization of the auction algorithm, collapsing to it as <span class="math inline">\(\varepsilon \to 0\)</span>. Every LP dual update you computed in MATH 304 is the zero-temperature limit of a log-domain Sinkhorn update.</p>
+<p>In MATH 213 (Analysis I), the <strong>uniform convergence</strong> of smooth approximations to non-smooth functions is a central theme. The soft-minimum <span class="math inline">\(\text{softmin}^\varepsilon \to \min\)</span> uniformly on compact sets as <span class="math inline">\(\varepsilon \to 0\)</span>, with error <span class="math inline">\(O(\varepsilon \log n)\)</span>. This is the approximation-theory content of the log-domain Sinkhorn: the algorithm computes smooth approximations to the hard combinatorial <span class="math inline">\(c\)</span>-transforms of Topic 4, with approximation error controlled uniformly by <span class="math inline">\(\varepsilon\)</span>. The convergence of the regularized OT value <span class="math inline">\(\text{OT}_\varepsilon \to W_c\)</span> as <span class="math inline">\(\varepsilon \to 0\)</span> — proved in Topic 1 — is the integral version of the pointwise convergence of soft-minimum to hard minimum.</p>
+<hr>
+</section>
+</section>
+<section id="layer-3-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="layer-3-bridge">Layer 3 (Bridge)</h2>
+<p>Every element of the Jawalakhel data centre story has a precise mathematical address. Let us walk through them one by one until the floating-point failure, the max-subtraction identity, the log-domain algorithm, and the soft-minimum are completely fused with the formalism.</p>
+<hr>
+<p><strong>The tower cluster log-likelihood computation — the pipeline aggregating log-probabilities via <span class="math inline">\(\log\sum_j e^{x_j}\)</span> and crashing to NaN — is the log-sum-exp function <span class="math inline">\(\text{LSE}(x) = \log\sum_j e^{x_j}\)</span>, the exact operation appearing in every Sinkhorn update.</strong> The log-probabilities <span class="math inline">\(x_j \in \{-850, -912, -1043, -798\}\)</span> are large negative numbers — mathematically finite, computationally unrepresentable as exponentials in IEEE 754 double precision. The underflow threshold <span class="math inline">\(e^{-745} \approx 5\times 10^{-324}\)</span> is the hard boundary of the double-precision representation: any <span class="math inline">\(e^{x_j}\)</span> with <span class="math inline">\(x_j &lt; -745\)</span> is rounded to exactly <span class="math inline">\(0.0\)</span>, not to a small positive number. The sum <span class="math inline">\(\sum_j e^{x_j} = 0.0\)</span> is a computational lie — the true sum is positive and finite — and <span class="math inline">\(\log(0) = -\infty\)</span> propagates to NaN in all downstream arithmetic. This is not approximation error. It is total information loss. The Sinkhorn failure is identical in structure: the Gibbs kernel entries <span class="math inline">\(K_{ij} = e^{-C_{ij}/\varepsilon}\)</span> play the role of <span class="math inline">\(e^{x_j}\)</span>, and the row-sum <span class="math inline">\((Kv)_i = \sum_j K_{ij}v_j\)</span> plays the role of <span class="math inline">\(\sum_j e^{x_j}\)</span>.</p>
+<p><strong>The cascade of failures — <span class="math inline">\(K_{ij} = 0\)</span> leading to <span class="math inline">\((Kv)_i = 0\)</span> leading to <span class="math inline">\(u_i = \infty\)</span> leading to <span class="math inline">\(\text{NaN}\)</span> — is the precise sequence <span class="math inline">\(e^{-C_{ij}/\varepsilon} \to 0 \Rightarrow (Kv)_i = 0 \Rightarrow u_i = a_i/0 = +\infty \Rightarrow (K^\top u)_j = 0\cdot\infty = \text{NaN}\)</span>, happening in the first iteration for <span class="math inline">\(\varepsilon \lesssim \Delta C / 745\)</span>.</strong> For cost range <span class="math inline">\(\Delta C = 10\)</span>, this threshold is <span class="math inline">\(\varepsilon \lesssim 0.013\)</span> — not a pathological edge case but the standard operating regime for faithful Wasserstein approximation. The cascade is not recoverable by running more iterations: NaN is an absorbing state in IEEE 754 arithmetic, propagating through every subsequent multiplication, addition, and division without exception. This is the condition number blow-up from MSCS 202 made concrete: the effective condition number of the Sinkhorn linear system is <span class="math inline">\(e^{\Delta C/\varepsilon}\)</span>, exponentially large for small <span class="math inline">\(\varepsilon\)</span>, making the computed solution meaningless in finite precision.</p>
+<hr>
+<p><strong>The clipping fix that breaks the downstream ranking — replacing <span class="math inline">\(x_j &lt; -700\)</span> with <span class="math inline">\(-700\)</span> before exponentiating — is the introduction of uncontrolled approximation error into the LSE computation, destroying the relative ordering of cluster scores.</strong> Clipping changes the mathematical problem being solved: instead of computing <span class="math inline">\(\text{LSE}(x)\)</span> for the true values, you compute <span class="math inline">\(\text{LSE}(\tilde{x})\)</span> for the clipped values <span class="math inline">\(\tilde{x}\)</span>. The error <span class="math inline">\(|\text{LSE}(x) - \text{LSE}(\tilde{x})|\)</span> is not bounded by machine epsilon — it is bounded by the clipping magnitude, which can be arbitrarily large. Two clusters with all values below <span class="math inline">\(-700\)</span> become computationally identical after clipping, even if their true scores differ significantly. In the Sinkhorn context, clipping the kernel is equivalent to replacing the true cost matrix <span class="math inline">\(C\)</span> with a modified matrix <span class="math inline">\(\tilde{C}\)</span> that caps large costs — solving a different OT problem entirely, producing a biased estimate of <span class="math inline">\(\text{OT}_\varepsilon\)</span> with uncontrolled error. The log-sum-exp stabilization produces no such bias: it is algebraically exact, solving the original problem without modification.</p>
+<p><strong>The max-subtraction identity <span class="math inline">\(\text{LSE}(x) = M + \log\sum_j e^{x_j - M}\)</span> with <span class="math inline">\(M = \max_j x_j\)</span> — algebraically exact, numerically safe — is the identity that the junior engineer writes on the whiteboard, verified term by term for the cluster values <span class="math inline">\((-850, -912, -1043, -798)\)</span>.</strong> The proof is one line: <span class="math inline">\(M + \log\sum_j e^{x_j - M} = M + \log(e^{-M}\sum_j e^{x_j}) = M - M + \log\sum_j e^{x_j} = \text{LSE}(x)\)</span>. The numerical safety follows from two simultaneous guarantees. First, <span class="math inline">\(x_j - M \leq 0\)</span> for all <span class="math inline">\(j\)</span>, so <span class="math inline">\(e^{x_j - M} \leq e^0 = 1\)</span> — overflow is structurally impossible. Second, <span class="math inline">\(\exists j^*\)</span> with <span class="math inline">\(x_{j^*} = M\)</span>, so <span class="math inline">\(e^{x_{j^*} - M} = 1\)</span> — the sum is always at least <span class="math inline">\(1\)</span>, the logarithm is always at least <span class="math inline">\(0\)</span>, and the result is never dominated by underflowed zeros. The error bound <span class="math inline">\(O(n\cdot\epsilon_{\text{mach}})\)</span>, independent of the magnitude of <span class="math inline">\(x\)</span> and of <span class="math inline">\(\varepsilon\)</span>, is the optimal achievable accuracy for floating-point summation — the same error analysis you performed for Gaussian elimination and numerical integration in MSCS 202.</p>
+<hr>
+<p><strong>The variable substitution <span class="math inline">\(f = \varepsilon\log u\)</span> and <span class="math inline">\(g = \varepsilon\log v\)</span> — replacing the scaling vectors with their log-domain counterparts — is the change of variables that converts the multiplicative Sinkhorn iterations into additive log-sum-exp operations, with the coupling expressed as <span class="math inline">\(P_{ij} = e^{(f_i + g_j - C_{ij})/\varepsilon}\)</span>.</strong> The scaling-vector form <span class="math inline">\(P_{ij} = u_i K_{ij} v_j = e^{f_i/\varepsilon} e^{-C_{ij}/\varepsilon} e^{g_j/\varepsilon}\)</span> involves three separate exponentials, each of which can underflow independently. The log-domain form collapses them into a single exponential <span class="math inline">\(e^{(f_i + g_j - C_{ij})/\varepsilon}\)</span> of the sum <span class="math inline">\(f_i + g_j - C_{ij}\)</span> — a difference of moderate real numbers. The argument <span class="math inline">\(f_i + g_j - C_{ij}\)</span> does not blow up as <span class="math inline">\(\varepsilon \to 0\)</span> because <span class="math inline">\(f_i\)</span> and <span class="math inline">\(g_j\)</span> are themselves <span class="math inline">\(O(\|C\|_\infty)\)</span> — they track the scale of the cost matrix, not the scale of <span class="math inline">\(1/\varepsilon\)</span>. This is the fundamental reason the log-domain formulation is stable: the <span class="math inline">\(\varepsilon\)</span> dependence is absorbed into the argument of a single exponential rather than spread across three separately catastrophic ones. The potentials <span class="math inline">\(f\)</span> and <span class="math inline">\(g\)</span> are the Kantorovich dual potentials from Topic 4 of Chapter 1 — the same objects that certify optimality of the primal coupling, now serving double duty as the numerically stable primary variables of the algorithm.</p>
+<p><strong>The log-domain row update <span class="math inline">\(f_i \leftarrow \varepsilon\log a_i - \varepsilon\cdot\text{LSE}_j((g_j - C_{ij})/\varepsilon)\)</span> — derived by substituting <span class="math inline">\(P_{ij} = e^{(f_i+g_j-C_{ij})/\varepsilon}\)</span> into the row marginal constraint <span class="math inline">\(\sum_j P_{ij} = a_i\)</span> and solving for <span class="math inline">\(f_i\)</span> — is the stabilized form of the Sinkhorn row normalization, with the LSE computed via max-subtraction over the stabilization constant <span class="math inline">\(M_i = \max_j(g_j - C_{ij})/\varepsilon\)</span>.</strong> The derivation is direct: <span class="math inline">\(\sum_j e^{(f_i+g_j-C_{ij})/\varepsilon} = a_i\)</span> gives <span class="math inline">\(e^{f_i/\varepsilon}\sum_j e^{(g_j-C_{ij})/\varepsilon} = a_i\)</span>, so <span class="math inline">\(f_i = \varepsilon\log a_i - \varepsilon\log\sum_j e^{(g_j-C_{ij})/\varepsilon} = \varepsilon\log a_i - \varepsilon\cdot\text{LSE}_j((g_j-C_{ij})/\varepsilon)\)</span>. The stabilization constant <span class="math inline">\(M_i\)</span> ensures that the largest argument in the LSE is shifted to zero before exponentiating — the max-subtraction from the data centre story, applied now to the argument <span class="math inline">\((g_j - C_{ij})/\varepsilon\)</span> rather than to raw log-probabilities. The column update is the symmetric mirror: <span class="math inline">\(g_j \leftarrow \varepsilon\log b_j - \varepsilon\cdot\text{LSE}_i((f_i - C_{ij})/\varepsilon)\)</span> with <span class="math inline">\(M_j = \max_i(f_i - C_{ij})/\varepsilon\)</span>.</p>
+<p><strong>The property that <span class="math inline">\(K\)</span> is never explicitly constructed in the log-domain algorithm — the cost matrix <span class="math inline">\(C\)</span> entering only through the differences <span class="math inline">\(g_j - C_{ij}\)</span> and <span class="math inline">\(f_i - C_{ij}\)</span> — is the computational realization of the observation that the Gibbs kernel is an intermediate object, not a fundamental one.</strong> The algorithm stores <span class="math inline">\(C \in \mathbb{R}^{m\times n}\)</span> and the potential vectors <span class="math inline">\(f \in \mathbb{R}^m\)</span>, <span class="math inline">\(g \in \mathbb{R}^n\)</span>. Total memory: <span class="math inline">\(O(mn + m + n) = O(mn)\)</span>. The coupling <span class="math inline">\(P \in \mathbb{R}^{m\times n}\)</span> is reconstructed only at the end via a single pass <span class="math inline">\(P_{ij} = e^{(f_i+g_j-C_{ij})/\varepsilon}\)</span>, when the application actually needs the transport plan. The dual objective <span class="math inline">\(\text{OT}_\varepsilon = \langle f,a\rangle + \langle g,b\rangle\)</span> is available immediately from the converged potentials without reconstructing <span class="math inline">\(P\)</span> — useful when only the distance value is needed, not the coupling itself.</p>
+<hr>
+<p><strong>The soft-minimum <span class="math inline">\(\text{softmin}_j^\varepsilon(C_{ij} - g_j) = -\varepsilon\log\sum_j e^{-(C_{ij}-g_j)/\varepsilon}\)</span> — the smooth approximation to <span class="math inline">\(\min_j(C_{ij} - g_j)\)</span> appearing in the log-domain row update — is the entropic <span class="math inline">\(c\)</span>-transform of <span class="math inline">\(g\)</span>, the regularized version of the exact <span class="math inline">\(c\)</span>-transform <span class="math inline">\(g^{\bar{c}}(x_i) = \min_j(C_{ij} - g_j)\)</span> from Topic 4 of Chapter 1.</strong> The log-domain row update rewrites as <span class="math inline">\(f_i \leftarrow \varepsilon\log a_i + g^{\bar{c},\varepsilon}(x_i)\)</span> where <span class="math inline">\(g^{\bar{c},\varepsilon}(x_i) = \text{softmin}_j^\varepsilon(C_{ij} - g_j)\)</span> is the soft <span class="math inline">\(c\)</span>-transform. As <span class="math inline">\(\varepsilon \to 0\)</span>, <span class="math inline">\(\text{softmin}^\varepsilon \to \min\)</span> uniformly on compact sets with approximation error <span class="math inline">\(O(\varepsilon\log n)\)</span> — the same uniform convergence result from MATH 213 (Analysis I) for smooth approximations to continuous but non-differentiable functions. The Sinkhorn iterations are alternating soft <span class="math inline">\(c\)</span>-transforms: each row update computes the soft <span class="math inline">\(c\)</span>-transform of <span class="math inline">\(g\)</span>, each column update computes the soft <span class="math inline">\(\bar{c}\)</span>-transform of <span class="math inline">\(f\)</span>. At <span class="math inline">\(\varepsilon = 0\)</span>, these collapse to the exact <span class="math inline">\(c\)</span>-transforms — the duality engine of Topic 4 — recovering the auction algorithm updates <span class="math inline">\(f_i \leftarrow \min_j(C_{ij} - g_j)\)</span> and <span class="math inline">\(g_j \leftarrow \min_i(C_{ij} - f_i)\)</span>.</p>
+<p><strong>The auction algorithm connection — the log-domain Sinkhorn at <span class="math inline">\(\varepsilon \to 0\)</span> collapsing to the exact dual updates <span class="math inline">\(f_i \leftarrow \min_j(C_{ij} - g_j)\)</span>, <span class="math inline">\(g_j \leftarrow \min_i(C_{ij} - f_i)\)</span> — is the competitive equilibrium interpretation of optimal transport from MATH 304.</strong> The auction algorithm, which you can derive from the KKT conditions of the discrete Kantorovich LP, updates dual variables by finding the cheapest available destination for each source — the hard minimum over the cost matrix corrected by current destination prices. The log-domain Sinkhorn updates are the soft version: instead of the cheapest destination getting all the flow, all destinations share the flow with weights proportional to <span class="math inline">\(e^{-(C_{ij}-g_j)/\varepsilon}\)</span> — exponentially more flow to cheaper destinations, exponentially less to expensive ones. The temperature <span class="math inline">\(\varepsilon\)</span> controls the sharpness of this competition, interpolating smoothly between the diffuse entropic regime (<span class="math inline">\(\varepsilon\)</span> large, all destinations share equally) and the sharp combinatorial regime (<span class="math inline">\(\varepsilon \to 0\)</span>, the cheapest destination wins everything). This interpolation is the mathematical content of the <span class="math inline">\(\varepsilon\)</span> dial from Topic 1, now visible at the level of individual update equations.</p>
+<hr>
+<p><strong>The break moment — the log-sum-exp stabilization resolving floating-point failure but not the exponentially slow convergence for very small <span class="math inline">\(\varepsilon\)</span> — is the distinction between numerical correctness and algorithmic efficiency.</strong> The stabilization guarantees that the computed potentials <span class="math inline">\(f^{(\ell)}\)</span> and <span class="math inline">\(g^{(\ell)}\)</span> satisfy <span class="math inline">\(|\hat{f}^{(\ell)}_i - f^{(\ell)}_i| = O(\epsilon_{\text{mach}})\)</span> at every iteration — the floating-point error is controlled at machine precision regardless of <span class="math inline">\(\varepsilon\)</span>. But the number of iterations required to reach <span class="math inline">\(\|f^{(\ell)} - f^*\|_\infty \leq \delta\)</span> is <span class="math inline">\(O(\varepsilon\log(1/\delta)/\Delta C)\)</span> from Topic 2’s convergence analysis — this grows without bound as <span class="math inline">\(\varepsilon \to 0\)</span>, independently of whether the algorithm runs in standard or log-domain form. The log-sum-exp trick resolves the first problem (numerical) completely; it does not resolve the second problem (algorithmic). For very small <span class="math inline">\(\varepsilon\)</span>, one must combine the log-domain formulation with <span class="math inline">\(\varepsilon\)</span>-scaling annealing: solve a sequence <span class="math inline">\(\varepsilon_1 &gt; \varepsilon_2 &gt; \cdots &gt; \varepsilon_T\)</span> with warm starts, achieving polylogarithmic total iteration count <span class="math inline">\(O(\log(\varepsilon_1/\varepsilon_T)\log(1/\delta))\)</span> — the practical production-grade implementation of Sinkhorn for small <span class="math inline">\(\varepsilon\)</span>.</p>
+<p><strong>The <span class="math inline">\(\varepsilon\)</span>-scaling annealing schedule — solving a geometric sequence of regularized problems <span class="math inline">\(\varepsilon_k = \varepsilon_1\cdot\rho^{k-1}\)</span> with warm-started potentials — is the numerical methods analogue of continuation methods from MSCS 202, where a hard problem is solved by deforming it from an easy nearby problem through a sequence of intermediate problems.</strong> The initial <span class="math inline">\(\varepsilon_1 = \|C\|_\infty\)</span> is chosen large enough that the Sinkhorn iterations converge in <span class="math inline">\(O(1)\)</span> steps — the Gibbs kernel is nearly flat and the marginal constraints are nearly decoupled. Each subsequent stage reduces <span class="math inline">\(\varepsilon\)</span> by a factor <span class="math inline">\(\rho\)</span>, warm-starting from the previous stage’s converged potentials. The initialization distance <span class="math inline">\(\|(f^{(\varepsilon_{k+1},0)},g^{(\varepsilon_{k+1},0)}) - (f^*_{\varepsilon_{k+1}},g^*_{\varepsilon_{k+1}})\|\)</span> is small when <span class="math inline">\(\varepsilon_{k+1}\)</span> is close to <span class="math inline">\(\varepsilon_k\)</span>, because the optimal potentials vary continuously with <span class="math inline">\(\varepsilon\)</span> — a consequence of the smooth differentiability of <span class="math inline">\(\text{OT}_\varepsilon\)</span> in <span class="math inline">\(\varepsilon\)</span> established in Topic 1. The annealing schedule is the practical bridge between the theoretical <span class="math inline">\(O(n^2)\)</span> complexity of a single Sinkhorn stage and the end-to-end computation of accurate Wasserstein distances at machine learning scale.</p>
+<hr>
+<p><strong>The connection to MSCS 202 (Numerical Methods) runs through condition number theory, continuation methods, and stabilized summation.</strong> The Gibbs kernel’s condition number <span class="math inline">\(\kappa(K) = e^{\Delta C/\varepsilon}\)</span> is the condition number of the Sinkhorn linear system — exponentially large for small <span class="math inline">\(\varepsilon\)</span>. The log-domain reformulation reduces the effective condition number to <span class="math inline">\(O(\Delta C/\varepsilon)\)</span> by working with logarithms of the kernel entries rather than the entries themselves, exactly as diagonal scaling and preconditioning reduce condition numbers in linear system solvers. The stabilized LSE summation achieves <span class="math inline">\(O(n\epsilon_{\text{mach}})\)</span> error regardless of input magnitude — the compensated summation guarantee from MSCS 202 applied to the specific structure of log-sum-exp. The <span class="math inline">\(\varepsilon\)</span>-scaling continuation method is the MSCS 202 homotopy continuation strategy: deform the problem from an easy warm-started initial point to the target, solving a sequence of intermediate problems rather than attacking the hard target directly.</p>
+<p><strong>The connection to MATH 304 (Computational Operations Research) closes through the dual variable interpretation and the auction algorithm limit.</strong> The potentials <span class="math inline">\(f^*\)</span> and <span class="math inline">\(g^*\)</span> produced by the log-domain Sinkhorn are the optimal dual variables of the regularized transportation LP — the shadow prices of the supply and demand constraints, exactly as in the transportation LP duality from MATH 304. The log-domain updates are the smooth coordinate ascent steps on the dual objective, collapsing to the auction algorithm’s exact dual updates as <span class="math inline">\(\varepsilon \to 0\)</span>. The dual objective value <span class="math inline">\(\text{OT}_\varepsilon = \langle f^*,a\rangle + \langle g^*,b\rangle\)</span> is the regularized Wasserstein distance, available from the converged potentials without constructing the primal coupling — exactly as the LP optimal value equals the dual objective at strong duality, from the duality theory of MATH 304.</p>
+<hr>
+<p><strong>Looking forward across the roadmap</strong>, the log-domain Sinkhorn algorithm is the production implementation of everything built in Chapter 2. It is the code that runs inside the Phase 1 checkpoint project — the Shape Shifter that morphs a donut into a crescent via Sinkhorn transport. It is the differentiable loss function that the Wasserstein GAN’s discriminator optimizes via the Kantorovich-Rubinstein formula. It is the computational primitive that Chapter 3’s barycenter algorithm iterates across multiple marginals. And in Phase 3, the connection between the log-domain Sinkhorn soft <span class="math inline">\(c\)</span>-transform and the score function update of a diffusion model — both are log-gradient operations on a smoothed energy landscape, both converge to hard assignments as temperature goes to zero — makes the log-domain algorithm the algorithmic ancestor of score-based generative modeling.</p>
+<p>The junior engineer’s one line on the whiteboard — <span class="math inline">\(\log\sum_j e^{x_j} = M + \log\sum_j e^{x_j - M}\)</span> — is the log-sum-exp identity, the algebraically exact, numerically perfect manipulation that converts the catastrophically unstable standard Sinkhorn into the production-ready log-domain algorithm: <span class="math inline">\(f_i \leftarrow \varepsilon\log a_i - \varepsilon\cdot\text{LSE}_j((g_j - C_{ij})/\varepsilon)\)</span>, stable for all <span class="math inline">\(\varepsilon &gt; 0\)</span>, differentiable end-to-end, converging to the exact <span class="math inline">\(c\)</span>-transform duality of Chapter 1 as <span class="math inline">\(\varepsilon \to 0\)</span>.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

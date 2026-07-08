@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>sinkhorn_knopp – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#topic-2---the-sinkhorn-knopp-theorem-convergence-by-alternating-normalization" id="toc-topic-2---the-sinkhorn-knopp-theorem-convergence-by-alternating-normalization" class="nav-link active" data-scroll-target="#topic-2---the-sinkhorn-knopp-theorem-convergence-by-alternating-normalization">Topic 2 - The Sinkhorn-Knopp Theorem: Convergence by Alternating Normalization</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#layer-1-story" id="toc-layer-1-story" class="nav-link" data-scroll-target="#layer-1-story">Layer 1 (Story)</a></li>
+  <li><a href="#layer-2-mathematics" id="toc-layer-2-mathematics" class="nav-link" data-scroll-target="#layer-2-mathematics">Layer 2 (Mathematics)</a></li>
+  <li><a href="#layer-3-bridge" id="toc-layer-3-bridge" class="nav-link" data-scroll-target="#layer-3-bridge">Layer 3 (Bridge)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<section id="topic-2---the-sinkhorn-knopp-theorem-convergence-by-alternating-normalization" class="level1">
+<h1>Topic 2 - The Sinkhorn-Knopp Theorem: Convergence by Alternating Normalization</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>Topic 1 gave you the regularized problem and its solution structure. The unique minimizer of the entropic Kantorovich problem must have the form <span class="math inline">\(P^*_\varepsilon = \text{diag}(u) \cdot K \cdot \text{diag}(v)\)</span>, where <span class="math inline">\(K_{ij} = e^{-C_{ij}/\varepsilon}\)</span> is the Gibbs kernel and <span class="math inline">\(u \in \mathbb{R}^m_+\)</span>, <span class="math inline">\(v \in \mathbb{R}^n_+\)</span> are positive scaling vectors determined by the marginal constraints. The structure of the solution is known. What is not yet known is how to find <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span> efficiently.</p>
+<p>This is the computational question Topic 2 answers.</p>
+<p>The Sinkhorn-Knopp theorem says the answer is almost embarrassingly simple. To find the scaling vectors <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span> that bring the Gibbs kernel’s marginals into agreement with <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span>, you alternate between two operations: normalize the rows of <span class="math inline">\(\text{diag}(u)K\text{diag}(v)\)</span> to match <span class="math inline">\(a\)</span>, then normalize the columns to match <span class="math inline">\(b\)</span>. Repeat. That is the entire algorithm. No gradients. No line searches. No matrix factorizations. Just alternating row and column normalization of the Gibbs kernel, converging geometrically to the unique regularized optimal coupling.</p>
+<p>This topic has two bullet points from the roadmap’s syllabus.</p>
+<p>The first is <strong>the Sinkhorn-Knopp theorem itself</strong> — the theorem that the alternating row-column normalization of a strictly positive matrix converges to the unique matrix with prescribed row and column sums that has the same zero pattern as the original. Applied to the Gibbs kernel <span class="math inline">\(K\)</span>, which is strictly positive everywhere (since <span class="math inline">\(e^{-C_{ij}/\varepsilon} &gt; 0\)</span> for all finite costs), the theorem guarantees that the Sinkhorn iterations converge to <span class="math inline">\(P^*_\varepsilon\)</span> regardless of the initialization of <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span>. The convergence is geometric — the error contracts by a constant factor at each iteration — and the contraction rate is controlled by the condition number of <span class="math inline">\(K\)</span>, which in turn depends on <span class="math inline">\(\varepsilon\)</span> and the spread of the cost matrix <span class="math inline">\(C\)</span>.</p>
+<p>The second is <strong>the information-geometric interpretation</strong> — understanding the Sinkhorn iterations not merely as a numerical algorithm but as alternating Bregman projections onto the row-constraint set and the column-constraint set in the KL divergence geometry. Each Sinkhorn iteration is a projection of the current coupling onto one of the two marginal hyperplanes, measured in KL divergence. The alternating projection framework — projecting onto two convex sets alternately until the intersection is reached — is a classical technique in convex optimization, and the Sinkhorn algorithm is its instantiation in the KL geometry. This interpretation connects the Sinkhorn algorithm to the broader family of expectation-maximization and coordinate ascent algorithms, and it is the geometric reason why convergence is guaranteed.</p>
+<p>By the end of this topic, the Sinkhorn algorithm will not feel like a trick. It will feel like the only natural algorithm for the regularized OT problem — the direct consequence of the Gibbs structure of the solution and the KL geometry of the regularization. The alternating normalization is alternating projection. The geometric convergence is the contraction property of KL projections. The scaling vectors <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span> are the dual potentials in disguise.</p>
+<hr>
+</section>
+<section id="layer-1-story" class="level2">
+<h2 class="anchored" data-anchor-id="layer-1-story">Layer 1 (Story)</h2>
+<p>You are the postmaster general of Nepal’s national courier network, and the sorting office from Topic 1 has just handed you a working regularized plan. You know the Gibbs kernel — the matrix of route preferences weighted by cost and temperature. You know the optimal coupling must have the form <span class="math inline">\(\text{diag}(u) \cdot K \cdot \text{diag}(v)\)</span>. What you do not yet know is how to find the two scaling vectors <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span> that make the marginals come out right.</p>
+<p>Your operations team hands you a deceptively simple proposal. They call it the ping-pong protocol.</p>
+<hr>
+<p><strong>The ping-pong protocol</strong></p>
+<p>Here is how it works.</p>
+<p>Start with <span class="math inline">\(v = \mathbf{1}\)</span> — every destination district gets an initial scaling factor of one. No corrections applied yet. The current plan is just the raw Gibbs kernel <span class="math inline">\(K\)</span> itself, unscaled.</p>
+<p>Step 1: Look at the row sums of the current plan. Each row <span class="math inline">\(i\)</span> currently sums to <span class="math inline">\(\sum_j K_{ij} v_j\)</span>. You need row <span class="math inline">\(i\)</span> to sum to <span class="math inline">\(a_i\)</span> — the actual supply at source district <span class="math inline">\(x_i\)</span>. So update <span class="math inline">\(u_i \leftarrow a_i / \sum_j K_{ij} v_j\)</span>. This corrects every row simultaneously. After this update, all row sums are exactly right.</p>
+<p>Step 2: Look at the column sums of the current plan. Each column <span class="math inline">\(j\)</span> currently sums to <span class="math inline">\(\sum_i u_i K_{ij} v_j\)</span>. You need column <span class="math inline">\(j\)</span> to sum to <span class="math inline">\(b_j\)</span> — the actual demand at destination <span class="math inline">\(y_j\)</span>. So update <span class="math inline">\(v_j \leftarrow b_j / \sum_i u_i K_{ij}\)</span>. This corrects every column simultaneously. After this update, all column sums are exactly right.</p>
+<p>But now the row sums are wrong again — fixing the columns disturbed the rows. So go back to Step 1. Fix the rows. Then fix the columns. Ping. Pong. Repeat.</p>
+<p>Your operations team claims this will converge to the correct <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span>. You are skeptical. Every time you fix the rows, you break the columns. Every time you fix the columns, you break the rows. How can alternating between two corrections that each undo the other’s work possibly converge to anything?</p>
+<hr>
+<p><strong>Why the ping-pong converges: the geometry of two constraints</strong></p>
+<p>Your consultant draws a picture on the whiteboard.</p>
+<p>Imagine the space of all non-negative <span class="math inline">\(m \times n\)</span> matrices — all possible sorting plans. Inside this enormous space, there are two constraint sets. The first constraint set <span class="math inline">\(\mathcal{R}\)</span> consists of all matrices whose row sums equal <span class="math inline">\(a\)</span> — all plans that correctly dispatch every source district’s supply. The second constraint set <span class="math inline">\(\mathcal{C}\)</span> consists of all matrices whose column sums equal <span class="math inline">\(b\)</span> — all plans that correctly deliver to every destination district’s demand. The feasible set <span class="math inline">\(\Pi(a,b)\)</span> is the intersection <span class="math inline">\(\mathcal{R} \cap \mathcal{C}\)</span> — the plans that simultaneously satisfy both constraints.</p>
+<p>You want to find the unique point in <span class="math inline">\(\mathcal{R} \cap \mathcal{C}\)</span> that has the Gibbs product form <span class="math inline">\(\text{diag}(u)K\text{diag}(v)\)</span>. Equivalently, you want to find the point in <span class="math inline">\(\mathcal{R} \cap \mathcal{C}\)</span> that is closest to the Gibbs kernel <span class="math inline">\(K\)</span> in KL divergence — because the regularized optimal coupling is precisely the KL projection of <span class="math inline">\(K\)</span> onto <span class="math inline">\(\Pi(a,b)\)</span>.</p>
+<p>The Sinkhorn algorithm finds this point by alternating projections. The row-normalization step projects the current matrix onto <span class="math inline">\(\mathcal{R}\)</span> — it finds the matrix with the correct row sums that is closest to the current plan in KL divergence. The column-normalization step projects the result onto <span class="math inline">\(\mathcal{C}\)</span> — it finds the matrix with the correct column sums that is closest to the row-normalized plan in KL divergence. Alternate between projecting onto <span class="math inline">\(\mathcal{R}\)</span> and projecting onto <span class="math inline">\(\mathcal{C}\)</span>, and the sequence of iterates converges to the unique point in <span class="math inline">\(\mathcal{R} \cap \mathcal{C}\)</span> closest to <span class="math inline">\(K\)</span> in KL divergence — which is exactly <span class="math inline">\(P^*_\varepsilon\)</span>.</p>
+<p>This is not a coincidence or a clever trick. It is the Bregman alternating projection theorem — a classical result in convex optimization that says: if you alternate projections onto two closed convex sets in a Bregman divergence geometry, and the intersection is non-empty, the iterates converge to the unique point in the intersection closest to the starting point in that divergence. The KL divergence is a Bregman divergence. The row-constraint set <span class="math inline">\(\mathcal{R}\)</span> and the column-constraint set <span class="math inline">\(\mathcal{C}\)</span> are both closed convex sets. Their intersection <span class="math inline">\(\Pi(a,b)\)</span> is non-empty. All conditions are met. Convergence is guaranteed.</p>
+<p>The ping-pong works not because the two corrections magically agree with each other — they do not, at each step. It works because each projection strictly reduces the KL divergence to the target <span class="math inline">\(P^*_\varepsilon\)</span>, and because the KL divergence is bounded below by zero, the sequence of reductions must converge.</p>
+<hr>
+<p><strong>The Sinkhorn-Knopp theorem: convergence for strictly positive matrices</strong></p>
+<p>Your consultant now states the classical theorem that underlies the algorithm.</p>
+<p>The Sinkhorn-Knopp theorem — proved by Richard Sinkhorn and Paul Knopp in 1967, originally in the context of doubly stochastic matrices — says the following. Take any strictly positive matrix <span class="math inline">\(K &gt; 0\)</span> — a matrix with no zero entries. Take any target row sums <span class="math inline">\(a &gt; 0\)</span> and target column sums <span class="math inline">\(b &gt; 0\)</span> with the same total mass <span class="math inline">\(\sum_i a_i = \sum_j b_j\)</span>. Then there exist unique positive diagonal scaling matrices <span class="math inline">\(D_1 = \text{diag}(u)\)</span> and <span class="math inline">\(D_2 = \text{diag}(v)\)</span> such that <span class="math inline">\(D_1 K D_2\)</span> has row sums <span class="math inline">\(a\)</span> and column sums <span class="math inline">\(b\)</span>. And the alternating row-column normalization converges to <span class="math inline">\(D_1 K D_2\)</span> from any starting point.</p>
+<p>The strict positivity of <span class="math inline">\(K\)</span> is essential. The Gibbs kernel <span class="math inline">\(K_{ij} = e^{-C_{ij}/\varepsilon}\)</span> is strictly positive for all finite costs <span class="math inline">\(C_{ij}\)</span> and all <span class="math inline">\(\varepsilon &gt; 0\)</span> — the exponential function never reaches zero for finite arguments. This is one of the most important properties of the entropic regularization: it guarantees the Gibbs kernel has no zeros, which guarantees the Sinkhorn-Knopp theorem applies, which guarantees the algorithm converges. The exact Kantorovich solution, by contrast, is a sparse matrix with many zeros — the Sinkhorn-Knopp theorem does not apply to it, and indeed no simple alternating normalization can recover it.</p>
+<hr>
+<p><strong>The convergence rate: how fast does the ping-pong settle?</strong></p>
+<p>Your operations team wants to know how many ping-pong iterations they need before the sorting plan is good enough to execute.</p>
+<p>Your consultant explains the convergence rate. The Sinkhorn iterations contract the error geometrically — at each full iteration (one row normalization plus one column normalization), the KL divergence to the target <span class="math inline">\(P^*_\varepsilon\)</span> is multiplied by a constant factor <span class="math inline">\(\rho \in (0,1)\)</span>. After <span class="math inline">\(t\)</span> full iterations, the KL divergence is at most <span class="math inline">\(\rho^t\)</span> times the initial KL divergence. Geometric convergence means that each additional iteration buys you a constant number of additional correct digits in the solution — the error halves (or contracts by some fixed fraction) at every step.</p>
+<p>The contraction factor <span class="math inline">\(\rho\)</span> depends on the condition number of the Gibbs kernel <span class="math inline">\(K\)</span>. Specifically, it depends on the ratio between the largest and smallest entries of <span class="math inline">\(K\)</span>: <span class="math inline">\(\kappa(K) = (\max_{ij} K_{ij}) / (\min_{ij} K_{ij}) = e^{(\max_{ij} C_{ij} - \min_{ij} C_{ij})/\varepsilon}\)</span>. When <span class="math inline">\(\varepsilon\)</span> is large, the kernel entries are nearly uniform, <span class="math inline">\(\kappa(K) \approx 1\)</span>, and convergence is very fast. When <span class="math inline">\(\varepsilon\)</span> is small, the kernel entries span an enormous range, <span class="math inline">\(\kappa(K)\)</span> is exponentially large, and convergence is very slow — many iterations are needed to resolve the sharp concentration of the optimal coupling. This is the same trade-off as the <span class="math inline">\(\varepsilon\)</span> dial from Topic 1: large <span class="math inline">\(\varepsilon\)</span> means fast convergence but poor approximation; small <span class="math inline">\(\varepsilon\)</span> means slow convergence but close approximation to the true Wasserstein distance.</p>
+<hr>
+<p><strong>The dual ascent interpretation: Sinkhorn climbs the dual objective</strong></p>
+<p>Your consultant reveals a second way to understand what the ping-pong is doing — not as alternating projections in the primal, but as coordinate ascent in the dual.</p>
+<p>Recall from Topic 4 of Chapter 1 that the Kantorovich dual maximizes <span class="math inline">\(\int \phi \, d\mu + \int \psi \, d\nu\)</span> over feasible potential pairs. The regularized dual — derived in Layer 2 of Topic 1 — maximizes a smooth version of this objective over the entropic potentials <span class="math inline">\(f \in \mathbb{R}^m\)</span> and <span class="math inline">\(g \in \mathbb{R}^n\)</span>. The dual objective is smooth and concave in <span class="math inline">\((f, g)\)</span> jointly.</p>
+<p>The row-normalization step of Sinkhorn — updating <span class="math inline">\(u \leftarrow a / (Kv)\)</span> component-wise — is equivalent to updating the row potentials <span class="math inline">\(f_i \leftarrow \varepsilon \log a_i - \varepsilon \log \sum_j e^{(g_j - C_{ij})/\varepsilon}\)</span>. This is exactly the coordinate ascent step that maximizes the dual objective over <span class="math inline">\(f\)</span> while holding <span class="math inline">\(g\)</span> fixed. The column-normalization step — updating <span class="math inline">\(v \leftarrow b / (K^\top u)\)</span> — is the coordinate ascent step that maximizes over <span class="math inline">\(g\)</span> while holding <span class="math inline">\(f\)</span> fixed. The Sinkhorn algorithm is coordinate ascent on the smooth concave dual objective, alternating between the row potentials and the column potentials.</p>
+<p>This dual ascent interpretation is important for three reasons. First, it explains convergence from the dual side: coordinate ascent on a smooth strictly concave function converges to the unique maximum. Second, it gives you the optimal dual potentials <span class="math inline">\(f^*\)</span> and <span class="math inline">\(g^*\)</span> as a byproduct of the algorithm — and these are the gradients <span class="math inline">\(\nabla_a \text{OT}_\varepsilon = f^*\)</span> and <span class="math inline">\(\nabla_b \text{OT}_\varepsilon = g^*\)</span> that enable backpropagation through the Wasserstein loss. Third, it connects the Sinkhorn algorithm to the broader family of EM algorithms and belief propagation, where alternating coordinate updates on a dual or variational objective are the standard computational paradigm.</p>
+<hr>
+<p><strong>The invariant structure: what the iterations preserve</strong></p>
+<p>There is one more thing your consultant points out, which will become important in the numerical stabilization of Topic 3.</p>
+<p>Throughout all the Sinkhorn iterations, the product structure <span class="math inline">\(P = \text{diag}(u)K\text{diag}(v)\)</span> is preserved exactly. At every iteration, the current plan is a diagonal scaling of the fixed Gibbs kernel <span class="math inline">\(K\)</span>. The iterations never change <span class="math inline">\(K\)</span> — they only update <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span>. This means the entire state of the algorithm at any point is captured by just <span class="math inline">\(m + n\)</span> numbers — the current values of <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span> — rather than the full <span class="math inline">\(mn\)</span> entries of <span class="math inline">\(P\)</span>. In practice, you never store the coupling matrix <span class="math inline">\(P\)</span> explicitly during the iterations. You store only <span class="math inline">\(u\)</span>, <span class="math inline">\(v\)</span>, and <span class="math inline">\(K\)</span>, and reconstruct <span class="math inline">\(P = \text{diag}(u)K\text{diag}(v)\)</span> at the end when you need it.</p>
+<p>This invariant also means that each Sinkhorn iteration costs <span class="math inline">\(O(mn)\)</span> operations — one matrix-vector product <span class="math inline">\(Kv\)</span> to update <span class="math inline">\(u\)</span>, and one matrix-vector product <span class="math inline">\(K^\top u\)</span> to update <span class="math inline">\(v\)</span>. For <span class="math inline">\(m = n\)</span>, this is <span class="math inline">\(O(n^2)\)</span> per iteration. Combined with the geometric convergence, the total cost of running Sinkhorn to precision <span class="math inline">\(\delta\)</span> is <span class="math inline">\(O(n^2 \log(1/\delta) / \log(1/\rho))\)</span> — quadratic in <span class="math inline">\(n\)</span>, compared to the cubic cost of the exact Kantorovich LP. This is the computational breakthrough of the chapter title: entropy reduces the cost from <span class="math inline">\(O(n^3)\)</span> to <span class="math inline">\(O(n^2)\)</span>, and the Sinkhorn-Knopp theorem is the guarantee that the reduction works.</p>
+<hr>
+<p><strong>The break moment</strong></p>
+<p>Here is the naive assumption that breaks.</p>
+<p>You might think: since the Sinkhorn iterations are guaranteed to converge, and since convergence is geometric, you can always just run more iterations to get arbitrarily close to the true regularized solution <span class="math inline">\(P^*_\varepsilon\)</span>. The algorithm is foolproof — convergence is a theorem, so all you need is patience.</p>
+<p>This breaks in two distinct ways.</p>
+<p>The first way it breaks is numerical. For small <span class="math inline">\(\varepsilon\)</span>, the Gibbs kernel entries <span class="math inline">\(K_{ij} = e^{-C_{ij}/\varepsilon}\)</span> span an enormous range. The matrix-vector product <span class="math inline">\(Kv\)</span> in the row-normalization step involves summing terms of wildly different magnitudes, many of which underflow to zero in floating-point arithmetic. The normalized vector <span class="math inline">\(u = a / (Kv)\)</span> then involves dividing by sums that contain many zeros, producing NaN or Inf. The algorithm does not converge to the wrong answer — it collapses to numerical garbage after a small number of iterations. More iterations do not help; they make the garbage propagate further. The geometric convergence theorem is a mathematical statement about exact arithmetic, not floating-point arithmetic. In finite precision, the algorithm breaks before convergence.</p>
+<p>The second way it breaks is subtler. Even in exact arithmetic, the convergence rate <span class="math inline">\(\rho\)</span> degrades as <span class="math inline">\(\varepsilon \to 0\)</span> — the number of iterations required to reach precision <span class="math inline">\(\delta\)</span> grows as <span class="math inline">\(O(e^{\|C\|_\infty/\varepsilon})\)</span>, exponentially in <span class="math inline">\(1/\varepsilon\)</span>. Running more iterations does not overcome this exponential blowup for very small <span class="math inline">\(\varepsilon\)</span>. The geometric convergence guarantee is real, but the geometry is increasingly flat — each iteration makes only infinitesimal progress. Patience alone is not sufficient when the convergence rate itself degrades exponentially.</p>
+<p>Both failures have the same root cause: the exponential parameterization of the Gibbs kernel is numerically catastrophic for small <span class="math inline">\(\varepsilon\)</span>. The fix — working in log-space using the log-sum-exp trick — is Topic 3, and it resolves both problems simultaneously by converting the multiplicative scaling iterations into additive log-domain updates that are stable in floating-point arithmetic and converge at the same rate regardless of the magnitude of the kernel entries.</p>
+<hr>
+<p>Hold five pictures simultaneously as you move to the mathematics.</p>
+<p>The ping-pong protocol: alternating row and column normalization of the Gibbs kernel, two operations that each break what the other fixes, converging nonetheless because each step reduces the KL divergence to the target.</p>
+<p>The alternating projection geometry: the row-constraint set <span class="math inline">\(\mathcal{R}\)</span> and the column-constraint set <span class="math inline">\(\mathcal{C}\)</span> as two convex sets in matrix space, with the Sinkhorn iterations bouncing between KL projections onto each, converging to their intersection <span class="math inline">\(\Pi(a,b)\)</span>.</p>
+<p>The dual ascent interpretation: each normalization step as a coordinate ascent update on the smooth concave dual objective, climbing toward the optimal entropic potentials <span class="math inline">\(f^*\)</span> and <span class="math inline">\(g^*\)</span>.</p>
+<p>The invariant product structure: the state of the algorithm captured entirely by <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span>, with <span class="math inline">\(K\)</span> fixed throughout, giving <span class="math inline">\(O(n^2)\)</span> cost per iteration.</p>
+<p>The two failure modes for small <span class="math inline">\(\varepsilon\)</span>: floating-point underflow breaking the algorithm in finite precision, and exponentially slow convergence breaking it in exact arithmetic — both resolved by the log-sum-exp stabilization of Topic 3.</p>
+<hr>
+</section>
+<section id="layer-2-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="layer-2-mathematics">Layer 2 (Mathematics)</h2>
+<p>We build the formalism in six stages: the precise statement of the Sinkhorn iterations, the Sinkhorn-Knopp theorem and its proof, the Bregman alternating projection interpretation, the convergence rate analysis via Hilbert’s projective metric, the dual ascent interpretation, and the differentiability of the Sinkhorn map.</p>
+<section id="the-sinkhorn-iterations-precise-statement" class="level3">
+<h3 class="anchored" data-anchor-id="the-sinkhorn-iterations-precise-statement">The Sinkhorn Iterations — Precise Statement</h3>
+<p>Given the Gibbs kernel <span class="math inline">\(K \in \mathbb{R}^{m\times n}_{++}\)</span> with <span class="math inline">\(K_{ij} = e^{-C_{ij}/\varepsilon}\)</span>, target marginals <span class="math inline">\(a \in \Sigma_m\)</span> and <span class="math inline">\(b \in \Sigma_n\)</span>, initialize <span class="math inline">\(v^{(0)} = \mathbf{1}_n\)</span>. The <strong>Sinkhorn iterations</strong> are:</p>
+<p><span class="math display">\[u^{(\ell+1)} = \frac{a}{K v^{(\ell)}}, \qquad v^{(\ell+1)} = \frac{b}{K^\top u^{(\ell+1)}}\]</span></p>
+<p>where division is elementwise. The current coupling estimate at iteration <span class="math inline">\(\ell\)</span> is:</p>
+<p><span class="math display">\[P^{(\ell)} = \text{diag}(u^{(\ell)}) \cdot K \cdot \text{diag}(v^{(\ell)})\]</span></p>
+<p>The row sums of <span class="math inline">\(P^{(\ell)}\)</span> after the <span class="math inline">\(u\)</span>-update are exactly <span class="math inline">\(a\)</span>. The column sums after the <span class="math inline">\(v\)</span>-update are exactly <span class="math inline">\(b\)</span>. Each update satisfies one set of marginal constraints exactly while generally violating the other.</p>
+<p><strong>Equivalent formulation via potentials.</strong> Setting <span class="math inline">\(f^{(\ell)} = \varepsilon \log u^{(\ell)}\)</span> and <span class="math inline">\(g^{(\ell)} = \varepsilon \log v^{(\ell)}\)</span>, the iterations become:</p>
+<p><span class="math display">\[f_i^{(\ell+1)} = \varepsilon \log a_i - \varepsilon \log \sum_j e^{(g_j^{(\ell)} - C_{ij})/\varepsilon}, \qquad g_j^{(\ell+1)} = \varepsilon \log b_j - \varepsilon \log \sum_i e^{(f_i^{(\ell+1)} - C_{ij})/\varepsilon}\]</span></p>
+<p>These are the <strong>log-domain Sinkhorn iterations</strong> — numerically stable reformulations that avoid explicit computation of <span class="math inline">\(K\)</span> by working with log-sum-exp operations over the potentials. Topic 3 develops these in full.</p>
+<hr>
+</section>
+<section id="the-sinkhorn-knopp-theorem" class="level3">
+<h3 class="anchored" data-anchor-id="the-sinkhorn-knopp-theorem">The Sinkhorn-Knopp Theorem</h3>
+<p><strong>Theorem (Sinkhorn-Knopp, 1967).</strong> Let <span class="math inline">\(K \in \mathbb{R}^{m\times n}_{++}\)</span> be a strictly positive matrix, and let <span class="math inline">\(a \in \mathbb{R}^m_{++}\)</span>, <span class="math inline">\(b \in \mathbb{R}^n_{++}\)</span> be strictly positive vectors with <span class="math inline">\(\sum_i a_i = \sum_j b_j\)</span>. Then:</p>
+<ol type="1">
+<li><p><strong>Existence and uniqueness.</strong> There exist unique vectors <span class="math inline">\(u \in \mathbb{R}^m_{++}\)</span> and <span class="math inline">\(v \in \mathbb{R}^n_{++}\)</span>, unique up to the scaling <span class="math inline">\((u, v) \mapsto (\lambda u, v/\lambda)\)</span> for <span class="math inline">\(\lambda &gt; 0\)</span>, such that <span class="math inline">\(P^* = \text{diag}(u)K\text{diag}(v)\)</span> satisfies <span class="math inline">\(P^*\mathbf{1} = a\)</span> and <span class="math inline">\((P^*)^\top\mathbf{1} = b\)</span>.</p></li>
+<li><p><strong>Convergence.</strong> The Sinkhorn iterations converge: <span class="math inline">\(P^{(\ell)} \to P^*\)</span> as <span class="math inline">\(\ell \to \infty\)</span>, and the convergence is geometric in the Hilbert projective metric.</p></li>
+</ol>
+<p><strong>Proof of existence and uniqueness</strong> (via the regularized OT problem). The regularized Kantorovich problem <span class="math inline">\(\min_{P \in \Pi(a,b)}\{\langle C,P\rangle + \varepsilon\,\text{KL}(P\|K)\}\)</span> has a strictly convex objective over a compact non-empty feasible set, hence a unique minimizer <span class="math inline">\(P^*_\varepsilon\)</span>. By the first-order optimality conditions derived in Topic 1, this minimizer satisfies <span class="math inline">\(P^*_{ij} = u_i K_{ij} v_j\)</span> for Lagrange multipliers <span class="math inline">\(u_i = e^{f_i/\varepsilon}\)</span> and <span class="math inline">\(v_j = e^{g_j/\varepsilon}\)</span>. Existence of <span class="math inline">\(u,v\)</span> follows from existence of Lagrange multipliers. Uniqueness of <span class="math inline">\(P^*\)</span> follows from strict convexity; uniqueness of <span class="math inline">\(u,v\)</span> up to the scaling ambiguity follows from the strict positivity of <span class="math inline">\(K\)</span>.</p>
+<p><strong>Proof of convergence</strong> (via Bregman projections — see next section).</p>
+<hr>
+</section>
+<section id="bregman-alternating-projections" class="level3">
+<h3 class="anchored" data-anchor-id="bregman-alternating-projections">Bregman Alternating Projections</h3>
+<p>The KL divergence <span class="math inline">\(\text{KL}(P\|Q) = \sum_{ij} P_{ij}\log(P_{ij}/Q_{ij}) - P_{ij} + Q_{ij}\)</span> is a <strong>Bregman divergence</strong> generated by the convex function <span class="math inline">\(\phi(P) = \sum_{ij} P_{ij}\log P_{ij}\)</span>. For Bregman divergences, the projection of a point <span class="math inline">\(Q\)</span> onto a convex set <span class="math inline">\(\mathcal{C}\)</span> is defined as:</p>
+<p><span class="math display">\[\text{proj}_{\mathcal{C}}^{\text{KL}}(Q) = \arg\min_{P \in \mathcal{C}} \text{KL}(P\|Q)\]</span></p>
+<p><strong>The two constraint sets.</strong> Define:</p>
+<p><span class="math display">\[\mathcal{R} = \{P \in \mathbb{R}^{m\times n}_+ : P\mathbf{1} = a\}, \qquad \mathcal{C} = \{P \in \mathbb{R}^{m\times n}_+ : P^\top\mathbf{1} = b\}\]</span></p>
+<p>Both are closed convex sets. Their intersection is <span class="math inline">\(\Pi(a,b)\)</span>.</p>
+<p><strong>The KL projections are the Sinkhorn updates.</strong></p>
+<p><strong>Lemma.</strong> The KL projection of any <span class="math inline">\(Q \in \mathbb{R}^{m\times n}_{++}\)</span> onto <span class="math inline">\(\mathcal{R}\)</span> is:</p>
+<p><span class="math display">\[\text{proj}_{\mathcal{R}}^{\text{KL}}(Q)_{ij} = \frac{a_i}{\sum_k Q_{ik}} \cdot Q_{ij} = \frac{a_i}{(Q\mathbf{1})_i} Q_{ij}\]</span></p>
+<p>This is exactly the row-normalization step: <span class="math inline">\(u_i \leftarrow a_i / (Kv)_i\)</span> applied to <span class="math inline">\(Q = \text{diag}(u)K\text{diag}(v)\)</span>.</p>
+<p><strong>Proof.</strong> Minimize <span class="math inline">\(\text{KL}(P\|Q)\)</span> subject to <span class="math inline">\(P\mathbf{1} = a\)</span>. The Lagrangian gives <span class="math inline">\(\log P_{ij} = \log Q_{ij} + \lambda_i - 1\)</span>, so <span class="math inline">\(P_{ij} = Q_{ij} e^{\lambda_i - 1}\)</span>. The row constraint <span class="math inline">\(\sum_j P_{ij} = a_i\)</span> gives <span class="math inline">\(e^{\lambda_i - 1} = a_i / \sum_j Q_{ij}\)</span>, yielding the stated formula. <span class="math inline">\(\square\)</span></p>
+<p>Similarly, the KL projection onto <span class="math inline">\(\mathcal{C}\)</span> is the column-normalization step.</p>
+<p><strong>Theorem (Bregman alternating projections).</strong> For a Bregman divergence generated by a strictly convex function, alternating projections onto two closed convex sets with non-empty intersection converge to the unique point in the intersection that minimizes the divergence from the starting point. Applied here: the Sinkhorn iterations are alternating KL projections onto <span class="math inline">\(\mathcal{R}\)</span> and <span class="math inline">\(\mathcal{C}\)</span>, starting from <span class="math inline">\(K\)</span>, converging to <span class="math inline">\(P^*_\varepsilon = \text{proj}_{\Pi(a,b)}^{\text{KL}}(K)\)</span>. <span class="math inline">\(\square\)</span></p>
+<hr>
+</section>
+<section id="convergence-rate-via-hilberts-projective-metric" class="level3">
+<h3 class="anchored" data-anchor-id="convergence-rate-via-hilberts-projective-metric">Convergence Rate via Hilbert’s Projective Metric</h3>
+<p>The geometric convergence rate of the Sinkhorn iterations is quantified using <strong>Hilbert’s projective metric</strong> on <span class="math inline">\(\mathbb{R}^n_{++}\)</span>:</p>
+<p><span class="math display">\[d_H(u, v) = \log \frac{\max_i(u_i/v_i)}{\min_i(u_i/v_i)}\]</span></p>
+<p>This metric is invariant under positive scaling — it measures the multiplicative spread between two positive vectors. Convergence in <span class="math inline">\(d_H\)</span> is equivalent to convergence in the scaling vectors <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span> up to the normalization ambiguity.</p>
+<p><strong>Theorem (Geometric convergence).</strong> Let <span class="math inline">\(\eta(K)\)</span> be the <strong>Birkhoff contraction coefficient</strong> of the Gibbs kernel:</p>
+<p><span class="math display">\[\eta(K) = \frac{1 - \sqrt{\kappa(K)^{-1}}}{1 + \sqrt{\kappa(K)^{-1}}} \in [0,1)\]</span></p>
+<p>where <span class="math inline">\(\kappa(K) = \min_{i,j,k,l} \frac{K_{ij} K_{kl}}{K_{il} K_{kj}}\)</span> is the <strong>cross-ratio</strong> of <span class="math inline">\(K\)</span> (a measure of how far <span class="math inline">\(K\)</span> is from a rank-one matrix). Then each Sinkhorn iteration contracts <span class="math inline">\(d_H\)</span> by factor <span class="math inline">\(\eta(K)^2\)</span>:</p>
+<p><span class="math display">\[d_H(u^{(\ell+1)}, u^*) \leq \eta(K)^2 \cdot d_H(u^{(\ell)}, u^*)\]</span></p>
+<p><strong>Interpretation.</strong> The cross-ratio <span class="math inline">\(\kappa(K)\)</span> is related to the condition number of <span class="math inline">\(K\)</span>:</p>
+<p><span class="math display">\[\kappa(K) = e^{-(\max_{ij} C_{ij} - \min_{ij} C_{ij})/\varepsilon} \cdot \text{(combinatorial factor)}\]</span></p>
+<p>For the Gibbs kernel, <span class="math inline">\(\kappa(K) \approx e^{-\Delta C/\varepsilon}\)</span> where <span class="math inline">\(\Delta C = \max_{ij} C_{ij} - \min_{ij} C_{ij}\)</span> is the cost range. As <span class="math inline">\(\varepsilon \to 0\)</span>: <span class="math inline">\(\kappa(K) \to 0\)</span>, <span class="math inline">\(\eta(K) \to 1\)</span>, convergence rate degrades to zero — exponentially many iterations needed. As <span class="math inline">\(\varepsilon \to \infty\)</span>: <span class="math inline">\(\kappa(K) \to 1\)</span>, <span class="math inline">\(\eta(K) \to 0\)</span>, convergence is instantaneous — <span class="math inline">\(K\)</span> is nearly rank-one and the marginals are nearly decoupled.</p>
+<p><strong>Iteration complexity.</strong> To achieve <span class="math inline">\(\|P^{(\ell)} - P^*_\varepsilon\|_1 \leq \delta\)</span>, the number of Sinkhorn iterations required is:</p>
+<p><span class="math display">\[\ell = O\left(\frac{\log(1/\delta)}{-\log \eta(K)}\right) = O\left(\frac{\varepsilon \log(1/\delta)}{\Delta C}\right)\]</span></p>
+<p>For fixed <span class="math inline">\(\varepsilon\)</span> and <span class="math inline">\(\Delta C\)</span>, this is <span class="math inline">\(O(\log(1/\delta))\)</span> iterations, each costing <span class="math inline">\(O(n^2)\)</span>, giving total complexity <span class="math inline">\(O(n^2 \log(1/\delta))\)</span> — the quadratic breakthrough over the cubic exact OT.</p>
+<hr>
+</section>
+<section id="dual-ascent-interpretation" class="level3">
+<h3 class="anchored" data-anchor-id="dual-ascent-interpretation">Dual Ascent Interpretation</h3>
+<p>The regularized dual problem (from Topic 1, Layer 2) is:</p>
+<p><span class="math display">\[\max_{f \in \mathbb{R}^m, g \in \mathbb{R}^n} \mathcal{G}(f, g) = \langle f, a\rangle + \langle g, b\rangle - \varepsilon \sum_{ij} a_i b_j e^{(f_i + g_j - C_{ij})/\varepsilon} + \varepsilon\]</span></p>
+<p>The function <span class="math inline">\(\mathcal{G}\)</span> is <strong>jointly concave</strong> in <span class="math inline">\((f,g)\)</span> — the second term is a sum of exponentials, which is convex, negated.</p>
+<p><strong>The Sinkhorn update as coordinate ascent.</strong> Fix <span class="math inline">\(g\)</span> and maximize <span class="math inline">\(\mathcal{G}\)</span> over <span class="math inline">\(f_i\)</span> for each <span class="math inline">\(i\)</span> independently:</p>
+<p><span class="math display">\[\frac{\partial \mathcal{G}}{\partial f_i} = a_i - \varepsilon \cdot a_i \sum_j b_j e^{(f_i + g_j - C_{ij})/\varepsilon} \cdot \frac{1}{\varepsilon} = a_i\left(1 - \sum_j b_j e^{(f_i + g_j - C_{ij})/\varepsilon}\right) = 0\]</span></p>
+<p>Solving: <span class="math inline">\(\sum_j b_j e^{(f_i + g_j - C_{ij})/\varepsilon} = 1\)</span>, giving:</p>
+<p><span class="math display">\[f_i^* = -\varepsilon \log \sum_j b_j e^{(g_j - C_{ij})/\varepsilon}\]</span></p>
+<p>This is exactly the row-update step in log-domain. Similarly, the column-update maximizes <span class="math inline">\(\mathcal{G}\)</span> over <span class="math inline">\(g\)</span> given <span class="math inline">\(f\)</span>. The Sinkhorn algorithm is <strong>block coordinate ascent</strong> on the concave dual <span class="math inline">\(\mathcal{G}\)</span>, with blocks <span class="math inline">\(f\)</span> and <span class="math inline">\(g\)</span> updated alternately. Since <span class="math inline">\(\mathcal{G}\)</span> is strictly concave in each block separately (the Hessian <span class="math inline">\(\partial^2 \mathcal{G}/\partial f_i^2 = -a_i^2 \sum_j b_j e^{(f_i+g_j-C_{ij})/\varepsilon} &lt; 0\)</span>), each coordinate update achieves the unique block maximum, and the overall sequence converges to the unique dual maximum <span class="math inline">\((f^*, g^*)\)</span>.</p>
+<p><strong>Gradient of <span class="math inline">\(\text{OT}_\varepsilon\)</span> via envelope theorem.</strong> At convergence, the optimal dual variables satisfy:</p>
+<p><span class="math display">\[\nabla_a \text{OT}_\varepsilon(\mu,\nu) = f^*, \qquad \nabla_b \text{OT}_\varepsilon(\mu,\nu) = g^*\]</span></p>
+<p>This is the envelope theorem applied to the dual: the gradient of the optimal value with respect to the right-hand side of a constraint equals the optimal dual variable for that constraint. The Sinkhorn algorithm therefore computes <span class="math inline">\(\nabla_a \text{OT}_\varepsilon\)</span> and <span class="math inline">\(\nabla_b \text{OT}_\varepsilon\)</span> as a free byproduct — the potentials <span class="math inline">\(f^*\)</span> and <span class="math inline">\(g^*\)</span> are available after convergence without any additional computation.</p>
+<hr>
+</section>
+<section id="differentiability-of-the-sinkhorn-map" class="level3">
+<h3 class="anchored" data-anchor-id="differentiability-of-the-sinkhorn-map">Differentiability of the Sinkhorn Map</h3>
+<p>For applications in machine learning, we need not just the value <span class="math inline">\(\text{OT}_\varepsilon\)</span> but also its gradient with respect to the cost matrix <span class="math inline">\(C\)</span> — to backpropagate through a Wasserstein loss whose cost depends on learned features.</p>
+<p><strong>Theorem (Implicit differentiation of Sinkhorn).</strong> The map <span class="math inline">\((a, b, C) \mapsto P^*_\varepsilon(a, b, C)\)</span> is infinitely differentiable. The derivative of <span class="math inline">\(P^*_\varepsilon\)</span> with respect to <span class="math inline">\(C_{kl}\)</span> is:</p>
+<p><span class="math display">\[\frac{\partial P^*_{\varepsilon,ij}}{\partial C_{kl}} = -\frac{1}{\varepsilon} P^*_{\varepsilon,ij} \delta_{ik}\delta_{jl} + \frac{1}{\varepsilon} P^*_{\varepsilon,ij} \left(\frac{\partial f^*_i}{\partial C_{kl}} + \frac{\partial g^*_j}{\partial C_{kl}}\right)\]</span></p>
+<p>where the derivatives <span class="math inline">\(\partial f^*/\partial C_{kl}\)</span> and <span class="math inline">\(\partial g^*/\partial C_{kl}\)</span> are computed by implicitly differentiating the optimality conditions of the dual — a linear system in the dual Hessian of <span class="math inline">\(\mathcal{G}\)</span>.</p>
+<p><strong>Practical backpropagation.</strong> In automatic differentiation frameworks (JAX, PyTorch), the backward pass through the Sinkhorn iterations can be computed by:</p>
+<ol type="1">
+<li><strong>Unrolled differentiation:</strong> differentiate through the fixed number of Sinkhorn iterations as a computational graph. Cost: <span class="math inline">\(O(\ell \cdot n^2)\)</span> memory.</li>
+<li><strong>Implicit differentiation:</strong> solve the linear system <span class="math inline">\(\nabla^2_{(f,g)}\mathcal{G} \cdot \partial(f^*,g^*)/\partial C = -\partial^2\mathcal{G}/\partial(f,g)\partial C\)</span> once at convergence. Cost: <span class="math inline">\(O(n^2)\)</span> memory, independent of <span class="math inline">\(\ell\)</span>.</li>
+</ol>
+<p>The implicit differentiation approach — known as <strong>Sinkhorn backprop</strong> — is the production-grade method used in libraries such as POT (Python Optimal Transport) and GeomLoss.</p>
+<hr>
+</section>
+<section id="why-this-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-matters">WHY THIS MATTERS</h3>
+<p>In MATH 304 (Computational Operations Research), the <strong>transportation simplex method</strong> solves the exact Kantorovich LP by moving between basic feasible solutions — extreme points of <span class="math inline">\(\Pi(a,b)\)</span> — improving the objective at each step. The Sinkhorn algorithm solves the regularized problem by moving through the interior of <span class="math inline">\(\Pi(a,b)\)</span> — never touching an extreme point, always strictly feasible. The contrast is between a combinatorial algorithm (simplex: <span class="math inline">\(O(n^3)\)</span>, sparse solutions) and a smooth iterative algorithm (Sinkhorn: <span class="math inline">\(O(n^2)\)</span> per iteration, dense solutions). The regularization converts the LP into a smooth program, and the Sinkhorn iterations are the natural smooth analogue of the transportation simplex.</p>
+<p>In MSCS 202 (Numerical Methods), the <strong>power iteration</strong> for computing the dominant eigenvector of a matrix is a classical <span class="math inline">\(O(n^2)\)</span>-per-iteration algorithm with geometric convergence, controlled by the ratio of the two largest eigenvalues. The Sinkhorn iterations have the same structure: <span class="math inline">\(O(n^2)\)</span> per iteration, geometric convergence, rate controlled by the spectral gap of a related operator (the Hilbert contraction coefficient <span class="math inline">\(\eta(K)\)</span>). The Perron-Frobenius theorem — which guarantees that strictly positive matrices have a unique dominant eigenvector with positive entries — is the linear algebra result underlying the Sinkhorn-Knopp theorem. The scaling <span class="math inline">\(u \leftarrow a/(Kv)\)</span>, <span class="math inline">\(v \leftarrow b/(K^\top u)\)</span> is the two-sided power iteration for the positive matrix <span class="math inline">\(K\)</span>.</p>
+<p>In MATH 208 (Statistics and Probability), the <strong>EM algorithm</strong> alternates between an E-step (computing the expected complete-data log-likelihood) and an M-step (maximizing over parameters), and is guaranteed to increase the marginal likelihood at every iteration. The Sinkhorn algorithm has the same structure: the E-step is the row normalization (projecting onto <span class="math inline">\(\mathcal{R}\)</span>), the M-step is the column normalization (projecting onto <span class="math inline">\(\mathcal{C}\)</span>), and the quantity that increases monotonically at every step is <span class="math inline">\(-\text{KL}(P^*_\varepsilon \| P^{(\ell)})\)</span> — the negative KL divergence to the target. Sinkhorn is the EM algorithm for the entropic OT problem, and the Bregman alternating projection theorem is the Sinkhorn analogue of the EM convergence theorem.</p>
+<hr>
+</section>
+</section>
+<section id="layer-3-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="layer-3-bridge">Layer 3 (Bridge)</h2>
+<p>Every element of the ping-pong protocol story has a precise mathematical address. Let us walk through them one by one until the alternating normalization, the Bregman projection geometry, the dual ascent interpretation, and the convergence rate are completely fused with the formalism.</p>
+<hr>
+<p><strong>The ping-pong protocol — alternating between fixing row sums and fixing column sums — is the Sinkhorn iterations <span class="math inline">\(u^{(\ell+1)} = a / Kv^{(\ell)}\)</span> and <span class="math inline">\(v^{(\ell+1)} = b / K^\top u^{(\ell+1)}\)</span>, where division is elementwise.</strong> The row-normalization update <span class="math inline">\(u_i \leftarrow a_i / (Kv)_i\)</span> rescales the <span class="math inline">\(i\)</span>-th row of <span class="math inline">\(\text{diag}(u)K\text{diag}(v)\)</span> by the factor <span class="math inline">\(a_i / \sum_j K_{ij}v_j\)</span> — the ratio of the target row sum to the current row sum. After this update, row <span class="math inline">\(i\)</span> sums to exactly <span class="math inline">\(a_i\)</span>. The column-normalization update <span class="math inline">\(v_j \leftarrow b_j / (K^\top u)_j\)</span> rescales the <span class="math inline">\(j\)</span>-th column by the factor <span class="math inline">\(b_j / \sum_i u_i K_{ij}\)</span> — the ratio of the target column sum to the current column sum. After this update, column <span class="math inline">\(j\)</span> sums to exactly <span class="math inline">\(b_j\)</span>, but the row sums are no longer exactly <span class="math inline">\(a\)</span> because the column rescaling has disturbed them. The ping-pong is the mathematical manifestation of this alternating exact-then-disturbed satisfaction of the two marginal constraints.</p>
+<p><strong>The invariant product structure — the fact that the current plan is always <span class="math inline">\(\text{diag}(u)K\text{diag}(v)\)</span> with <span class="math inline">\(K\)</span> fixed throughout — is the key computational economy of the Sinkhorn algorithm.</strong> The Gibbs kernel <span class="math inline">\(K_{ij} = e^{-C_{ij}/\varepsilon}\)</span> is computed once at initialization and never modified. The entire state of the algorithm at any iteration is captured by the two vectors <span class="math inline">\(u \in \mathbb{R}^m_{++}\)</span> and <span class="math inline">\(v \in \mathbb{R}^n_{++}\)</span> — <span class="math inline">\(m + n\)</span> numbers rather than the <span class="math inline">\(mn\)</span> entries of <span class="math inline">\(P\)</span>. Each iteration requires two matrix-vector products: <span class="math inline">\(Kv\)</span> of cost <span class="math inline">\(O(mn)\)</span> and <span class="math inline">\(K^\top u\)</span> of cost <span class="math inline">\(O(mn)\)</span>. For <span class="math inline">\(m = n\)</span>, this is <span class="math inline">\(O(n^2)\)</span> per iteration. The coupling matrix <span class="math inline">\(P^{(\ell)} = \text{diag}(u^{(\ell)})K\text{diag}(v^{(\ell)})\)</span> is reconstructed explicitly only at the end, when needed. This invariant is what makes the cubic-to-quadratic reduction real and not merely theoretical.</p>
+<hr>
+<p><strong>The two constraint sets <span class="math inline">\(\mathcal{R}\)</span> and <span class="math inline">\(\mathcal{C}\)</span> — the sets of matrices with correct row sums and correct column sums respectively — are the closed convex sets whose intersection is the feasible set <span class="math inline">\(\Pi(a,b)\)</span>.</strong> The set <span class="math inline">\(\mathcal{R} = \{P \geq 0 : P\mathbf{1} = a\}\)</span> is a convex polytope face — the intersection of the non-negative orthant with <span class="math inline">\(m\)</span> linear equality constraints, one per row. The set <span class="math inline">\(\mathcal{C} = \{P \geq 0 : P^\top\mathbf{1} = b\}\)</span> is a convex polytope face — the intersection of the non-negative orthant with <span class="math inline">\(n\)</span> linear equality constraints, one per column. Both are closed and convex. Their intersection <span class="math inline">\(\mathcal{R} \cap \mathcal{C} = \Pi(a,b)\)</span> is non-empty because <span class="math inline">\(\sum_i a_i = \sum_j b_j\)</span> — mass is conserved. The whiteboard picture your consultant drew is the precise setup for the Bregman alternating projection theorem: two closed convex sets, non-empty intersection, alternating projections converging to the unique point in the intersection closest to the starting point in KL divergence.</p>
+<p><strong>The KL projection of a matrix <span class="math inline">\(Q\)</span> onto <span class="math inline">\(\mathcal{R}\)</span> — finding the matrix in <span class="math inline">\(\mathcal{R}\)</span> closest to <span class="math inline">\(Q\)</span> in KL divergence — is exactly the row-normalization step <span class="math inline">\(P_{ij} \leftarrow Q_{ij} \cdot a_i / (Q\mathbf{1})_i\)</span>.</strong> The proof is a one-line Lagrangian calculation from MATH 304: the KKT conditions for <span class="math inline">\(\min_{P\mathbf{1}=a} \text{KL}(P\|Q)\)</span> give <span class="math inline">\(\log P_{ij} - \log Q_{ij} = \lambda_i - 1\)</span> for each row <span class="math inline">\(i\)</span>, so <span class="math inline">\(P_{ij} = Q_{ij} e^{\lambda_i - 1}\)</span>, and the constraint <span class="math inline">\(\sum_j P_{ij} = a_i\)</span> fixes <span class="math inline">\(e^{\lambda_i - 1} = a_i / \sum_j Q_{ij}\)</span>. The KL projection onto a row-constraint set is row-normalization. The KL projection onto a column-constraint set is column-normalization. The Sinkhorn iterations are alternating KL projections — not a heuristic, not a clever guess, but the unique sequence of steepest-descent steps in the KL geometry alternating between the two constraint sets.</p>
+<p><strong>The Bregman alternating projection theorem — the guarantee that alternating KL projections onto two closed convex sets with non-empty intersection converge to the KL projection of the starting point onto the intersection — is the convergence proof of the Sinkhorn algorithm.</strong> The KL divergence is a Bregman divergence generated by the strictly convex function <span class="math inline">\(\phi(P) = \sum_{ij} P_{ij}\log P_{ij}\)</span>. The theorem applies: starting from <span class="math inline">\(K\)</span>, alternating between projecting onto <span class="math inline">\(\mathcal{R}\)</span> and <span class="math inline">\(\mathcal{C}\)</span>, the iterates converge to <span class="math inline">\(\text{proj}_{\Pi(a,b)}^{\text{KL}}(K) = P^*_\varepsilon\)</span> — the unique regularized optimal coupling. The connection to MATH 213 (Analysis I) is direct: the Bregman alternating projection theorem is the metric space analogue of the alternating projection theorem for Hilbert spaces, with the KL divergence playing the role of the squared norm. Every convergence argument you made for alternating projections in Euclidean space has a direct KL-divergence counterpart here.</p>
+<hr>
+<p><strong>The Sinkhorn-Knopp theorem — the existence, uniqueness, and convergence guarantee for strictly positive matrices — is the mathematical backbone that makes the ping-pong reliable.</strong> Existence and uniqueness of <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span> follow from the strict convexity of the regularized OT problem: the unique minimizer <span class="math inline">\(P^*_\varepsilon\)</span> exists, and the first-order conditions force it to have the form <span class="math inline">\(\text{diag}(u)K\text{diag}(v)\)</span>, so <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span> exist and are unique up to the scaling ambiguity <span class="math inline">\((u,v) \mapsto (\lambda u, v/\lambda)\)</span>. The strict positivity of <span class="math inline">\(K\)</span> — the property that <span class="math inline">\(K_{ij} = e^{-C_{ij}/\varepsilon} &gt; 0\)</span> for all finite <span class="math inline">\(C_{ij}\)</span> — is what guarantees the Lagrange multipliers are finite and the scaling vectors are strictly positive. If <span class="math inline">\(K\)</span> had zeros — as the exact Kantorovich coupling does — the Lagrange multipliers could be infinite, the scaling vectors could degenerate, and the theorem would fail. Entropic regularization exists precisely to prevent this degeneracy.</p>
+<p><strong>The Birkhoff contraction coefficient <span class="math inline">\(\eta(K)\)</span> — the geometric convergence rate of the Sinkhorn iterations in Hilbert’s projective metric — is controlled by the cross-ratio <span class="math inline">\(\kappa(K) \approx e^{-\Delta C/\varepsilon}\)</span> of the Gibbs kernel.</strong> In the sorting office story: the cross-ratio measures how nearly rank-one the kernel <span class="math inline">\(K\)</span> is. A rank-one kernel <span class="math inline">\(K_{ij} = \alpha_i \beta_j\)</span> would mean the route preference completely factorizes — the preference for source <span class="math inline">\(i\)</span> is independent of destination <span class="math inline">\(j\)</span>, and vice versa. For such a kernel, one iteration suffices: scale rows by <span class="math inline">\(a/\alpha\)</span> and columns by <span class="math inline">\(b/\beta\)</span> and you are done. The further <span class="math inline">\(K\)</span> is from rank-one — the more the route preferences interact — the more iterations are required. The cross-ratio <span class="math inline">\(\kappa(K)\)</span> measures this deviation from rank-one structure, and the contraction coefficient <span class="math inline">\(\eta(K) = (1-\sqrt{\kappa})/(1+\sqrt{\kappa})\)</span> translates it into a convergence rate. For small <span class="math inline">\(\varepsilon\)</span>, the kernel entries span an enormous range — <span class="math inline">\(K\)</span> is very far from rank-one, <span class="math inline">\(\kappa \to 0\)</span>, <span class="math inline">\(\eta \to 1\)</span> — and convergence is slow. For large <span class="math inline">\(\varepsilon\)</span>, <span class="math inline">\(K\)</span> is nearly uniform — nearly rank-one — and convergence is fast.</p>
+<p><strong>The iteration complexity <span class="math inline">\(O(n^2 \log(1/\delta))\)</span> — the total cost of running Sinkhorn to precision <span class="math inline">\(\delta\)</span> — is the formal statement of the cubic-to-quadratic breakthrough.</strong> The exact Kantorovich LP requires <span class="math inline">\(O(n^3)\)</span> operations via the transportation simplex, interior point methods, or the Hungarian algorithm for the assignment special case — all of which you encountered in MATH 304. The Sinkhorn algorithm requires <span class="math inline">\(O(n^2)\)</span> operations per iteration and <span class="math inline">\(O(\varepsilon \log(1/\delta)/\Delta C)\)</span> iterations, giving <span class="math inline">\(O(n^2 \log(1/\delta))\)</span> total for fixed <span class="math inline">\(\varepsilon\)</span> and <span class="math inline">\(\Delta C\)</span>. The improvement is not a constant-factor speedup — it is a reduction in the polynomial degree of the complexity, from cubic to quadratic, which becomes decisive at machine learning scale where <span class="math inline">\(n\)</span> is in the thousands or millions.</p>
+<hr>
+<p><strong>The dual ascent interpretation — the row-normalization step as coordinate ascent over <span class="math inline">\(f\)</span> and the column-normalization step as coordinate ascent over <span class="math inline">\(g\)</span> on the smooth concave dual objective <span class="math inline">\(\mathcal{G}(f,g)\)</span> — is the connection between the Sinkhorn algorithm and every coordinate ascent and EM algorithm you will encounter in machine learning.</strong> The dual objective <span class="math inline">\(\mathcal{G}(f,g) = \langle f,a\rangle + \langle g,b\rangle - \varepsilon\sum_{ij}a_ib_je^{(f_i+g_j-C_{ij})/\varepsilon} + \varepsilon\)</span> is strictly concave in <span class="math inline">\(f\)</span> for fixed <span class="math inline">\(g\)</span> and strictly concave in <span class="math inline">\(g\)</span> for fixed <span class="math inline">\(f\)</span> — the Hessian in each block is negative definite. Setting <span class="math inline">\(\partial\mathcal{G}/\partial f_i = 0\)</span> gives <span class="math inline">\(f_i^* = -\varepsilon\log\sum_j b_j e^{(g_j - C_{ij})/\varepsilon}\)</span>, exactly the log-domain row update. The Sinkhorn iterations are block coordinate ascent on <span class="math inline">\(\mathcal{G}\)</span>, alternating between the <span class="math inline">\(f\)</span>-block and the <span class="math inline">\(g\)</span>-block. The EM algorithm connection from MATH 208 is precise: the E-step computes the expected sufficient statistics (row normalization, fixing the row potentials), and the M-step maximizes the complete-data likelihood (column normalization, fixing the column potentials). The monotone increase of the dual objective at every Sinkhorn step is the Sinkhorn analogue of the EM monotone likelihood increase.</p>
+<p><strong>The optimal dual potentials <span class="math inline">\(f^*\)</span> and <span class="math inline">\(g^*\)</span> — available as a free byproduct of the Sinkhorn iterations at convergence — are the gradients <span class="math inline">\(\nabla_a\text{OT}_\varepsilon = f^*\)</span> and <span class="math inline">\(\nabla_b\text{OT}_\varepsilon = g^*\)</span> needed for backpropagation through the Wasserstein loss.</strong> This is the envelope theorem from MATH 304 applied to the parametric dual: the derivative of the optimal dual value with respect to the right-hand side of the <span class="math inline">\(i\)</span>-th row constraint is the optimal dual variable <span class="math inline">\(f^*_i\)</span>, and similarly for the column constraints. In a neural network training loop where the Wasserstein loss <span class="math inline">\(\text{OT}_\varepsilon(\mu_\theta, \nu)\)</span> depends on model parameters <span class="math inline">\(\theta\)</span> through the source distribution <span class="math inline">\(\mu_\theta\)</span>, the gradient <span class="math inline">\(\partial\text{OT}_\varepsilon/\partial\theta = f^* \cdot \partial a/\partial\theta\)</span> — the chain rule through the potentials. No additional backward computation is required beyond the forward Sinkhorn pass that already computes <span class="math inline">\(f^*\)</span> and <span class="math inline">\(g^*\)</span>.</p>
+<hr>
+<p><strong>The first break moment — floating-point underflow for small <span class="math inline">\(\varepsilon\)</span> breaking the algorithm in finite precision — is the numerical ill-conditioning of the Gibbs kernel identified in MSCS 202.</strong> The kernel entry <span class="math inline">\(K_{ij} = e^{-C_{ij}/\varepsilon}\)</span> for <span class="math inline">\(C_{ij} = 100\)</span> and <span class="math inline">\(\varepsilon = 0.01\)</span> is <span class="math inline">\(e^{-10000} \approx 10^{-4343}\)</span>, far below the IEEE 754 double-precision underflow threshold of <span class="math inline">\(\approx 10^{-308}\)</span>. The matrix-vector product <span class="math inline">\((Kv)_i = \sum_j K_{ij}v_j\)</span> contains terms that are identically zero in floating point, making the row-normalization denominator incorrect. The condition number of <span class="math inline">\(K\)</span> is <span class="math inline">\(e^{\Delta C/\varepsilon}\)</span> — exponentially large — and the matrix is numerically rank-deficient. This is the same ill-conditioning you studied in MSCS 202 for linear systems with large condition numbers: the computed solution is dominated by floating-point error, not by the true mathematical solution.</p>
+<p><strong>The second break moment — exponentially slow convergence for small <span class="math inline">\(\varepsilon\)</span> even in exact arithmetic — is the degradation of the Birkhoff contraction coefficient <span class="math inline">\(\eta(K) \to 1\)</span> as <span class="math inline">\(\varepsilon \to 0\)</span>.</strong> The number of iterations to reach precision <span class="math inline">\(\delta\)</span> is <span class="math inline">\(O(\varepsilon\log(1/\delta)/\Delta C)\)</span>, which goes to infinity as <span class="math inline">\(\varepsilon \to 0\)</span>. For <span class="math inline">\(\varepsilon = 10^{-3}\)</span> and <span class="math inline">\(\Delta C = 10\)</span>, you need <span class="math inline">\(O(10^{-4}\log(1/\delta))\)</span> iterations — not many. For <span class="math inline">\(\varepsilon = 10^{-6}\)</span>, you need <span class="math inline">\(O(10^{-7}\log(1/\delta))\)</span> — still manageable. But for <span class="math inline">\(\varepsilon \to 0\)</span>, the iteration count grows without bound. The geometric convergence guarantee is real but vacuous in the limit: each iteration reduces the error by a factor <span class="math inline">\(\eta(K) \to 1\)</span>, meaning each iteration makes essentially no progress. The two failures — numerical and algorithmic — both originate from the exponential parameterization of <span class="math inline">\(K\)</span>, and both are resolved by the log-domain reformulation of Topic 3.</p>
+<hr>
+<p><strong>The connection to MATH 304 (Computational Operations Research) is threefold.</strong> First, the transportation simplex method from MATH 304 solves the exact Kantorovich LP by pivoting between extreme points of <span class="math inline">\(\Pi(a,b)\)</span> — corners of the transportation polytope. The Sinkhorn algorithm solves the regularized problem by moving through the interior of <span class="math inline">\(\Pi(a,b)\)</span> — strictly feasible points. The regularization converts a combinatorial corner-finding problem into a smooth interior-point problem, and the Sinkhorn iterations are the smooth analogue of the simplex pivots. Second, the dual variables <span class="math inline">\(f^*\)</span> and <span class="math inline">\(g^*\)</span> of the regularized problem are the entropic analogues of the shadow prices of the supply and demand constraints in the transportation LP — the same economic interpretation from Topic 4’s Kantorovich duality, now appearing as the potentials that certify Sinkhorn optimality. Third, the Perron-Frobenius theorem from linear algebra — which guarantees that strictly positive matrices have a unique dominant eigenvector — is the spectral foundation of the Sinkhorn-Knopp theorem, and the scaling iterations are the two-sided power iteration that computes this dominant structure.</p>
+<p><strong>The connection to MSCS 202 (Numerical Methods) runs through iterative linear solvers and condition number theory.</strong> The Jacobi and Gauss-Seidel methods for solving <span class="math inline">\(Ax = b\)</span> alternate between updating each variable while holding the others fixed — exactly the structure of the Sinkhorn iterations. The convergence of Jacobi and Gauss-Seidel is controlled by the spectral radius of the iteration matrix, just as Sinkhorn convergence is controlled by the Birkhoff contraction coefficient. The log-sum-exp stabilization of Topic 3 is the Sinkhorn analogue of the diagonal scaling and pivoting strategies in MSCS 202 — numerical preprocessing that reduces the effective condition number of the problem without changing its mathematical solution.</p>
+<hr>
+<p><strong>Looking forward across the roadmap</strong>, the Sinkhorn-Knopp theorem is the computational engine that makes everything in Phase 1 and beyond practical. In Topic 3, the log-domain reformulation stabilizes the Sinkhorn iterations for small <span class="math inline">\(\varepsilon\)</span>, completing the computational toolkit for entropic OT. In Chapter 3, the Wasserstein barycenters — the Fréchet means of multiple distributions — are computed by iterating the Sinkhorn algorithm across multiple marginals simultaneously, a direct generalization of the two-marginal case. In Phase 3, the connection between Sinkhorn and the forward-backward algorithm for diffusion models makes the Sinkhorn iterations the computational primitive underlying score-based generative modeling: the score function update is the continuous-time limit of the Sinkhorn row-normalization step, and the diffusion reverse process is the continuous-time limit of the alternating projection convergence.</p>
+<p>The ping-pong protocol — alternating row and column normalizations of the fixed Gibbs kernel, updating only <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span> while <span class="math inline">\(K\)</span> stands unchanged, converging geometrically to the unique regularized optimal coupling — is the Sinkhorn algorithm: <span class="math inline">\(u \leftarrow a/Kv\)</span>, <span class="math inline">\(v \leftarrow b/K^\top u\)</span>, repeat until <span class="math inline">\(\|P^{(\ell)}\mathbf{1} - a\|_1 + \|(P^{(\ell)})^\top\mathbf{1} - b\|_1 &lt; \delta\)</span>.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

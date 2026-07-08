@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>svd – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#topic-2---svd-the-geometry-of-data-compression" id="toc-topic-2---svd-the-geometry-of-data-compression" class="nav-link active" data-scroll-target="#topic-2---svd-the-geometry-of-data-compression">Topic 2 - SVD: The Geometry of Data Compression</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#layer-1-story" id="toc-layer-1-story" class="nav-link" data-scroll-target="#layer-1-story">Layer 1 (Story)</a></li>
+  <li><a href="#layer-2-mathematics" id="toc-layer-2-mathematics" class="nav-link" data-scroll-target="#layer-2-mathematics">Layer 2 (Mathematics)</a></li>
+  <li><a href="#layer-3-bridge" id="toc-layer-3-bridge" class="nav-link" data-scroll-target="#layer-3-bridge">Layer 3 (Bridge)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<section id="topic-2---svd-the-geometry-of-data-compression" class="level1">
+<h1>Topic 2 - SVD: The Geometry of Data Compression</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>The Spectral Theorem gave you the complete geometric description of symmetric matrices: orthogonal eigenvectors, real eigenvalues, a pure rescaling in the natural coordinate system. It is a beautiful and complete result — for symmetric matrices. But most matrices you will encounter in the roadmap are not square, and even square matrices arising from data are rarely symmetric. The data matrix <span class="math inline">\(X \in \mathbb{R}^{n \times T}\)</span> of sensor readings has <span class="math inline">\(n\)</span> sensors and <span class="math inline">\(T\)</span> time steps — it is <span class="math inline">\(n\)</span> by <span class="math inline">\(T\)</span>, rectangular, not square at all. The Jacobian of a smooth map between manifolds of different dimensions is rectangular. The weight matrices of neural networks are rectangular. The transport plan matrix in the Sinkhorn algorithm is square but not symmetric. The spectral theorem does not apply to any of these.</p>
+<p>What you need is a decomposition that applies to every matrix — rectangular or square, symmetric or not — and that reveals the same kind of geometric structure that the spectral theorem reveals for symmetric matrices. You need to know: what are the preferred input directions, what are the preferred output directions, and how much does the matrix stretch each input direction as it maps it to the corresponding output direction? This is exactly what the Singular Value Decomposition provides.</p>
+<p>The SVD says: every matrix <span class="math inline">\(A \in \mathbb{R}^{m \times n}\)</span>, regardless of shape or symmetry, can be written as <span class="math inline">\(A = U\Sigma V^T\)</span>, where <span class="math inline">\(U \in \mathbb{R}^{m \times m}\)</span> is orthogonal with columns <span class="math inline">\(u_1, \ldots, u_m\)</span>, <span class="math inline">\(V \in \mathbb{R}^{n \times n}\)</span> is orthogonal with columns <span class="math inline">\(v_1, \ldots, v_n\)</span>, and <span class="math inline">\(\Sigma \in \mathbb{R}^{m \times n}\)</span> is a rectangular diagonal matrix with non-negative entries <span class="math inline">\(\sigma_1 \geq \sigma_2 \geq \cdots \geq \sigma_{\min(m,n)} \geq 0\)</span> on the diagonal.</p>
+<p>The geometric reading of this decomposition is the complete story of what <span class="math inline">\(A\)</span> does as a linear map from <span class="math inline">\(\mathbb{R}^n\)</span> to <span class="math inline">\(\mathbb{R}^m\)</span>. The matrix <span class="math inline">\(V^T\)</span> rotates the input space <span class="math inline">\(\mathbb{R}^n\)</span> so that the input is expressed in the coordinate system of the right singular vectors <span class="math inline">\(v_1, \ldots, v_n\)</span> — the preferred input directions. The matrix <span class="math inline">\(\Sigma\)</span> stretches each right singular vector direction by the corresponding singular value <span class="math inline">\(\sigma_i\)</span> and maps it to the corresponding left singular vector direction — zero stretching if <span class="math inline">\(\sigma_i = 0\)</span>, moderate stretching if <span class="math inline">\(\sigma_i\)</span> is moderate, large stretching if <span class="math inline">\(\sigma_i\)</span> is large. The matrix <span class="math inline">\(U\)</span> rotates the output to express it in the standard coordinate system of <span class="math inline">\(\mathbb{R}^m\)</span>. The matrix <span class="math inline">\(A\)</span> is a composition of a rotation, a stretch-and-possibly-dimension-change, and another rotation — and nothing else. No shear, no mysterious coupling between directions beyond the stretching: the SVD reveals that every linear map is, in the right pair of coordinate systems, just a rescaling possibly accompanied by a dimension change.</p>
+<p>The roadmap names this topic with a precise description: the geometry of data compression. This name points directly to the most important practical consequence of the SVD — the Eckart-Young theorem, which says that the best rank-<span class="math inline">\(k\)</span> approximation to any matrix, in the sense of minimizing the Frobenius norm of the error, is obtained by keeping only the <span class="math inline">\(k\)</span> largest singular values and their associated left and right singular vectors. Throwing away the directions with small singular values loses little information about the matrix’s action — because those directions contribute little to the matrix’s overall effect — while dramatically reducing the number of numbers needed to represent the matrix. This is the mathematics of data compression, dimensionality reduction, and low-rank approximation.</p>
+<p>The topic has three subtopics that develop the SVD in logical order.</p>
+<p>The first subtopic is the <strong>existence and structure of the SVD</strong> — the precise statement that every matrix has an SVD, the geometric interpretation of left and right singular vectors and singular values, and the connection to the spectral theorem via the symmetric matrices <span class="math inline">\(A^TA\)</span> and <span class="math inline">\(AA^T\)</span> whose eigenvectors are the right and left singular vectors respectively.</p>
+<p>The second subtopic is the <strong>Eckart-Young theorem</strong> — the best low-rank approximation theorem, showing that truncating the SVD to <span class="math inline">\(k\)</span> terms gives the closest rank-<span class="math inline">\(k\)</span> matrix to <span class="math inline">\(A\)</span> in both the Frobenius norm and the spectral norm. This theorem is the mathematical foundation of PCA, latent semantic analysis, matrix completion, and the low-rank approximation methods used throughout machine learning.</p>
+<p>The third subtopic is the <strong>pseudoinverse and least squares</strong> — the Moore-Penrose pseudoinverse <span class="math inline">\(A^+ = V\Sigma^+ U^T\)</span>, how it provides the minimum-norm least-squares solution to an overdetermined or underdetermined linear system, and why it is the correct generalization of matrix inversion to non-square and rank-deficient matrices. The pseudoinverse is the tool that makes linear regression, linear ODEs, and linear inverse problems well-posed even when the system matrix is not invertible.</p>
+<p>By the end of this topic, when you see any matrix in the roadmap — a data matrix, a Jacobian, a kernel matrix, a weight matrix — you will immediately see its SVD structure: a set of preferred input directions, a set of preferred output directions, a list of singular values measuring how strongly the matrix acts in each direction, and a low-rank approximation obtained by keeping only the directions with the largest singular values. The SVD is the most general and most powerful decomposition in linear algebra, and it is the tool that makes data compression, dimensionality reduction, and low-rank approximation not just possible but optimal.</p>
+<p><strong>ALL THREE SUBTOPICS ARE TREATED AS A SINGLE TOPIC FOR EASY COMPREHENSION.</strong></p>
+<hr>
+</section>
+<section id="layer-1-story" class="level2">
+<h2 class="anchored" data-anchor-id="layer-1-story">Layer 1 (Story)</h2>
+<p>You are the chief cartographer at the Survey Department of Nepal, and you have just received an extraordinary assignment. The department has been contracted to produce a compressed digital atlas of Nepal for distribution to schools across the country — not the full high-resolution atlas used by professional surveyors, but a lightweight version that captures the most important geographic features while fitting within the severe storage constraints of the schools’ aging computers.</p>
+<p>The full atlas is stored as a large matrix: each row represents a horizontal scan line across Nepal from west to east, each column represents a fixed longitude, and each entry is the elevation at that location. The matrix has 10,000 rows and 8,000 columns — 80 million numbers, far too large to distribute efficiently. Your job is to compress this elevation matrix as aggressively as possible while preserving the features that matter most: the major mountain ranges, the broad river valleys, the Terai plains, the hilly middle region. The fine-grained details — individual ridgelines, local valleys, small settlements — can be sacrificed for the sake of compression.</p>
+<p>How do you do it?</p>
+<hr>
+<p><strong>The naive approach and why it fails</strong></p>
+<p>Your junior cartographer proposes the obvious solution: simply reduce the resolution. Take every other row and every other column — halve the number of rows and columns simultaneously — and store the resulting 5,000 by 4,000 matrix. You have compressed the data by a factor of 4, and the stored matrix is a coarser version of the original.</p>
+<p>The problem is that this approach is unselective. It discards fine-grained information in all directions simultaneously — it cannot distinguish between the sweeping north-south elevation gradient from the Terai to the Himalayas (which is the most important geographic feature in Nepal and should be preserved) and the fine-grained east-west variation within a single mountain massif (which is far less important and can safely be discarded). The naive downsampling treats all directions of variation as equally important, which they are not.</p>
+<p>What you actually want is a compression scheme that identifies the most important directions of variation in the elevation data and preserves those while discarding the least important. Some directions account for enormous amounts of the total elevation variation across Nepal. Others account for tiny amounts. The right compression strategy is to keep the big directions and throw away the small ones.</p>
+<p>But what are the “directions of variation” in a matrix? And how do you find the most important ones? This is the question that the SVD answers.</p>
+<hr>
+<p><strong>The SVD as a decomposition into geographic themes</strong></p>
+<p>Your senior cartographer — a mathematician who has worked at the department for thirty years — explains the SVD through a geographic analogy that immediately clarifies what the decomposition is doing.</p>
+<p>Imagine describing Nepal’s elevation not as a matrix of raw numbers, but as a superposition of geographic themes. The first theme is the dominant north-south trend: the elevation rises dramatically and consistently from the Terai in the south to the Himalayas in the north, across the entire east-west extent of the country. This trend can be described by two vectors: a row pattern that captures how elevation varies from south to north at each horizontal scan line, and a column pattern that captures how the magnitude of this north-south trend varies as you move from west to east. The first theme is the outer product of these two vectors, weighted by the magnitude of the theme’s contribution.</p>
+<p>The second theme is the east-west trend: Nepal is higher in the northwest (Karnali region, Dolpa) and lower in the southeast (Mechi zone), so the elevation has a systematic east-west gradient. This is a second pair of vectors — a row pattern and a column pattern — whose outer product captures this east-west tilting.</p>
+<p>The third theme might be the central uplift: the Kathmandu valley and surrounding hills form a distinct elevated plateau in the middle of the country, higher than the Terai but lower than the Himalayas, with a specific geographic pattern. A third pair of vectors captures this.</p>
+<p>And so on, with each successive theme capturing a progressively smaller and more localized feature of the elevation data.</p>
+<p>The crucial insight is that the full elevation matrix is exactly the sum of all these themes, each weighted by its importance:</p>
+<p><span class="math display">\[\text{Elevation} = \sigma_1 u_1 v_1^T + \sigma_2 u_2 v_2^T + \sigma_3 u_3 v_3^T + \cdots\]</span></p>
+<p>Each term <span class="math inline">\(\sigma_k u_k v_k^T\)</span> is a rank-1 matrix — the outer product of a left vector <span class="math inline">\(u_k\)</span> (the row pattern, describing how the theme varies north-south) and a right vector <span class="math inline">\(v_k\)</span> (the column pattern, describing how the theme varies east-west), weighted by the singular value <span class="math inline">\(\sigma_k\)</span> (the importance of the theme). The left vectors <span class="math inline">\(u_k\)</span> are orthogonal to each other — they are mutually independent geographic themes in the row direction. The right vectors <span class="math inline">\(v_k\)</span> are orthogonal to each other — mutually independent themes in the column direction. And the singular values <span class="math inline">\(\sigma_1 \geq \sigma_2 \geq \cdots \geq 0\)</span> are ordered from most important to least important.</p>
+<p>This decomposition is the Singular Value Decomposition. Written as a matrix equation: <span class="math inline">\(A = U\Sigma V^T\)</span>, where the columns of <span class="math inline">\(U\)</span> are the left vectors <span class="math inline">\(u_k\)</span>, the columns of <span class="math inline">\(V\)</span> are the right vectors <span class="math inline">\(v_k\)</span>, and <span class="math inline">\(\Sigma\)</span> is the diagonal matrix of singular values <span class="math inline">\(\sigma_k\)</span>.</p>
+<hr>
+<p><strong>The compression strategy: keep the big themes, throw away the small ones</strong></p>
+<p>Armed with the SVD, the compression strategy is now obvious and optimal. The full elevation matrix is the sum of rank-1 themes, ordered by importance. The most important theme contributes a fraction <span class="math inline">\(\sigma_1^2 / \sum_k \sigma_k^2\)</span> of the total variation in the matrix. The second most important contributes <span class="math inline">\(\sigma_2^2 / \sum_k \sigma_k^2\)</span>. And so on.</p>
+<p>To compress the matrix, keep only the first <span class="math inline">\(k\)</span> themes — the <span class="math inline">\(k\)</span> most important ones — and discard the rest:</p>
+<p><span class="math display">\[A_k = \sigma_1 u_1 v_1^T + \sigma_2 u_2 v_2^T + \cdots + \sigma_k u_k v_k^T\]</span></p>
+<p>This is the rank-<span class="math inline">\(k\)</span> approximation to the elevation matrix. Instead of storing <span class="math inline">\(m \times n\)</span> numbers, you store <span class="math inline">\(k\)</span> singular values, <span class="math inline">\(k\)</span> left vectors of length <span class="math inline">\(m\)</span>, and <span class="math inline">\(k\)</span> right vectors of length <span class="math inline">\(n\)</span> — a total of <span class="math inline">\(k(m + n + 1)\)</span> numbers. For <span class="math inline">\(k \ll \min(m,n)\)</span>, this is far fewer numbers than the original matrix, and the approximation quality depends entirely on how quickly the singular values decay. If the first few singular values are much larger than the rest — as is typically the case for structured geographic data — the approximation is excellent.</p>
+<p>Your senior cartographer demonstrates: the first singular vector captures the dominant north-south trend and already accounts for roughly 70% of the total elevation variation. The first three themes together account for perhaps 90%. The first ten themes might account for 99%. By keeping only 10 themes instead of the full 8,000 singular values, you achieve a 99% reduction in the number of stored numbers while preserving 99% of the elevation variation — an extraordinary compression that would be impossible with naive downsampling.</p>
+<hr>
+<p><strong>The geometric picture: what the SVD says the matrix is doing</strong></p>
+<p>Now your senior cartographer steps back and explains what the SVD is saying geometrically about the elevation matrix as a linear map.</p>
+<p>The matrix <span class="math inline">\(A: \mathbb{R}^{8000} \to \mathbb{R}^{10000}\)</span> takes a column vector — a specification of the elevation at each of the 8,000 longitude positions — and produces a row vector — the corresponding elevation across all 10,000 scan lines. This is a linear map from an 8,000-dimensional space to a 10,000-dimensional space.</p>
+<p>The SVD says: this linear map has a very specific geometric structure. In the input space <span class="math inline">\(\mathbb{R}^{8000}\)</span>, there is a preferred set of orthogonal directions — the right singular vectors <span class="math inline">\(v_1, v_2, \ldots\)</span> — that are the natural modes of east-west variation in the elevation data. In the output space <span class="math inline">\(\mathbb{R}^{10000}\)</span>, there is a corresponding preferred set of orthogonal directions — the left singular vectors <span class="math inline">\(u_1, u_2, \ldots\)</span> — that are the natural modes of north-south variation. The matrix <span class="math inline">\(A\)</span> maps the <span class="math inline">\(k\)</span>-th right singular vector to the <span class="math inline">\(k\)</span>-th left singular vector, scaled by the <span class="math inline">\(k\)</span>-th singular value: <span class="math inline">\(Av_k = \sigma_k u_k\)</span>.</p>
+<p>This is the complete picture. The matrix does not mix the preferred directions — the <span class="math inline">\(k\)</span>-th input direction maps exclusively to the <span class="math inline">\(k\)</span>-th output direction. The only freedom the matrix has is in the scaling: it amplifies direction <span class="math inline">\(k\)</span> by the factor <span class="math inline">\(\sigma_k\)</span>. The directions with large singular values are amplified strongly. The directions with small singular values are amplified weakly. The directions with zero singular values are annihilated — they map to the zero vector.</p>
+<p>The factorization <span class="math inline">\(A = U\Sigma V^T\)</span> is the explicit encoding of this picture: <span class="math inline">\(V^T\)</span> rotates the input into the preferred input coordinate system, <span class="math inline">\(\Sigma\)</span> performs the direction-specific scaling and possible dimension change, and <span class="math inline">\(U\)</span> rotates the output into the standard output coordinate system.</p>
+<hr>
+<p><strong>The connection to the Spectral Theorem: symmetric brothers</strong></p>
+<p>Your senior cartographer now explains why the SVD is the right generalization of the spectral theorem to rectangular matrices, by showing the explicit connection.</p>
+<p>Consider the symmetric matrix <span class="math inline">\(A^TA \in \mathbb{R}^{8000 \times 8000}\)</span> — the product of the elevation matrix with its own transpose. This is always symmetric positive semidefinite: for any <span class="math inline">\(v \in \mathbb{R}^{8000}\)</span>, <span class="math inline">\(v^T(A^TA)v = \|Av\|_2^2 \geq 0\)</span>. The spectral theorem applies: <span class="math inline">\(A^TA = V\Lambda V^T\)</span> where <span class="math inline">\(V\)</span> is orthogonal and <span class="math inline">\(\Lambda\)</span> has non-negative diagonal entries <span class="math inline">\(\lambda_1 \geq \lambda_2 \geq \cdots \geq 0\)</span>.</p>
+<p>The right singular vectors of <span class="math inline">\(A\)</span> are exactly the eigenvectors of <span class="math inline">\(A^TA\)</span>, and the singular values of <span class="math inline">\(A\)</span> are the square roots of the eigenvalues of <span class="math inline">\(A^TA\)</span>: <span class="math inline">\(\sigma_k = \sqrt{\lambda_k}\)</span>. Similarly, the left singular vectors are the eigenvectors of <span class="math inline">\(AA^T \in \mathbb{R}^{10000 \times 10000}\)</span>, with the same nonzero eigenvalues.</p>
+<p>The SVD is not a separate theorem — it is the spectral theorem applied to the symmetric matrices <span class="math inline">\(A^TA\)</span> and <span class="math inline">\(AA^T\)</span>, with the square root taken to recover the singular values. The spectral theorem, in a sense, is the special case of the SVD where the matrix happens to be square and symmetric — the left and right singular vectors coincide (as eigenvectors), and the singular values are the absolute values of the eigenvalues.</p>
+<hr>
+<p><strong>The break moment: the singular value spectrum reveals the data’s structure</strong></p>
+<p>Here is the break moment. The naive assumption is that the singular values decay slowly and uniformly — that the elevation data requires many themes to capture accurately, and that compression is inherently lossy and inaccurate.</p>
+<p>This breaks dramatically in practice. Real geographic data — and more broadly, real data from almost any structured domain — has singular values that decay rapidly: the first few singular values are much larger than the rest, and the tail of small singular values can be discarded with negligible error. This rapid decay reflects the structured nature of the data: Nepal’s elevation is not random noise. It is organized by the geological forces that built the Himalayas, the river systems that carved the valleys, and the climatic gradients that shape the vegetation. This structure concentrates the variation in a few dominant directions, producing a rapidly decaying singular value spectrum.</p>
+<p>The assumption that all directions are equally important — the assumption underlying naive compression and naive learning algorithms — breaks whenever the data has structure. And real data always has structure. This is the manifold hypothesis from Chapter 3, now expressed in the language of linear algebra: the data matrix has rapidly decaying singular values because the data lies on a low-dimensional manifold, and the SVD reveals that manifold’s linear approximation.</p>
+<p>In machine learning, this rapid decay justifies low-rank approximations to weight matrices, attention matrices, and kernel matrices. It justifies PCA as a preprocessing step. It explains why neural networks with many parameters can be compressed to much smaller networks with minimal accuracy loss — the weight matrices have rapidly decaying singular values, and the large singular values capture the important computation while the small ones are numerical noise.</p>
+<hr>
+<p>Hold four pictures simultaneously.</p>
+<p>The elevation matrix as a sum of geographic themes: north-south gradient, east-west tilt, central plateau, each captured by an outer product <span class="math inline">\(\sigma_k u_k v_k^T\)</span>, with larger themes weighted more heavily — the SVD as a decomposition into interpretable components.</p>
+<p>The geometric picture of the linear map: preferred input directions (right singular vectors) mapping to preferred output directions (left singular vectors), each scaled by a singular value — the SVD as pure stretch in the right coordinate systems.</p>
+<p>The compression: keep the first <span class="math inline">\(k\)</span> themes, discard the rest, store <span class="math inline">\(k(m+n+1)\)</span> numbers instead of <span class="math inline">\(mn\)</span> — the Eckart-Young theorem as optimal compression.</p>
+<p>The connection to the spectral theorem: the right singular vectors are eigenvectors of <span class="math inline">\(A^TA\)</span>, the left singular vectors are eigenvectors of <span class="math inline">\(AA^T\)</span>, the singular values are the square roots of their eigenvalues — the SVD as the spectral theorem applied to the symmetric brothers of <span class="math inline">\(A\)</span>.</p>
+<hr>
+</section>
+<section id="layer-2-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="layer-2-mathematics">Layer 2 (Mathematics)</h2>
+<p>We build the formalism in six stages: the precise statement and proof of the SVD existence theorem, the geometric interpretation via the four fundamental subspaces, the Eckart-Young theorem for optimal low-rank approximation, the pseudoinverse and least squares, the relationship between SVD and spectral decomposition, and the connection to the roadmap through matrix approximation in machine learning.</p>
+<section id="the-svd-precise-statement" class="level3">
+<h3 class="anchored" data-anchor-id="the-svd-precise-statement">The SVD — Precise Statement</h3>
+<p><strong>Theorem (Singular Value Decomposition).</strong> For any matrix <span class="math inline">\(A \in \mathbb{R}^{m \times n}\)</span> with <span class="math inline">\(m \geq n\)</span> (without loss of generality), there exist:</p>
+<ul>
+<li>An orthogonal matrix <span class="math inline">\(U \in \mathbb{R}^{m \times m}\)</span> with columns <span class="math inline">\(u_1, \ldots, u_m \in \mathbb{R}^m\)</span></li>
+<li>An orthogonal matrix <span class="math inline">\(V \in \mathbb{R}^{n \times n}\)</span> with columns <span class="math inline">\(v_1, \ldots, v_n \in \mathbb{R}^n\)</span></li>
+<li>A rectangular diagonal matrix <span class="math inline">\(\Sigma \in \mathbb{R}^{m \times n}\)</span> with diagonal entries <span class="math inline">\(\sigma_1 \geq \sigma_2 \geq \cdots \geq \sigma_n \geq 0\)</span></li>
+</ul>
+<p>such that:</p>
+<p><span class="math display">\[A = U\Sigma V^T\]</span></p>
+<p>The diagonal entries <span class="math inline">\(\sigma_i\)</span> are the <strong>singular values</strong> of <span class="math inline">\(A\)</span>. The columns <span class="math inline">\(u_i\)</span> of <span class="math inline">\(U\)</span> are the <strong>left singular vectors</strong>. The columns <span class="math inline">\(v_i\)</span> of <span class="math inline">\(V\)</span> are the <strong>right singular vectors</strong>. The number of nonzero singular values equals <span class="math inline">\(\text{rank}(A)\)</span>.</p>
+<p><strong>Proof via spectral theorem.</strong> The matrix <span class="math inline">\(A^TA \in \mathbb{R}^{n \times n}\)</span> is symmetric positive semidefinite: <span class="math inline">\(v^T(A^TA)v = \|Av\|_2^2 \geq 0\)</span>. By the spectral theorem:</p>
+<p><span class="math display">\[A^TA = V\Lambda V^T, \quad \Lambda = \text{diag}(\lambda_1, \ldots, \lambda_n), \quad \lambda_1 \geq \cdots \geq \lambda_n \geq 0\]</span></p>
+<p>Define the singular values <span class="math inline">\(\sigma_i = \sqrt{\lambda_i} \geq 0\)</span> and let <span class="math inline">\(r = \text{rank}(A)\)</span>, so <span class="math inline">\(\sigma_1 \geq \cdots \geq \sigma_r &gt; 0 = \sigma_{r+1} = \cdots = \sigma_n\)</span>.</p>
+<p>For <span class="math inline">\(i = 1, \ldots, r\)</span>, define the left singular vectors:</p>
+<p><span class="math display">\[u_i = \frac{Av_i}{\sigma_i} \in \mathbb{R}^m\]</span></p>
+<p><strong>Verification:</strong> <span class="math inline">\(\langle u_i, u_j\rangle = \frac{1}{\sigma_i\sigma_j}\langle Av_i, Av_j\rangle = \frac{1}{\sigma_i\sigma_j} v_i^T A^T A v_j = \frac{1}{\sigma_i\sigma_j} v_i^T (\lambda_j v_j) = \frac{\lambda_j}{\sigma_i\sigma_j}\delta_{ij} = \delta_{ij}\)</span>.</p>
+<p>So <span class="math inline">\(u_1, \ldots, u_r\)</span> are orthonormal. Extend to an orthonormal basis <span class="math inline">\(u_1, \ldots, u_m\)</span> of <span class="math inline">\(\mathbb{R}^m\)</span> by adding any orthonormal complement of <span class="math inline">\(\text{span}(u_1,\ldots,u_r)\)</span>. Set <span class="math inline">\(U = [u_1|\cdots|u_m]\)</span>.</p>
+<p><strong>Verification of <span class="math inline">\(A = U\Sigma V^T\)</span>:</strong> For <span class="math inline">\(i \leq r\)</span>: <span class="math inline">\((U\Sigma V^T)e_i^{(n)} = \sigma_i U e_i^{(m)} = \sigma_i u_i = Av_i = A V e_i^{(n)}\)</span>. For <span class="math inline">\(i &gt; r\)</span>: both sides give zero. Since the columns of <span class="math inline">\(V\)</span> span <span class="math inline">\(\mathbb{R}^n\)</span>, <span class="math inline">\(A = U\Sigma V^T\)</span>. <span class="math inline">\(\square\)</span></p>
+<hr>
+</section>
+<section id="the-compact-svd" class="level3">
+<h3 class="anchored" data-anchor-id="the-compact-svd">The Compact SVD</h3>
+<p>When <span class="math inline">\(r = \text{rank}(A) &lt; \min(m,n)\)</span>, it is often more efficient to use the <strong>compact (thin) SVD</strong>:</p>
+<p><span class="math display">\[A = U_r \Sigma_r V_r^T\]</span></p>
+<p>where <span class="math inline">\(U_r \in \mathbb{R}^{m \times r}\)</span>, <span class="math inline">\(\Sigma_r = \text{diag}(\sigma_1,\ldots,\sigma_r) \in \mathbb{R}^{r \times r}\)</span> with all entries positive, and <span class="math inline">\(V_r \in \mathbb{R}^{n \times r}\)</span>. The columns of <span class="math inline">\(U_r\)</span> and <span class="math inline">\(V_r\)</span> are semi-orthogonal: <span class="math inline">\(U_r^T U_r = I_r\)</span> and <span class="math inline">\(V_r^T V_r = I_r\)</span>.</p>
+<p>The outer product expansion of the full SVD is:</p>
+<p><span class="math display">\[A = \sum_{i=1}^r \sigma_i u_i v_i^T = \sum_{i=1}^{\min(m,n)} \sigma_i u_i v_i^T\]</span></p>
+<p>Each term <span class="math inline">\(\sigma_i u_i v_i^T\)</span> is a rank-1 matrix. The full matrix is the sum of <span class="math inline">\(r\)</span> rank-1 matrices, weighted by the singular values.</p>
+<hr>
+</section>
+<section id="the-four-fundamental-subspaces" class="level3">
+<h3 class="anchored" data-anchor-id="the-four-fundamental-subspaces">The Four Fundamental Subspaces</h3>
+<p>The SVD reveals the four fundamental subspaces of <span class="math inline">\(A\)</span> simultaneously.</p>
+<p><strong>Column space</strong> (range of <span class="math inline">\(A\)</span>): <span class="math inline">\(\mathcal{R}(A) = \text{span}(u_1, \ldots, u_r)\)</span> — the first <span class="math inline">\(r\)</span> left singular vectors.</p>
+<p><strong>Left null space</strong> (null space of <span class="math inline">\(A^T\)</span>): <span class="math inline">\(\mathcal{N}(A^T) = \text{span}(u_{r+1}, \ldots, u_m)\)</span> — the last <span class="math inline">\(m-r\)</span> left singular vectors.</p>
+<p><strong>Row space</strong> (range of <span class="math inline">\(A^T\)</span>): <span class="math inline">\(\mathcal{R}(A^T) = \text{span}(v_1, \ldots, v_r)\)</span> — the first <span class="math inline">\(r\)</span> right singular vectors.</p>
+<p><strong>Null space</strong> (null space of <span class="math inline">\(A\)</span>): <span class="math inline">\(\mathcal{N}(A) = \text{span}(v_{r+1}, \ldots, v_n)\)</span> — the last <span class="math inline">\(n-r\)</span> right singular vectors.</p>
+<p>The SVD establishes the <strong>fundamental theorem of linear algebra</strong>: <span class="math inline">\(\mathcal{R}(A^T) \perp \mathcal{N}(A)\)</span> and <span class="math inline">\(\mathcal{R}(A) \perp \mathcal{N}(A^T)\)</span>, with <span class="math inline">\(\mathbb{R}^n = \mathcal{R}(A^T) \oplus \mathcal{N}(A)\)</span> and <span class="math inline">\(\mathbb{R}^m = \mathcal{R}(A) \oplus \mathcal{N}(A^T)\)</span>.</p>
+<p>For any <span class="math inline">\(v \in \mathbb{R}^n\)</span>, decompose: <span class="math inline">\(v = \sum_{i=1}^r c_i v_i + v_\perp\)</span> where <span class="math inline">\(v_\perp \in \mathcal{N}(A)\)</span>. Then:</p>
+<p><span class="math display">\[Av = \sum_{i=1}^r \sigma_i c_i u_i\]</span></p>
+<p>The null space component <span class="math inline">\(v_\perp\)</span> is annihilated by <span class="math inline">\(A\)</span>, and the row space component is mapped isomorphically (up to scaling by <span class="math inline">\(\sigma_i\)</span>) to the column space.</p>
+<hr>
+</section>
+<section id="norms-via-singular-values" class="level3">
+<h3 class="anchored" data-anchor-id="norms-via-singular-values">Norms via Singular Values</h3>
+<p>The singular values provide canonical formulas for the most important matrix norms.</p>
+<p><strong>Spectral norm</strong> (operator norm, 2-norm):</p>
+<p><span class="math display">\[\|A\|_2 = \sigma_1 = \max_{\|v\|_2 = 1} \|Av\|_2\]</span></p>
+<p>The spectral norm is the largest singular value — the maximum stretching factor of <span class="math inline">\(A\)</span>.</p>
+<p><strong>Frobenius norm</strong>:</p>
+<p><span class="math display">\[\|A\|_F = \sqrt{\sum_{i,j} a_{ij}^2} = \sqrt{\sum_{i=1}^r \sigma_i^2} = \sqrt{\text{tr}(A^TA)}\]</span></p>
+<p>The Frobenius norm is the <span class="math inline">\(\ell_2\)</span> norm of the vector of singular values.</p>
+<p><strong>Nuclear norm</strong> (trace norm):</p>
+<p><span class="math display">\[\|A\|_* = \sum_{i=1}^r \sigma_i\]</span></p>
+<p>The nuclear norm is the <span class="math inline">\(\ell_1\)</span> norm of the vector of singular values. It is the convex envelope of the rank function — the tightest convex lower bound on rank — and it is used as a convex surrogate for rank minimization in matrix completion problems.</p>
+<p>These three norms satisfy the inequality <span class="math inline">\(\|A\|_2 \leq \|A\|_F \leq \sqrt{r}\|A\|_2\)</span> for a rank-<span class="math inline">\(r\)</span> matrix.</p>
+<hr>
+</section>
+<section id="the-eckart-young-theorem-optimal-low-rank-approximation" class="level3">
+<h3 class="anchored" data-anchor-id="the-eckart-young-theorem-optimal-low-rank-approximation">The Eckart-Young Theorem — Optimal Low-Rank Approximation</h3>
+<p><strong>Theorem (Eckart-Young, 1936).</strong> Let <span class="math inline">\(A \in \mathbb{R}^{m \times n}\)</span> with SVD <span class="math inline">\(A = U\Sigma V^T\)</span> and singular values <span class="math inline">\(\sigma_1 \geq \cdots \geq \sigma_r &gt; 0\)</span>. Define the rank-<span class="math inline">\(k\)</span> truncated SVD:</p>
+<p><span class="math display">\[A_k = \sum_{i=1}^k \sigma_i u_i v_i^T = U_k \Sigma_k V_k^T\]</span></p>
+<p>Then <span class="math inline">\(A_k\)</span> is the best rank-<span class="math inline">\(k\)</span> approximation to <span class="math inline">\(A\)</span> in both the Frobenius and spectral norms:</p>
+<p><span class="math display">\[\|A - A_k\|_F = \min_{\text{rank}(B) \leq k} \|A - B\|_F = \sqrt{\sum_{i=k+1}^r \sigma_i^2}\]</span></p>
+<p><span class="math display">\[\|A - A_k\|_2 = \min_{\text{rank}(B) \leq k} \|A - B\|_2 = \sigma_{k+1}\]</span></p>
+<p><strong>Proof (Frobenius norm).</strong> First compute the error: <span class="math inline">\(A - A_k = \sum_{i=k+1}^r \sigma_i u_i v_i^T\)</span>, so <span class="math inline">\(\|A-A_k\|_F^2 = \sum_{i=k+1}^r \sigma_i^2\)</span>.</p>
+<p>Now suppose <span class="math inline">\(B\)</span> has rank <span class="math inline">\(\leq k\)</span>. Then <span class="math inline">\(\mathcal{N}(B)\)</span> has dimension <span class="math inline">\(\geq n-k\)</span>. The subspace <span class="math inline">\(\text{span}(v_1,\ldots,v_{k+1})\)</span> has dimension <span class="math inline">\(k+1\)</span>. By dimension counting, there exists a nonzero <span class="math inline">\(w \in \text{span}(v_1,\ldots,v_{k+1}) \cap \mathcal{N}(B)\)</span> with <span class="math inline">\(\|w\|_2 = 1\)</span>.</p>
+<p>Write <span class="math inline">\(w = \sum_{i=1}^{k+1} c_i v_i\)</span> with <span class="math inline">\(\sum_i c_i^2 = 1\)</span>. Then:</p>
+<p><span class="math display">\[\|A - B\|_F^2 \geq \|(A-B)w\|_2^2 = \|Aw\|_2^2 = \left\|\sum_{i=1}^{k+1} \sigma_i c_i u_i\right\|_2^2 = \sum_{i=1}^{k+1} \sigma_i^2 c_i^2 \geq \sigma_{k+1}^2 \sum_{i=1}^{k+1} c_i^2 = \sigma_{k+1}^2\]</span></p>
+<p>Meanwhile <span class="math inline">\(\|A-A_k\|_F^2 = \sum_{i=k+1}^r \sigma_i^2 \geq \sigma_{k+1}^2\)</span>, with the Frobenius error being at most <span class="math inline">\(\sigma_{k+1}^2\)</span> times the remaining rank. Since <span class="math inline">\(A_k\)</span> achieves <span class="math inline">\(\sqrt{\sum_{i=k+1}^r \sigma_i^2}\)</span> and any rank-<span class="math inline">\(k\)</span> matrix achieves at least <span class="math inline">\(\sigma_{k+1}\)</span>, and <span class="math inline">\(A_k\)</span> achieves the minimum, the proof is complete. <span class="math inline">\(\square\)</span></p>
+<p><strong>Explained variance.</strong> Define the fraction of variance explained by the rank-<span class="math inline">\(k\)</span> approximation:</p>
+<p><span class="math display">\[\text{EV}(k) = \frac{\sum_{i=1}^k \sigma_i^2}{\sum_{i=1}^r \sigma_i^2} = \frac{\|A_k\|_F^2}{\|A\|_F^2}\]</span></p>
+<p>This is the fraction of the total Frobenius norm squared captured by the first <span class="math inline">\(k\)</span> singular components. In PCA, this is the fraction of total variance explained by the first <span class="math inline">\(k\)</span> principal components.</p>
+<hr>
+</section>
+<section id="the-moore-penrose-pseudoinverse" class="level3">
+<h3 class="anchored" data-anchor-id="the-moore-penrose-pseudoinverse">The Moore-Penrose Pseudoinverse</h3>
+<p>For a matrix <span class="math inline">\(A \in \mathbb{R}^{m \times n}\)</span> with SVD <span class="math inline">\(A = U\Sigma V^T\)</span>, the <strong>Moore-Penrose pseudoinverse</strong> is:</p>
+<p><span class="math display">\[A^+ = V\Sigma^+ U^T\]</span></p>
+<p>where <span class="math inline">\(\Sigma^+ \in \mathbb{R}^{n \times m}\)</span> is obtained from <span class="math inline">\(\Sigma^T\)</span> by replacing each nonzero diagonal entry <span class="math inline">\(\sigma_i &gt; 0\)</span> with <span class="math inline">\(1/\sigma_i\)</span> and leaving zeros as zeros:</p>
+<p><span class="math display">\[\Sigma^+ = \text{diag}(\sigma_1^{-1}, \ldots, \sigma_r^{-1}, 0, \ldots, 0) \in \mathbb{R}^{n \times m}\]</span></p>
+<p><strong>Properties of the pseudoinverse</strong> (Moore-Penrose conditions):</p>
+<p><span class="math display">\[AA^+A = A \qquad \text{(1)}\]</span> <span class="math display">\[A^+AA^+ = A^+ \qquad \text{(2)}\]</span> <span class="math display">\[(AA^+)^T = AA^+ \qquad \text{(3)}\]</span> <span class="math display">\[(A^+A)^T = A^+A \qquad \text{(4)}\]</span></p>
+<p>These four conditions uniquely characterize <span class="math inline">\(A^+\)</span> among all matrices. The pseudoinverse reduces to the ordinary inverse when <span class="math inline">\(A\)</span> is square and invertible: <span class="math inline">\(A^+ = A^{-1}\)</span>.</p>
+<p><strong>Least squares via pseudoinverse.</strong> For an overdetermined system <span class="math inline">\(Ax = b\)</span> with <span class="math inline">\(m &gt; n\)</span> and <span class="math inline">\(A\)</span> full column rank (<span class="math inline">\(r = n\)</span>), the least-squares solution minimizing <span class="math inline">\(\|Ax - b\|_2^2\)</span> is:</p>
+<p><span class="math display">\[x^* = A^+b = (A^TA)^{-1}A^Tb\]</span></p>
+<p><strong>Proof.</strong> The normal equations <span class="math inline">\(A^TAx = A^Tb\)</span> give <span class="math inline">\(x^* = (A^TA)^{-1}A^Tb\)</span>. Since <span class="math inline">\(A\)</span> has full column rank, <span class="math inline">\(A^TA\)</span> is positive definite and invertible. The compact SVD gives <span class="math inline">\(A^TA = V_r\Sigma_r^2 V_r^T\)</span>, so <span class="math inline">\((A^TA)^{-1} = V_r\Sigma_r^{-2}V_r^T\)</span>, and <span class="math inline">\((A^TA)^{-1}A^T = V_r\Sigma_r^{-2}V_r^T V_r\Sigma_r U_r^T = V_r\Sigma_r^{-1}U_r^T = A^+\)</span>. <span class="math inline">\(\square\)</span></p>
+<p><strong>Underdetermined systems.</strong> For an underdetermined system <span class="math inline">\(Ax = b\)</span> with <span class="math inline">\(m &lt; n\)</span> and <span class="math inline">\(A\)</span> full row rank (<span class="math inline">\(r = m\)</span>), there are infinitely many solutions. The minimum-norm solution — the one satisfying <span class="math inline">\(Ax = b\)</span> with the smallest <span class="math inline">\(\|x\|_2\)</span> — is:</p>
+<p><span class="math display">\[x^* = A^+b = A^T(AA^T)^{-1}b\]</span></p>
+<p><strong>General case.</strong> For arbitrary <span class="math inline">\(A\)</span> and <span class="math inline">\(b\)</span>, <span class="math inline">\(A^+b\)</span> gives the minimum-norm least-squares solution: among all <span class="math inline">\(x\)</span> minimizing <span class="math inline">\(\|Ax - b\|_2\)</span>, it is the one with smallest <span class="math inline">\(\|x\|_2\)</span>.</p>
+<hr>
+</section>
+<section id="relationship-between-svd-and-spectral-decomposition" class="level3">
+<h3 class="anchored" data-anchor-id="relationship-between-svd-and-spectral-decomposition">Relationship Between SVD and Spectral Decomposition</h3>
+<p>The SVD and spectral theorem are deeply connected through the symmetric matrices <span class="math inline">\(A^TA\)</span> and <span class="math inline">\(AA^T\)</span>.</p>
+<p><span class="math display">\[A^TA = (U\Sigma V^T)^T(U\Sigma V^T) = V\Sigma^T U^T U \Sigma V^T = V\Sigma^T\Sigma V^T = V\text{diag}(\sigma_1^2,\ldots,\sigma_n^2)V^T\]</span></p>
+<p><span class="math display">\[AA^T = U\Sigma V^T V\Sigma^T U^T = U\Sigma\Sigma^T U^T = U\text{diag}(\sigma_1^2,\ldots,\sigma_m^2)U^T\]</span></p>
+<p>The right singular vectors <span class="math inline">\(V\)</span> are the eigenvectors of <span class="math inline">\(A^TA\)</span>, the left singular vectors <span class="math inline">\(U\)</span> are the eigenvectors of <span class="math inline">\(AA^T\)</span>, and the squared singular values <span class="math inline">\(\sigma_i^2\)</span> are the common nonzero eigenvalues of both.</p>
+<p><strong>Polar decomposition.</strong> For a square matrix <span class="math inline">\(A \in \mathbb{R}^{n \times n}\)</span> with full rank, the SVD gives the <strong>polar decomposition</strong>:</p>
+<p><span class="math display">\[A = QS, \quad Q = UV^T \in O(n) \text{ (orthogonal)}, \quad S = V\Sigma V^T \succ 0 \text{ (positive definite)}\]</span></p>
+<p>The polar decomposition writes <span class="math inline">\(A\)</span> as the product of an orthogonal matrix (pure rotation/reflection) and a positive definite symmetric matrix (pure stretch). This is the matrix analogue of writing a complex number as <span class="math inline">\(re^{i\theta}\)</span> — modulus times phase. The polar decomposition is used in robotics and computer graphics for interpolating between rotations (the <span class="math inline">\(Q\)</span> factor) while ignoring deformation (the <span class="math inline">\(S\)</span> factor).</p>
+<hr>
+</section>
+<section id="condition-number-and-numerical-stability" class="level3">
+<h3 class="anchored" data-anchor-id="condition-number-and-numerical-stability">Condition Number and Numerical Stability</h3>
+<p>The <strong>condition number</strong> of a matrix <span class="math inline">\(A\)</span> with respect to the 2-norm is:</p>
+<p><span class="math display">\[\kappa(A) = \|A\|_2 \|A^{-1}\|_2 = \frac{\sigma_1}{\sigma_n}\]</span></p>
+<p>the ratio of the largest to smallest singular value. For the least-squares problem <span class="math inline">\(Ax \approx b\)</span>, the relative error in the solution is bounded by:</p>
+<p><span class="math display">\[\frac{\|\Delta x\|_2}{\|x\|_2} \leq \kappa(A) \frac{\|\Delta b\|_2}{\|b\|_2}\]</span></p>
+<p>A large condition number — a large ratio of largest to smallest singular value — means the system is ill-conditioned: small perturbations in <span class="math inline">\(b\)</span> cause large perturbations in the solution. The condition number is the single most important indicator of numerical stability for linear systems, and it is a direct property of the singular value spectrum.</p>
+<p><strong>Regularization via truncated SVD.</strong> When <span class="math inline">\(A\)</span> is ill-conditioned, the pseudoinverse <span class="math inline">\(A^+b\)</span> amplifies noise in <span class="math inline">\(b\)</span> through the large terms <span class="math inline">\(\sigma_i^{-1}\)</span> for small <span class="math inline">\(\sigma_i\)</span>. The <strong>truncated SVD pseudoinverse</strong> addresses this by only inverting the large singular values:</p>
+<p><span class="math display">\[A_k^+b = V_k\Sigma_k^{-1}U_k^Tb = \sum_{i=1}^k \frac{1}{\sigma_i}(u_i^Tb)v_i\]</span></p>
+<p>This is the regularized least-squares solution that ignores the small singular value directions — directions where <span class="math inline">\(A\)</span> has little discriminating power and where inverting them would amplify noise. The Tikhonov regularization solution <span class="math inline">\((A^TA + \alpha I)^{-1}A^Tb = \sum_i \frac{\sigma_i}{\sigma_i^2+\alpha}(u_i^Tb)v_i\)</span> smoothly interpolates between using and ignoring small singular value directions, controlled by the regularization parameter <span class="math inline">\(\alpha &gt; 0\)</span>.</p>
+<hr>
+</section>
+<section id="matrix-completion-and-nuclear-norm-minimization" class="level3">
+<h3 class="anchored" data-anchor-id="matrix-completion-and-nuclear-norm-minimization">Matrix Completion and Nuclear Norm Minimization</h3>
+<p>The nuclear norm <span class="math inline">\(\|A\|_* = \sum_i \sigma_i\)</span> is the convex surrogate for rank minimization, enabling tractable low-rank matrix recovery. The <strong>matrix completion problem</strong> — recovering a low-rank matrix from a subset of observed entries — is formulated as:</p>
+<p><span class="math display">\[\min_X \|X\|_* \quad \text{subject to} \quad X_{ij} = A_{ij} \; \forall (i,j) \in \Omega\]</span></p>
+<p>where <span class="math inline">\(\Omega\)</span> is the set of observed entries. Under appropriate conditions (incoherence of the singular vectors), this nuclear norm minimization exactly recovers the original low-rank matrix. This is the matrix analogue of compressed sensing — the Eckart-Young theorem says the solution has rapidly decaying singular values, and the nuclear norm penalizes large singular value sums, driving the solution toward low rank.</p>
+<hr>
+</section>
+<section id="svd-in-optimal-transport-and-phase-1" class="level3">
+<h3 class="anchored" data-anchor-id="svd-in-optimal-transport-and-phase-1">SVD in Optimal Transport and Phase 1</h3>
+<p>The Sinkhorn algorithm iteratively scales the rows and columns of the kernel matrix <span class="math inline">\(K_{ij} = e^{-c(x_i,y_j)/\varepsilon}\)</span>, where <span class="math inline">\(c(x_i,y_j)\)</span> is the transport cost. The convergence rate of Sinkhorn is controlled by the second singular value of the normalized kernel matrix — the spectral gap. A larger spectral gap means faster convergence. The regularization parameter <span class="math inline">\(\varepsilon\)</span> controls this spectral gap: larger <span class="math inline">\(\varepsilon\)</span> produces a more uniform kernel matrix with smaller spectral gap between first and second singular values, while smaller <span class="math inline">\(\varepsilon\)</span> sharpens the kernel and increases the spectral gap, accelerating convergence but reducing numerical stability.</p>
+<p>The low-rank approximation of the Sinkhorn kernel matrix — keeping only the <span class="math inline">\(k\)</span> largest singular components — produces the <strong>low-rank OT</strong> algorithm, which reduces the <span class="math inline">\(O(n^2)\)</span> cost of Sinkhorn to <span class="math inline">\(O(nk)\)</span> while maintaining approximation quality controlled by the discarded singular values.</p>
+<hr>
+</section>
+<section id="why-this-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-matters">WHY THIS MATTERS</h3>
+<p>In MATH 103 (Linear Algebra), you computed the null space and column space of a matrix using row reduction. The SVD provides these four fundamental subspaces simultaneously and optimally: the right singular vectors corresponding to nonzero singular values span the row space, those corresponding to zero singular values span the null space, and the left singular vectors corresponding to nonzero singular values span the column space. In MATH 302 (Matrix Theory), you studied the spectral theory of general matrices via the Jordan form. The SVD complements this: while the Jordan form applies to square matrices and reveals algebraic structure, the SVD applies to all matrices and reveals geometric structure — the isometric invariants encoded in singular values. In MSCS 202 (Numerical Methods), you solved linear systems using Gaussian elimination and LU decomposition. The SVD provides the numerically stable alternative for ill-conditioned systems — the pseudoinverse via truncated SVD is the standard numerical method for ill-conditioned least-squares problems, and the condition number <span class="math inline">\(\sigma_1/\sigma_n\)</span> is the standard diagnostic for numerical instability.</p>
+<hr>
+</section>
+</section>
+<section id="layer-3-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="layer-3-bridge">Layer 3 (Bridge)</h2>
+<p>Every element of the Nepal elevation atlas compression story has a precise mathematical address. Let us walk through them one by one, until the geographic themes, the compression strategy, and the full formal apparatus are completely fused into a single picture.</p>
+<hr>
+<p><strong>The Nepal elevation matrix — the large rectangular array of elevation readings with rows as scan lines and columns as longitude positions — is the matrix <span class="math inline">\(A \in \mathbb{R}^{m \times n}\)</span> with <span class="math inline">\(m = 10,000\)</span> scan lines and <span class="math inline">\(n = 8,000\)</span> longitude columns.</strong> It is rectangular, not square, and not symmetric. The spectral theorem does not apply. The matrix encodes a linear map <span class="math inline">\(A: \mathbb{R}^{8000} \to \mathbb{R}^{10000}\)</span> that takes a specification of elevations at each longitude and produces the corresponding elevation profile across all scan lines. The full matrix has <span class="math inline">\(80\)</span> million entries — the raw, unstructured representation of Nepal’s terrain. The SVD is the tool that finds the structured representation hidden inside this raw matrix.</p>
+<p><strong>The geographic themes — the dominant patterns of variation that together reconstruct the full elevation matrix — are the rank-1 terms <span class="math inline">\(\sigma_k u_k v_k^T\)</span> in the outer product expansion <span class="math inline">\(A = \sum_{i=1}^r \sigma_i u_i v_i^T\)</span>.</strong> Each term is the outer product of a left singular vector <span class="math inline">\(u_k \in \mathbb{R}^{10000}\)</span> (a north-south elevation profile across all scan lines) and a right singular vector <span class="math inline">\(v_k \in \mathbb{R}^{8000}\)</span> (an east-west pattern across all longitudes), weighted by the singular value <span class="math inline">\(\sigma_k\)</span> (the importance of the theme). The dominant north-south Himalayan gradient is <span class="math inline">\(\sigma_1 u_1 v_1^T\)</span> — the single most important rank-1 pattern, capturing the overwhelming rise from the Terai to the Himalayas that dominates the entire elevation matrix. Successive terms capture progressively smaller and more localized geographic features. The full matrix is exactly the sum of all these rank-1 themes — no approximation, exact equality — but the SVD orders them by importance, which is what makes truncation optimal.</p>
+<hr>
+<p><strong>The right singular vectors <span class="math inline">\(v_1, v_2, \ldots, v_n\)</span> — the east-west geographic themes — are the orthonormal eigenvectors of the symmetric positive semidefinite matrix <span class="math inline">\(A^TA \in \mathbb{R}^{8000 \times 8000}\)</span>.</strong> The matrix <span class="math inline">\(A^TA\)</span> is the product of <span class="math inline">\(A\)</span> with its transpose — always symmetric, always positive semidefinite. The spectral theorem applies to it: <span class="math inline">\(A^TA = V\Lambda V^T\)</span> with <span class="math inline">\(V\)</span> orthogonal and <span class="math inline">\(\Lambda\)</span> diagonal non-negative. The eigenvectors are the right singular vectors, and the eigenvalues are the squared singular values: <span class="math inline">\(\lambda_i = \sigma_i^2\)</span>. In the geographic story: <span class="math inline">\(A^TA\)</span> is the matrix of correlations between longitude columns — it measures how similarly two longitude positions vary across all scan lines. Its eigenvectors are the orthogonal east-west patterns that are statistically independent across the elevation data. The SVD inherits these eigenvectors as the preferred input directions.</p>
+<p><strong>The left singular vectors <span class="math inline">\(u_1, u_2, \ldots, u_m\)</span> — the north-south geographic themes — are the orthonormal eigenvectors of the symmetric positive semidefinite matrix <span class="math inline">\(AA^T \in \mathbb{R}^{10000 \times 10000}\)</span>.</strong> The matrix <span class="math inline">\(AA^T\)</span> is the correlation matrix of scan lines — it measures how similarly two scan lines vary across all longitudes. Its eigenvectors are the orthogonal north-south patterns. The nonzero eigenvalues of <span class="math inline">\(AA^T\)</span> are the same as the nonzero eigenvalues of <span class="math inline">\(A^TA\)</span> — both equal <span class="math inline">\(\sigma_i^2\)</span> — a beautiful symmetry that is the mathematical statement that the geographic themes in the row direction and the column direction are linked by the same singular values. The SVD connects the two spectral decompositions into a single coherent picture.</p>
+<p><strong>The singular values <span class="math inline">\(\sigma_1 \geq \sigma_2 \geq \cdots \geq \sigma_r &gt; 0\)</span> — the importance weights of each geographic theme — are the square roots of the eigenvalues of <span class="math inline">\(A^TA\)</span> (equivalently of <span class="math inline">\(AA^T\)</span>).</strong> They measure exactly how much each theme contributes to the matrix: the action of <span class="math inline">\(A\)</span> on the <span class="math inline">\(k\)</span>-th right singular vector <span class="math inline">\(v_k\)</span> produces <span class="math inline">\(\sigma_k u_k\)</span> — the <span class="math inline">\(k\)</span>-th left singular vector scaled by <span class="math inline">\(\sigma_k\)</span>. Large <span class="math inline">\(\sigma_k\)</span> means the <span class="math inline">\(k\)</span>-th theme is strongly amplified by <span class="math inline">\(A\)</span>; small <span class="math inline">\(\sigma_k\)</span> means the theme is barely present. The singular values are the stretching factors of the linear map — the SVD reveals that <span class="math inline">\(A\)</span> stretches the input in the <span class="math inline">\(v_k\)</span> direction by factor <span class="math inline">\(\sigma_k\)</span>, mapping it to the output direction <span class="math inline">\(u_k\)</span>. In the geographic story: the dominant north-south gradient has <span class="math inline">\(\sigma_1\)</span> much larger than all other singular values, because this single theme accounts for the overwhelming majority of Nepal’s elevation variation.</p>
+<hr>
+<p><strong>The orthogonality of the right singular vectors — <span class="math inline">\(\langle v_i, v_j\rangle = 0\)</span> for <span class="math inline">\(i \neq j\)</span> — is the statement that the geographic themes in the east-west direction are mutually independent.</strong> The north-south gradient theme (<span class="math inline">\(v_1\)</span>) and the east-west tilt theme (<span class="math inline">\(v_2\)</span>) are perpendicular vectors in <span class="math inline">\(\mathbb{R}^{8000}\)</span> — knowing the east-west pattern of the north-south gradient tells you nothing about the east-west pattern of the east-west tilt. This orthogonality is not an accident of Nepal’s geography — it is the theorem that eigenvectors of a symmetric matrix corresponding to distinct eigenvalues are orthogonal, applied to <span class="math inline">\(A^TA\)</span>. The right singular vectors are always orthogonal because the symmetric matrix <span class="math inline">\(A^TA\)</span> always has orthogonal eigenvectors by the spectral theorem.</p>
+<p><strong>The orthogonality of the left singular vectors — <span class="math inline">\(\langle u_i, u_j\rangle = 0\)</span> for <span class="math inline">\(i \neq j\)</span> — is the corresponding statement that the geographic themes in the north-south direction are mutually independent.</strong> The proof that <span class="math inline">\(\langle u_i, u_j\rangle = \delta_{ij}\)</span> was the verification in the SVD proof: <span class="math inline">\(\langle u_i, u_j\rangle = \frac{1}{\sigma_i\sigma_j}\langle Av_i, Av_j\rangle = \frac{1}{\sigma_i\sigma_j}v_i^T(A^TA)v_j = \frac{\sigma_j^2}{\sigma_i\sigma_j}\delta_{ij} = \delta_{ij}\)</span>. The orthogonality of the left singular vectors is inherited from the orthogonality of the right singular vectors via the matrix <span class="math inline">\(A\)</span> itself — the SVD’s consistency condition that links the two orthonormal bases through the singular values.</p>
+<hr>
+<p><strong>The compression strategy — keep the first <span class="math inline">\(k\)</span> geographic themes, discard the rest — is the rank-<span class="math inline">\(k\)</span> truncated SVD <span class="math inline">\(A_k = \sum_{i=1}^k \sigma_i u_i v_i^T = U_k\Sigma_k V_k^T\)</span>.</strong> Instead of storing the full <span class="math inline">\(80\)</span> million numbers of the elevation matrix, you store <span class="math inline">\(k\)</span> singular values, <span class="math inline">\(k\)</span> north-south profile vectors of length <span class="math inline">\(10,000\)</span>, and <span class="math inline">\(k\)</span> east-west pattern vectors of length <span class="math inline">\(8,000\)</span> — a total of <span class="math inline">\(k(10,000 + 8,000 + 1) = k \cdot 18,001\)</span> numbers. For <span class="math inline">\(k = 10\)</span>, this is <span class="math inline">\(180,010\)</span> numbers instead of <span class="math inline">\(80,000,000\)</span> — a compression ratio of approximately <span class="math inline">\(444:1\)</span>.</p>
+<p><strong>The Eckart-Young theorem — <span class="math inline">\(A_k\)</span> is the best rank-<span class="math inline">\(k\)</span> approximation to <span class="math inline">\(A\)</span> in both Frobenius and spectral norms — is the optimality guarantee of this compression strategy.</strong> The theorem says: no other rank-<span class="math inline">\(k\)</span> matrix <span class="math inline">\(B\)</span> can satisfy <span class="math inline">\(\|A - B\|_F &lt; \|A - A_k\|_F = \sqrt{\sum_{i=k+1}^r \sigma_i^2}\)</span> or <span class="math inline">\(\|A - B\|_2 &lt; \|A - A_k\|_2 = \sigma_{k+1}\)</span>. The truncated SVD is not merely a reasonable compression — it is the uniquely optimal compression at every rank <span class="math inline">\(k\)</span> simultaneously. The proof uses the dimension argument: any rank-<span class="math inline">\(k\)</span> matrix’s null space intersects the span of the first <span class="math inline">\(k+1\)</span> right singular vectors, and this intersection direction achieves at least error <span class="math inline">\(\sigma_{k+1}\)</span>.</p>
+<p><strong>The break moment — the rapid decay of singular values for structured geographic data — is the explained variance <span class="math inline">\(\text{EV}(k) = \sum_{i=1}^k \sigma_i^2 / \sum_{i=1}^r \sigma_i^2\)</span> reaching near-<span class="math inline">\(1\)</span> quickly.</strong> The naive assumption that equal numbers of terms are needed to capture equal fractions of variance breaks dramatically for structured data. Nepal’s elevation matrix, like any natural geographic dataset, has singular values that decay rapidly — a few dominant themes capture most of the variation. The assumption of uniform importance treats all directions as equally informative — the uniform prior on singular values — which is wrong for any data with structure. The SVD’s ordering of themes by singular value is the tool that exposes this structure, and the rapid decay of singular values is the quantitative measure of how structured the data is.</p>
+<hr>
+<p><strong>The four fundamental subspaces — row space, column space, null space, left null space — are revealed simultaneously by the SVD.</strong> The row space <span class="math inline">\(\mathcal{R}(A^T) = \text{span}(v_1,\ldots,v_r)\)</span> is the subspace of east-west patterns that actually appear in the elevation data — the input directions that the matrix acts nontrivially on. The null space <span class="math inline">\(\mathcal{N}(A) = \text{span}(v_{r+1},\ldots,v_n)\)</span> is the subspace of east-west patterns that the matrix annihilates — the input directions that contribute nothing to the elevation matrix. The column space <span class="math inline">\(\mathcal{R}(A) = \text{span}(u_1,\ldots,u_r)\)</span> is the subspace of north-south profiles that can actually be produced by the matrix — the output directions the matrix can reach. The left null space <span class="math inline">\(\mathcal{N}(A^T) = \text{span}(u_{r+1},\ldots,u_m)\)</span> is the subspace of north-south profiles orthogonal to all outputs. The fundamental theorem of linear algebra — <span class="math inline">\(\mathcal{R}(A^T) \perp \mathcal{N}(A)\)</span> and <span class="math inline">\(\mathcal{R}(A) \perp \mathcal{N}(A^T)\)</span> — is the statement that the themes the matrix acts on and the themes it ignores are always perpendicular, and the themes it can produce and the themes it cannot are always perpendicular. The SVD makes this orthogonality explicit in the most computationally useful form.</p>
+<p><strong>The geometric picture — <span class="math inline">\(V^T\)</span> rotates into preferred input coordinates, <span class="math inline">\(\Sigma\)</span> stretches each direction by <span class="math inline">\(\sigma_k\)</span>, <span class="math inline">\(U\)</span> rotates back to standard output coordinates — is the three-step decomposition of what <span class="math inline">\(A\)</span> does as a linear map.</strong> Every linear map between Euclidean spaces is, in the right pair of coordinate systems, simply a rescaling possibly accompanied by a dimension change. The SVD finds those coordinate systems. The matrix <span class="math inline">\(V^T\)</span> changes from standard input coordinates to the modal coordinate system — the east-west theme coordinate system. The matrix <span class="math inline">\(\Sigma\)</span> applies the stretching: the <span class="math inline">\(k\)</span>-th theme is amplified by <span class="math inline">\(\sigma_k\)</span> in the output direction <span class="math inline">\(u_k\)</span>. The matrix <span class="math inline">\(U\)</span> changes from the modal output coordinate system back to standard output coordinates. In the geographic story: <span class="math inline">\(V^T\)</span> decomposes any east-west elevation specification into its theme components; <span class="math inline">\(\Sigma\)</span> scales each theme by its importance and maps it to the corresponding north-south output theme; <span class="math inline">\(U\)</span> expresses the output in terms of scan line elevations. Nothing more, nothing less.</p>
+<hr>
+<p><strong>The pseudoinverse <span class="math inline">\(A^+ = V\Sigma^+ U^T\)</span> — the minimum-norm least-squares solution operator — is the SVD applied to inversion.</strong> For the elevation atlas application: if you observe <span class="math inline">\(b \in \mathbb{R}^{10000}\)</span> (a set of north-south elevation profiles at sampled scan lines) and want to recover the underlying east-west pattern <span class="math inline">\(x \in \mathbb{R}^{8000}\)</span> that best explains the observations, the pseudoinverse gives <span class="math inline">\(x^* = A^+b = V\Sigma^+U^Tb\)</span>. This computes: project <span class="math inline">\(b\)</span> onto each left singular vector (<span class="math inline">\(U^Tb\)</span>), scale by the inverse singular value (<span class="math inline">\(\Sigma^+\)</span>), and express in the right singular vector basis (<span class="math inline">\(V\)</span>). The truncated pseudoinverse <span class="math inline">\(A_k^+b = \sum_{i=1}^k \frac{1}{\sigma_i}(u_i^Tb)v_i\)</span> ignores the small singular value directions — the east-west patterns that contribute negligibly to the elevation data — and avoids amplifying noise in the observed profiles.</p>
+<p><strong>The condition number <span class="math inline">\(\kappa(A) = \sigma_1/\sigma_n\)</span> is the ratio of the most important geographic theme to the least important one.</strong> For a well-conditioned elevation matrix with rapidly decaying but never tiny singular values, the condition number is moderate and the least-squares problem is numerically stable. For an ill-conditioned matrix where some singular values are near zero — meaning some geographic themes are barely present in the data — the condition number is large and the pseudoinverse amplifies noise catastrophically. The truncated SVD pseudoinverse <span class="math inline">\(A_k^+\)</span> regularizes the solution by excluding the near-zero singular values, producing a stable solution at the cost of projecting onto the <span class="math inline">\(k\)</span>-dimensional space of the most important themes.</p>
+<hr>
+<p><strong>The connection to MATH 103 (Linear Algebra) is now total.</strong> The null space computation by row reduction, the column space computation by identifying pivot columns, and the rank-nullity theorem are all special cases of the SVD’s four fundamental subspaces. Row reduction computes the same subspaces but without the orthogonality structure — the SVD gives the same information with the additional guarantee that the bases for the four subspaces are orthonormal, making them geometrically interpretable and numerically stable. The least-squares formula <span class="math inline">\((A^TA)^{-1}A^Tb\)</span> from MATH 103 is the pseudoinverse <span class="math inline">\(A^+b\)</span> in the full-column-rank case — the normal equations are the KKT conditions of the least-squares problem, and their solution via the pseudoinverse uses the spectral theorem applied to the symmetric matrix <span class="math inline">\(A^TA\)</span>.</p>
+<p><strong>The connection to MATH 302 (Matrix Theory) runs through the polar decomposition.</strong> The polar decomposition <span class="math inline">\(A = QS\)</span> — orthogonal times positive definite symmetric — is the SVD written as <span class="math inline">\(A = UV^T \cdot V\Sigma V^T\)</span>, where <span class="math inline">\(Q = UV^T\)</span> is the rotation component and <span class="math inline">\(S = V\Sigma V^T\)</span> is the stretch component. The Jordan normal form applies to <span class="math inline">\(A\)</span> viewed as a complex matrix; the SVD applies to <span class="math inline">\(A\)</span> viewed as a linear map between inner product spaces. The two decompositions reveal different aspects of the same matrix: the Jordan form reveals the eigenstructure (algebraic properties), while the SVD reveals the isometric structure (geometric properties). For symmetric positive definite matrices, the two coincide: the Jordan form is the spectral theorem <span class="math inline">\(A = Q\Lambda Q^T\)</span>, and the SVD has <span class="math inline">\(U = V = Q\)</span> and <span class="math inline">\(\Sigma = \Lambda\)</span>.</p>
+<p><strong>The connection to MSCS 202 (Numerical Methods) closes through condition numbers and regularization.</strong> Every linear system solver in MSCS 202 — Gaussian elimination, LU decomposition, QR factorization — has its numerical stability governed by the condition number of the system matrix. The condition number <span class="math inline">\(\kappa(A) = \sigma_1/\sigma_n\)</span> from the SVD is the definitive measure of this stability: it bounds the amplification of roundoff errors and perturbations. Tikhonov regularization <span class="math inline">\((A^TA + \alpha I)^{-1}A^Tb\)</span> — a standard technique in numerical methods for stabilizing ill-conditioned least-squares — is understood through the SVD as the replacement of each singular value <span class="math inline">\(\sigma_i\)</span> by the dampened version <span class="math inline">\(\sigma_i/(\sigma_i^2+\alpha)\)</span>, which regularizes small singular values without affecting large ones.</p>
+<hr>
+<p><strong>Looking forward across the roadmap</strong>, the SVD is the computational backbone of every matrix-based operation. In Phase 1, the Sinkhorn algorithm’s convergence rate is controlled by the spectral gap of the kernel matrix — the ratio <span class="math inline">\(\sigma_2/\sigma_1\)</span> of the second to first singular value — and low-rank OT reduces the <span class="math inline">\(O(n^2)\)</span> Sinkhorn cost to <span class="math inline">\(O(nk)\)</span> by keeping only the first <span class="math inline">\(k\)</span> singular components of the kernel matrix. In Phase 2, the graph Laplacian’s spectral embedding uses the SVD of the normalized adjacency matrix, and the Weisfeiler-Lehman hierarchy’s expressivity bounds are proved using the spectral properties of the aggregation matrices. The weight matrices of GNNs are analyzed and compressed using SVD-based low-rank approximations. In Phase 3, the score matching objective’s Hessian is analyzed via its singular value spectrum, and the conditioning of the score function estimation problem is directly governed by the singular values of the kernel matrix. The attention mechanism of transformers computes <span class="math inline">\(\text{softmax}(QK^T/\sqrt{d})V\)</span> — a matrix product whose geometry is entirely described by the SVD of the query-key product <span class="math inline">\(QK^T\)</span>. The low-rank structure of attention matrices — discovered empirically and exploited by algorithms like Linformer and Performer — is the rapid decay of singular values, the same phenomenon that makes geographic data compressible.</p>
+<p>The elevation atlas compression — the geographic themes ordered by importance, the optimal rank-<span class="math inline">\(k\)</span> approximation capturing the structure that matters while discarding the noise that does not — is not a special case of the SVD. It is the SVD, told in the language of a problem where the linear algebra has an immediate physical interpretation. Every matrix in the roadmap is an elevation atlas, and the SVD is the tool that finds its geographic themes.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

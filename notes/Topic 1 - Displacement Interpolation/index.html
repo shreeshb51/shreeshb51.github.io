@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2026-06-28">
+
+<title>Topic 1 - Displacement Interpolation – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Topic 1 - Displacement Interpolation</li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#topic-1---displacement-interpolation-the-geodesic-between-two-distributions" id="toc-topic-1---displacement-interpolation-the-geodesic-between-two-distributions" class="nav-link active" data-scroll-target="#topic-1---displacement-interpolation-the-geodesic-between-two-distributions">Topic 1 - Displacement Interpolation: The Geodesic Between Two Distributions</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#layer-1-story" id="toc-layer-1-story" class="nav-link" data-scroll-target="#layer-1-story">Layer 1 (Story)</a></li>
+  <li><a href="#layer-2-mathematics" id="toc-layer-2-mathematics" class="nav-link" data-scroll-target="#layer-2-mathematics">Layer 2 (Mathematics)</a></li>
+  <li><a href="#layer-3-bridge" id="toc-layer-3-bridge" class="nav-link" data-scroll-target="#layer-3-bridge">Layer 3 (Bridge)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Topic 1 - Displacement Interpolation</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">June 28, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="topic-1---displacement-interpolation-the-geodesic-between-two-distributions" class="level1">
+<h1>Topic 1 - Displacement Interpolation: The Geodesic Between Two Distributions</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>Every metric space has a notion of distance. Only some metric spaces have a notion of straight lines — paths between two points that are simultaneously the shortest possible path and the most geometrically natural one. In Euclidean space, the straight line between two points is obvious: the convex combination <span class="math inline">\((1-t)x + ty\)</span> for <span class="math inline">\(t \in [0,1]\)</span>. In Riemannian manifolds, the straight line generalizes to the geodesic — the curve of zero acceleration, the path a particle would follow if subjected to no force other than the constraint of staying on the manifold. In the Wasserstein space of probability distributions equipped with the <span class="math inline">\(W_2\)</span> metric, the geodesic is the displacement interpolation — and understanding it requires unlearning the naive notion of interpolation that Euclidean intuition suggests.</p>
+<p>The naive interpolation between two probability distributions <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> is the linear mixture <span class="math inline">\((1-t)\mu + t\nu\)</span>. This is the straight line in the vector space of signed measures — the Euclidean interpolation in the function space where distributions live as densities. It is computationally trivial, analytically clean, and geometrically wrong. Consider two Dirac masses: <span class="math inline">\(\mu = \delta_0\)</span> and <span class="math inline">\(\nu = \delta_1\)</span>. The linear interpolation <span class="math inline">\((1-t)\delta_0 + t\delta_1\)</span> is a two-point distribution for all <span class="math inline">\(t \in (0,1)\)</span>, assigning mass <span class="math inline">\(1-t\)</span> to the origin and mass <span class="math inline">\(t\)</span> to the point <span class="math inline">\(1\)</span>. The mass does not move — it splits, fades at the source, and brightens at the destination. At <span class="math inline">\(t = 0.5\)</span>, the interpolation is <span class="math inline">\(\frac{1}{2}\delta_0 + \frac{1}{2}\delta_1\)</span> — two half-mass points, neither of which resembles either <span class="math inline">\(\mu\)</span> or <span class="math inline">\(\nu\)</span>. No single grain of mass ever travels from <span class="math inline">\(0\)</span> to <span class="math inline">\(1\)</span>. The interpolation is a ghostly superposition, not a movement.</p>
+<p>The displacement interpolation corrects this. The correct interpolation between <span class="math inline">\(\delta_0\)</span> and <span class="math inline">\(\delta_1\)</span> is <span class="math inline">\(\delta_{(1-t)\cdot 0 + t\cdot 1} = \delta_t\)</span> — a single unit mass that moves continuously from <span class="math inline">\(0\)</span> to <span class="math inline">\(1\)</span> as <span class="math inline">\(t\)</span> goes from <span class="math inline">\(0\)</span> to <span class="math inline">\(1\)</span>. The mass does not split or fade. It travels. At <span class="math inline">\(t = 0.5\)</span>, the interpolation is <span class="math inline">\(\delta_{0.5}\)</span> — a single unit mass at the midpoint. This is the displacement interpolation, and for these two Dirac masses, it is obviously the right answer. The generalization to arbitrary distributions is the subject of this topic.</p>
+<p>This topic has three components that together build the complete picture of displacement interpolation.</p>
+<p>The first component is <strong>the construction via optimal coupling</strong> — the precise definition of the displacement interpolation using the optimal coupling <span class="math inline">\(\pi^*\)</span> between <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span>. For any coupling <span class="math inline">\(\pi \in \Pi(\mu,\nu)\)</span>, not necessarily optimal, the interpolated distribution at time <span class="math inline">\(t\)</span> is the pushforward of <span class="math inline">\(\pi\)</span> under the linear interpolation map <span class="math inline">\((x,y) \mapsto (1-t)x + ty\)</span>:</p>
+<p><span class="math display">\[\mu_t = ((1-t)\text{proj}_x + t\text{proj}_y)_\# \pi\]</span></p>
+<p>This is the distribution of the random variable <span class="math inline">\((1-t)X + tY\)</span> where <span class="math inline">\((X,Y) \sim \pi\)</span>. For the optimal coupling <span class="math inline">\(\pi^*\)</span> — the coupling that minimizes <span class="math inline">\(\int\|x-y\|^2 d\pi\)</span> — this produces the displacement interpolation. For a suboptimal coupling, it produces a valid interpolation but not a geodesic. The optimality of the coupling is what makes the interpolation a shortest path rather than merely a path. The length of any path defined by a coupling <span class="math inline">\(\pi\)</span> is <span class="math inline">\(\int\|x-y\| d\pi\)</span>, and this is minimized precisely when <span class="math inline">\(\pi = \pi^*\)</span> is the optimal coupling — the Wasserstein distance <span class="math inline">\(W_2(\mu,\nu)\)</span> is the length of the geodesic.</p>
+<p>The second component is <strong>the Brenier map simplification for absolutely continuous sources</strong> — the observation that when <span class="math inline">\(\mu\)</span> is absolutely continuous, the optimal coupling <span class="math inline">\(\pi^*\)</span> is the graph of the Brenier map <span class="math inline">\(T^* = \nabla\phi\)</span>, and the displacement interpolation simplifies dramatically. The interpolated distribution at time <span class="math inline">\(t\)</span> is the pushforward of <span class="math inline">\(\mu\)</span> under the map <span class="math inline">\(T_t = (1-t)\text{id} + tT^*\)</span>:</p>
+<p><span class="math display">\[\mu_t = (T_t)_\# \mu = ((1-t)\text{id} + t\nabla\phi)_\# \mu\]</span></p>
+<p>This is a one-parameter family of pushforward measures, each defined by a single deterministic map <span class="math inline">\(T_t\)</span> applied to the fixed source distribution <span class="math inline">\(\mu\)</span>. The maps <span class="math inline">\(T_t\)</span> interpolate linearly between the identity (which keeps <span class="math inline">\(\mu\)</span> fixed) and the Brenier map <span class="math inline">\(T^*\)</span> (which moves <span class="math inline">\(\mu\)</span> to <span class="math inline">\(\nu\)</span>). Crucially, for <span class="math inline">\(t \in [0,1]\)</span>, the map <span class="math inline">\(T_t\)</span> is itself the gradient of a convex function — the function <span class="math inline">\((1-t)\frac{\|x\|^2}{2} + t\phi(x)\)</span> is convex, and its gradient is <span class="math inline">\((1-t)x + t\nabla\phi(x) = T_t(x)\)</span>. This means every intermediate distribution <span class="math inline">\(\mu_t\)</span> is connected to <span class="math inline">\(\mu\)</span> by an optimal transport map — the geodesic passes through a sequence of distributions that are themselves optimally connected to each other. The path is not merely shortest between its endpoints. It is shortest between every pair of intermediate points.</p>
+<p>The third component is <strong>the Riemannian structure of Wasserstein space and Otto’s calculus</strong> — the infinite-dimensional geometric framework that makes the displacement interpolation a geodesic in the rigorous Riemannian sense. Otto’s calculus, developed by Felix Otto in 2001, interprets the Wasserstein space <span class="math inline">\((\mathcal{P}_2(\mathbb{R}^n), W_2)\)</span> as an infinite-dimensional Riemannian manifold, with tangent vectors at a distribution <span class="math inline">\(\mu\)</span> identified with velocity fields <span class="math inline">\(v: \mathbb{R}^n \to \mathbb{R}^n\)</span> satisfying the continuity equation <span class="math inline">\(\partial_t\mu + \nabla\cdot(\mu v) = 0\)</span>. The Riemannian metric at <span class="math inline">\(\mu\)</span> is <span class="math inline">\(g_\mu(v,v) = \int\|v(x)\|^2 d\mu(x)\)</span> — the <span class="math inline">\(L^2(\mu)\)</span> norm of the velocity field. Geodesics in this Riemannian structure are the displacement interpolations, and the geodesic equation is the pressureless Euler equation of fluid dynamics. The displacement interpolation between <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> is the path followed by an ideal fluid of particles, each moving in a straight line from its starting location to its destination, with the starting-to-destination assignment given by the optimal transport plan. The continuity equation <span class="math inline">\(\partial_t\mu_t + \nabla\cdot(\mu_t v_t) = 0\)</span> with <span class="math inline">\(v_t(x) = T^*(T_t^{-1}(x)) - T_t^{-1}(x)\)</span> is satisfied along the geodesic, confirming that the interpolation is the correct Riemannian object.</p>
+<p>By the end of this topic, the displacement interpolation will feel like the only geometrically honest way to interpolate between distributions. The linear mixture is interpolation in the wrong space — the flat function space — while the displacement interpolation is interpolation in the right space — the curved Wasserstein manifold. This distinction is not academic. In Phase 3, the rectified flow algorithm trains a neural network to follow straight-line paths in the Wasserstein sense — displacement interpolations from noise to data — and the entire theory of flow matching rests on the geometric correctness of this interpolation. The generative model that learns to move mass along geodesics rather than blur it along linear mixtures is the generative model that respects the geometry of the data space, and the displacement interpolation is the precise mathematical object that makes this respect possible.</p>
+<hr>
+</section>
+<section id="layer-1-story" class="level2">
+<h2 class="anchored" data-anchor-id="layer-1-story">Layer 1 (Story)</h2>
+<p>You are a cartographer working for the Survey Department of Nepal, and you have been handed an unusual assignment. Two colleagues have independently produced population density maps of Nepal — one from the census of 1990, one from the census of 2020. Both maps are correct. Both maps show the distribution of Nepal’s population across its geographic space — the Terai plains, the hill districts, the mountain regions — as a continuous density, brighter where population is denser, darker where it is sparse.</p>
+<p>Your task is to produce a series of intermediate maps — a smooth animation showing how Nepal’s population distribution evolved from 1990 to 2020. Not a historical reconstruction, not a simulation of actual migration — a geometric interpolation. A sequence of plausible intermediate states that connects the 1990 map to the 2020 map as smoothly and honestly as possible, capturing the genuine spatial reorganization of population that occurred over those thirty years.</p>
+<p>You have two colleagues working on this problem simultaneously, using completely different approaches. Watching them work, and watching their approaches fail and succeed, is the story of displacement interpolation.</p>
+<hr>
+<p><strong>The first colleague: the pixel mixer</strong></p>
+<p>Your first colleague is a computer scientist. Her approach is immediate and natural. Take the 1990 density map as an image — a grid of pixel values, each representing population density at a geographic location. Take the 2020 density map as another image on the same grid. For each intermediate time <span class="math inline">\(t \in [0,1]\)</span>, produce the weighted average: multiply the 1990 pixel values by <span class="math inline">\((1-t)\)</span> and the 2020 pixel values by <span class="math inline">\(t\)</span>, and add them together.</p>
+<p>At <span class="math inline">\(t = 0\)</span>, you get the 1990 map exactly. At <span class="math inline">\(t = 1\)</span>, you get the 2020 map exactly. At <span class="math inline">\(t = 0.5\)</span>, you get the average of the two maps — each pixel set to the mean of its 1990 and 2020 values.</p>
+<p>She produces the animation and projects it on the wall. Everyone in the room immediately notices that something is wrong, though it takes a moment to articulate what.</p>
+<p>In 1990, Kathmandu valley was moderately populated. In 2020, it is extremely dense. In the intermediate frames, the valley brightens gradually — density increases at the Kathmandu pixels. Simultaneously, in 1990, certain Terai towns were moderately populated, and in 2020 they are denser still. They also brighten gradually.</p>
+<p>But here is what does not happen in the animation: you never see population moving. The Terai towns brighten and the hill districts dim as if by independent processes, with no visible connection between the two. In reality, much of Kathmandu’s population growth came from people migrating from the hill districts — from Sindhupalchok, Dhading, Gorkha. In the pixel-mixer’s animation, the hill districts dim and Kathmandu brightens, but there is no spatial continuity between the two events. They happen at the same pixel, independently. The animation looks like two photographic transparencies slowly cross-fading, not like a population moving through space.</p>
+<p>Even worse: in some intermediate frames, population appears simultaneously at both the source and the destination — the hill district still shows half its 1990 population while Kathmandu already shows half its 2020 population. The total population in the intermediate frame is not the actual population of Nepal at any intermediate time — it is an artifact of the averaging, a mathematical ghost that never existed.</p>
+<p>The pixel mixer has interpolated in the wrong space. She has drawn a straight line through the space of density functions — the flat, Euclidean vector space of real-valued functions on the map. That straight line is not the straight line through the space of population distributions. It is a shortcut through a space that has no geographic meaning.</p>
+<hr>
+<p><strong>The second colleague: the migration planner</strong></p>
+<p>Your second colleague is a geographer. He thinks about the problem completely differently.</p>
+<p>Instead of asking what the intermediate density should be at each pixel, he asks: where did each person go? If you could label every person in the 1990 population and ask where their 2020 counterpart lives, you would have a transport map — a function that assigns to each 1990 location a 2020 destination. The intermediate distribution at time <span class="math inline">\(t\)</span> would then be straightforward: each person is at the location <span class="math inline">\((1-t) \times (\text{1990 location}) + t \times (\text{2020 location})\)</span>. At <span class="math inline">\(t = 0\)</span>, everyone is at their 1990 location. At <span class="math inline">\(t = 1\)</span>, everyone is at their 2020 location. At intermediate <span class="math inline">\(t\)</span>, everyone is exactly <span class="math inline">\(t\)</span> fraction of the way along their individual trajectory from source to destination.</p>
+<p>This is displacement interpolation. Each grain of population mass travels along a straight line in geographic space from its starting location to its ending location, at constant speed, all grains moving simultaneously.</p>
+<p>The geographer draws this on the map. A person from Dhading moves toward Kathmandu. A person from Gorkha moves toward Pokhara. A person from the eastern hills moves toward the eastern Terai. The intermediate maps show genuine spatial movement — density flowing from the hills to the valleys, from the mountains to the Terai, in geographically coherent streams. The animation looks like what it is: a population reorganizing itself across a landscape.</p>
+<p>But the geographer immediately faces a harder question: which transport map should he use? Many different assignments of 1990 people to 2020 locations are consistent with the two density maps. A person from Dhading could go to Kathmandu, or to Birgunj, or to Biratnagar. The two maps do not uniquely determine where each person went — they only constrain the aggregate: the total number of people arriving at each 2020 location must match the 2020 density, and the total number of people leaving each 1990 location must match the 1990 density.</p>
+<hr>
+<p><strong>The optimal assignment: the Brenier map as migration plan</strong></p>
+<p>This is the Monge problem in geographic disguise, and the answer from Chapter 1 applies directly. Among all valid migration plans — all transport maps that move the 1990 density to the 2020 density — use the one that minimizes the total migration cost, where cost is measured as population times squared distance traveled. This is the Brenier map <span class="math inline">\(T^* = \nabla\phi\)</span> for the quadratic cost — the unique optimal transport map that is the gradient of a convex potential <span class="math inline">\(\phi\)</span>.</p>
+<p>The convex potential <span class="math inline">\(\phi\)</span> in the geography story is the migration value function — a scalar field over the 1990 population landscape whose gradient at each location tells you the optimal destination for the population at that location. The convexity of <span class="math inline">\(\phi\)</span> encodes the no-crossing principle: migration routes from the optimal plan never intersect. If a Dhading migrant is heading northeast to Kathmandu and a Sindhupalchok migrant is heading southwest to Chitwan, their routes cross, and swapping their destinations makes both journeys shorter. The optimal plan eliminates all such crossings.</p>
+<p>The geographer writes the intermediate distribution:</p>
+<p><span class="math display">\[\mu_t = (T_t)_\# \mu_{1990}, \quad T_t(x) = (1-t)x + t\nabla\phi(x)\]</span></p>
+<p>At each time <span class="math inline">\(t\)</span>, the intermediate distribution is the pushforward of the 1990 density under the map <span class="math inline">\(T_t\)</span> — the map that moves each 1990 location <span class="math inline">\(x\)</span> exactly <span class="math inline">\(t\)</span> fraction of the way to its optimal 2020 destination <span class="math inline">\(\nabla\phi(x)\)</span>. The intermediate map is not a pixel average. It is the 1990 population physically displaced by <span class="math inline">\(t\)</span> times its full migration distance.</p>
+<hr>
+<p><strong>The no-crossing property and convexity of intermediate maps</strong></p>
+<p>Your consultant — the mathematician who has appeared in every chapter — now points out something remarkable about the intermediate maps <span class="math inline">\(T_t\)</span>.</p>
+<p>The map <span class="math inline">\(T_t(x) = (1-t)x + t\nabla\phi(x)\)</span> is itself the gradient of a convex function. Specifically, it is the gradient of <span class="math inline">\((1-t)\frac{\|x\|^2}{2} + t\phi(x)\)</span>. You can verify this: the gradient of this function with respect to <span class="math inline">\(x\)</span> is <span class="math inline">\((1-t)x + t\nabla\phi(x) = T_t(x)\)</span>.</p>
+<p>Since <span class="math inline">\((1-t)\frac{\|x\|^2}{2} + t\phi(x)\)</span> is a convex combination of the strictly convex function <span class="math inline">\(\frac{\|x\|^2}{2}\)</span> and the convex function <span class="math inline">\(\phi(x)\)</span>, it is itself convex — strictly so for <span class="math inline">\(t \in [0,1)\)</span>. This means <span class="math inline">\(T_t\)</span> is itself the gradient of a convex function — the Brenier map from <span class="math inline">\(\mu_0 = \mu_{1990}\)</span> to <span class="math inline">\(\mu_t\)</span>.</p>
+<p>In geographic terms: at every intermediate time <span class="math inline">\(t\)</span>, the map from the original 1990 population to the intermediate distribution is itself an optimal transport map. The migration plan at time <span class="math inline">\(t\)</span> is not just a fragment of the full migration — it is the complete optimal plan for the sub-journey from start to the <span class="math inline">\(t\)</span>-fraction milestone. The path is not merely the shortest path between its endpoints. Every sub-path is the shortest path between its own endpoints. This is the geodesic property — and it is the precise mathematical content of why displacement interpolation is the straight line in Wasserstein space.</p>
+<hr>
+<p><strong>The two pictures side by side: blurring versus flowing</strong></p>
+<p>Your cartographer’s office now has two animations running side by side on the wall.</p>
+<p>The pixel mixer’s animation: at <span class="math inline">\(t = 0.5\)</span>, the hill districts show half their 1990 density and Kathmandu shows half its 2020 density simultaneously. The intermediate frame is a superposition — both distributions present at half-strength. Two populations occupying the same geographic space. No movement visible. Total population in the frame is the average of 1990 and 2020 totals — a number that never existed.</p>
+<p>The geographer’s animation: at <span class="math inline">\(t = 0.5\)</span>, each person is halfway along their optimal migration route. The hill districts show reduced density because their populations are in transit. The Kathmandu valley shows intermediate density because the migrants have not yet fully arrived. The total population in the frame is exactly the total population of Nepal — conserved at every moment, with no ghosts and no doubling.</p>
+<p>The difference is not visual polish. It is geometric honesty. The pixel mixer’s interpolation is a straight line in the wrong space. The geographer’s interpolation is a straight line in the right space — the Wasserstein space where the metric is defined by transportation cost, where straight lines are displacement interpolations, and where the geometry respects the physical constraint that population is a mass that moves through geographic space rather than a number that blurs across pixels.</p>
+<hr>
+<p><strong>Otto’s calculus: the Wasserstein space as a Riemannian manifold</strong></p>
+<p>Your consultant now reveals the full geometric picture.</p>
+<p>Think of the space of all possible population density maps of Nepal — all valid probability distributions over the geographic space — as a single geometric object. This space is infinite-dimensional: it is parameterized by a function (the density) rather than a finite list of coordinates. But it has a metric — the Wasserstein distance <span class="math inline">\(W_2\)</span> — and therefore a geometry.</p>
+<p>In this geometry, a tangent vector at a distribution <span class="math inline">\(\mu\)</span> is a velocity field <span class="math inline">\(v: \mathbb{R}^2 \to \mathbb{R}^2\)</span> — a vector assigned to each geographic location, describing the direction and speed at which the population at that location is moving. The continuity equation <span class="math inline">\(\partial_t\mu_t + \nabla\cdot(\mu_t v_t) = 0\)</span> is the conservation law that connects the velocity field to the changing density: the rate of change of density at each location equals the negative divergence of the population flux. This is the same continuity equation from fluid dynamics that you know from MATH 217 (ODEs and PDEs) — conservation of mass in a flowing fluid.</p>
+<p>The Riemannian metric on the Wasserstein space at a distribution <span class="math inline">\(\mu\)</span> is the <span class="math inline">\(L^2(\mu)\)</span>-norm of the velocity field:</p>
+<p><span class="math display">\[g_\mu(v, v) = \int_{\mathbb{R}^2} \|v(x)\|^2 \, d\mu(x)\]</span></p>
+<p>The length of a path <span class="math inline">\(\{\mu_t\}_{t\in[0,1]}\)</span> in Wasserstein space is the integral of the speed:</p>
+<p><span class="math display">\[\text{Length}(\{\mu_t\}) = \int_0^1 \sqrt{g_{\mu_t}(v_t, v_t)} \, dt = \int_0^1 \left(\int \|v_t(x)\|^2 \, d\mu_t(x)\right)^{1/2} dt\]</span></p>
+<p>The geodesic — the shortest path — is the path that minimizes this length. And the minimizer is exactly the displacement interpolation: the path where every particle moves in a straight line at constant speed, with no acceleration, with the particle assignments given by the optimal transport plan.</p>
+<p>The velocity field along the geodesic is <span class="math inline">\(v_t = (T^* - \text{id}) \circ T_t^{-1}\)</span> — the vector field that points from each current location <span class="math inline">\(T_t(x)\)</span> toward its final destination <span class="math inline">\(T^*(x)\)</span>, with constant velocity. This velocity field is itself the gradient of a convex function at each time — the gradient of the pressure field in the pressureless Euler equation of fluid dynamics. The geodesic equation in Wasserstein space is the pressureless Euler equation: particles move in straight lines because there is no pressure to deflect them.</p>
+<hr>
+<p><strong>The break moment</strong></p>
+<p>Here is the naive assumption that breaks.</p>
+<p>You might think: the displacement interpolation always produces valid, well-behaved intermediate distributions. After all, it is a pushforward of a valid distribution under a smooth map — how could it fail to be well-behaved?</p>
+<p>It breaks when the intermediate map <span class="math inline">\(T_t\)</span> is not injective — when two different source locations map to the same intermediate location.</p>
+<p>For <span class="math inline">\(t \in (0,1)\)</span>, the map <span class="math inline">\(T_t(x) = (1-t)x + t\nabla\phi(x)\)</span> is the gradient of <span class="math inline">\((1-t)\frac{\|x\|^2}{2} + t\phi(x)\)</span>. This function is strictly convex as long as the Hessian <span class="math inline">\((1-t)I + t\nabla^2\phi(x)\)</span> is positive definite. When <span class="math inline">\(\nabla^2\phi(x)\)</span> has a negative eigenvalue at some point <span class="math inline">\(x\)</span> — when the Brenier potential is not uniformly convex — the Hessian of the intermediate potential can lose positive definiteness at some critical time <span class="math inline">\(t_c &lt; 1\)</span>, and at that moment the map <span class="math inline">\(T_{t_c}\)</span> has a zero Jacobian determinant. The map is no longer injective. Mass from different source locations collides at the same intermediate location. The intermediate density <span class="math inline">\(\mu_{t_c}\)</span> develops a singularity — an atom or a density that blows up — even though both <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> are smooth.</p>
+<p>In geographic terms: two different groups of migrants converge on the same location at the same intermediate time, producing a temporary spike in density that is an artifact of the straight-line trajectories, not a reflection of any genuine population event.</p>
+<p>This singularity formation is not a failure of the theory — it is a genuine geometric phenomenon. In the Riemannian geometry of Wasserstein space, it corresponds to the geodesic passing through a conjugate point — a point where nearby geodesics intersect, analogous to the focusing of light rays at a caustic. The displacement interpolation is still the geodesic, and it is still the correct geometric interpolation. The singularity is the Wasserstein-space analogue of a caustic in optics: geometrically precise, physically meaningful, and unavoidable when the transport map is not uniformly monotone.</p>
+<p>The practical fix for computational applications is entropic regularization — replacing the sharp Brenier map <span class="math inline">\(T^*\)</span> with the smoothed Sinkhorn coupling <span class="math inline">\(P^*_\varepsilon\)</span>, which spreads each source location’s mass across multiple destinations and prevents the sharp focusing that causes singularities. The entropic displacement interpolation never develops singularities because the smoothed coupling prevents mass from all converging to a single point.</p>
+<hr>
+<p>Hold five pictures simultaneously as you move to the mathematics.</p>
+<p>The pixel mixer’s animation: cross-fading density maps, straight line in the wrong function space, ghostly superposition of two populations that never moved — the linear interpolation <span class="math inline">\((1-t)\mu + t\nu\)</span> in the flat vector space of measures.</p>
+<p>The geographer’s animation: each grain of population traveling along its straight-line optimal migration route, arriving at its destination at <span class="math inline">\(t = 1\)</span>, mass conserved at every intermediate time — the displacement interpolation <span class="math inline">\(\mu_t = (T_t)_\#\mu\)</span> with <span class="math inline">\(T_t = (1-t)\text{id} + t\nabla\phi\)</span>.</p>
+<p>The geodesic property: every intermediate map <span class="math inline">\(T_t\)</span> is itself the gradient of a convex function and therefore the optimal transport map from <span class="math inline">\(\mu\)</span> to <span class="math inline">\(\mu_t\)</span> — the path is shortest not just between its endpoints but between every pair of intermediate points.</p>
+<p>Otto’s Riemannian calculus: the Wasserstein space as an infinite-dimensional manifold, tangent vectors as velocity fields satisfying the continuity equation, the Riemannian metric as the <span class="math inline">\(L^2(\mu)\)</span>-norm of velocities, geodesics as displacement interpolations satisfying the pressureless Euler equation.</p>
+<p>The break moment: singularity formation when <span class="math inline">\(T_t\)</span> loses injectivity at a conjugate point, the Wasserstein-space analogue of a caustic, resolved in computation by entropic regularization that prevents mass focusing.</p>
+<hr>
+</section>
+<section id="layer-2-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="layer-2-mathematics">Layer 2 (Mathematics)</h2>
+<p>We build the formalism in six stages: the precise definition of displacement interpolation via optimal couplings, the Brenier map simplification for absolutely continuous measures, the constant-speed geodesic property and its proof, Otto’s calculus and the Riemannian structure of Wasserstein space, the geodesic equation as the pressureless Euler equation, and the regularity theory including conjugate points and singularity formation.</p>
+<section id="displacement-interpolation-precise-definition" class="level3">
+<h3 class="anchored" data-anchor-id="displacement-interpolation-precise-definition">Displacement Interpolation — Precise Definition</h3>
+<p>Let <span class="math inline">\(\mu, \nu \in \mathcal{P}_2(\mathbb{R}^n)\)</span> and let <span class="math inline">\(\pi \in \Pi(\mu,\nu)\)</span> be any coupling. Define the <strong>linear interpolation map</strong> at time <span class="math inline">\(t \in [0,1]\)</span>:</p>
+<p><span class="math display">\[\iota_t: \mathbb{R}^n \times \mathbb{R}^n \to \mathbb{R}^n, \qquad \iota_t(x,y) = (1-t)x + ty\]</span></p>
+<p>The <strong>interpolated distribution</strong> at time <span class="math inline">\(t\)</span> induced by <span class="math inline">\(\pi\)</span> is the pushforward:</p>
+<p><span class="math display">\[\mu_t^\pi = (\iota_t)_\# \pi \in \mathcal{P}_2(\mathbb{R}^n)\]</span></p>
+<p>This is the distribution of the random variable <span class="math inline">\((1-t)X + tY\)</span> where <span class="math inline">\((X,Y) \sim \pi\)</span>. At <span class="math inline">\(t=0\)</span>: <span class="math inline">\(\mu_0^\pi = (\text{proj}_x)_\#\pi = \mu\)</span>. At <span class="math inline">\(t=1\)</span>: <span class="math inline">\(\mu_1^\pi = (\text{proj}_y)_\#\pi = \nu\)</span>.</p>
+<p><strong>Definition (Displacement Interpolation).</strong> The <strong>displacement interpolation</strong> between <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> is the curve <span class="math inline">\(\{\mu_t\}_{t\in[0,1]}\)</span> induced by the <strong>optimal coupling</strong> <span class="math inline">\(\pi^* \in \Pi(\mu,\nu)\)</span>:</p>
+<p><span class="math display">\[\mu_t = (\iota_t)_\# \pi^*\]</span></p>
+<p>where <span class="math inline">\(\pi^*\)</span> minimizes <span class="math inline">\(\int\|x-y\|^2\,d\pi\)</span> over <span class="math inline">\(\Pi(\mu,\nu)\)</span>.</p>
+<p><strong>Why optimality matters.</strong> For any coupling <span class="math inline">\(\pi \in \Pi(\mu,\nu)\)</span>, the path <span class="math inline">\(\{\mu_t^\pi\}\)</span> connects <span class="math inline">\(\mu\)</span> to <span class="math inline">\(\nu\)</span>. But only the optimal coupling <span class="math inline">\(\pi^*\)</span> produces a path of minimum length in the Wasserstein metric. Non-optimal couplings produce longer paths — they route mass inefficiently, creating detours in Wasserstein space.</p>
+<hr>
+</section>
+<section id="the-brenier-map-simplification" class="level3">
+<h3 class="anchored" data-anchor-id="the-brenier-map-simplification">The Brenier Map Simplification</h3>
+<p><strong>Theorem.</strong> When <span class="math inline">\(\mu \ll \lambda^n\)</span> (absolutely continuous), the optimal coupling <span class="math inline">\(\pi^* = (\text{id}, T^*)_\#\mu\)</span> is supported on the graph of the Brenier map <span class="math inline">\(T^* = \nabla\phi\)</span>. The displacement interpolation simplifies to:</p>
+<p><span class="math display">\[\mu_t = (T_t)_\#\mu, \qquad T_t(x) = (1-t)x + t\nabla\phi(x)\]</span></p>
+<p><strong>Proof.</strong> Since <span class="math inline">\(\pi^* = (\text{id},T^*)_\#\mu\)</span> is concentrated on <span class="math inline">\(\{(x,T^*(x))\}\)</span>, the interpolation map <span class="math inline">\(\iota_t(x,y) = (1-t)x+ty\)</span> restricted to this graph gives <span class="math inline">\(\iota_t(x,T^*(x)) = (1-t)x + tT^*(x) = T_t(x)\)</span>. Therefore <span class="math inline">\(\mu_t = (\iota_t)_\#\pi^* = (T_t)_\#\mu\)</span>. <span class="math inline">\(\square\)</span></p>
+<p><strong>Convexity of the intermediate potential.</strong> Define:</p>
+<p><span class="math display">\[\phi_t(x) = (1-t)\frac{\|x\|^2}{2} + t\phi(x)\]</span></p>
+<p>Then <span class="math inline">\(\nabla\phi_t(x) = (1-t)x + t\nabla\phi(x) = T_t(x)\)</span>. Since <span class="math inline">\(\phi_t\)</span> is a convex combination of <span class="math inline">\(\frac{\|x\|^2}{2}\)</span> (strictly convex) and <span class="math inline">\(\phi\)</span> (convex), it is strictly convex for <span class="math inline">\(t \in [0,1)\)</span>. Therefore <span class="math inline">\(T_t = \nabla\phi_t\)</span> is itself the gradient of a convex function — a Brenier map — for every <span class="math inline">\(t \in [0,1)\)</span>.</p>
+<p><strong>Corollary.</strong> The map <span class="math inline">\(T_t: \mathbb{R}^n \to \mathbb{R}^n\)</span> is the optimal transport map from <span class="math inline">\(\mu\)</span> to <span class="math inline">\(\mu_t\)</span> for every <span class="math inline">\(t \in [0,1)\)</span>. The geodesic <span class="math inline">\(\{\mu_t\}\)</span> is a sequence of distributions each optimally connected to <span class="math inline">\(\mu\)</span> — and by the group property of Brenier maps, optimally connected to each other.</p>
+<hr>
+</section>
+<section id="the-constant-speed-geodesic-property" class="level3">
+<h3 class="anchored" data-anchor-id="the-constant-speed-geodesic-property">The Constant-Speed Geodesic Property</h3>
+<p><strong>Definition (Wasserstein geodesic).</strong> A curve <span class="math inline">\(\{\mu_t\}_{t\in[0,1]}\)</span> in <span class="math inline">\(\mathcal{P}_2(\mathbb{R}^n)\)</span> is a <strong>constant-speed geodesic</strong> if:</p>
+<p><span class="math display">\[W_2(\mu_s, \mu_t) = |t-s| \cdot W_2(\mu_0, \mu_1) \quad \forall s,t \in [0,1]\]</span></p>
+<p>The curve travels at constant speed equal to <span class="math inline">\(W_2(\mu_0,\mu_1)\)</span>, and the Wasserstein distance between any two points on the curve equals the product of the speed and the elapsed time.</p>
+<p><strong>Theorem (Displacement interpolation is a constant-speed geodesic).</strong> The displacement interpolation <span class="math inline">\(\mu_t = (T_t)_\#\mu\)</span> with <span class="math inline">\(T_t = (1-t)\text{id} + t\nabla\phi\)</span> is a constant-speed geodesic in <span class="math inline">\((\mathcal{P}_2(\mathbb{R}^n), W_2)\)</span>.</p>
+<p><strong>Proof.</strong> For <span class="math inline">\(0 \leq s &lt; t \leq 1\)</span>, the optimal transport map from <span class="math inline">\(\mu_s\)</span> to <span class="math inline">\(\mu_t\)</span> is <span class="math inline">\((T_t \circ T_s^{-1})\)</span> — the composition of the Brenier map from <span class="math inline">\(\mu\)</span> to <span class="math inline">\(\mu_t\)</span> with the inverse of the Brenier map from <span class="math inline">\(\mu\)</span> to <span class="math inline">\(\mu_s\)</span>. This composition is:</p>
+<p><span class="math display">\[T_t \circ T_s^{-1}(z) = \left(1 - \frac{t-s}{1-s}\right)z + \frac{t-s}{1-s}T^*(T_s^{-1}(z))\]</span></p>
+<p>which is itself the gradient of a convex function (being a convex combination of the identity and a Brenier map). Therefore:</p>
+<p><span class="math display">\[W_2^2(\mu_s, \mu_t) = \int \|T_t(x) - T_s(x)\|^2\,d\mu(x) = \int \|(t-s)(T^*(x)-x)\|^2\,d\mu(x)\]</span></p>
+<p><span class="math display">\[= (t-s)^2 \int \|T^*(x) - x\|^2\,d\mu(x) = (t-s)^2 W_2^2(\mu_0,\mu_1)\]</span></p>
+<p>Taking square roots: <span class="math inline">\(W_2(\mu_s,\mu_t) = (t-s)W_2(\mu_0,\mu_1)\)</span>. <span class="math inline">\(\square\)</span></p>
+<p><strong>Uniqueness.</strong> When <span class="math inline">\(\mu \ll \lambda^n\)</span>, the geodesic is unique. This follows from the uniqueness of the Brenier map (Theorem of Chapter 1, Topic 1) and the fact that every geodesic in <span class="math inline">\(\mathcal{P}_2(\mathbb{R}^n)\)</span> between two absolutely continuous measures must arise from an optimal transport map.</p>
+<hr>
+</section>
+<section id="the-w_2-distance-formula-along-the-geodesic" class="level3">
+<h3 class="anchored" data-anchor-id="the-w_2-distance-formula-along-the-geodesic">The <span class="math inline">\(W_2\)</span> Distance Formula Along the Geodesic</h3>
+<p>An important consequence of the geodesic property is the McCann interpolation formula. For <span class="math inline">\(\mu_t = (T_t)_\#\mu\)</span> with <span class="math inline">\(T_t = (1-t)\text{id} + t\nabla\phi\)</span>:</p>
+<p><span class="math display">\[W_2^2(\mu_s, \mu_t) = (t-s)^2 W_2^2(\mu,\nu) = (t-s)^2 \int \|\nabla\phi(x) - x\|^2\,d\mu(x)\]</span></p>
+<p>Setting <span class="math inline">\(s=0\)</span>:</p>
+<p><span class="math display">\[W_2^2(\mu, \mu_t) = t^2 W_2^2(\mu,\nu)\]</span></p>
+<p>The intermediate distributions are at fraction <span class="math inline">\(t\)</span> of the total Wasserstein distance from the source. The speed along the geodesic is constant and equal to <span class="math inline">\(W_2(\mu,\nu)\)</span>.</p>
+<p><strong>Comparison with linear interpolation.</strong> For the linear interpolation <span class="math inline">\(\tilde\mu_t = (1-t)\mu + t\nu\)</span>:</p>
+<p><span class="math display">\[W_2(\mu, \tilde\mu_t) \leq t \cdot W_2(\mu,\nu) \quad \text{(triangle inequality)}\]</span></p>
+<p>but equality need not hold, and the path <span class="math inline">\(\{\tilde\mu_t\}\)</span> is generally not a geodesic. The linear interpolation takes a shortcut through the wrong geometry, producing a path that is shorter in the flat function space but longer — or simply different, and geometrically incorrect — in Wasserstein space.</p>
+<hr>
+</section>
+<section id="ottos-calculus-the-riemannian-structure-of-wasserstein-space" class="level3">
+<h3 class="anchored" data-anchor-id="ottos-calculus-the-riemannian-structure-of-wasserstein-space">Otto’s Calculus — The Riemannian Structure of Wasserstein Space</h3>
+<p>Otto’s calculus, developed by Felix Otto (2001), provides a formal Riemannian structure on <span class="math inline">\(\mathcal{P}_2(\mathbb{R}^n)\)</span> that makes the displacement interpolation the geodesic in a rigorous infinitesimal sense.</p>
+<p><strong>Tangent space.</strong> The tangent space at <span class="math inline">\(\mu \in \mathcal{P}_2(\mathbb{R}^n)\)</span> is identified with the space of velocity fields:</p>
+<p><span class="math display">\[T_\mu\mathcal{P}_2 = \overline{\{\nabla\psi : \psi \in C_c^\infty(\mathbb{R}^n)\}}^{L^2(\mu)}\]</span></p>
+<p>the <span class="math inline">\(L^2(\mu)\)</span>-closure of gradients of smooth compactly supported functions. Tangent vectors are gradient vector fields because the continuity equation <span class="math inline">\(\partial_t\mu + \nabla\cdot(\mu v) = 0\)</span> — which constrains how <span class="math inline">\(\mu\)</span> can evolve — has solutions with minimum <span class="math inline">\(L^2(\mu)\)</span>-norm precisely when <span class="math inline">\(v = \nabla\psi\)</span> is a gradient field (by the Helmholtz decomposition: the curl-free component of <span class="math inline">\(v\)</span> has strictly smaller <span class="math inline">\(L^2(\mu)\)</span>-norm than the full <span class="math inline">\(v\)</span> if <span class="math inline">\(v\)</span> has a rotational component).</p>
+<p><strong>The Otto metric.</strong> For tangent vectors <span class="math inline">\(v = \nabla\psi_1\)</span> and <span class="math inline">\(w = \nabla\psi_2\)</span> at <span class="math inline">\(\mu\)</span>:</p>
+<p><span class="math display">\[g_\mu(\nabla\psi_1, \nabla\psi_2) = \int_{\mathbb{R}^n} \langle\nabla\psi_1(x), \nabla\psi_2(x)\rangle\,d\mu(x)\]</span></p>
+<p>This is the <span class="math inline">\(L^2(\mu)\)</span> inner product of two gradient vector fields. The norm <span class="math inline">\(\|v\|_{T_\mu} = \sqrt{g_\mu(v,v)} = \left(\int\|\nabla\psi\|^2\,d\mu\right)^{1/2}\)</span> is the <span class="math inline">\(L^2(\mu)\)</span> norm of the velocity field.</p>
+<p><strong>Geodesic equation.</strong> A curve <span class="math inline">\(\{\mu_t\}\)</span> with velocity field <span class="math inline">\(\{v_t\}\)</span> (satisfying <span class="math inline">\(\partial_t\mu_t + \nabla\cdot(\mu_t v_t) = 0\)</span>) is a geodesic in the Otto metric if and only if:</p>
+<p><span class="math display">\[\frac{D v_t}{dt} = 0\]</span></p>
+<p>where <span class="math inline">\(D/dt\)</span> is the covariant derivative in the Otto metric. In Euclidean coordinates on <span class="math inline">\(\mathbb{R}^n\)</span>, this geodesic equation is the <strong>pressureless Euler equation</strong>:</p>
+<p><span class="math display">\[\partial_t v_t + (v_t \cdot \nabla) v_t = 0\]</span></p>
+<p>coupled with the continuity equation <span class="math inline">\(\partial_t\mu_t + \nabla\cdot(\mu_t v_t) = 0\)</span>.</p>
+<p><strong>The displacement interpolation satisfies the geodesic equation.</strong> Along the geodesic <span class="math inline">\(\mu_t = (T_t)_\#\mu\)</span> with <span class="math inline">\(T_t = (1-t)\text{id} + t\nabla\phi\)</span>, the velocity field is:</p>
+<p><span class="math display">\[v_t(T_t(x)) = \frac{d}{dt}T_t(x) = \nabla\phi(x) - x\]</span></p>
+<p>In Eulerian coordinates (as a function of the current position <span class="math inline">\(z = T_t(x)\)</span>):</p>
+<p><span class="math display">\[v_t(z) = (\nabla\phi - \text{id})(T_t^{-1}(z))\]</span></p>
+<p>The material derivative <span class="math inline">\((\partial_t + v_t\cdot\nabla)v_t\)</span> of this field is:</p>
+<p><span class="math display">\[\frac{d}{dt}v_t(T_t(x)) = \frac{d}{dt}(\nabla\phi(x) - x) = 0\]</span></p>
+<p>since <span class="math inline">\(\nabla\phi(x) - x\)</span> is independent of <span class="math inline">\(t\)</span>. Therefore <span class="math inline">\(v_t\)</span> satisfies the pressureless Euler equation — the displacement interpolation is a geodesic in the Otto metric. <span class="math inline">\(\square\)</span></p>
+<hr>
+</section>
+<section id="the-continuity-equation-and-benamou-brenier-formula" class="level3">
+<h3 class="anchored" data-anchor-id="the-continuity-equation-and-benamou-brenier-formula">The Continuity Equation and Benamou-Brenier Formula</h3>
+<p>The <strong>Benamou-Brenier formula</strong> expresses <span class="math inline">\(W_2^2(\mu,\nu)\)</span> as a dynamic optimization:</p>
+<p><span class="math display">\[W_2^2(\mu,\nu) = \inf_{\{\mu_t,v_t\}} \int_0^1 \int_{\mathbb{R}^n} \|v_t(x)\|^2\,d\mu_t(x)\,dt\]</span></p>
+<p>where the infimum is over all pairs <span class="math inline">\((\mu_t, v_t)\)</span> satisfying the continuity equation <span class="math inline">\(\partial_t\mu_t + \nabla\cdot(\mu_t v_t) = 0\)</span> with boundary conditions <span class="math inline">\(\mu_0 = \mu\)</span> and <span class="math inline">\(\mu_1 = \nu\)</span>.</p>
+<p>This is the <strong>fluid dynamic formulation of optimal transport</strong>: the squared Wasserstein distance equals the minimum kinetic energy required to continuously deform <span class="math inline">\(\mu\)</span> into <span class="math inline">\(\nu\)</span>, where kinetic energy at time <span class="math inline">\(t\)</span> is <span class="math inline">\(\frac{1}{2}\int\|v_t\|^2\,d\mu_t\)</span> — the <span class="math inline">\(L^2(\mu_t)\)</span>-norm of the velocity field squared.</p>
+<p><strong>The minimizer.</strong> The infimum is attained by the displacement interpolation <span class="math inline">\(\mu_t = (T_t)_\#\mu\)</span> with constant velocity field <span class="math inline">\(v_t(T_t(x)) = \nabla\phi(x) - x\)</span>. The kinetic energy is constant along the geodesic:</p>
+<p><span class="math display">\[\int\|v_t\|^2\,d\mu_t = \int\|\nabla\phi(x)-x\|^2\,d\mu = W_2^2(\mu,\nu) \quad \forall t\in[0,1]\]</span></p>
+<p>The Benamou-Brenier formula is the bridge between the static optimal transport problem (minimizing coupling cost) and the dynamic problem (minimizing kinetic energy of a continuous deformation). Both have the same value <span class="math inline">\(W_2^2(\mu,\nu)\)</span>, and both are solved by the displacement interpolation.</p>
+<hr>
+</section>
+<section id="regularity-and-singularity-formation" class="level3">
+<h3 class="anchored" data-anchor-id="regularity-and-singularity-formation">Regularity and Singularity Formation</h3>
+<p><strong>The Jacobian of <span class="math inline">\(T_t\)</span>.</strong> The intermediate map <span class="math inline">\(T_t = \nabla\phi_t\)</span> with <span class="math inline">\(\phi_t = (1-t)\frac{\|x\|^2}{2} + t\phi\)</span> has Jacobian:</p>
+<p><span class="math display">\[DT_t(x) = \nabla^2\phi_t(x) = (1-t)I + t\nabla^2\phi(x)\]</span></p>
+<p>The density of <span class="math inline">\(\mu_t\)</span> (when <span class="math inline">\(\mu\)</span> has density <span class="math inline">\(f_0\)</span>) satisfies the change-of-variables formula:</p>
+<p><span class="math display">\[f_t(T_t(x)) = \frac{f_0(x)}{\det(DT_t(x))} = \frac{f_0(x)}{\det((1-t)I + t\nabla^2\phi(x))}\]</span></p>
+<p><strong>Singularity formation.</strong> A singularity occurs when <span class="math inline">\(\det(DT_t(x)) = 0\)</span> at some point <span class="math inline">\(x\)</span> — when the Hessian <span class="math inline">\((1-t)I + t\nabla^2\phi(x)\)</span> loses positive definiteness. Let <span class="math inline">\(\lambda_{\min}(x)\)</span> denote the smallest eigenvalue of <span class="math inline">\(\nabla^2\phi(x)\)</span>. The Jacobian vanishes when:</p>
+<p><span class="math display">\[(1-t) + t\lambda_{\min}(x) = 0 \iff t_c(x) = \frac{1}{1-\lambda_{\min}(x)}\]</span></p>
+<p>A singularity forms at time <span class="math inline">\(t_c(x)\)</span> if <span class="math inline">\(\lambda_{\min}(x) &lt; 0\)</span> (non-convex Brenier potential) and <span class="math inline">\(t_c(x) \in (0,1)\)</span> (the singularity occurs before the endpoint). When <span class="math inline">\(\nabla^2\phi(x) \succ 0\)</span> everywhere — when <span class="math inline">\(\phi\)</span> is uniformly convex — no singularity forms: all eigenvalues of <span class="math inline">\((1-t)I + t\nabla^2\phi(x)\)</span> are positive for all <span class="math inline">\(t\in[0,1]\)</span>.</p>
+<p><strong>Conjugate points.</strong> The time <span class="math inline">\(t_c = \min_x t_c(x)\)</span> at which the first singularity forms is the <strong>first conjugate time</strong> along the geodesic — the Wasserstein-space analogue of the conjugate point on a Riemannian geodesic, where nearby geodesics focus and the exponential map loses injectivity. Beyond the conjugate time, the displacement interpolation continues to be the geodesic, but the density <span class="math inline">\(f_t\)</span> is no longer a smooth function — it develops atoms or blow-up concentrations at the caustic.</p>
+<p><strong>Regularity theorem.</strong> If <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> both have densities bounded above and below on compact convex supports, then <span class="math inline">\(\phi\)</span> is <span class="math inline">\(C^{1,\alpha}\)</span> for some <span class="math inline">\(\alpha &gt; 0\)</span> (Caffarelli’s regularity theory), and singularities are generically absent on compact regions. The geodesic is smooth in this case.</p>
+<hr>
+</section>
+<section id="why-this-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-matters">WHY THIS MATTERS</h3>
+<p>In MATH 217 (ODEs and PDEs), the <strong>continuity equation</strong> <span class="math inline">\(\partial_t\rho + \nabla\cdot(\rho v) = 0\)</span> is the conservation law for a scalar density <span class="math inline">\(\rho\)</span> transported by a velocity field <span class="math inline">\(v\)</span>. It governs the evolution of any conserved quantity — mass, charge, probability — under a flow. The displacement interpolation satisfies the continuity equation with the constant velocity field <span class="math inline">\(v_t(z) = (\nabla\phi-\text{id})(T_t^{-1}(z))\)</span>, confirming that it is a genuine physical flow of mass through space, not a mathematical superposition. The pressureless Euler equation <span class="math inline">\(\partial_t v + (v\cdot\nabla)v = 0\)</span> — the geodesic equation in Wasserstein space — is the inviscid Burgers equation in one dimension, whose solutions are known to develop shocks in finite time. The singularity formation in the displacement interpolation is the Wasserstein-space manifestation of shock formation in the Burgers equation: the same mathematics, interpreted geometrically rather than analytically.</p>
+<p>In MATH 304 (Computational Operations Research), the <strong>Benamou-Brenier formula</strong> converts the static optimal transport problem (minimize <span class="math inline">\(\int\|x-y\|^2\,d\pi\)</span> over couplings <span class="math inline">\(\pi\)</span>) into a dynamic control problem (minimize <span class="math inline">\(\int_0^1\int\|v_t\|^2\,d\mu_t\,dt\)</span> over flows). This is the continuous-time analogue of the network flow formulation of the transportation LP from MATH 304: instead of optimizing a single assignment of supply to demand, you optimize a time-continuous flow of mass through a network, with the kinetic energy playing the role of the transportation cost. The dynamic formulation enables numerical methods for computing <span class="math inline">\(W_2\)</span> that avoid the <span class="math inline">\(O(n^2)\)</span> cost matrix entirely, working instead with PDE solvers on the fluid dynamic formulation.</p>
+<p>In MATH 322 (Combinatorics) and COMP 323 (Graph Theory), the <strong>displacement interpolation</strong> on discrete spaces — finite metric spaces or graphs — is the discrete geodesic in the graph Wasserstein space. The intermediate distributions are probability vectors on the graph nodes, and the displacement interpolation moves probability mass along the graph’s shortest paths. The geodesic equation on graphs is the discrete pressureless Euler equation, and the conjugate points correspond to nodes where multiple shortest paths from different sources meet — a graph-theoretic focus phenomenon analogous to the Riemannian caustic.</p>
+<hr>
+</section>
+</section>
+<section id="layer-3-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="layer-3-bridge">Layer 3 (Bridge)</h2>
+<p>Every element of the Survey Department cartography story has a precise mathematical address. Let us walk through them one by one until the pixel mixer, the geographer, the migration map, Otto’s calculus, and the singularity formation are completely fused with the formalism.</p>
+<hr>
+<p><strong>The two population density maps — the 1990 census map <span class="math inline">\(\mu_{1990}\)</span> and the 2020 census map <span class="math inline">\(\mu_{2020}\)</span> — are the two probability measures <span class="math inline">\(\mu, \nu \in \mathcal{P}_2(\mathbb{R}^2)\)</span>, absolutely continuous with respect to Lebesgue measure on the geographic space <span class="math inline">\(\mathbb{R}^2\)</span>, with densities <span class="math inline">\(f_0 = d\mu/d\lambda^2\)</span> and <span class="math inline">\(f_1 = d\nu/d\lambda^2\)</span> representing population density at each geographic location.</strong> The absolute continuity of both maps — the fact that population is spread continuously across the landscape rather than concentrated at discrete towns — is the mathematical condition <span class="math inline">\(\mu \ll \lambda^2\)</span> and <span class="math inline">\(\nu \ll \lambda^2\)</span> that guarantees the Brenier theorem applies: the optimal transport map <span class="math inline">\(T^* = \nabla\phi\)</span> exists, is unique <span class="math inline">\(\mu\)</span>-almost everywhere, and determines the displacement interpolation completely. The total mass condition <span class="math inline">\(\mu(\mathbb{R}^2) = \nu(\mathbb{R}^2) = 1\)</span> is the normalization that makes both maps probability distributions — the total population is conserved between census years, with emigration and immigration ignored in the geometric interpolation.</p>
+<p><strong>The pixel mixer’s animation — taking the weighted average <span class="math inline">\((1-t)\mu + t\nu\)</span> at each geographic pixel — is the linear interpolation in the flat vector space of signed measures, the straight line in the wrong space.</strong> The interpolated distribution <span class="math inline">\((1-t)\mu + t\nu\)</span> is a valid probability measure for every <span class="math inline">\(t \in [0,1]\)</span> — it is non-negative and integrates to one. But it is not a geodesic in Wasserstein space. Its length in the Wasserstein metric satisfies <span class="math inline">\(\text{Length}(\{(1-t)\mu+t\nu\}_{t\in[0,1]}) \geq W_2(\mu,\nu)\)</span>, with strict inequality in general — the linear path is longer than the geodesic. At <span class="math inline">\(t = 0.5\)</span>, the linear interpolation assigns density <span class="math inline">\(\frac{1}{2}f_0(x) + \frac{1}{2}f_1(x)\)</span> to each location <span class="math inline">\(x\)</span> — half the 1990 density plus half the 2020 density, simultaneously present at every location. The ghost population — the superposition of two populations at half-strength — is the mathematical consequence of interpolating in the function space <span class="math inline">\(L^1(\lambda^2)\)</span> rather than in the Wasserstein space <span class="math inline">\(\mathcal{P}_2(\mathbb{R}^2)\)</span>. The two spaces have completely different notions of straight line, and the linear interpolation picks the straight line of the wrong one.</p>
+<hr>
+<p><strong>The geographer’s approach — assigning each 1990 person a 2020 destination and placing everyone <span class="math inline">\(t\)</span> fraction of the way along their trajectory at intermediate time <span class="math inline">\(t\)</span> — is the construction of the interpolated distribution <span class="math inline">\(\mu_t = (\iota_t)_\#\pi^*\)</span> where <span class="math inline">\(\iota_t(x,y) = (1-t)x + ty\)</span> is the linear interpolation map and <span class="math inline">\(\pi^* \in \Pi(\mu,\nu)\)</span> is the optimal coupling.</strong> The random variable <span class="math inline">\((1-t)X + tY\)</span> with <span class="math inline">\((X,Y) \sim \pi^*\)</span> is the geographic location of a randomly chosen person at intermediate time <span class="math inline">\(t\)</span>: <span class="math inline">\(X\)</span> is their 1990 location, <span class="math inline">\(Y\)</span> is their 2020 destination, and <span class="math inline">\((1-t)X + tY\)</span> is the point exactly <span class="math inline">\(t\)</span> fraction of the way from <span class="math inline">\(X\)</span> to <span class="math inline">\(Y\)</span> along the straight-line migration path. The distribution of this random variable is <span class="math inline">\(\mu_t = (\iota_t)_\#\pi^*\)</span> — the pushforward of the optimal coupling under the linear interpolation map. The key word is optimal: using the optimal coupling <span class="math inline">\(\pi^*\)</span> rather than an arbitrary coupling <span class="math inline">\(\pi \in \Pi(\mu,\nu)\)</span> is what makes the path a geodesic rather than merely a valid path. A suboptimal coupling routes mass inefficiently, creating crossing migration routes that increase path length in Wasserstein space.</p>
+<p><strong>The total population conservation at every intermediate time — the fact that the geographer’s animation never creates ghost population or double-counts — is the property that <span class="math inline">\(\mu_t(\mathbb{R}^2) = 1\)</span> for all <span class="math inline">\(t \in [0,1]\)</span>, which follows immediately from <span class="math inline">\(\mu_t = (\iota_t)_\#\pi^*\)</span> being a pushforward of a probability measure.</strong> The pushforward of a probability measure is always a probability measure: <span class="math inline">\(\mu_t(\mathbb{R}^2) = \pi^*((\iota_t)^{-1}(\mathbb{R}^2)) = \pi^*(\mathbb{R}^2 \times \mathbb{R}^2) = 1\)</span>. The mass conservation is not a modelling assumption — it is a theorem about pushforward measures, the same push-forward formula from Chapter 1 of Phase 0 that you applied to define the Monge problem’s push-forward constraint <span class="math inline">\(T_\#\mu = \nu\)</span>. The pixel mixer’s interpolation <span class="math inline">\((1-t)\mu + t\nu\)</span> also integrates to one — mass conservation holds trivially for convex combinations of probability measures — but mass conservation alone does not guarantee geometric honesty. The displacement interpolation satisfies a stronger property: mass is conserved not just globally but continuously along spatial trajectories.</p>
+<hr>
+<p><strong>The optimal migration plan — the Brenier map <span class="math inline">\(T^* = \nabla\phi\)</span> from the 1990 density to the 2020 density for the quadratic cost — is the transport map that minimizes total squared migration distance <span class="math inline">\(\int\|x - T^*(x)\|^2\,d\mu(x)\)</span> subject to <span class="math inline">\((T^*)_\#\mu = \nu\)</span>.</strong> The convex potential <span class="math inline">\(\phi: \mathbb{R}^2 \to \mathbb{R}\)</span> is the migration value function — the scalar field whose gradient at each 1990 location specifies the optimal 2020 destination for the population at that location. The existence and uniqueness of <span class="math inline">\(T^* = \nabla\phi\)</span> follow from the Brenier theorem of Chapter 1, Topic 1: since <span class="math inline">\(\mu \ll \lambda^2\)</span>, the unique optimal Monge map is the gradient of a convex function. The no-crossing property of the optimal migration routes — the fact that the routes of <span class="math inline">\(T^*\)</span> never intersect geographically — is the cyclical monotonicity of the Brenier map: for any finite collection of source-destination pairs <span class="math inline">\((x_i, T^*(x_i))\)</span> in the optimal plan, <span class="math inline">\(\sum_i\|x_i - T^*(x_i)\|^2 \leq \sum_i\|x_i - T^*(x_{\sigma(i)})\|^2\)</span> for any permutation <span class="math inline">\(\sigma\)</span>. In the migration story, this says swapping any two migrants’ destinations always increases the total squared distance — the original assignment is globally efficient.</p>
+<p><strong>The intermediate displacement map <span class="math inline">\(T_t(x) = (1-t)x + t\nabla\phi(x)\)</span> — placing each 1990 person <span class="math inline">\(x\)</span> at the point <span class="math inline">\(t\)</span> fraction of the way to their optimal 2020 destination <span class="math inline">\(\nabla\phi(x)\)</span> — is the gradient of the intermediate convex potential <span class="math inline">\(\phi_t(x) = (1-t)\frac{\|x\|^2}{2} + t\phi(x)\)</span>.</strong> The verification is direct: <span class="math inline">\(\nabla\phi_t(x) = (1-t)x + t\nabla\phi(x) = T_t(x)\)</span>. The convexity of <span class="math inline">\(\phi_t\)</span> for <span class="math inline">\(t \in [0,1)\)</span> follows from the convex combination structure: <span class="math inline">\(\nabla^2\phi_t(x) = (1-t)I + t\nabla^2\phi(x)\)</span>, which is positive definite as long as the eigenvalues of <span class="math inline">\(t\nabla^2\phi(x)\)</span> are greater than <span class="math inline">\(-(1-t)\)</span> — guaranteed when <span class="math inline">\(\phi\)</span> is convex (<span class="math inline">\(\nabla^2\phi \succeq 0\)</span>) and <span class="math inline">\(t &lt; 1\)</span>. The strict convexity of <span class="math inline">\(\phi_t\)</span> for <span class="math inline">\(t \in [0,1)\)</span> means <span class="math inline">\(T_t = \nabla\phi_t\)</span> is itself a Brenier map — the unique optimal transport map from <span class="math inline">\(\mu\)</span> to <span class="math inline">\(\mu_t\)</span>. Every intermediate distribution <span class="math inline">\(\mu_t\)</span> is optimally connected not just to <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> but to every other <span class="math inline">\(\mu_s\)</span> along the geodesic. This is the geodesic property: the path is shortest between every pair of its points, not just between its endpoints.</p>
+<hr>
+<p><strong>The constant-speed geodesic property — <span class="math inline">\(W_2(\mu_s, \mu_t) = |t-s|W_2(\mu,\nu)\)</span> for all <span class="math inline">\(s,t \in [0,1]\)</span> — is derived from the computation <span class="math inline">\(W_2^2(\mu_s,\mu_t) = \int\|T_t(x) - T_s(x)\|^2\,d\mu(x) = (t-s)^2\int\|\nabla\phi(x)-x\|^2\,d\mu(x) = (t-s)^2W_2^2(\mu,\nu)\)</span>.</strong> The key step is that <span class="math inline">\(T_t(x) - T_s(x) = (t-s)(\nabla\phi(x) - x)\)</span> — the displacement between two intermediate positions is exactly <span class="math inline">\((t-s)\)</span> times the total migration displacement <span class="math inline">\(\nabla\phi(x) - x\)</span>. This is the constant-velocity property: each person moves at constant speed <span class="math inline">\(\|\nabla\phi(x) - x\|\)</span> along their straight-line trajectory, arriving at their destination at <span class="math inline">\(t=1\)</span> having traveled at constant rate. The Wasserstein distance between intermediate distributions <span class="math inline">\(\mu_s\)</span> and <span class="math inline">\(\mu_t\)</span> equals the product of the elapsed time <span class="math inline">\(|t-s|\)</span> and the total Wasserstein distance <span class="math inline">\(W_2(\mu,\nu)\)</span> — the path is parameterized at constant speed, and therefore it is a constant-speed geodesic in the metric space <span class="math inline">\((\mathcal{P}_2(\mathbb{R}^2), W_2)\)</span>.</p>
+<p><strong>The uniqueness of the geodesic — the fact that the displacement interpolation is the only constant-speed geodesic between <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> when <span class="math inline">\(\mu \ll \lambda^n\)</span> — follows from the uniqueness of the Brenier map and the uniqueness of the optimal coupling.</strong> Any constant-speed geodesic between <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> in <span class="math inline">\(\mathcal{P}_2(\mathbb{R}^n)\)</span> must be induced by an optimal coupling <span class="math inline">\(\pi^*\)</span> — a coupling that minimizes transport cost. When <span class="math inline">\(\mu \ll \lambda^n\)</span>, the Brenier theorem guarantees the optimal coupling is unique and concentrated on the graph of <span class="math inline">\(\nabla\phi\)</span>. Therefore the displacement interpolation is uniquely determined by the unique optimal coupling. Two different geodesics between <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> would require two different optimal couplings, which contradicts uniqueness. In the migration story: there is exactly one optimal migration plan, and it determines exactly one sequence of intermediate population distributions.</p>
+<hr>
+<p><strong>Otto’s tangent space at <span class="math inline">\(\mu\)</span> — the <span class="math inline">\(L^2(\mu)\)</span>-closure of gradient vector fields <span class="math inline">\(\nabla\psi\)</span> — is the space of velocity fields that can instantaneously move population mass in a mass-conserving way, with the curl-free (gradient) component being the unique minimum-energy representative.</strong> The Helmholtz decomposition of any vector field <span class="math inline">\(v\)</span> on <span class="math inline">\(\mathbb{R}^n\)</span> into a curl-free component <span class="math inline">\(\nabla\psi\)</span> and a divergence-free component <span class="math inline">\(w\)</span> (with <span class="math inline">\(\nabla\cdot w = 0\)</span>) shows that the divergence-free component <span class="math inline">\(w\)</span> contributes to the continuity equation <span class="math inline">\(\partial_t\mu + \nabla\cdot(\mu v) = 0\)</span> — it moves mass — but has <span class="math inline">\(\int\|w\|^2\,d\mu &gt; 0\)</span> additional kinetic energy compared to the gradient component <span class="math inline">\(\nabla\psi\)</span> that produces the same mass movement. The minimum-energy velocity field that achieves a given infinitesimal mass displacement is always a gradient field. This is why tangent vectors in Wasserstein space are gradient fields: they are the minimum-energy representatives of infinitesimal mass displacements, exactly as tangent vectors on a Riemannian manifold are the minimum-norm representatives of infinitesimal displacements on the manifold.</p>
+<p><strong>The Otto metric <span class="math inline">\(g_\mu(\nabla\psi_1, \nabla\psi_2) = \int\langle\nabla\psi_1,\nabla\psi_2\rangle\,d\mu\)</span> — the <span class="math inline">\(L^2(\mu)\)</span> inner product of two gradient velocity fields — is the kinetic energy inner product, measuring the cost of moving population mass simultaneously in the directions specified by <span class="math inline">\(\nabla\psi_1\)</span> and <span class="math inline">\(\nabla\psi_2\)</span>.</strong> The norm <span class="math inline">\(\|\nabla\psi\|_{T_\mu} = (\int\|\nabla\psi\|^2\,d\mu)^{1/2}\)</span> is the square root of the kinetic energy of the velocity field <span class="math inline">\(\nabla\psi\)</span> weighted by the current population distribution <span class="math inline">\(\mu\)</span>. Moving a dense population at high speed is expensive — the <span class="math inline">\(d\mu\)</span> weighting penalizes high velocity in densely populated regions proportionally to their population. This is the Riemannian metric that makes <span class="math inline">\(W_2\)</span> the geodesic distance: the length of a path <span class="math inline">\(\{\mu_t\}\)</span> is <span class="math inline">\(\int_0^1\|\nabla\psi_t\|_{T_{\mu_t}}\,dt\)</span> — the total kinetic energy accumulated along the path — and this length is minimized by the displacement interpolation, which moves every particle at constant minimum velocity along a straight line.</p>
+<p><strong>The continuity equation <span class="math inline">\(\partial_t\mu_t + \nabla\cdot(\mu_t v_t) = 0\)</span> — the mass conservation law connecting the evolving population density to the migration velocity field — is the PDE from MATH 217 (ODEs and PDEs) that governs every physical flow of a conserved scalar quantity.</strong> Along the geodesic <span class="math inline">\(\mu_t = (T_t)_\#\mu\)</span> with velocity field <span class="math inline">\(v_t(T_t(x)) = \nabla\phi(x) - x\)</span>, the continuity equation holds by the pushforward density formula: <span class="math inline">\(f_t(T_t(x))\det(DT_t(x)) = f_0(x)\)</span>, which differentiated with respect to <span class="math inline">\(t\)</span> gives exactly <span class="math inline">\(\partial_t f_t + \nabla\cdot(f_t v_t) = 0\)</span>. In the geography story: the rate of change of population density at a location equals the negative divergence of the population flux — population accumulates where migrants are converging and depletes where migrants are departing. The continuity equation is the mathematical statement that no population is created or destroyed during the migration, only redistributed.</p>
+<p><strong>The pressureless Euler equation <span class="math inline">\(\partial_t v_t + (v_t\cdot\nabla)v_t = 0\)</span> — the geodesic equation in Wasserstein space — is the statement that the migration velocity of each person is constant along their trajectory: no acceleration, no pressure, no external force.</strong> The material derivative <span class="math inline">\((\partial_t + v_t\cdot\nabla)v_t = 0\)</span> means that the velocity of the fluid parcel currently at position <span class="math inline">\(z\)</span> does not change as time evolves — each migrant travels at constant velocity <span class="math inline">\(\nabla\phi(x) - x\)</span> from their 1990 location <span class="math inline">\(x\)</span> to their 2020 destination <span class="math inline">\(\nabla\phi(x)\)</span>, without speeding up or slowing down. This is the pressureless condition: in a fluid with pressure, the pressure gradient <span class="math inline">\(-\nabla p\)</span> appears on the right-hand side of the Euler equation as an acceleration force. Setting <span class="math inline">\(p = 0\)</span> removes all forces and leaves pure inertial motion — straight-line travel at constant speed. The geodesic equation is Newton’s first law in Wasserstein space: particles move in straight lines because nothing deflects them.</p>
+<hr>
+<p><strong>The Benamou-Brenier formula <span class="math inline">\(W_2^2(\mu,\nu) = \inf\int_0^1\int\|v_t\|^2\,d\mu_t\,dt\)</span> — expressing the squared Wasserstein distance as the minimum kinetic energy of a continuous mass-conserving flow — is the bridge between the static optimal transport problem of Chapter 1 and the dynamic fluid-mechanics interpretation of Chapter 3.</strong> The static problem minimizes <span class="math inline">\(\int\|x-y\|^2\,d\pi\)</span> over couplings <span class="math inline">\(\pi\)</span> — a single-time-step assignment cost. The dynamic problem minimizes <span class="math inline">\(\int_0^1\int\|v_t\|^2\,d\mu_t\,dt\)</span> over continuous flows — a cumulative kinetic energy. Both have the same optimal value <span class="math inline">\(W_2^2(\mu,\nu)\)</span>, and both are minimized by the displacement interpolation with its constant velocity field. In MATH 304 terms: the static problem is the transportation LP (one assignment, minimize cost), and the dynamic problem is the network flow LP (continuous flow through time, minimize cumulative cost). Strong duality of LP makes these equivalent — the static and dynamic formulations are primal and dual to each other in the infinite-dimensional sense, unified by the Benamou-Brenier formula.</p>
+<hr>
+<p><strong>The break moment — singularity formation when the Jacobian <span class="math inline">\(\det(DT_t(x)) = \det((1-t)I + t\nabla^2\phi(x))\)</span> vanishes at some conjugate time <span class="math inline">\(t_c(x) = 1/(1-\lambda_{\min}(x))\)</span> — is the Wasserstein-space manifestation of caustic formation in geometric optics and shock formation in the Burgers equation from MATH 217.</strong> When <span class="math inline">\(\lambda_{\min}(x) &lt; 0\)</span> — when the Brenier potential <span class="math inline">\(\phi\)</span> is not uniformly convex at <span class="math inline">\(x\)</span> — the intermediate Hessian <span class="math inline">\((1-t)I + t\nabla^2\phi(x)\)</span> has a zero eigenvalue at <span class="math inline">\(t_c(x) &lt; 1\)</span>. At this moment, the map <span class="math inline">\(T_{t_c}\)</span> has zero Jacobian — it squashes a neighborhood of <span class="math inline">\(x\)</span> onto a lower-dimensional set. Mass from a two-dimensional region maps to a one-dimensional curve or a single point, creating an atom in the intermediate distribution <span class="math inline">\(\mu_{t_c}\)</span> — a concentration of population mass that is a genuine singularity of the density <span class="math inline">\(f_{t_c}\)</span>. In the geography story: two groups of migrants converging on the same intermediate location at the same moment create a population spike that is a mathematical artifact of straight-line trajectories, not a physical event. The entropic regularization fix — replacing <span class="math inline">\(T^*\)</span> with the smoothed Sinkhorn coupling <span class="math inline">\(P^*_\varepsilon\)</span> — spreads each person’s destination across multiple locations with Gibbs weights <span class="math inline">\(e^{-\|x-y\|^2/\varepsilon}\)</span>, preventing the sharp focusing that causes singularity formation. The regularized displacement interpolation is everywhere smooth for <span class="math inline">\(\varepsilon &gt; 0\)</span>, developing singularities only in the limit <span class="math inline">\(\varepsilon \to 0\)</span> when the coupling sharpens to the deterministic Brenier map.</p>
+<hr>
+<p><strong>The connection to MATH 217 (ODEs and PDEs) is complete and explicit.</strong> The continuity equation <span class="math inline">\(\partial_t\mu_t + \nabla\cdot(\mu_t v_t) = 0\)</span> is the conservation law you studied for scalar transport — mass, charge, probability density — under a velocity field. The pressureless Euler equation <span class="math inline">\(\partial_t v_t + (v_t\cdot\nabla)v_t = 0\)</span> is the inviscid Burgers equation in one dimension, whose solutions you analyzed for shock formation via the method of characteristics. The displacement interpolation is the classical solution of the Burgers equation along characteristics — each characteristic is a migrant’s straight-line trajectory <span class="math inline">\(x + t(\nabla\phi(x)-x)\)</span>, and characteristics crossing corresponds to the conjugate-point singularity. The Monge-Ampère equation <span class="math inline">\(\det(\nabla^2\phi_t) = f_0/f_t\circ T_t\)</span> governing the intermediate density is the fully nonlinear PDE from Chapter 1 of Phase 1, now appearing as a transport equation along the geodesic. Every PDE tool from MATH 217 — method of characteristics, conservation laws, weak solutions, shock conditions — has a Wasserstein-space interpretation in the displacement interpolation.</p>
+<p><strong>The connection to MATH 304 (Computational Operations Research) closes through the Benamou-Brenier dynamic formulation.</strong> The network flow LP from MATH 304 — minimizing flow cost over a time-extended network subject to flow conservation at each node — is the discrete-time, discrete-space version of the Benamou-Brenier variational problem. The continuous flow <span class="math inline">\((\mu_t, v_t)\)</span> satisfying <span class="math inline">\(\partial_t\mu_t + \nabla\cdot(\mu_t v_t) = 0\)</span> is the infinite-dimensional generalization of a network flow: mass is conserved at every spatial location at every time, and the kinetic energy <span class="math inline">\(\int\|v_t\|^2\,d\mu_t\)</span> is the instantaneous flow cost. The LP duality between the static Kantorovich problem and the dynamic Benamou-Brenier problem is the continuous analogue of the LP duality between the transportation problem and the network flow problem in MATH 304.</p>
+<hr>
+<p><strong>Looking forward across the roadmap</strong>, the displacement interpolation is the geometric object that unifies Phase 1 with Phase 3. In Topic 2 of Chapter 3, the Wasserstein barycenter is the Fréchet mean in Wasserstein space — defined as the distribution that minimizes the sum of squared Wasserstein distances to a collection of input distributions, computed by iterating displacement interpolations across multiple marginals simultaneously. In Phase 3, the Neural ODE <span class="math inline">\(dx/dt = f(x,t,\theta)\)</span> is a parametric velocity field satisfying the continuity equation — a learned displacement interpolation from noise to data. The flow matching algorithm trains <span class="math inline">\(f\)</span> to match the velocity field <span class="math inline">\(v_t = \nabla\phi - \text{id}\)</span> of the optimal transport displacement interpolation, making the learned generative flow as straight as possible — minimizing the kinetic energy of the learned trajectory, converging to the Brenier map in the limit of infinite data and model capacity. The rectified flow algorithm of Phase 3 is exactly the flow matching algorithm applied to the displacement interpolation: it learns the straightest possible path from noise to data in the Wasserstein metric, and the straightness is precisely the geodesic property of the displacement interpolation proved in this topic.</p>
+<p>The two animations on the Survey Department wall — the pixel mixer’s cross-fading ghost population and the geographer’s mass-conserving migration flow — are the linear interpolation <span class="math inline">\((1-t)\mu+t\nu\)</span> and the displacement interpolation <span class="math inline">\(\mu_t = (T_t)_\#\mu\)</span> with <span class="math inline">\(T_t = (1-t)\text{id}+t\nabla\phi\)</span>. The difference between them is the difference between a straight line in the wrong space and a geodesic in the right space — a distinction that separates geometry-blind interpolation from geometry-aware transport, and that will reappear at the heart of every generative model in Phase 3.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

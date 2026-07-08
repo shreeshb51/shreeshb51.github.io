@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>entropic_regularization – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#topic-1---entropic-regularization-making-optimal-transport-smooth" id="toc-topic-1---entropic-regularization-making-optimal-transport-smooth" class="nav-link active" data-scroll-target="#topic-1---entropic-regularization-making-optimal-transport-smooth">Topic 1 - Entropic Regularization: Making Optimal Transport Smooth</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#layer-1-story" id="toc-layer-1-story" class="nav-link" data-scroll-target="#layer-1-story">Layer 1 (Story)</a></li>
+  <li><a href="#layer-2-mathematics" id="toc-layer-2-mathematics" class="nav-link" data-scroll-target="#layer-2-mathematics">Layer 2 (Mathematics)</a></li>
+  <li><a href="#layer-3-bridge" id="toc-layer-3-bridge" class="nav-link" data-scroll-target="#layer-3-bridge">Layer 3 (Bridge)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<section id="topic-1---entropic-regularization-making-optimal-transport-smooth" class="level1">
+<h1>Topic 1 - Entropic Regularization: Making Optimal Transport Smooth</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>The Kantorovich problem is geometrically perfect and computationally brutal. Its solution — the optimal coupling <span class="math inline">\(\pi^*\)</span> — is a sparse object. In the discrete case with <span class="math inline">\(n\)</span> source points and <span class="math inline">\(n\)</span> target points, the optimal coupling concentrates its mass on at most <span class="math inline">\(2n - 1\)</span> pairs out of the <span class="math inline">\(n^2\)</span> possible pairs. It is the extreme point of a polytope, found by the simplex method, and it costs <span class="math inline">\(O(n^3)\)</span> to compute. Every time you want to compute a Wasserstein distance inside a training loop, you are paying that cubic price. At any serious scale, this is unacceptable.</p>
+<p>The question is whether you can modify the Kantorovich problem slightly — perturbing it just enough to make computation tractable — without destroying the geometric meaning of the Wasserstein distance.</p>
+<p>Entropic regularization is that modification. It adds a single penalty term to the Kantorovich objective: a term that measures how concentrated the coupling is, and penalizes concentration. The penalty pushes the optimal coupling away from the sparse extreme-point solution toward a smoother, more diffuse distribution over transport pairs. The resulting problem is strictly convex, has a unique solution with a closed-form structure, and can be solved by a simple iterative algorithm that costs <span class="math inline">\(O(n^2)\)</span> per iteration.</p>
+<p>This topic covers three bullet points from the roadmap: the entropic regularization itself — what the penalty term is and why it is the right one — the structural form of the regularized solution — why it must be a Gibbs kernel scaled by two diagonal vectors — and the trade-off controlled by the regularization parameter <span class="math inline">\(\varepsilon\)</span> — what you gain and what you lose as <span class="math inline">\(\varepsilon\)</span> varies.</p>
+<p>The first bullet is <strong>entropic regularization</strong> — the addition of <span class="math inline">\(+\varepsilon H(\pi)\)</span> to the Kantorovich objective, where <span class="math inline">\(H(\pi)\)</span> is the negative KL divergence of the coupling <span class="math inline">\(\pi\)</span> with respect to the product measure <span class="math inline">\(\mu \otimes \nu\)</span>, equivalently the relative entropy measuring how far <span class="math inline">\(\pi\)</span> is from independence. Large <span class="math inline">\(H(\pi)\)</span> means the coupling is spread out and nearly independent. Small <span class="math inline">\(H(\pi)\)</span> means the coupling is concentrated and nearly deterministic. Adding <span class="math inline">\(+\varepsilon H(\pi)\)</span> to a minimization problem penalizes low entropy — penalizes concentration — and pushes the solution toward smoother couplings.</p>
+<p>The second bullet is <strong>the structure of the regularized solution</strong> — the fact that the unique minimizer of the regularized problem must have the form <span class="math inline">\(\pi^*_\varepsilon(x,y) \propto e^{-c(x,y)/\varepsilon}\)</span>, modulated by two marginal-correction factors. This Gibbs form is not an assumption — it is a theorem, derived from the first-order optimality conditions of the regularized problem. The exponential of the negative cost is the kernel, and the marginal constraints force it to be scaled row-wise and column-wise until the marginals match. This product structure is precisely what makes the Sinkhorn algorithm possible.</p>
+<p>The third bullet is <strong>the <span class="math inline">\(\varepsilon\)</span> trade-off</strong> — understanding what the regularization parameter controls geometrically and computationally. As <span class="math inline">\(\varepsilon \to 0\)</span>, the regularized solution converges to the exact Kantorovich solution but becomes numerically unstable. As <span class="math inline">\(\varepsilon \to \infty\)</span>, the solution converges to the independent product <span class="math inline">\(\mu \otimes \nu\)</span> — the coupling that ignores transport cost entirely — and loses geometric meaning. The practical regime is small but not too small: large enough for numerical stability, small enough that the regularized Wasserstein distance remains a faithful approximation of the true Wasserstein distance.</p>
+<p>By the end of this topic, you will understand why entropy is the right regularizer — not a heuristic choice, but the unique penalty that produces a solution with the Gibbs product structure that makes Sinkhorn work. The computational breakthrough of Chapter 2 rests entirely on this structural insight.</p>
+<hr>
+</section>
+<section id="layer-1-story" class="level2">
+<h2 class="anchored" data-anchor-id="layer-1-story">Layer 1 (Story)</h2>
+<p>You are the head of the postal sorting office in Kathmandu’s main distribution hub, and you have inherited a crisis.</p>
+<p>Every morning, thousands of parcels arrive from districts across the western hills — Pokhara, Baglung, Myagdi — and must be dispatched to addresses across the eastern Terai — Janakpur, Birgunj, Biratnagar. Each parcel has a source district and a destination district. Your job is to design the sorting plan: which parcel goes on which truck, which truck takes which route.</p>
+<p>Your predecessor solved this problem the hard way. Every morning, he called in a team of operations researchers, handed them the full manifest — every parcel, every address, every route cost — and asked them to solve the exact optimal assignment. Find the cheapest possible sorting plan. Move every parcel to its destination at minimum total cost. They solved it using the transportation simplex method, exactly as you learned in MATH 304. The solution was perfect. It was also the reason the trucks left three hours late every single day.</p>
+<p>The exact optimal plan is a sparse object. Out of thousands of possible parcel-to-route assignments, the optimal solution uses only a handful — the extreme point of a polytope, concentrated on the cheapest routes, ignoring everything else. Finding that sparse extreme point requires the full cubic machinery of the simplex method. As the number of parcels and destinations grows, the computation time grows as the cube of that number. Double the parcels, wait eight times as long. The trucks cannot wait.</p>
+<p>You need a better approach. Not a perfect plan — a fast, good-enough plan that gets the trucks moving on time.</p>
+<hr>
+<p><strong>The new policy: penalize obsessive efficiency</strong></p>
+<p>Your senior logistics consultant — the same mathematician who explained the no-crossing principle — walks in with an unconventional proposal.</p>
+<p>The reason the exact optimal plan takes so long to compute, she explains, is that it is too decisive. It concentrates all its choices on a tiny number of routes, ignoring everything else. The simplex method has to search the entire polytope of valid sorting plans, checking extreme point after extreme point, until it finds the single sparsest, cheapest one.</p>
+<p>What if, instead of demanding the cheapest plan, you demanded a plan that is cheap but also spread out? A plan that does not put all its eggs in one basket — that distributes parcels across multiple routes, not just the single cheapest one, while still preferring cheaper routes over expensive ones?</p>
+<p>Such a plan would not be perfectly optimal. It would be slightly more expensive than the true minimum. But it would be far easier to compute, because you are no longer looking for a sparse extreme point. You are looking for a smooth, interior solution — a plan that spreads its weight across many routes, weighted by their costs.</p>
+<p>To implement this, your consultant introduces a new rule into the sorting office: you must pay a penalty every time your sorting plan becomes too concentrated. The penalty is proportional to how decisive your plan is — how sharply it commits to a small number of routes and ignores the rest. Plans that spread parcels evenly across many routes pay a small penalty. Plans that concentrate everything on a single route pay a large penalty.</p>
+<p>This penalty has a name in information theory: it is the negative entropy of the sorting plan.</p>
+<hr>
+<p><strong>What entropy measures in the sorting office</strong></p>
+<p>Imagine your sorting plan as a probability distribution over route assignments. For each possible pair — parcel from district <span class="math inline">\(x\)</span>, delivered via route to destination <span class="math inline">\(y\)</span> — your plan assigns a weight <span class="math inline">\(\pi(x,y)\)</span> describing how much of the flow goes along that pair. A perfectly decisive plan puts all its weight on a single pair: one route, used for everything. A perfectly spread-out plan puts equal weight on every possible pair: all routes used equally.</p>
+<p>The entropy of your plan measures its spread. A plan concentrated on a single route has very low entropy — it is highly predictable, highly decisive. A plan spread uniformly across all routes has very high entropy — it is maximally uncertain, maximally spread.</p>
+<p>The negative entropy <span class="math inline">\(-H(\pi)\)</span> is the concentration penalty. Low entropy means high concentration means high penalty. High entropy means low concentration means low penalty.</p>
+<p>Your new objective is: minimize the total transport cost of the sorting plan, plus a small multiple <span class="math inline">\(\varepsilon\)</span> of the concentration penalty. You want a plan that is cheap, but not so obsessively cheap that it becomes a computational nightmare to find.</p>
+<p>Formally, you are minimizing:</p>
+<p><span class="math display">\[\text{total transport cost} + \varepsilon \times \text{concentration penalty}\]</span></p>
+<p>where the concentration penalty is the negative entropy of the plan.</p>
+<p>The parameter <span class="math inline">\(\varepsilon\)</span> — the regularization strength — is the dial that controls how much you care about spreading the plan out. Turn <span class="math inline">\(\varepsilon\)</span> all the way down to zero: the penalty disappears, and you are back to the exact Kantorovich problem, the trucks leave three hours late. Turn <span class="math inline">\(\varepsilon\)</span> all the way up to infinity: the penalty dominates, you use every route equally regardless of cost, the trucks leave on time but the fuel bill is catastrophic. The practical regime is somewhere in between: <span class="math inline">\(\varepsilon\)</span> small enough that the plan is still geometrically meaningful, large enough that the computation is fast and numerically stable.</p>
+<hr>
+<p><strong>The structure of the regularized solution: why the optimal plan must be a Gibbs distribution</strong></p>
+<p>Your consultant now makes the key observation that drives the entire Sinkhorn algorithm.</p>
+<p>Suppose you have fixed the total amount of flow leaving each source district and the total amount arriving at each destination district — the marginal constraints. You want to find the sorting plan <span class="math inline">\(\pi(x,y)\)</span> that minimizes transport cost plus concentration penalty, subject to these marginal constraints.</p>
+<p>Write the cost of route <span class="math inline">\((x,y)\)</span> as <span class="math inline">\(c(x,y)\)</span> — the expense of moving a parcel from district <span class="math inline">\(x\)</span> to destination <span class="math inline">\(y\)</span>. Your objective is to choose the flow weights <span class="math inline">\(\pi(x,y)\)</span> to minimize:</p>
+<p><span class="math display">\[\sum_{x,y} c(x,y)\pi(x,y) - \varepsilon \sum_{x,y} \pi(x,y)\log\pi(x,y)\]</span></p>
+<p>subject to the row and column sum constraints.</p>
+<p>Ignore the marginal constraints for a moment — just minimize the cost plus penalty over all non-negative <span class="math inline">\(\pi\)</span>. Take the derivative with respect to <span class="math inline">\(\pi(x,y)\)</span> and set it to zero:</p>
+<p><span class="math display">\[c(x,y) - \varepsilon(\log\pi(x,y) + 1) = 0\]</span></p>
+<p>Solving: <span class="math inline">\(\log\pi(x,y) = c(x,y)/\varepsilon - 1\)</span>, so:</p>
+<p><span class="math display">\[\pi(x,y) \propto e^{-c(x,y)/\varepsilon}\]</span></p>
+<p>The optimal unconstrained plan is the Gibbs distribution — the exponential of the negative cost, scaled by the temperature <span class="math inline">\(\varepsilon\)</span>. Cheap routes get exponentially higher weight than expensive routes. The sharpness of this preference is controlled by <span class="math inline">\(\varepsilon\)</span>: small <span class="math inline">\(\varepsilon\)</span> means very sharp preference for cheap routes, large <span class="math inline">\(\varepsilon\)</span> means nearly uniform preference.</p>
+<p>This is not a heuristic — it is the exact first-order optimality condition of the regularized problem. The regularized optimal coupling must have Gibbs form.</p>
+<p>Now restore the marginal constraints. The plan must also satisfy: the total flow out of each source district equals the source mass <span class="math inline">\(\mu(x)\)</span>, and the total flow into each destination equals the target mass <span class="math inline">\(\nu(y)\)</span>. The Gibbs distribution <span class="math inline">\(e^{-c(x,y)/\varepsilon}\)</span> does not generally satisfy these constraints. You need to correct it — scale its rows until the row sums match <span class="math inline">\(\mu\)</span>, and scale its columns until the column sums match <span class="math inline">\(\nu\)</span>.</p>
+<p>The key insight: because the unconstrained solution has the product form <span class="math inline">\(e^{-c(x,y)/\varepsilon}\)</span>, the marginal-corrected solution must have the form:</p>
+<p><span class="math display">\[\pi^*(x,y) = u(x) \cdot e^{-c(x,y)/\varepsilon} \cdot v(y)\]</span></p>
+<p>for some positive scaling functions <span class="math inline">\(u(x)\)</span> and <span class="math inline">\(v(y)\)</span> — one factor per source district, one factor per destination. The Gibbs kernel is sandwiched between two diagonal scalings, one on each side.</p>
+<p>Finding <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span> is now a simple problem. Normalize the rows to match <span class="math inline">\(\mu\)</span>: this fixes <span class="math inline">\(u\)</span> given <span class="math inline">\(v\)</span>. Normalize the columns to match <span class="math inline">\(\nu\)</span>: this fixes <span class="math inline">\(v\)</span> given <span class="math inline">\(u\)</span>. Alternate. Repeat. This is the Sinkhorn algorithm, and its convergence is guaranteed because the regularized problem is strictly convex — there is exactly one solution, and the alternating normalization converges to it geometrically.</p>
+<hr>
+<p><strong>The break moment</strong></p>
+<p>Here is the naive assumption that breaks.</p>
+<p>You might think: the smaller the <span class="math inline">\(\varepsilon\)</span>, the better. After all, you want to approximate the true Wasserstein distance, and smaller <span class="math inline">\(\varepsilon\)</span> means the regularized solution is closer to the exact optimal coupling. Why not just use a very small <span class="math inline">\(\varepsilon\)</span> and get as close to the truth as you want?</p>
+<p>This breaks in the sorting office immediately.</p>
+<p>For small <span class="math inline">\(\varepsilon\)</span>, the Gibbs kernel entries <span class="math inline">\(e^{-c(x,y)/\varepsilon}\)</span> span an enormous range of values. A cheap route with <span class="math inline">\(c(x,y) = 1\)</span> and an expensive route with <span class="math inline">\(c(x,y) = 100\)</span> at <span class="math inline">\(\varepsilon = 0.01\)</span> give kernel values <span class="math inline">\(e^{-100}\)</span> and <span class="math inline">\(e^{-10000}\)</span> respectively — numbers so astronomically small that no floating-point representation can distinguish them from zero. The entire kernel matrix underflows to zero. The Sinkhorn normalization divides by these zeros. The algorithm collapses.</p>
+<p>The problem is not mathematical — the regularized solution exists and is unique for any <span class="math inline">\(\varepsilon &gt; 0\)</span>. The problem is numerical. The Gibbs kernel in standard floating-point arithmetic loses all information when <span class="math inline">\(\varepsilon\)</span> is small, because the exponential function maps large negative numbers to values indistinguishable from zero.</p>
+<p>The fix is the log-sum-exp trick: instead of working with the kernel <span class="math inline">\(K_{ij} = e^{-c(x,y)/\varepsilon}\)</span> directly, work in log-space. Replace the scaling vectors <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span> with their logarithms <span class="math inline">\(f = \varepsilon \log u\)</span> and <span class="math inline">\(g = \varepsilon \log v\)</span>. The multiplicative Sinkhorn iterations become additive log-sum-exp operations, which remain numerically stable regardless of how small <span class="math inline">\(\varepsilon\)</span> is. The exponential is never explicitly computed — only differences of log-values are, and these remain in a reasonable numerical range.</p>
+<p>The naive assumption — smaller <span class="math inline">\(\varepsilon\)</span> is always better — breaks against the wall of floating-point arithmetic. The log-sum-exp trick is not a hack. It is the mandatory stabilization that makes the Sinkhorn algorithm usable in practice.</p>
+<hr>
+<p>Hold three pictures simultaneously as you move to the mathematics.</p>
+<p>The sorting office: a flow distribution over parcel-route pairs, penalized for concentration, optimal when spread according to the Gibbs distribution weighted by route cost — this is entropic regularization.</p>
+<p>The Gibbs kernel sandwiched between two diagonal scalings: <span class="math inline">\(\pi^*(x,y) = u(x) \cdot e^{-c(x,y)/\varepsilon} \cdot v(y)\)</span> — this is the structural form of the regularized solution, derived from first-order optimality, and it is what makes Sinkhorn possible.</p>
+<p>The <span class="math inline">\(\varepsilon\)</span> dial: turned to zero, you recover exact OT but lose computation; turned to infinity, you lose geometry but gain speed; the practical regime lives in between, stabilized by the log-sum-exp trick when <span class="math inline">\(\varepsilon\)</span> is small.</p>
+<hr>
+</section>
+<section id="layer-2-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="layer-2-mathematics">Layer 2 (Mathematics)</h2>
+<p>We build the formalism in five stages: the precise statement of the regularized Kantorovich problem, the derivation of the Gibbs solution structure, the dual of the regularized problem, the <span class="math inline">\(\varepsilon\)</span>-convergence theory, and the connection to KL divergence.</p>
+<section id="the-regularized-kantorovich-problem-precise-statement" class="level3">
+<h3 class="anchored" data-anchor-id="the-regularized-kantorovich-problem-precise-statement">The Regularized Kantorovich Problem — Precise Statement</h3>
+<p>Let <span class="math inline">\(\mu \in \mathcal{P}(\mathcal{X})\)</span> and <span class="math inline">\(\nu \in \mathcal{P}(\mathcal{Y})\)</span> be discrete measures supported on <span class="math inline">\(m\)</span> and <span class="math inline">\(n\)</span> points respectively, with weight vectors <span class="math inline">\(a \in \Sigma_m\)</span> and <span class="math inline">\(b \in \Sigma_n\)</span> (probability simplices). Let <span class="math inline">\(C \in \mathbb{R}^{m \times n}_+\)</span> be the cost matrix with <span class="math inline">\(C_{ij} = c(x_i, y_j)\)</span>.</p>
+<p>The <strong>entropic regularization</strong> of the Kantorovich problem adds a KL divergence penalty:</p>
+<p><span class="math display">\[\text{OT}_\varepsilon(\mu,\nu) = \min_{P \in \Pi(a,b)} \left\{ \langle C, P \rangle - \varepsilon H(P) \right\}\]</span></p>
+<p>where:</p>
+<p><span class="math display">\[\langle C, P \rangle = \sum_{i,j} C_{ij} P_{ij}\]</span></p>
+<p>is the total transport cost, and:</p>
+<p><span class="math display">\[H(P) = -\sum_{i,j} P_{ij} \log P_{ij}\]</span></p>
+<p>is the <strong>Shannon entropy</strong> of the coupling matrix <span class="math inline">\(P\)</span>, with the convention <span class="math inline">\(0 \log 0 = 0\)</span>.</p>
+<p>The feasible set is:</p>
+<p><span class="math display">\[\Pi(a,b) = \left\{ P \in \mathbb{R}^{m\times n}_+ : P\mathbf{1}_n = a, \, P^\top \mathbf{1}_m = b \right\}\]</span></p>
+<p>Equivalently, writing the penalty as a KL divergence with respect to the product measure <span class="math inline">\(a \otimes b\)</span>:</p>
+<p><span class="math display">\[\text{OT}_\varepsilon(\mu,\nu) = \min_{P \in \Pi(a,b)} \left\{ \langle C, P \rangle + \varepsilon \, \text{KL}(P \| a \otimes b) - \varepsilon H(a) - \varepsilon H(b) \right\}\]</span></p>
+<p>Since <span class="math inline">\(H(a)\)</span> and <span class="math inline">\(H(b)\)</span> are constants independent of <span class="math inline">\(P\)</span>, minimizing <span class="math inline">\(\langle C,P\rangle - \varepsilon H(P)\)</span> is equivalent to minimizing <span class="math inline">\(\langle C,P\rangle + \varepsilon\,\text{KL}(P \| a\otimes b)\)</span>. The KL divergence form makes clear that entropic regularization penalizes deviation of <span class="math inline">\(P\)</span> from the independent product coupling <span class="math inline">\(a \otimes b\)</span> — the coupling that assigns no information about transport structure at all.</p>
+<p><strong>Strict convexity.</strong> The function <span class="math inline">\(P \mapsto -H(P) = \sum_{ij} P_{ij}\log P_{ij}\)</span> is strictly convex on <span class="math inline">\(\mathbb{R}^{m\times n}_+\)</span> (as a sum of strictly convex functions <span class="math inline">\(t \mapsto t\log t\)</span>). Adding it to the linear objective <span class="math inline">\(\langle C, P\rangle\)</span> produces a strictly convex objective over the convex feasible set <span class="math inline">\(\Pi(a,b)\)</span>. Therefore <span class="math inline">\(\text{OT}_\varepsilon\)</span> has a <strong>unique minimizer</strong> <span class="math inline">\(P^*_\varepsilon\)</span> for every <span class="math inline">\(\varepsilon &gt; 0\)</span>.</p>
+<hr>
+</section>
+<section id="the-gibbs-structure-derivation-from-first-order-optimality" class="level3">
+<h3 class="anchored" data-anchor-id="the-gibbs-structure-derivation-from-first-order-optimality">The Gibbs Structure — Derivation from First-Order Optimality</h3>
+<p><strong>Theorem (Gibbs form of the regularized solution).</strong> The unique solution <span class="math inline">\(P^*_\varepsilon\)</span> of the regularized Kantorovich problem has the form:</p>
+<p><span class="math display">\[P^*_\varepsilon = \text{diag}(u) \cdot K \cdot \text{diag}(v)\]</span></p>
+<p>where <span class="math inline">\(K \in \mathbb{R}^{m\times n}_+\)</span> is the <strong>Gibbs kernel</strong>:</p>
+<p><span class="math display">\[K_{ij} = e^{-C_{ij}/\varepsilon}\]</span></p>
+<p>and <span class="math inline">\(u \in \mathbb{R}^m_+\)</span>, <span class="math inline">\(v \in \mathbb{R}^n_+\)</span> are strictly positive scaling vectors uniquely determined (up to a multiplicative constant exchanged between <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span>) by the marginal constraints:</p>
+<p><span class="math display">\[\text{diag}(u) K \text{diag}(v) \mathbf{1}_n = a, \quad \text{diag}(u) K^\top \text{diag}(v) \mathbf{1}_m = b\]</span></p>
+<p><strong>Proof.</strong> Form the Lagrangian with multipliers <span class="math inline">\(f \in \mathbb{R}^m\)</span> (for row constraints) and <span class="math inline">\(g \in \mathbb{R}^n\)</span> (for column constraints):</p>
+<p><span class="math display">\[\mathcal{L}(P, f, g) = \sum_{ij} C_{ij}P_{ij} + \varepsilon\sum_{ij}P_{ij}\log P_{ij} - \sum_i f_i\left(\sum_j P_{ij} - a_i\right) - \sum_j g_j\left(\sum_i P_{ij} - b_j\right)\]</span></p>
+<p>Taking the derivative with respect to <span class="math inline">\(P_{ij}\)</span> and setting to zero:</p>
+<p><span class="math display">\[C_{ij} + \varepsilon(\log P_{ij} + 1) - f_i - g_j = 0\]</span></p>
+<p>Solving for <span class="math inline">\(P_{ij}\)</span>:</p>
+<p><span class="math display">\[\log P_{ij} = \frac{f_i + g_j - C_{ij}}{\varepsilon} - 1\]</span></p>
+<p><span class="math display">\[P_{ij} = e^{f_i/\varepsilon - 1/2} \cdot e^{-C_{ij}/\varepsilon} \cdot e^{g_j/\varepsilon - 1/2}\]</span></p>
+<p>Setting <span class="math inline">\(u_i = e^{f_i/\varepsilon - 1/2}\)</span> and <span class="math inline">\(v_j = e^{g_j/\varepsilon - 1/2}\)</span>, this is exactly <span class="math inline">\(P_{ij} = u_i K_{ij} v_j\)</span>, giving the matrix form <span class="math inline">\(P^*_\varepsilon = \text{diag}(u) K \text{diag}(v)\)</span>. <span class="math inline">\(\square\)</span></p>
+<p>The Lagrange multipliers <span class="math inline">\(f_i\)</span> and <span class="math inline">\(g_j\)</span> are the dual potentials of the regularized problem — the entropic analogues of the Kantorovich potentials <span class="math inline">\(\phi\)</span> and <span class="math inline">\(\psi\)</span> from Topic 4. Their relationship to the scaling vectors is:</p>
+<p><span class="math display">\[f_i = \varepsilon \log u_i + \frac{\varepsilon}{2}, \qquad g_j = \varepsilon \log v_j + \frac{\varepsilon}{2}\]</span></p>
+<hr>
+</section>
+<section id="the-dual-of-the-regularized-problem" class="level3">
+<h3 class="anchored" data-anchor-id="the-dual-of-the-regularized-problem">The Dual of the Regularized Problem</h3>
+<p>The regularized Kantorovich problem has a dual that parallels the Kantorovich dual of Topic 4, with the hard constraint <span class="math inline">\(\phi(x) + \psi(y) \leq c(x,y)\)</span> replaced by a soft penalty.</p>
+<p><strong>Theorem (Entropic dual).</strong> The dual of <span class="math inline">\(\text{OT}_\varepsilon\)</span> is:</p>
+<p><span class="math display">\[\text{OT}_\varepsilon(\mu,\nu) = \max_{f \in \mathbb{R}^m, g \in \mathbb{R}^n} \left\{ \langle f, a\rangle + \langle g, b\rangle - \varepsilon \sum_{ij} e^{(f_i + g_j - C_{ij})/\varepsilon} \cdot a_i b_j + \varepsilon \right\}\]</span></p>
+<p>The dual variables <span class="math inline">\(f \in \mathbb{R}^m\)</span> and <span class="math inline">\(g \in \mathbb{R}^n\)</span> are the <strong>entropic potentials</strong> — the log-domain versions of the Kantorovich potentials. Strong duality holds: the primal minimum equals the dual maximum, and the optimal primal solution <span class="math inline">\(P^*_\varepsilon\)</span> is recovered from the optimal dual variables via <span class="math inline">\(P^*_{ij} = a_i b_j e^{(f_i + g_j - C_{ij})/\varepsilon}\)</span>.</p>
+<p>The Sinkhorn iterations, derived in Topic 2, are coordinate ascent steps on this dual objective — alternately optimizing over <span class="math inline">\(f\)</span> while holding <span class="math inline">\(g\)</span> fixed, then over <span class="math inline">\(g\)</span> while holding <span class="math inline">\(f\)</span> fixed.</p>
+<hr>
+</section>
+<section id="the-varepsilon-convergence-theory" class="level3">
+<h3 class="anchored" data-anchor-id="the-varepsilon-convergence-theory">The <span class="math inline">\(\varepsilon\)</span>-Convergence Theory</h3>
+<p><strong>Theorem (<span class="math inline">\(\varepsilon \to 0\)</span> limit).</strong> As <span class="math inline">\(\varepsilon \to 0^+\)</span>:</p>
+<p><span class="math display">\[\text{OT}_\varepsilon(\mu,\nu) \to \text{OT}_0(\mu,\nu) = W_c(\mu,\nu)\]</span></p>
+<p>and the regularized optimal coupling <span class="math inline">\(P^*_\varepsilon\)</span> converges weakly to the <strong>maximum entropy optimal coupling</strong> — the coupling in <span class="math inline">\(\arg\min_{\pi \in \Pi^*(a,b)} \text{KL}(\pi \| a\otimes b)\)</span>, where <span class="math inline">\(\Pi^*(a,b)\)</span> is the set of exact Kantorovich optimal couplings. Among all optimal exact couplings, the regularized solution selects the one closest to independence.</p>
+<p><strong>Theorem (<span class="math inline">\(\varepsilon \to \infty\)</span> limit).</strong> As <span class="math inline">\(\varepsilon \to \infty\)</span>:</p>
+<p><span class="math display">\[P^*_\varepsilon \to a \otimes b\]</span></p>
+<p>the independent product coupling, and <span class="math inline">\(\text{OT}_\varepsilon(\mu,\nu) \to \langle C, a\otimes b\rangle - \varepsilon H(a) - \varepsilon H(b)\)</span>, which diverges. The regularized distance loses all transport structure.</p>
+<p><strong>Approximation error.</strong> For finite <span class="math inline">\(\varepsilon\)</span>:</p>
+<p><span class="math display">\[0 \leq \text{OT}_\varepsilon(\mu,\nu) - W_c(\mu,\nu) \leq \varepsilon \log(mn)\]</span></p>
+<p>The regularized OT overestimates the true Wasserstein distance by at most <span class="math inline">\(\varepsilon \log(mn)\)</span>. This bound is sharp in general. For a fixed approximation tolerance <span class="math inline">\(\delta\)</span>, choose <span class="math inline">\(\varepsilon \leq \delta / \log(mn)\)</span>.</p>
+<p><strong>Differentiability.</strong> Unlike <span class="math inline">\(W_c(\mu,\nu)\)</span>, which is not differentiable with respect to the input weights <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> when the optimal coupling is non-unique, <span class="math inline">\(\text{OT}_\varepsilon(\mu,\nu)\)</span> is <strong>infinitely differentiable</strong> in <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> for every <span class="math inline">\(\varepsilon &gt; 0\)</span>. The gradient is:</p>
+<p><span class="math display">\[\nabla_a \text{OT}_\varepsilon = f^*, \qquad \nabla_b \text{OT}_\varepsilon = g^*\]</span></p>
+<p>where <span class="math inline">\((f^*, g^*)\)</span> are the optimal entropic potentials. This differentiability is the property that makes <span class="math inline">\(\text{OT}_\varepsilon\)</span> usable as a loss function in neural network training via backpropagation.</p>
+<hr>
+</section>
+<section id="kl-divergence-formulation-and-the-gibbs-variational-principle" class="level3">
+<h3 class="anchored" data-anchor-id="kl-divergence-formulation-and-the-gibbs-variational-principle">KL Divergence Formulation and the Gibbs Variational Principle</h3>
+<p>The entropic regularization can be understood through the <strong>Gibbs variational principle</strong> from statistical mechanics. For any probability distribution <span class="math inline">\(Q\)</span> over states and a Hamiltonian (energy function) <span class="math inline">\(E\)</span>:</p>
+<p><span class="math display">\[\min_{Q} \left\{ \mathbb{E}_Q[E] - \varepsilon H(Q) \right\} = -\varepsilon \log \sum_{\text{states}} e^{-E/\varepsilon}\]</span></p>
+<p>and the minimizer is the Gibbs (Boltzmann) distribution <span class="math inline">\(Q^* \propto e^{-E/\varepsilon}\)</span>. The entropic Kantorovich problem is precisely the Gibbs variational principle applied to the probability distribution <span class="math inline">\(P\)</span> over transport pairs <span class="math inline">\((i,j)\)</span>, with energy <span class="math inline">\(E_{ij} = C_{ij}\)</span> and temperature <span class="math inline">\(\varepsilon\)</span>. The regularized optimal coupling is the Boltzmann distribution over transport pairs, with cheaper pairs assigned exponentially higher probability.</p>
+<p>The KL divergence form makes the regularization interpretation precise:</p>
+<p><span class="math display">\[\text{OT}_\varepsilon(\mu,\nu) + \varepsilon H(a) + \varepsilon H(b) = \min_{P \in \Pi(a,b)} \left\{ \varepsilon \, \text{KL}(P \| K_\varepsilon) \right\} + \langle C^*, a\otimes b\rangle\]</span></p>
+<p>where <span class="math inline">\(K_\varepsilon = (a_i K_{ij} b_j)_{ij}\)</span> is the normalized Gibbs kernel. The regularized problem finds the coupling <span class="math inline">\(P\)</span> closest to the Gibbs kernel <span class="math inline">\(K_\varepsilon\)</span> in KL divergence, subject to the marginal constraints. The Sinkhorn algorithm solves this KL projection problem by alternating projections — first projecting onto the row-constraint set, then onto the column-constraint set — in the KL geometry. This is the information-geometric interpretation of Sinkhorn: it is Bregman alternating projections with the KL divergence as the Bregman divergence.</p>
+<hr>
+</section>
+<section id="why-this-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-matters">WHY THIS MATTERS</h3>
+<p>In MATH 208 (Statistics and Probability), the KL divergence <span class="math inline">\(\text{KL}(P\|Q) = \sum_i P_i \log(P_i/Q_i)\)</span> measures how much information is lost when <span class="math inline">\(Q\)</span> is used to approximate <span class="math inline">\(P\)</span>. The entropic regularization penalty <span class="math inline">\(\varepsilon\,\text{KL}(P\|a\otimes b)\)</span> penalizes the coupling for carrying information beyond the marginals — for encoding transport structure that goes beyond what the marginals alone imply. Setting <span class="math inline">\(\varepsilon\)</span> large forces <span class="math inline">\(P \approx a\otimes b\)</span>, the maximum-ignorance coupling. Setting <span class="math inline">\(\varepsilon\)</span> small allows <span class="math inline">\(P\)</span> to encode sharp transport structure at the cost of computational difficulty.</p>
+<p>In MATH 304 (Computational Operations Research), the Lagrangian duality approach used to derive the Gibbs form is exactly the method you applied to derive the KKT conditions for constrained optimization. The Lagrange multipliers <span class="math inline">\(f_i\)</span> and <span class="math inline">\(g_j\)</span> are the shadow prices of the row and column constraints — the dual variables of the transportation LP, now appearing in the exponent of the Gibbs kernel rather than as linear potentials. Every LP duality argument from MATH 304 applies to the regularized problem, with the difference that the logarithmic barrier term <span class="math inline">\(\varepsilon\sum P_{ij}\log P_{ij}\)</span> replaces the indicator function of the feasible set, converting the LP into a smooth strictly convex program.</p>
+<p>In MSCS 202 (Numerical Methods), the condition number of a matrix controls the convergence rate of iterative solvers. The Sinkhorn algorithm’s convergence rate is controlled by the condition number of the Gibbs kernel <span class="math inline">\(K\)</span>, which degrades as <span class="math inline">\(\varepsilon \to 0\)</span> — the entries of <span class="math inline">\(K\)</span> span an exponentially large range, making the matrix increasingly ill-conditioned. The log-sum-exp stabilization of Topic 3 is the numerical analysis fix for this ill-conditioning, exactly analogous to the pivoting strategies and scaling techniques you studied for linear system solvers.</p>
+<hr>
+</section>
+</section>
+<section id="layer-3-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="layer-3-bridge">Layer 3 (Bridge)</h2>
+<p>Every element of the Kathmandu postal sorting office story has a precise mathematical address. Let us walk through them one by one until the concentration penalty, the Gibbs kernel, the scaling vectors, and the <span class="math inline">\(\varepsilon\)</span> dial are completely fused with the formalism.</p>
+<hr>
+<p><strong>The sorting plan — the assignment of parcel flows across all possible source-destination pairs — is the coupling matrix <span class="math inline">\(P \in \Pi(a,b)\)</span>.</strong> Each entry <span class="math inline">\(P_{ij} \geq 0\)</span> is the amount of mass transported from source point <span class="math inline">\(x_i\)</span> to destination point <span class="math inline">\(y_j\)</span>. The row sum constraint <span class="math inline">\(P\mathbf{1}_n = a\)</span> says the total flow leaving each source district equals the source mass — all surplus parcels are dispatched. The column sum constraint <span class="math inline">\(P^\top\mathbf{1}_m = b\)</span> says the total flow arriving at each destination equals the target mass — all deficits are exactly met. The feasible set <span class="math inline">\(\Pi(a,b)\)</span> is the set of all valid sorting plans: non-negative matrices with prescribed row and column sums. The exact Kantorovich solution is a sparse extreme point of this polytope — a corner solution that uses only <span class="math inline">\(2n-1\)</span> of the <span class="math inline">\(n^2\)</span> possible routes, found by the simplex method at cubic cost.</p>
+<p><strong>The concentration penalty — the rule that punishes sorting plans for being too decisive — is the negative Shannon entropy <span class="math inline">\(-H(P) = \sum_{ij} P_{ij}\log P_{ij}\)</span>.</strong> Low entropy means high concentration: the plan commits all its flow to a tiny number of routes, exactly like the sparse Kantorovich solution. High entropy means high spread: the plan distributes flow across many routes, weighted by their costs. Adding <span class="math inline">\(-\varepsilon H(P)\)</span> to the minimization objective penalizes low entropy — penalizes concentration — and pushes the solution away from the sparse extreme point and toward a smooth interior solution. The regularized objective <span class="math inline">\(\langle C, P\rangle - \varepsilon H(P)\)</span> is strictly convex because <span class="math inline">\(-H(P)\)</span> is strictly convex, guaranteeing a unique minimizer for every <span class="math inline">\(\varepsilon &gt; 0\)</span>. The cubic search over polytope vertices is replaced by a smooth convex minimization with a unique interior solution.</p>
+<p><strong>The KL divergence reformulation — penalizing the coupling for carrying information beyond the marginals — is the equivalent form <span class="math inline">\(\langle C,P\rangle + \varepsilon\,\text{KL}(P\|a\otimes b)\)</span>.</strong> The product measure <span class="math inline">\(a\otimes b\)</span> is the maximum-ignorance coupling: the joint distribution that assigns no transport information at all, treating source and destination as independent. The KL divergence <span class="math inline">\(\text{KL}(P\|a\otimes b)\)</span> measures how far the sorting plan <span class="math inline">\(P\)</span> deviates from this total ignorance. Penalizing this deviation with weight <span class="math inline">\(\varepsilon\)</span> says: you may encode transport structure in your plan, but you pay a price proportional to how much structure you encode. The entropic regularization is not an arbitrary smoothing — it is the unique penalty that corresponds to projecting onto the marginal constraints in the KL geometry, which is exactly what the Sinkhorn algorithm does.</p>
+<hr>
+<p><strong>The first-order optimality condition — setting the derivative of the Lagrangian to zero — is the derivation that forces the Gibbs form <span class="math inline">\(P_{ij} \propto e^{-C_{ij}/\varepsilon}\)</span> on the unconstrained solution.</strong> The Lagrangian from MATH 304’s KKT conditions attaches multipliers <span class="math inline">\(f_i\)</span> to the row constraints and <span class="math inline">\(g_j\)</span> to the column constraints. Differentiating with respect to <span class="math inline">\(P_{ij}\)</span> and setting to zero gives <span class="math inline">\(C_{ij} + \varepsilon(\log P_{ij} + 1) - f_i - g_j = 0\)</span>, which solves to <span class="math inline">\(P_{ij} = e^{(f_i + g_j - C_{ij})/\varepsilon - 1}\)</span>. This is the Gibbs-Boltzmann distribution from statistical mechanics: the probability of a transport pair <span class="math inline">\((i,j)\)</span> is proportional to the exponential of the negative cost divided by the temperature <span class="math inline">\(\varepsilon\)</span>. Cheap routes are exponentially more likely than expensive routes. The sharpness of this preference is controlled by <span class="math inline">\(\varepsilon\)</span>: the Lagrange multipliers <span class="math inline">\(f_i\)</span> and <span class="math inline">\(g_j\)</span> are the entropic potentials — the dual variables of the regularized problem, the entropic analogues of the Kantorovich potentials <span class="math inline">\(\phi\)</span> and <span class="math inline">\(\psi\)</span> from Topic 4.</p>
+<p><strong>The Gibbs kernel — the matrix <span class="math inline">\(K_{ij} = e^{-C_{ij}/\varepsilon}\)</span> whose entries are the exponentials of the negative scaled costs — is the unconstrained regularized solution, before marginal correction.</strong> The kernel <span class="math inline">\(K\)</span> encodes the full transport preference structure: entry <span class="math inline">\(K_{ij}\)</span> is large when the route <span class="math inline">\((i,j)\)</span> is cheap and small when it is expensive. It does not satisfy the marginal constraints — its row sums are not <span class="math inline">\(a\)</span> and its column sums are not <span class="math inline">\(b\)</span>. It is the raw Gibbs distribution over transport pairs, which must be scaled to match the prescribed marginals. The Gibbs kernel is the fixed object computed once at the start of the Sinkhorn algorithm and never changed — all subsequent computation is the search for the two scaling vectors that bring its marginals into agreement with <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span>.</p>
+<p><strong>The scaling vectors <span class="math inline">\(u \in \mathbb{R}^m_+\)</span> and <span class="math inline">\(v \in \mathbb{R}^n_+\)</span> — the per-district correction factors that adjust the Gibbs kernel to match the marginals — are the positive vectors satisfying <span class="math inline">\(P^*_\varepsilon = \text{diag}(u)\cdot K\cdot\text{diag}(v)\)</span>.</strong> The vector <span class="math inline">\(u_i = e^{f_i/\varepsilon - 1/2}\)</span> is the exponential of the row dual potential, and <span class="math inline">\(v_j = e^{g_j/\varepsilon - 1/2}\)</span> is the exponential of the column dual potential. In the sorting office: <span class="math inline">\(u_i\)</span> is the multiplicative correction applied to all routes leaving source district <span class="math inline">\(x_i\)</span>, ensuring the total flow out of <span class="math inline">\(x_i\)</span> equals <span class="math inline">\(a_i\)</span>. The vector <span class="math inline">\(v_j\)</span> is the multiplicative correction applied to all routes arriving at destination <span class="math inline">\(y_j\)</span>, ensuring the total flow into <span class="math inline">\(y_j\)</span> equals <span class="math inline">\(b_j\)</span>. The regularized optimal coupling is completely determined by the Gibbs kernel and these two vectors — a dramatic dimensional reduction from <span class="math inline">\(mn\)</span> free parameters to <span class="math inline">\(m + n\)</span> free parameters.</p>
+<hr>
+<p><strong>The <span class="math inline">\(\varepsilon\)</span> dial — the regularization parameter that controls the trade-off between transport fidelity and computational tractability — is the temperature parameter governing the sharpness of the Gibbs distribution.</strong> At <span class="math inline">\(\varepsilon \to 0\)</span>: the Gibbs kernel becomes infinitely sharp, concentrating all weight on the cheapest routes, and <span class="math inline">\(P^*_\varepsilon\)</span> converges to the maximum-entropy exact Kantorovich coupling — the true Wasserstein solution. The approximation error <span class="math inline">\(\text{OT}_\varepsilon - W_c \leq \varepsilon\log(mn)\)</span> goes to zero, but the kernel matrix becomes numerically degenerate. At <span class="math inline">\(\varepsilon \to \infty\)</span>: the Gibbs kernel becomes flat, all routes receive equal weight, and <span class="math inline">\(P^*_\varepsilon \to a\otimes b\)</span> — the independent product coupling that ignores cost entirely. The regularized distance diverges and loses geometric meaning. The practical regime is <span class="math inline">\(\varepsilon\)</span> small enough that <span class="math inline">\(\varepsilon\log(mn)\)</span> is a tolerable approximation error, large enough that the kernel matrix remains numerically representable.</p>
+<p><strong>The differentiability of <span class="math inline">\(\text{OT}_\varepsilon\)</span> with respect to the input weights — the property that makes entropic OT usable as a neural network loss function — is the consequence of strict convexity and the smooth Gibbs form of the solution.</strong> The exact Wasserstein distance <span class="math inline">\(W_c(\mu,\nu)\)</span> is not differentiable when the optimal coupling is non-unique — its gradient is a subgradient, not a gradient. The regularized distance <span class="math inline">\(\text{OT}_\varepsilon\)</span> is infinitely differentiable for every <span class="math inline">\(\varepsilon &gt; 0\)</span>, with gradient <span class="math inline">\(\nabla_a\text{OT}_\varepsilon = f^*\)</span> and <span class="math inline">\(\nabla_b\text{OT}_\varepsilon = g^*\)</span> — the optimal entropic potentials. This is the property exploited in the Wasserstein loss functions of generative models: backpropagation through <span class="math inline">\(\text{OT}_\varepsilon\)</span> computes the gradient with respect to the generator’s output distribution by reading off the optimal dual potentials, which are available as a byproduct of the Sinkhorn algorithm.</p>
+<hr>
+<p><strong>The break moment — the naive assumption that smaller <span class="math inline">\(\varepsilon\)</span> is always better, broken by floating-point underflow — is the numerical ill-conditioning of the Gibbs kernel for small <span class="math inline">\(\varepsilon\)</span>.</strong> The kernel entry <span class="math inline">\(K_{ij} = e^{-C_{ij}/\varepsilon}\)</span> for a costly route with <span class="math inline">\(C_{ij} = 100\)</span> at <span class="math inline">\(\varepsilon = 0.01\)</span> is <span class="math inline">\(e^{-10000}\)</span> — a number approximately <span class="math inline">\(10^{-4343}\)</span> in absolute value, which underflows to exactly zero in IEEE 754 double precision (which can represent numbers only as small as <span class="math inline">\(\approx 10^{-308}\)</span>). Once the kernel underflows, every row and column normalization divides by zero. The mathematical solution exists and is unique — the problem is not ill-posed. The computation is broken. This is the numerical analysis failure mode from MSCS 202: the condition number of <span class="math inline">\(K\)</span> grows as <span class="math inline">\(e^{\|C\|_\infty/\varepsilon}\)</span>, exponentially large for small <span class="math inline">\(\varepsilon\)</span>, making the matrix numerically rank-deficient in floating point.</p>
+<p><strong>The log-sum-exp fix — working in log-space with potentials <span class="math inline">\(f = \varepsilon\log u\)</span> and <span class="math inline">\(g = \varepsilon\log v\)</span> instead of the scaling vectors directly — converts the multiplicative Sinkhorn iterations into additive log-sum-exp operations that never explicitly compute <span class="math inline">\(e^{-C_{ij}/\varepsilon}\)</span>.</strong> Instead of updating <span class="math inline">\(u_i \leftarrow a_i / (Kv)_i\)</span>, the log-domain update is <span class="math inline">\(f_i \leftarrow \varepsilon\log a_i - \varepsilon\log\sum_j e^{(g_j - C_{ij})/\varepsilon}\)</span>, which is a log-sum-exp operation over the differences <span class="math inline">\(g_j - C_{ij}\)</span> — quantities that remain in a reasonable numerical range regardless of <span class="math inline">\(\varepsilon\)</span>. The exponential is applied to differences, not to absolute values, and differences of log-potentials are numerically stable because they encode ratios rather than absolute magnitudes. This is the same stabilization trick used in the forward algorithm for Hidden Markov Models in MSCS 202: never compute small probabilities directly, always work with their logarithms.</p>
+<hr>
+<p><strong>The connection to MATH 208 (Statistics and Probability) runs through the KL divergence and the maximum entropy principle.</strong> The regularized optimal coupling <span class="math inline">\(P^*_\varepsilon\)</span> is the solution to a maximum entropy problem: among all couplings with marginals <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> and expected cost at most <span class="math inline">\(\langle C, P\rangle\)</span>, it is the one with maximum entropy. This is Jaynes’s maximum entropy principle from statistical mechanics: the least-committal distribution consistent with the constraints is the Gibbs distribution. The KL divergence <span class="math inline">\(\text{KL}(P\|a\otimes b)\)</span> you minimized in the regularized problem is the KL divergence you computed in MATH 208 for comparing discrete distributions — here applied to coupling matrices rather than probability vectors. The entire entropic regularization framework is the maximum entropy principle of MATH 208, applied to the space of transport plans.</p>
+<p><strong>The connection to MATH 304 (Computational Operations Research) closes through Lagrangian duality and the interpretation of dual variables as prices.</strong> The Lagrange multipliers <span class="math inline">\(f_i\)</span> and <span class="math inline">\(g_j\)</span> derived from the KKT conditions of the regularized problem are the shadow prices of the supply and demand constraints — exactly as in the transportation LP of MATH 304, but now appearing in the exponent of the Gibbs kernel rather than as linear dual variables. The complementary slackness condition from MATH 304 — the primal constraint is active when the dual variable is nonzero — becomes the Gibbs form condition: every entry <span class="math inline">\(P^*_{ij} = u_i K_{ij} v_j &gt; 0\)</span> is strictly positive, so all dual constraints are simultaneously active in the smooth sense. The strict interior solution of the regularized problem is the analytical content of why the LP corner solution of the exact Kantorovich problem is replaced by a strictly interior Gibbs solution.</p>
+<hr>
+<p><strong>Looking forward across the roadmap</strong>, entropic regularization is the foundation on which everything in Chapter 2 is built. Topic 2 — the Sinkhorn-Knopp theorem — takes the Gibbs structure <span class="math inline">\(P^*_\varepsilon = \text{diag}(u)K\text{diag}(v)\)</span> derived here and proves that the scaling vectors <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span> can be found by alternately normalizing the rows and columns of <span class="math inline">\(K\)</span>, with geometric convergence guaranteed by the strict convexity of the regularized problem. Topic 3 — the log-sum-exp trick — takes the numerical instability identified in the break moment and resolves it completely with the log-domain reformulation, making the algorithm stable for arbitrarily small <span class="math inline">\(\varepsilon\)</span>. In Phase 3, the entropic regularization reappears as the foundation of denoising diffusion models: the forward noising process of a diffusion model is precisely the <span class="math inline">\(\varepsilon \to \infty\)</span> limit of entropic OT, and the reverse denoising process is the <span class="math inline">\(\varepsilon \to 0\)</span> limit — the entire diffusion framework is entropic OT interpolated across scales of <span class="math inline">\(\varepsilon\)</span>.</p>
+<p>The Gibbs kernel <span class="math inline">\(K_{ij} = e^{-C_{ij}/\varepsilon}\)</span> sandwiched between the diagonal scaling vectors <span class="math inline">\(\text{diag}(u)\)</span> and <span class="math inline">\(\text{diag}(v)\)</span> — the sorting office’s spread-out, cost-weighted plan that gets the trucks moving on time — is the regularized optimal coupling <span class="math inline">\(P^*_\varepsilon\)</span>, the computationally tractable approximation to the Wasserstein distance that makes Optimal Transport practical at machine learning scale.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

@@ -1,0 +1,2595 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Stage 5 — DDPM as a Wasserstein Gradient Flow (JKO Connection) – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Stage 5 — DDPM as a Wasserstein Gradient Flow (JKO Connection)</li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#the-jko-scheme" id="toc-the-jko-scheme" class="nav-link active" data-scroll-target="#the-jko-scheme">The JKO Scheme</a></li>
+  <li><a href="#connection-to-ddpm" id="toc-connection-to-ddpm" class="nav-link" data-scroll-target="#connection-to-ddpm">Connection to DDPM</a></li>
+  <li><a href="#why-this-reframes-training" id="toc-why-this-reframes-training" class="nav-link" data-scroll-target="#why-this-reframes-training">Why This Reframes Training</a></li>
+  <li><a href="#implication-for-sampling-quality" id="toc-implication-for-sampling-quality" class="nav-link" data-scroll-target="#implication-for-sampling-quality">Implication for Sampling Quality</a></li>
+  <li><a href="#stage-8-the-push-forward-view-unifying-ddpm-and-rectified-flow-the-push-forward-operatorfor-a-measurable-map-t-mathbbrd-to-mathbbrd-and-source-distribution-mu-the-push-forward-t_sharp-mu-nu-meansnua-mut-1a-quad-forall-text-measurable-ain-plain-terms-if-you-draw-samples-x-sim-mu-and-apply-t-the-outputs-tx-are-distributed-as-nu.-both-ddpm-and-rectified-flow-learn-different-parameterizations-of-this-map.-rectified-flow-deterministic-push-forwardthe-ode-flow-map-varphi_t-mathbbrd-to-mathbbrd-integrates-the-learned-velocity-field-from-t1-to-t0varphi_0x-x-int_10-v_thetax_t-t-dtthe-push-forward-equation-isvarphi_0_sharp-mathcaln0-mathbfi-p_textdatathe-transport-map-is-t-varphi_0-a-single-deterministic-function.v_theta-parameterizes-t-as-its-infinitesimal-generator-the-network-predicts-local-velocity-arrows-whose-path-integral-accumulates-into-the-full-transport.because-rectified-flow-trains-v_theta-toward-straight-line-targets-x_1---x_0-the-integral-is-nearly-linear---euler-integration-with-few-steps-closely-approximates-the-exact-varphi_0.-ddpm-stochastic-push-forward-via-markov-kernelddpm-defines-a-stochastic-transport-through-a-composition-of-markov-kernelst_sharp-mu-k_1-circ-k_2-circ-cdots-circ-k_t_sharp-mathcaln0-mathbfiwhere-each-kernel-k_t-samples-from-p_thetax_t-1-mid-x_t.the-push-forward-is-not-a-single-deterministic-map-but-a-sequence-of-conditional-gaussians-each-shifting-probability-mass-by-one-denoising-step.-rectified-flow-ddpm-push-forward-type-deterministic-stochastic-transport-map-t-varphi_0-ode-flow-k_1-circ-cdots-circ-k_t-markov-chain-generator-v_theta-velocity-field-varepsilon_theta-score-noise-predictor-path-geometry-straight-ot-geodesic-curved-variance-preserving-sde-nfe-to-approximate-t-low-path-is-straight-high-path-is-curved-unificationboth-models-solve-the-same-problemtextfind-t-text-such-that-t_sharp-mu-nu-quad-mu-mathcaln0mathbfiquad-nu-p_textdatathey-differ-only-in-how-t-is-parameterized-and-how-straight-its-trajectories-are.-rectified-flows-straight-paths-make-t-easier-to-approximate-numerically-this-is-the-geometric-reason-it-achieves-lower-fid-at-fewer-nfes." id="toc-stage-8-the-push-forward-view-unifying-ddpm-and-rectified-flow-the-push-forward-operatorfor-a-measurable-map-t-mathbbrd-to-mathbbrd-and-source-distribution-mu-the-push-forward-t_sharp-mu-nu-meansnua-mut-1a-quad-forall-text-measurable-ain-plain-terms-if-you-draw-samples-x-sim-mu-and-apply-t-the-outputs-tx-are-distributed-as-nu.-both-ddpm-and-rectified-flow-learn-different-parameterizations-of-this-map.-rectified-flow-deterministic-push-forwardthe-ode-flow-map-varphi_t-mathbbrd-to-mathbbrd-integrates-the-learned-velocity-field-from-t1-to-t0varphi_0x-x-int_10-v_thetax_t-t-dtthe-push-forward-equation-isvarphi_0_sharp-mathcaln0-mathbfi-p_textdatathe-transport-map-is-t-varphi_0-a-single-deterministic-function.v_theta-parameterizes-t-as-its-infinitesimal-generator-the-network-predicts-local-velocity-arrows-whose-path-integral-accumulates-into-the-full-transport.because-rectified-flow-trains-v_theta-toward-straight-line-targets-x_1---x_0-the-integral-is-nearly-linear---euler-integration-with-few-steps-closely-approximates-the-exact-varphi_0.-ddpm-stochastic-push-forward-via-markov-kernelddpm-defines-a-stochastic-transport-through-a-composition-of-markov-kernelst_sharp-mu-k_1-circ-k_2-circ-cdots-circ-k_t_sharp-mathcaln0-mathbfiwhere-each-kernel-k_t-samples-from-p_thetax_t-1-mid-x_t.the-push-forward-is-not-a-single-deterministic-map-but-a-sequence-of-conditional-gaussians-each-shifting-probability-mass-by-one-denoising-step.-rectified-flow-ddpm-push-forward-type-deterministic-stochastic-transport-map-t-varphi_0-ode-flow-k_1-circ-cdots-circ-k_t-markov-chain-generator-v_theta-velocity-field-varepsilon_theta-score-noise-predictor-path-geometry-straight-ot-geodesic-curved-variance-preserving-sde-nfe-to-approximate-t-low-path-is-straight-high-path-is-curved-unificationboth-models-solve-the-same-problemtextfind-t-text-such-that-t_sharp-mu-nu-quad-mu-mathcaln0mathbfiquad-nu-p_textdatathey-differ-only-in-how-t-is-parameterized-and-how-straight-its-trajectories-are.-rectified-flows-straight-paths-make-t-easier-to-approximate-numerically-this-is-the-geometric-reason-it-achieves-lower-fid-at-fewer-nfes." class="nav-link" data-scroll-target="#stage-8-the-push-forward-view-unifying-ddpm-and-rectified-flow-the-push-forward-operatorfor-a-measurable-map-t-mathbbrd-to-mathbbrd-and-source-distribution-mu-the-push-forward-t_sharp-mu-nu-meansnua-mut-1a-quad-forall-text-measurable-ain-plain-terms-if-you-draw-samples-x-sim-mu-and-apply-t-the-outputs-tx-are-distributed-as-nu.-both-ddpm-and-rectified-flow-learn-different-parameterizations-of-this-map.-rectified-flow-deterministic-push-forwardthe-ode-flow-map-varphi_t-mathbbrd-to-mathbbrd-integrates-the-learned-velocity-field-from-t1-to-t0varphi_0x-x-int_10-v_thetax_t-t-dtthe-push-forward-equation-isvarphi_0_sharp-mathcaln0-mathbfi-p_textdatathe-transport-map-is-t-varphi_0-a-single-deterministic-function.v_theta-parameterizes-t-as-its-infinitesimal-generator-the-network-predicts-local-velocity-arrows-whose-path-integral-accumulates-into-the-full-transport.because-rectified-flow-trains-v_theta-toward-straight-line-targets-x_1---x_0-the-integral-is-nearly-linear---euler-integration-with-few-steps-closely-approximates-the-exact-varphi_0.-ddpm-stochastic-push-forward-via-markov-kernelddpm-defines-a-stochastic-transport-through-a-composition-of-markov-kernelst_sharp-mu-k_1-circ-k_2-circ-cdots-circ-k_t_sharp-mathcaln0-mathbfiwhere-each-kernel-k_t-samples-from-p_thetax_t-1-mid-x_t.the-push-forward-is-not-a-single-deterministic-map-but-a-sequence-of-conditional-gaussians-each-shifting-probability-mass-by-one-denoising-step.-rectified-flow-ddpm-push-forward-type-deterministic-stochastic-transport-map-t-varphi_0-ode-flow-k_1-circ-cdots-circ-k_t-markov-chain-generator-v_theta-velocity-field-varepsilon_theta-score-noise-predictor-path-geometry-straight-ot-geodesic-curved-variance-preserving-sde-nfe-to-approximate-t-low-path-is-straight-high-path-is-curved-unificationboth-models-solve-the-same-problemtextfind-t-text-such-that-t_sharp-mu-nu-quad-mu-mathcaln0mathbfiquad-nu-p_textdatathey-differ-only-in-how-t-is-parameterized-and-how-straight-its-trajectories-are.-rectified-flows-straight-paths-make-t-easier-to-approximate-numerically-this-is-the-geometric-reason-it-achieves-lower-fid-at-fewer-nfes.">Stage 8 — The Push-Forward View: Unifying DDPM and Rectified Flow## The Push-Forward OperatorFor a measurable map <span class="math inline">\(T: \mathbb{R}^d \to \mathbb{R}^d\)</span> and source distribution <span class="math inline">\(\mu\)</span>, the <strong>push-forward</strong> <span class="math inline">\(T_\sharp \mu = \nu\)</span> means:<span class="math display">\[\nu(A) = \mu(T^{-1}(A)) \quad \forall \text{ measurable } A\]</span>In plain terms: if you draw samples <span class="math inline">\(x \sim \mu\)</span> and apply <span class="math inline">\(T\)</span>, the outputs <span class="math inline">\(T(x)\)</span> are distributed as <span class="math inline">\(\nu\)</span>. Both DDPM and Rectified Flow learn different parameterizations of this map.—## Rectified Flow: Deterministic Push-ForwardThe ODE flow map <span class="math inline">\(\varphi_t: \mathbb{R}^d \to \mathbb{R}^d\)</span> integrates the learned velocity field from <span class="math inline">\(t=1\)</span> to <span class="math inline">\(t=0\)</span>:<span class="math display">\[\varphi_0(x) = x + \int_1^0 v_\theta(x_t, t)\, dt\]</span>The push-forward equation is:<span class="math display">\[(\varphi_0)_\sharp \mathcal{N}(0, \mathbf{I}) = p_{\text{data}}\]</span>The transport map is <span class="math inline">\(T = \varphi_0\)</span> — a <strong>single deterministic function</strong>.<span class="math inline">\(v_\theta\)</span> parameterizes <span class="math inline">\(T\)</span> as its infinitesimal generator: the network predicts local velocity arrows whose path integral accumulates into the full transport.Because Rectified Flow trains <span class="math inline">\(v_\theta\)</span> toward straight-line targets <span class="math inline">\((x_1 - x_0)\)</span>, the integral is nearly linear - Euler integration with few steps closely approximates the exact <span class="math inline">\(\varphi_0\)</span>.—## DDPM: Stochastic Push-Forward via Markov KernelDDPM defines a <strong>stochastic</strong> transport through a composition of Markov kernels:<span class="math display">\[T_\sharp \mu = (K_1 \circ K_2 \circ \cdots \circ K_T)_\sharp \mathcal{N}(0, \mathbf{I})\]</span>where each kernel <span class="math inline">\(K_t\)</span> samples from <span class="math inline">\(p_\theta(x_{t-1} \mid x_t)\)</span>.The push-forward is not a single deterministic map but a sequence of conditional Gaussians, each shifting probability mass by one denoising step.| | Rectified Flow | DDPM ||—|—|—|| Push-forward type | deterministic | stochastic || Transport map <span class="math inline">\(T\)</span> | <span class="math inline">\(\varphi_0\)</span> (ODE flow) | <span class="math inline">\(K_1 \circ \cdots \circ K_T\)</span> (Markov chain) || Generator | <span class="math inline">\(v_\theta\)</span> (velocity field) | <span class="math inline">\(\varepsilon_\theta\)</span> (score / noise predictor) || Path geometry | straight (≈ OT geodesic) | curved (variance-preserving SDE) || NFE to approximate <span class="math inline">\(T\)</span> | low (path is straight) | high (path is curved) |—## UnificationBoth models solve the same problem:<span class="math display">\[\text{find } T \text{ such that } T_\sharp \mu = \nu, \quad \mu = \mathcal{N}(0,\mathbf{I}),\quad \nu = p_{\text{data}}\]</span>They differ only in how <span class="math inline">\(T\)</span> is parameterized and how straight its trajectories are. Rectified Flow’s straight paths make <span class="math inline">\(T\)</span> easier to approximate numerically — this is the geometric reason it achieves lower FID at fewer NFEs.</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Stage 5 — DDPM as a Wasserstein Gradient Flow (JKO Connection)</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>::: {#cell-1 .cell _uuid=‘8f2839f25d086af736a60e9eeb907d3b93b6e0e5’ _cell_guid=‘b1076dfc-b9ad-4769-8c92-a6c4dae69d19’ trusted=‘true’ quarto-private-1=‘{“key”:“execution”,“value”:{“iopub.status.busy”:“2026-06-02T03:43:25.705909Z”,“iopub.execute_input”:“2026-06-02T03:43:25.706161Z”,“iopub.status.idle”:“2026-06-02T03:43:32.743560Z”,“shell.execute_reply.started”:“2026-06-02T03:43:25.706138Z”,“shell.execute_reply”:“2026-06-02T03:43:32.742805Z”}}’ execution_count=1}</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 1 - import libraries and check versionsimport matplotlibimport matplotlib.pyplot as pltimport numpy as npimport torchimport torch.nn as nnimport torch.nn.functional as Fimport torchvisionfrom torchvision import datasets, transformsfrom torch.utils.data import DataLoader, TensorDatasetimport torch.optim as optimimport mathimport timefrom tqdm import tqdmimport subprocesssubprocess.run(["pip", "install", "pytorch-fid", "--quiet"], check=True)from pytorch_fid.inception import InceptionV3from pytorch_fid.fid_score import calculate_frechet_distancefrom scipy import linalgprint("pytorch-fid installed")print(f"torch: {torch.__version__}")print(f"torchvision: {torchvision.__version__}")print(f"numpy: {np.__version__}")print(f"matplotlib: {matplotlib.__version__}")print(f"cuda {torch.cuda.is_available()} | device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'cpu'}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>pytorch-fid installed
+torch: 2.3.1+cu121
+torchvision: 0.18.1+cu121
+numpy: 2.4.6
+matplotlib: 3.10.0
+cuda True | device: Tesla P100-PCIE-16GB</code></pre>
+</div>
+<p>:::</p>
+<div id="cell-2" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T03:43:32.745067Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T03:43:32.745988Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T03:43:38.947725Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T03:43:32.745948Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T03:43:38.947043Z&quot;}}" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 2 - load cifar-10, inspect structureraw = datasets.CIFAR10(root="./data", train=True, download=True, transform=transforms.ToTensor())classes = raw.classestargets = np.array(raw.targets)imgs = raw.data # (50000, 32, 32, 3), uint8print(f"train samples: {len(raw)}")print(f"image shape: {imgs.shape[1:]} dtype={imgs.dtype}")print(f"classes: {classes}")print(f"\nper-class counts:")for i, c in enumerate(classes):    print(f"{c:12s}: {(targets == i).sum()}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Downloading https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz to ./data/cifar-10-python.tar.gz</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>100%|██████████| 170498071/170498071 [00:03&lt;00:00, 47721059.59it/s]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Extracting ./data/cifar-10-python.tar.gz to ./data
+train samples: 50000
+image shape: (32, 32, 3)  dtype=uint8
+classes : ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+
+per-class counts:
+airplane    : 5000
+automobile  : 5000
+bird        : 5000
+cat         : 5000
+deer        : 5000
+dog         : 5000
+frog        : 5000
+horse       : 5000
+ship        : 5000
+truck       : 5000</code></pre>
+</div>
+</div>
+<div id="cell-3" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T03:43:38.948554Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T03:43:38.948839Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T03:43:39.429046Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T03:43:38.948816Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T03:43:39.428187Z&quot;}}" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 3 - 5x5 grid, one image per class (pick 5 random images per class → show first two rows as class representatives)fig, axes = plt.subplots(2, 5, figsize=(12, 5))for cls_idx in range(10):    idx = np.where(targets == cls_idx)[0][0]    ax = axes[cls_idx // 5][cls_idx % 5]    ax.imshow(imgs[idx])    ax.set_title(classes[cls_idx], fontsize=9)    ax.axis("off")plt.suptitle("one sample per class (raw uint8)", y=1.02)plt.tight_layout()plt.show()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_4_score_based_gm_with_ot_guided_sampling_files/figure-html/cell-4-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-4" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T03:43:39.430830Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T03:43:39.431056Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T03:43:40.257942Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T03:43:39.431033Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T03:43:40.257185Z&quot;}}" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 4 - per-channel mean and std on raw [0, 255] dataimgs_f = imgs.astype(np.float32) # (50000, 32, 32, 3)ch_mean = imgs_f.mean(axis=(0, 1, 2))ch_std = imgs_f.std(axis=(0, 1, 2))for i, ch in enumerate(["R", "G", "B"]):    print(f"{ch} mean={ch_mean[i]:.3f}  std={ch_std[i]:.3f}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>R mean=125.307  std=62.993
+G mean=122.950  std=62.089
+B mean=113.866  std=66.705</code></pre>
+</div>
+</div>
+<div id="cell-5" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T03:43:40.258775Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T03:43:40.258995Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T03:43:43.287586Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T03:43:40.258973Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T03:43:43.286840Z&quot;}}" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 5 - per-channel pixel intensity histogramsfig, ax = plt.subplots(figsize=(8, 4))colors  = ["red", "green", "blue"]for i, (ch, col) in enumerate(zip(["R", "G", "B"], colors)):    ax.hist(imgs_f[:, :, :, i].ravel(), bins=256, range=(0, 255),            alpha=0.4, color=col, label=ch, density=True)ax.set_xlabel("pixel intensity (0–255)")ax.set_ylabel("density")ax.set_title("per-channel intensity distribution (raw)")ax.legend()plt.tight_layout()plt.show()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_4_score_based_gm_with_ot_guided_sampling_files/figure-html/cell-6-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-6" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T03:43:43.289255Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T03:43:43.289556Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T03:43:44.288553Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T03:43:43.289513Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T03:43:44.287568Z&quot;}}" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 6 — normalize to [-1, 1] and verifyimgs_norm = (imgs_f / 127.5) - 1.0 # (50000, 32, 32, 3)vmin, vmax = imgs_norm.min(), imgs_norm.max()vmean = imgs_norm.mean()vstd = imgs_norm.std()print(f"min: {vmin:.6f} (expected -1.0)")print(f"max: {vmax:.6f} (expected  1.0)")print(f"mean: {vmean:.6f} (expected ≈ 0.0)")print(f"std: {vstd:.6f}")assert vmin &gt;= -1.0, f"min {vmin} out of range"assert vmax &lt;=  1.0, f"max {vmax} out of range"print("\nassertions passed — range confirmed [-1, 1]")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>min: -1.000000 (expected -1.0)
+max: 1.000000 (expected  1.0)
+mean: -0.053274 (expected ≈ 0.0)
+std: 0.503138
+
+assertions passed — range confirmed [-1, 1]</code></pre>
+</div>
+</div>
+<div id="cell-7" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T03:43:44.289619Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T03:43:44.290081Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T03:43:44.297321Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T03:43:44.290032Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T03:43:44.296409Z&quot;}}" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 7 - define linear beta schedule and precompute noise schedule parametersT = 1000beta_min = 1e-4beta_max = 0.02betas = torch.linspace(beta_min, beta_max, T) # (T,)alphas = 1.0 - betas # (T,)alpha_bars = torch.cumprod(alphas, dim=0) # (T,)  ᾱ_tprint(f"betas: min={betas.min():.6f} max={betas.max():.6f}")print(f"alphas: min={alphas.min():.6f} max={alphas.max():.6f}")print(f"alpha_bars: t=1 → {alpha_bars[0]:.6f} t=T → {alpha_bars[-1]:.6f}")print(f"\nexpected: alpha_bars[0] ≈ 1.0, alpha_bars[-1] ≈ 0.0")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>betas: min=0.000100 max=0.020000
+alphas: min=0.980000 max=0.999900
+alpha_bars: t=1 → 0.999900 t=T → 0.000040
+
+expected: alpha_bars[0] ≈ 1.0, alpha_bars[-1] ≈ 0.0</code></pre>
+</div>
+</div>
+<div id="cell-8" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T03:43:44.298351Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T03:43:44.298690Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T03:43:44.813570Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T03:43:44.298627Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T03:43:44.812958Z&quot;}}" data-execution_count="8">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 8 - verify signal-to-noise ratio collapse: plot sqrt(ᾱ_t) and sqrt(1−ᾱ_t) vs tfig, ax = plt.subplots(figsize=(8, 4))ts = np.arange(1, T + 1)ax.plot(ts, alpha_bars.sqrt().numpy(), label=r"$\sqrt{\bar{\alpha}_t}$  (signal coeff)")ax.plot(ts, (1 - alpha_bars).sqrt().numpy(), label=r"$\sqrt{1-\bar{\alpha}_t}$  (noise coeff)")ax.axhline(0.5, color="gray", linestyle="--", linewidth=0.8)ax.set_xlabel("timestep t")ax.set_ylabel("coefficient")ax.set_title("signal vs noise coefficient over forward process")ax.legend()plt.tight_layout()plt.show()crossover = (alpha_bars &lt; 0.5).nonzero(as_tuple=True)[0][0].item() + 1print(f"signal &lt; noise after t = {crossover} (signal/noise crossover)")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_4_score_based_gm_with_ot_guided_sampling_files/figure-html/cell-9-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>signal &lt; noise after t = 260 (signal/noise crossover)</code></pre>
+</div>
+</div>
+<div id="cell-9" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T03:43:44.814624Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T03:43:44.815036Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T03:43:44.823374Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T03:43:44.815011Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T03:43:44.822771Z&quot;}}" data-execution_count="9">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 9 - implement closed-form forward process q(x_t | x_0)def q_sample(x0: torch.Tensor, t: torch.Tensor, alpha_bars: torch.Tensor) -&gt; tuple[torch.Tensor, torch.Tensor]:    """    Sample x_t ~ q(x_t | x_0) in closed form.    x_t = sqrt(ᾱ_t) * x0 + sqrt(1 − ᾱ_t) * ε,  ε ~ N(0, I)    Args:        x0: clean image tensor (B, C, H, W)        t: integer timestep indices (B,), 0-indexed        alpha_bars: precomputed ᾱ values (T,)    Returns:        x_t: noisy image at timestep t        eps: the noise that was added (target for the score network)    """    ab = alpha_bars[t].view(-1, 1, 1, 1) # (B, 1, 1, 1)    eps = torch.randn_like(x0)    x_t = ab.sqrt() * x0 + (1 - ab).sqrt() * eps    return x_t, eps# smoke test: single image, single timestepx0_test = torch.zeros(1, 3, 32, 32) # black imaget_test = torch.tensor([499]) # t = 500x_t, eps = q_sample(x0_test, t_test, alpha_bars)ab_500 = alpha_bars[499].item()print(f"t=500  ᾱ_t={ab_500:.4f}")print(f"expected x_t mean ≈ 0.0 (signal=0 + noise centered at 0)")print(f"x_t mean={x_t.mean():.4f} std={x_t.std():.4f}")print(f"expected std ≈ sqrt(1-ᾱ_t) = {(1-ab_500)**0.5:.4f}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>t=500  ᾱ_t=0.0786
+expected x_t mean ≈ 0.0 (signal=0 + noise centered at 0)
+x_t mean=0.0012 std=0.9648
+expected std ≈ sqrt(1-ᾱ_t) = 0.9599</code></pre>
+</div>
+</div>
+<div id="cell-10" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T03:43:44.826245Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T03:43:44.826605Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T03:43:45.107310Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T03:43:44.826567Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T03:43:45.106633Z&quot;}}" data-execution_count="10">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 10 - visualize forward process for one image at t = 0, 100, 300, 500, 700, 999# pick one image from the dataset and convert to tensor in [-1, 1]sample_np = raw.data[42].astype(np.float32) / 127.5 - 1.0 # (32, 32, 3)x0 = torch.tensor(sample_np).permute(2, 0, 1).unsqueeze(0) # (1, 3, 32, 32)timesteps = [0, 100, 300, 500, 700, 999]fig, axes = plt.subplots(1, 6, figsize=(14, 3))for ax, t_val in zip(axes, timesteps):    t_tensor = torch.tensor([t_val])    x_t, _ = q_sample(x0, t_tensor, alpha_bars)    img = x_t.squeeze(0).permute(1, 2, 0).numpy()    img = (img + 1) / 2 # back to [0,1] for display    img = np.clip(img, 0, 1)    ax.imshow(img)    ab_val = alpha_bars[t_val].item()    ax.set_title(f"t={t_val}\nᾱ={ab_val:.3f}", fontsize=8)    ax.axis("off")plt.suptitle("forward process: clean -&gt; pure noise", y=1.02)plt.tight_layout()plt.show()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_4_score_based_gm_with_ot_guided_sampling_files/figure-html/cell-11-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-11" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T03:43:45.108342Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T03:43:45.108653Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T03:43:45.195661Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T03:43:45.108620Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T03:43:45.194812Z&quot;}}" data-execution_count="11">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 11 - numerical verification: at t=T, x_T should be ≈ N(0, I)t_T = torch.tensor([T - 1])x_T_samples = torch.stack([q_sample(x0, t_T, alpha_bars)[0] for _ in range(1000)]).squeeze(1)print(f"at t=T: ᾱ_T = {alpha_bars[-1]:.6f}")print(f"x_T empirical mean: {x_T_samples.mean():.4f} (expected ≈ 0.0)")print(f"x_T empirical std: {x_T_samples.std():.4f} (expected ≈ 1.0)")print(f"max |signal contrib| = {(alpha_bars[-1].sqrt() * x0.abs().max()).item():.6f} (should be negligible)")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>at t=T: ᾱ_T = 0.000040
+x_T empirical mean: 0.0002 (expected ≈ 0.0)
+x_T empirical std: 0.9998 (expected ≈ 1.0)
+max |signal contrib| = 0.004958 (should be negligible)</code></pre>
+</div>
+</div>
+<div id="cell-12" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T03:43:45.196781Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T03:43:45.197316Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T03:43:45.202414Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T03:43:45.197290Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T03:43:45.201645Z&quot;}}" data-execution_count="12">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 12 - implement the denoising score matching lossdef diffusion_loss(model: nn.Module, x0: torch.Tensor, alpha_bars: torch.Tensor) -&gt; torch.Tensor:    """    Denoising score matching loss: L = E_{t, x0, ε} [ ||ε_θ(x_t, t) − ε||² ]    Samples t uniformly, constructs x_t via q_sample, and regresses predicted noise onto true noise.    Args:        model: score network ε_θ(x_t, t) — implemented in stage 4        x0: clean images (B, C, H, W) in [-1, 1]        alpha_bars: precomputed ᾱ values (T,)    Returns:        scalar MSE loss    """    B = x0.shape[0]    t = torch.randint(0, len(alpha_bars), (B,), device=x0.device)    x_t, eps = q_sample(x0, t, alpha_bars.to(x0.device))    eps_pred = model(x_t, t)    return nn.functional.mse_loss(eps_pred, eps)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-13" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T03:43:45.203426Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T03:43:45.203955Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T03:43:45.221225Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T03:43:45.203932Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T03:43:45.220430Z&quot;}}" data-execution_count="13">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 13 - verify score &lt;-&gt; noise equivalence numerically# at a fixed t, compute the analytic score and confirm it equals -ε / sqrt(1 - ᾱ_t)t_val = torch.tensor([499]) # t = 500x_t, eps = q_sample(x0, t_val, alpha_bars)ab = alpha_bars[499]score_analytic = -(x_t - ab.sqrt() * x0) / (1 - ab) # direct formulascore_from_noise = -eps / (1 - ab).sqrt() # via reparameterizationmax_diff = (score_analytic - score_from_noise).abs().max().item()print(f"ᾱ_t = {ab:.6f}")print(f"max |score_analytic − score_from_noise| = {max_diff:.2e}")print(f"equivalence confirmed: {max_diff &lt; 1e-5}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>ᾱ_t = 0.078587
+max |score_analytic − score_from_noise| = 4.77e-07
+equivalence confirmed: True</code></pre>
+</div>
+</div>
+<div id="cell-14" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T03:43:45.222405Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T03:43:45.222809Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T03:43:45.379367Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T03:43:45.222773Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T03:43:45.378400Z&quot;}}" data-execution_count="14">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 14 - visualize scaling factor 1/sqrt(1 - ᾱ_t) across timestepsscale = 1.0 / (1 - alpha_bars).sqrt()fig, ax = plt.subplots(figsize=(8, 4))ax.plot(np.arange(1, T + 1), scale.numpy())ax.set_xlabel("timestep t")ax.set_ylabel(r"$1/\sqrt{1 - \bar{\alpha}_t}$")ax.set_title("score scaling factor vs timestep")ax.axvline(260, color="gray", linestyle="--", linewidth=0.8, label="signal/noise crossover (t=260)")ax.legend()plt.tight_layout()plt.show()print(f"scale at t=1: {scale[0]:.4f} (small — mostly signal, score is gentle)")print(f"scale at t=500: {scale[499]:.4f} (moderate)")print(f"scale at t=999: {scale[999]:.4f} (large — mostly noise, score is sharp)")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_4_score_based_gm_with_ot_guided_sampling_files/figure-html/cell-15-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>scale at t=1: 99.9917 (small — mostly signal, score is gentle)
+scale at t=500: 1.0418 (moderate)
+scale at t=999: 1.0000 (large — mostly noise, score is sharp)</code></pre>
+</div>
+</div>
+<div id="cell-15" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T03:43:45.380222Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T03:43:45.380414Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T03:43:45.389649Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T03:43:45.380394Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T03:43:45.389001Z&quot;}}" data-execution_count="15">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 15 - sinusoidal timestep embeddingclass SinusoidalTimestepEmbedding(nn.Module):    """    Encodes scalar timestep t into a continuous vector via sinusoidal frequencies.    Identical in spirit to positional encodings in transformers — gives the network    a smooth, unique representation of each noise level.    """    def __init__(self, dim: int):        super().__init__()        self.dim = dim    def forward(self, t: torch.Tensor) -&gt; torch.Tensor:        # t: (B,) integer timesteps        half = self.dim // 2        freqs = torch.exp(math.log(10000) * torch.arange(half, device=t.device) / (half - 1)) # (half,)        args = t[:, None].float() * freqs[None, :] # (B, half)        return torch.cat([args.sin(), args.cos()], dim=-1) # (B, dim)# verify shape and that different timesteps produce different embeddingsemb = SinusoidalTimestepEmbedding(dim=128)t_a = torch.tensor([0, 499, 999])out = emb(t_a)print(f"embedding shape: {out.shape} (expected (3, 128))")print(f"t=0 norm: {out[0].norm():.4f}")print(f"t=499 norm: {out[1].norm():.4f}")print(f"t=999 norm: {out[2].norm():.4f}")print(f"t=0 vs t=499 cosine sim: {torch.nn.functional.cosine_similarity(out[0:1], out[1:2]).item():.4f}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>embedding shape: torch.Size([3, 128]) (expected (3, 128))
+t=0 norm: 8.0000
+t=499 norm: 8.0000
+t=999 norm: 8.0000
+t=0 vs t=499 cosine sim: 0.0918</code></pre>
+</div>
+</div>
+<div id="cell-16" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T03:43:45.390532Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T03:43:45.391089Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T03:43:45.409646Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T03:43:45.391049Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T03:43:45.408925Z&quot;}}" data-execution_count="16">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 16 - residual block with time conditioningclass ResBlock(nn.Module):    """    Conv -&gt; GroupNorm -&gt; SiLU -&gt; Conv -&gt; GroupNorm, with additive time embedding injection    and a residual connection. Core building block of the U-Net encoder/decoder.    """    def __init__(self, in_ch: int, out_ch: int, time_dim: int):        super().__init__()        self.conv1 = nn.Conv2d(in_ch,  out_ch, 3, padding=1)        self.conv2 = nn.Conv2d(out_ch, out_ch, 3, padding=1)        self.norm1 = nn.GroupNorm(8, out_ch)        self.norm2 = nn.GroupNorm(8, out_ch)        self.act = nn.SiLU()        self.time_mlp = nn.Linear(time_dim, out_ch)        # 1x1 conv to match channels if in_ch != out_ch        self.skip = nn.Conv2d(in_ch, out_ch, 1) if in_ch != out_ch else nn.Identity()    def forward(self, x: torch.Tensor, t_emb: torch.Tensor) -&gt; torch.Tensor:        h = self.act(self.norm1(self.conv1(x)))        h = h + self.time_mlp(self.act(t_emb))[:, :, None, None] # inject time        h = self.act(self.norm2(self.conv2(h)))        return h + self.skip(x)# smoke testrb = ResBlock(32, 64, time_dim=128)x_ = torch.randn(2, 32, 16, 16)t_ = torch.randn(2, 128)out = rb(x_, t_)print(f"resblock output shape: {out.shape} (expected (2, 64, 16, 16))")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>resblock output shape: torch.Size([2, 64, 16, 16]) (expected (2, 64, 16, 16))</code></pre>
+</div>
+</div>
+<div id="cell-17" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T03:43:45.410815Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T03:43:45.411339Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T03:43:45.499797Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T03:43:45.411316Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T03:43:45.499061Z&quot;}}" data-execution_count="17">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 17 - U-Net score networkclass UNet(nn.Module):    """    Time-conditioned U-Net. Takes noisy image x_t and timestep t,    returns predicted noise ε_θ(x_t, t) of same spatial shape as input.    Architecture: sinusoidal embedding -&gt; encoder (downsample) -&gt; bottleneck -&gt; decoder (upsample + skip).    """    def __init__(self, in_ch: int=3, base_ch: int=64, time_dim: int=256):        super().__init__()        self.time_mlp = nn.Sequential(            SinusoidalTimestepEmbedding(time_dim),            nn.Linear(time_dim, time_dim),            nn.SiLU(),        )        # encoder        self.enc1 = ResBlock(in_ch, base_ch, time_dim) # 32x32        self.enc2 = ResBlock(base_ch, base_ch * 2, time_dim) # 16x16        self.enc3 = ResBlock(base_ch * 2, base_ch * 4, time_dim) # 8x8        self.down = nn.MaxPool2d(2)        # bottleneck        self.bot1 = ResBlock(base_ch * 4, base_ch * 4, time_dim)        self.bot2 = ResBlock(base_ch * 4, base_ch * 4, time_dim)        # decoder        self.up = nn.Upsample(scale_factor=2, mode="nearest")        self.dec3 = ResBlock(base_ch * 4 + base_ch * 4, base_ch * 2, time_dim)        self.dec2 = ResBlock(base_ch * 2 + base_ch * 2, base_ch, time_dim)        self.dec1 = ResBlock(base_ch + base_ch, base_ch, time_dim)        # output projection        self.out = nn.Conv2d(base_ch, in_ch, 1)    def forward(self, x: torch.Tensor, t: torch.Tensor) -&gt; torch.Tensor:        t_emb = self.time_mlp(t) # (B, time_dim)        # encode        e1 = self.enc1(x, t_emb) # (B, 64,  32, 32)        e2 = self.enc2(self.down(e1), t_emb) # (B, 128, 16, 16)        e3 = self.enc3(self.down(e2), t_emb) # (B, 256,  8,  8)        # bottleneck        b  = self.bot2(self.bot1(self.down(e3), t_emb), t_emb) # (B, 256, 4, 4)        # decode with skip connections        d3 = self.dec3(torch.cat([self.up(b),  e3], dim=1), t_emb)        d2 = self.dec2(torch.cat([self.up(d3), e2], dim=1), t_emb)        d1 = self.dec1(torch.cat([self.up(d2), e1], dim=1), t_emb)        return self.out(d1)# instantiate and verifymodel = UNet(in_ch=3, base_ch=64, time_dim=256)x_ = torch.randn(2, 3, 32, 32)t_ = torch.randint(0, 1000, (2,))out = model(x_, t_)print(f"output shape: {out.shape}  (expected (2, 3, 32, 32))")total = sum(p.numel() for p in model.parameters())print(f"total params: {total:,}  (must be ≤ 30M)")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>output shape: torch.Size([2, 3, 32, 32])  (expected (2, 3, 32, 32))
+total params: 5,053,763  (must be ≤ 30M)</code></pre>
+</div>
+</div>
+<div id="cell-18" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T03:43:45.500703Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T03:43:45.500962Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T03:43:45.566777Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T03:43:45.500938Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T03:43:45.566099Z&quot;}}" data-execution_count="18">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 18 - verify output shape matches input and gradients flowloss = out.mean()loss.backward()grad_norms = {n: p.grad.norm().item() for n, p in model.named_parameters() if p.grad is not None}print(f"layers with gradients: {len(grad_norms)}")print(f"min grad norm: {min(grad_norms.values()):.2e}")print(f"max grad norm: {max(grad_norms.values()):.2e}")print(f"any zero grads: {any(v == 0.0 for v in grad_norms.values())}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>layers with gradients: 96
+min grad norm: 1.84e-02
+max grad norm: 6.07e+00
+any zero grads: False</code></pre>
+</div>
+</div>
+<div id="cell-19" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T03:43:45.567636Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T03:43:45.567903Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T03:43:46.627154Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T03:43:45.567878Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T03:43:46.626202Z&quot;}}" data-execution_count="19">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 19 — training loopSEED = 42torch.manual_seed(SEED)DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")BATCH_SIZE = 128LR = 2e-4N_EPOCHS = 100transform  = transforms.Compose([    transforms.ToTensor(),    transforms.Lambda(lambda x: x * 2 - 1), # [0,1] -&gt; [-1,1]])train_set = datasets.CIFAR10(root="./data", train=True, download=True, transform=transform)train_loader = DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True, num_workers=4, pin_memory=True, drop_last=True)model = UNet(in_ch=3, base_ch=64, time_dim=256).to(DEVICE)optimizer = optim.AdamW(model.parameters(), lr=LR)ab_dev = alpha_bars.to(DEVICE)print(f"device: {DEVICE}")print(f"batches/ep: {len(train_loader)}")print(f"params: {sum(p.numel() for p in model.parameters()):,}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Files already downloaded and verified
+device: cuda
+batches/ep: 390
+params: 5,053,763</code></pre>
+</div>
+</div>
+<div id="cell-20" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T03:43:46.628197Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T03:43:46.628607Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T04:21:01.221678Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T03:43:46.628572Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T04:21:01.220859Z&quot;}}" data-execution_count="20">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 20 — run training, log loss every epochloss_history = []for epoch in range(1, N_EPOCHS + 1):    model.train()    epoch_loss = 0.0    t0 = time.time()    for imgs, _ in tqdm(train_loader, desc=f"epoch {epoch:3d}/{N_EPOCHS}", leave=False):        imgs = imgs.to(DEVICE)        optimizer.zero_grad()        loss = diffusion_loss(model, imgs, ab_dev)        loss.backward()        nn.utils.clip_grad_norm_(model.parameters(), 1.0)        optimizer.step()        epoch_loss += loss.item()    avg = epoch_loss / len(train_loader)    loss_history.append(avg)    print(f"epoch {epoch:3d}/{N_EPOCHS}  loss={avg:.4f}  time={time.time()-t0:.1f}s")torch.save(model.state_dict(), "ddpm_unet.pt")print("\nmodel saved → ddpm_unet.pt")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch   1/100  loss=0.0836  time=22.9s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch   2/100  loss=0.0460  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch   3/100  loss=0.0421  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch   4/100  loss=0.0400  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch   5/100  loss=0.0395  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch   6/100  loss=0.0385  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch   7/100  loss=0.0381  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch   8/100  loss=0.0373  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch   9/100  loss=0.0370  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  10/100  loss=0.0365  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  11/100  loss=0.0370  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  12/100  loss=0.0357  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  13/100  loss=0.0359  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  14/100  loss=0.0359  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  15/100  loss=0.0353  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  16/100  loss=0.0348  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  17/100  loss=0.0346  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  18/100  loss=0.0349  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  19/100  loss=0.0344  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  20/100  loss=0.0344  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  21/100  loss=0.0344  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  22/100  loss=0.0344  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  23/100  loss=0.0342  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  24/100  loss=0.0342  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  25/100  loss=0.0343  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  26/100  loss=0.0344  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  27/100  loss=0.0336  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  28/100  loss=0.0341  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  29/100  loss=0.0335  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  30/100  loss=0.0339  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  31/100  loss=0.0332  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  32/100  loss=0.0331  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  33/100  loss=0.0331  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  34/100  loss=0.0333  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  35/100  loss=0.0339  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  36/100  loss=0.0327  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  37/100  loss=0.0330  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  38/100  loss=0.0332  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  39/100  loss=0.0332  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  40/100  loss=0.0334  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  41/100  loss=0.0328  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  42/100  loss=0.0327  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  43/100  loss=0.0330  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  44/100  loss=0.0328  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  45/100  loss=0.0330  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  46/100  loss=0.0329  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  47/100  loss=0.0324  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  48/100  loss=0.0333  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  49/100  loss=0.0322  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  50/100  loss=0.0331  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  51/100  loss=0.0328  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  52/100  loss=0.0326  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  53/100  loss=0.0319  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  54/100  loss=0.0326  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  55/100  loss=0.0325  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  56/100  loss=0.0327  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  57/100  loss=0.0324  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  58/100  loss=0.0319  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  59/100  loss=0.0322  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  60/100  loss=0.0325  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  61/100  loss=0.0327  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  62/100  loss=0.0321  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  63/100  loss=0.0324  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  64/100  loss=0.0323  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  65/100  loss=0.0317  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  66/100  loss=0.0317  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  67/100  loss=0.0324  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  68/100  loss=0.0326  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  69/100  loss=0.0323  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  70/100  loss=0.0319  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  71/100  loss=0.0324  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  72/100  loss=0.0328  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  73/100  loss=0.0326  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  74/100  loss=0.0320  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  75/100  loss=0.0319  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  76/100  loss=0.0321  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  77/100  loss=0.0321  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  78/100  loss=0.0321  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  79/100  loss=0.0319  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  80/100  loss=0.0321  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  81/100  loss=0.0319  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  82/100  loss=0.0319  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  83/100  loss=0.0323  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  84/100  loss=0.0320  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  85/100  loss=0.0321  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  86/100  loss=0.0318  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  87/100  loss=0.0317  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  88/100  loss=0.0321  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  89/100  loss=0.0316  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  90/100  loss=0.0321  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  91/100  loss=0.0317  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  92/100  loss=0.0319  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  93/100  loss=0.0317  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  94/100  loss=0.0315  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  95/100  loss=0.0319  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  96/100  loss=0.0323  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  97/100  loss=0.0322  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  98/100  loss=0.0316  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  99/100  loss=0.0318  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch 100/100  loss=0.0316  time=22.3s
+
+model saved → ddpm_unet.pt</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+</div>
+<div id="cell-21" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T04:21:01.222981Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T04:21:01.223451Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T04:21:01.367113Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T04:21:01.223419Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T04:21:01.366425Z&quot;}}" data-execution_count="21">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb239"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb239-1"><a href="#cb239-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 21 - plot training loss curvefig, ax = plt.subplots(figsize=(8, 4))ax.plot(range(1, N_EPOCHS + 1), loss_history)ax.set_xlabel("epoch")ax.set_ylabel("MSE loss")ax.set_title("DDPM training loss")plt.tight_layout()plt.show()print(f"initial loss: {loss_history[0]:.4f} (expected ≈ 1.0 — predicting random noise)")print(f"final loss: {loss_history[-1]:.4f} (expected &lt; 0.1 after convergence)")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_4_score_based_gm_with_ot_guided_sampling_files/figure-html/cell-22-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>initial loss: 0.0836 (expected ≈ 1.0 — predicting random noise)
+final loss: 0.0316 (expected &lt; 0.1 after convergence)</code></pre>
+</div>
+</div>
+<section id="the-jko-scheme" class="level2">
+<h2 class="anchored" data-anchor-id="the-jko-scheme">The JKO Scheme</h2>
+<p>The <strong>Jordan-Kinderlehrer-Otto (JKO) scheme</strong> is a time-discretization of gradient flow in the space of probability distributions equipped with the Wasserstein-2 metric.</p>
+<p>At each discrete step <span class="math inline">\(k\)</span>, the next distribution <span class="math inline">\(\rho_{k+1}\)</span> is defined by:</p>
+<p><span class="math display">\[\rho_{k+1} = \arg\min_{\rho} \left[ \underbrace{\mathrm{KL}(\rho \,\|\, p_{\text{data}})}_{\text{energy to minimize}} + \underbrace{\frac{1}{2\tau} W_2^2(\rho,\, \rho_k)}_{\text{proximal regularizer}} \right]\]</span></p>
+<ul>
+<li><span class="math inline">\(\mathcal{F}[\rho] = \mathrm{KL}(\rho \| p_{\text{data}})\)</span>: the functional being minimized — measures how far the current distribution is from the data distribution.</li>
+<li><span class="math inline">\(W_2^2(\rho, \rho_k)\)</span>: the squared Wasserstein-2 distance — penalizes moving too far in a single step. Acts as a speed limit in distribution space.</li>
+<li><span class="math inline">\(\tau\)</span>: the step size — corresponds to <span class="math inline">\(\beta_t\)</span> in the DDPM noise schedule.</li>
+</ul>
+</section>
+<section id="connection-to-ddpm" class="level2">
+<h2 class="anchored" data-anchor-id="connection-to-ddpm">Connection to DDPM</h2>
+<p>Each DDPM <strong>denoising step</strong> is precisely a JKO update:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>JKO term</th>
+<th>DDPM equivalent</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\rho_k\)</span></td>
+<td>noisy distribution <span class="math inline">\(q(x_t)\)</span> at step <span class="math inline">\(t\)</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\rho_{k+1}\)</span></td>
+<td>denoised distribution <span class="math inline">\(p_\theta(x_{t-1})\)</span></td>
+</tr>
+<tr class="odd">
+<td>step size <span class="math inline">\(\tau\)</span></td>
+<td>noise schedule parameter <span class="math inline">\(\beta_t\)</span></td>
+</tr>
+<tr class="even">
+<td>velocity field</td>
+<td>score network <span class="math inline">\(\varepsilon_\theta(x_t, t)\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>The reverse SDE in DDPM implements the continuous limit of this scheme: as <span class="math inline">\(\tau \to 0\)</span> and <span class="math inline">\(T \to \infty\)</span>, the discrete JKO steps converge to the <strong>Fokker-Planck equation</strong>, whose drift term is exactly the score function <span class="math inline">\(\nabla_x \log p(x_t)\)</span>.</p>
+</section>
+<section id="why-this-reframes-training" class="level2">
+<h2 class="anchored" data-anchor-id="why-this-reframes-training">Why This Reframes Training</h2>
+<p>Naively, training <span class="math inline">\(\varepsilon_\theta\)</span> looks like pixel-space curve-fitting — minimizing MSE between predicted and true noise vectors.</p>
+<p>The JKO lens reveals what is actually happening:</p>
+<blockquote class="blockquote">
+<p><strong>Training is gradient descent in the space of probability distributions.</strong> The score network learns the velocity field of a Wasserstein gradient flow that transports <span class="math inline">\(\mathcal{N}(0, I)\)</span> toward <span class="math inline">\(p_{\text{data}}\)</span> along the direction of steepest descent of <span class="math inline">\(\mathrm{KL}(\cdot \| p_{\text{data}})\)</span>.</p>
+</blockquote>
+<p>This is not curve-fitting. It is learning the geometry of the Wasserstein manifold — specifically, the vector field that moves probability mass most efficiently from noise to data.</p>
+</section>
+<section id="implication-for-sampling-quality" class="level2">
+<h2 class="anchored" data-anchor-id="implication-for-sampling-quality">Implication for Sampling Quality</h2>
+<p>Because each denoising step is a proximal minimization, the step size <span class="math inline">\(\beta_t\)</span> directly controls the trade-off between: - <strong>fidelity to data</strong> (minimize <span class="math inline">\(\mathrm{KL}\)</span>), and - <strong>stability</strong> (stay close to <span class="math inline">\(\rho_k\)</span> via <span class="math inline">\(W_2\)</span> penalty).</p>
+<p>Too large a <span class="math inline">\(\beta_t\)</span>: distribution jumps erratically — proximal term too weak. Too small a <span class="math inline">\(\beta_t\)</span>: convergence is slow — requires many NFEs.</p>
+<p>This is the mathematical reason why DDPM needs large <span class="math inline">\(T\)</span> steps, and why Rectified Flow can do better — it finds straighter paths in distribution space, reducing the number of proximal steps needed.</p>
+<div id="cell-23" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T04:21:01.368238Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T04:21:01.368603Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T04:21:05.535698Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T04:21:01.368578Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T04:21:05.534804Z&quot;}}" data-execution_count="22">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb241"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb241-1"><a href="#cb241-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 22 - implement ddpm reverse sampler@torch.no_grad()def ddpm_sample(model: nn.Module, alpha_bars: torch.Tensor,                betas: torch.Tensor, n_samples: int=16,                device: torch.device=DEVICE) -&gt; torch.Tensor:    """    Full T-step DDPM reverse sampler.    Starts from x_T ~ N(0,I) and applies learned reverse transition    p_θ(x_{t-1}|x_t) for T steps. Returns denoised images in [-1,1].    """    alphas = 1.0 - betas    ab = alpha_bars.to(device)    al = alphas.to(device)    be = betas.to(device)    x = torch.randn(n_samples, 3, 32, 32, device=device) # x_T ~ N(0,I)    for t in reversed(range(len(be))):        t_batch = torch.full((n_samples,), t, device=device, dtype=torch.long)        eps_pred = model(x, t_batch)        # compute reverse mean μ_θ        coeff = be[t] / (1 - ab[t]).sqrt()        mean = (1 / al[t].sqrt()) * (x - coeff * eps_pred)        if t &gt; 0:            sigma = be[t].sqrt()            x = mean + sigma * torch.randn_like(x)        else:            x = mean # no noise at t=0    return x# smoke test: single forward pass through sampler, check output shape and rangemodel.eval()samples = ddpm_sample(model, alpha_bars, betas, n_samples=4)print(f"output shape: {samples.shape} (expected (4, 3, 32, 32))")print(f"min={samples.min():.3f} max={samples.max():.3f} (expected roughly in [-1,1])")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>output shape: torch.Size([4, 3, 32, 32]) (expected (4, 3, 32, 32))
+min=-1.047 max=0.995 (expected roughly in [-1,1])</code></pre>
+</div>
+</div>
+<div id="cell-24" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T04:21:05.536806Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T04:21:05.537154Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T04:21:05.967694Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T04:21:05.537129Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T04:21:05.966986Z&quot;}}" data-execution_count="23">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb243"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb243-1"><a href="#cb243-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 23 - strided sampler (ddim-style, configurable nfe)@torch.no_grad()def ddpm_sample_strided(model: nn.Module, alpha_bars: torch.Tensor,                        betas: torch.Tensor, n_samples: int=16,                        n_steps: int=100,                        device: torch.device=DEVICE) -&gt; tuple[torch.Tensor, int]:    """    Strided DDPM sampler using a subset of T timesteps.    Selects n_steps evenly spaced timesteps from [0, T-1].    Returns (samples, nfe) where nfe = n_steps.    """    T = len(betas)    timesteps = list(reversed(range(0, T, T // n_steps)))[:n_steps]    ab = alpha_bars.to(device)    be = betas.to(device)    x = torch.randn(n_samples, 3, 32, 32, device=device)    for i, t in enumerate(timesteps):        t_batch = torch.full((n_samples,), t, device=device, dtype=torch.long)        eps_pred = model(x, t_batch)        ab_t = ab[t]        ab_prev = ab[timesteps[i + 1]] if i + 1 &lt; len(timesteps) else torch.tensor(1.0)        # reconstruct x0 estimate        x0_hat = (x - (1 - ab_t).sqrt() * eps_pred) / ab_t.sqrt()        x0_hat = x0_hat.clamp(-1, 1)        # compute x_{t-1} mean        mean = ab_prev.sqrt() * x0_hat + (1 - ab_prev).sqrt() * eps_pred        if i &lt; len(timesteps) - 1:            sigma = ((1 - ab_prev) / (1 - ab_t) * (1 - ab_t / ab_prev)).sqrt()            x = mean + sigma * torch.randn_like(x)        else:            x = mean    return x, n_stepssamples_strided, nfe = ddpm_sample_strided(model, alpha_bars, betas, n_samples=4, n_steps=100)print(f"strided output shape: {samples_strided.shape}")print(f"nfe used: {nfe}")print(f"min={samples_strided.min():.3f} max={samples_strided.max():.3f}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>strided output shape: torch.Size([4, 3, 32, 32])
+nfe used: 100
+min=-1.000 max=1.000</code></pre>
+</div>
+</div>
+<div id="cell-25" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T04:21:05.968839Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T04:21:05.969182Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T04:21:10.320308Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T04:21:05.969155Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T04:21:10.319646Z&quot;}}" data-execution_count="24">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb245"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb245-1"><a href="#cb245-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 24 - generate 4x4 grid of samples and visualizemodel.eval()samples = ddpm_sample(model, alpha_bars, betas, n_samples=16)def show_grid(imgs: torch.Tensor, title: str, nrow: int=4):    imgs = (imgs.clamp(-1, 1) + 1) / 2 # [-1,1] → [0,1]    imgs = imgs.cpu().permute(0, 2, 3, 1).numpy()    fig, axes = plt.subplots(nrow, nrow, figsize=(8, 8))    for i, ax in enumerate(axes.ravel()):        ax.imshow(imgs[i])        ax.axis("off")    plt.suptitle(title)    plt.tight_layout()    plt.show()show_grid(samples, f"ddpm samples - nfe={T}")print(f"total nfe (full sampler): {T}")print(f"total nfe (strided, 100): 100")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_4_score_based_gm_with_ot_guided_sampling_files/figure-html/cell-25-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>total nfe (full sampler): 1000
+total nfe (strided, 100): 100</code></pre>
+</div>
+</div>
+<div id="cell-26" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T04:21:10.321229Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T04:21:10.321522Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T04:21:10.805591Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T04:21:10.321480Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T04:21:10.804951Z&quot;}}" data-execution_count="25">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb247"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb247-1"><a href="#cb247-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 25 - verify nfe counts explicitlynfe_full = T_, nfe_100 = ddpm_sample_strided(model, alpha_bars, betas, n_samples=1, n_steps=100)_, nfe_10 = ddpm_sample_strided(model, alpha_bars, betas, n_samples=1, n_steps=10)print(f"full sampler nfe: {nfe_full}")print(f"strided (100) nfe: {nfe_100}")print(f"strided (10) nfe: {nfe_10}")print(f"\neach nfe = one forward pass through ε_θ")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>full sampler nfe: 1000
+strided (100) nfe: 100
+strided (10) nfe: 10
+
+each nfe = one forward pass through ε_θ</code></pre>
+</div>
+</div>
+<div id="cell-27" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T04:21:10.806442Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T04:21:10.806688Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T04:21:10.880754Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T04:21:10.806665Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T04:21:10.880094Z&quot;}}" data-execution_count="26">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb249"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb249-1"><a href="#cb249-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 26 - rectified flow training objectivedef rectified_flow_loss(model: nn.Module, x0: torch.Tensor) -&gt; torch.Tensor:    """    Rectified flow loss: L = E_{x0~data, x1~N(0,I), t~U[0,1]} ||v_θ(x_t,t) − (x1−x0)||²    x_t = (1−t)x0 + t*x1  is the straight-line interpolation.    target velocity is the constant vector (x1 − x0).    """    B = x0.shape[0]    x1 = torch.randn_like(x0) # noise    t = torch.rand(B, device=x0.device) # t ~ U[0,1]    t4 = t.view(-1, 1, 1, 1)    x_t = (1 - t4) * x0 + t4 * x1 # interpolation    target = x1 - x0 # constant velocity    # reuse t as integer-scaled timestep for embedding (map [0,1] → [0,T-1])    t_int = (t * (T - 1)).long()    v_pred = model(x_t, t_int)    return nn.functional.mse_loss(v_pred, target)# smoke testrf_model = UNet(in_ch=3, base_ch=64, time_dim=256).to(DEVICE)x_test = torch.randn(4, 3, 32, 32, device=DEVICE)loss_test = rectified_flow_loss(rf_model, x_test)print(f"rectified flow loss (random init): {loss_test.item():.4f}")print(f"expected: ~2.0 (var of x1−x0 = var(x1)+var(x0) ≈ 1+1 = 2)")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>rectified flow loss (random init): 2.2064
+expected: ~2.0 (var of x1−x0 = var(x1)+var(x0) ≈ 1+1 = 2)</code></pre>
+</div>
+</div>
+<div id="cell-28" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T04:21:10.881621Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T04:21:10.881994Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T04:21:10.889207Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T04:21:10.881934Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T04:21:10.888416Z&quot;}}" data-execution_count="27">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb251"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb251-1"><a href="#cb251-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 27 - verify interpolation at boundary timestepsx0_t = torch.randn(2, 3, 32, 32)x1_t = torch.randn(2, 3, 32, 32)t0 = torch.zeros(2, 1, 1, 1)t1 = torch.ones(2,  1, 1, 1)xt_0 = (1 - t0) * x0_t + t0 * x1_txt_1 = (1 - t1) * x0_t + t1 * x1_tprint(f"at t=0: max|x_t - x0| = {(xt_0 - x0_t).abs().max():.2e} (expected 0.0)")print(f"at t=1: max|x_t - x1| = {(xt_1 - x1_t).abs().max():.2e} (expected 0.0)")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>at t=0: max|x_t - x0| = 0.00e+00 (expected 0.0)
+at t=1: max|x_t - x1| = 0.00e+00 (expected 0.0)</code></pre>
+</div>
+</div>
+<div id="cell-29" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T04:21:10.893608Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T04:21:10.894274Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T04:58:17.217227Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T04:21:10.894249Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T04:58:17.216023Z&quot;}}" data-execution_count="28">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb253"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb253-1"><a href="#cb253-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 28 - train rectified flow modeltorch.manual_seed(SEED)rf_model = UNet(in_ch=3, base_ch=64, time_dim=256).to(DEVICE)rf_optim = optim.AdamW(rf_model.parameters(), lr=LR)rf_history = []for epoch in range(1, N_EPOCHS + 1):    rf_model.train()    epoch_loss = 0.0    t0 = time.time()    for imgs, _ in tqdm(train_loader, desc=f"epoch {epoch:3d}/{N_EPOCHS}", leave=False):        imgs = imgs.to(DEVICE)        rf_optim.zero_grad()        loss = rectified_flow_loss(rf_model, imgs)        loss.backward()        nn.utils.clip_grad_norm_(rf_model.parameters(), 1.0)        rf_optim.step()        epoch_loss += loss.item()    avg = epoch_loss / len(train_loader)    rf_history.append(avg)    print(f"epoch {epoch:3d}/{N_EPOCHS}  loss={avg:.4f}  time={time.time()-t0:.1f}s")torch.save(rf_model.state_dict(), "rectified_flow.pt")print("\nmodel saved → rectified_flow.pt")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch   1/100  loss=0.3067  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch   2/100  loss=0.2319  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch   3/100  loss=0.2204  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch   4/100  loss=0.2150  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch   5/100  loss=0.2112  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch   6/100  loss=0.2084  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch   7/100  loss=0.2057  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch   8/100  loss=0.2036  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch   9/100  loss=0.2025  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  10/100  loss=0.2015  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  11/100  loss=0.2000  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  12/100  loss=0.1995  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  13/100  loss=0.1981  time=22.4s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  14/100  loss=0.1957  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  15/100  loss=0.1957  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  16/100  loss=0.1961  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  17/100  loss=0.1955  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  18/100  loss=0.1946  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  19/100  loss=0.1942  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  20/100  loss=0.1944  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  21/100  loss=0.1940  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  22/100  loss=0.1938  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  23/100  loss=0.1927  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  24/100  loss=0.1922  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  25/100  loss=0.1915  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  26/100  loss=0.1918  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  27/100  loss=0.1906  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  28/100  loss=0.1903  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  29/100  loss=0.1902  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  30/100  loss=0.1902  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  31/100  loss=0.1903  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  32/100  loss=0.1889  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  33/100  loss=0.1898  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  34/100  loss=0.1898  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  35/100  loss=0.1893  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  36/100  loss=0.1906  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  37/100  loss=0.1887  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  38/100  loss=0.1896  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  39/100  loss=0.1884  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  40/100  loss=0.1888  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  41/100  loss=0.1888  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  42/100  loss=0.1874  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  43/100  loss=0.1881  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  44/100  loss=0.1882  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  45/100  loss=0.1875  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  46/100  loss=0.1886  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  47/100  loss=0.1864  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  48/100  loss=0.1879  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  49/100  loss=0.1871  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  50/100  loss=0.1869  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  51/100  loss=0.1870  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  52/100  loss=0.1876  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  53/100  loss=0.1879  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  54/100  loss=0.1870  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  55/100  loss=0.1863  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  56/100  loss=0.1862  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  57/100  loss=0.1860  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  58/100  loss=0.1859  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  59/100  loss=0.1853  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  60/100  loss=0.1865  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  61/100  loss=0.1870  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  62/100  loss=0.1856  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  63/100  loss=0.1855  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  64/100  loss=0.1852  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  65/100  loss=0.1845  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  66/100  loss=0.1851  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  67/100  loss=0.1855  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  68/100  loss=0.1857  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  69/100  loss=0.1856  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  70/100  loss=0.1852  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  71/100  loss=0.1844  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  72/100  loss=0.1842  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  73/100  loss=0.1852  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  74/100  loss=0.1852  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  75/100  loss=0.1850  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  76/100  loss=0.1845  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  77/100  loss=0.1844  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  78/100  loss=0.1840  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  79/100  loss=0.1842  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  80/100  loss=0.1839  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  81/100  loss=0.1840  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  82/100  loss=0.1841  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  83/100  loss=0.1837  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  84/100  loss=0.1848  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  85/100  loss=0.1846  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  86/100  loss=0.1836  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  87/100  loss=0.1842  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  88/100  loss=0.1838  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  89/100  loss=0.1835  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  90/100  loss=0.1851  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  91/100  loss=0.1837  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  92/100  loss=0.1838  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  93/100  loss=0.1839  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  94/100  loss=0.1839  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  95/100  loss=0.1837  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  96/100  loss=0.1836  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  97/100  loss=0.1827  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  98/100  loss=0.1837  time=22.3s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch  99/100  loss=0.1840  time=22.2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                                </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>epoch 100/100  loss=0.1838  time=22.2s
+
+model saved → rectified_flow.pt</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+</div>
+<div id="cell-30" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T04:58:17.218888Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T04:58:17.219236Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T04:58:17.628877Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T04:58:17.219206Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T04:58:17.628211Z&quot;}}" data-execution_count="29">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb455"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb455-1"><a href="#cb455-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 29 - rectified flow ode sampler@torch.no_grad()def rf_sample(model: nn.Module, n_samples: int=16,              n_steps: int=100, device: torch.device=DEVICE) -&gt; tuple[torch.Tensor, int]:    """    Euler integration of the learned ODE dx/dt = v_θ(x,t).    Integrates from t=1 (noise) to t=0 (data) with n_steps uniform steps.    """    dt = 1.0 / n_steps    x = torch.randn(n_samples, 3, 32, 32, device=device) # x_1 ~ N(0,I)    for i in range(n_steps):        t_val = 1.0 - i * dt # integrate 1→0        t_int = torch.full((n_samples,), int(t_val * (T-1)), device=device, dtype=torch.long)        v = model(x, t_int)        x = x - v * dt # euler step    return x, n_steps# smoke testrf_model.eval()rf_samples, nfe = rf_sample(rf_model, n_samples=4, n_steps=100)print(f"output shape: {rf_samples.shape}")print(f"nfe: {nfe}")print(f"min={rf_samples.min():.3f} max={rf_samples.max():.3f}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>output shape: torch.Size([4, 3, 32, 32])
+nfe: 100
+min=-1.241 max=1.078</code></pre>
+</div>
+</div>
+<div id="cell-31" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T04:58:17.629834Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T04:58:17.630175Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T04:58:18.606520Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T04:58:17.630149Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T04:58:18.605921Z&quot;}}" data-execution_count="30">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb457"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb457-1"><a href="#cb457-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 30 - visualize rectified flow samples and compare loss curvesrf_samples_grid, _ = rf_sample(rf_model, n_samples=16, n_steps=100)show_grid(rf_samples_grid, "rectified flow samples — nfe=100")fig, ax = plt.subplots(figsize=(8, 4))ax.plot(range(1, N_EPOCHS + 1), loss_history, label="ddpm")ax.plot(range(1, N_EPOCHS + 1), rf_history, label="rectified flow")ax.set_xlabel("epoch")ax.set_ylabel("loss")ax.set_title("training loss comparison")ax.legend()plt.tight_layout()plt.show()print(f"ddpm final loss: {loss_history[-1]:.4f}")print(f"rf final loss: {rf_history[-1]:.4f}")print(f"note: losses are not directly comparable — different target scales")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_4_score_based_gm_with_ot_guided_sampling_files/figure-html/cell-31-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_4_score_based_gm_with_ot_guided_sampling_files/figure-html/cell-31-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>ddpm final loss: 0.0316
+rf final loss: 0.1838
+note: losses are not directly comparable — different target scales</code></pre>
+</div>
+</div>
+</section>
+<section id="stage-8-the-push-forward-view-unifying-ddpm-and-rectified-flow-the-push-forward-operatorfor-a-measurable-map-t-mathbbrd-to-mathbbrd-and-source-distribution-mu-the-push-forward-t_sharp-mu-nu-meansnua-mut-1a-quad-forall-text-measurable-ain-plain-terms-if-you-draw-samples-x-sim-mu-and-apply-t-the-outputs-tx-are-distributed-as-nu.-both-ddpm-and-rectified-flow-learn-different-parameterizations-of-this-map.-rectified-flow-deterministic-push-forwardthe-ode-flow-map-varphi_t-mathbbrd-to-mathbbrd-integrates-the-learned-velocity-field-from-t1-to-t0varphi_0x-x-int_10-v_thetax_t-t-dtthe-push-forward-equation-isvarphi_0_sharp-mathcaln0-mathbfi-p_textdatathe-transport-map-is-t-varphi_0-a-single-deterministic-function.v_theta-parameterizes-t-as-its-infinitesimal-generator-the-network-predicts-local-velocity-arrows-whose-path-integral-accumulates-into-the-full-transport.because-rectified-flow-trains-v_theta-toward-straight-line-targets-x_1---x_0-the-integral-is-nearly-linear---euler-integration-with-few-steps-closely-approximates-the-exact-varphi_0.-ddpm-stochastic-push-forward-via-markov-kernelddpm-defines-a-stochastic-transport-through-a-composition-of-markov-kernelst_sharp-mu-k_1-circ-k_2-circ-cdots-circ-k_t_sharp-mathcaln0-mathbfiwhere-each-kernel-k_t-samples-from-p_thetax_t-1-mid-x_t.the-push-forward-is-not-a-single-deterministic-map-but-a-sequence-of-conditional-gaussians-each-shifting-probability-mass-by-one-denoising-step.-rectified-flow-ddpm-push-forward-type-deterministic-stochastic-transport-map-t-varphi_0-ode-flow-k_1-circ-cdots-circ-k_t-markov-chain-generator-v_theta-velocity-field-varepsilon_theta-score-noise-predictor-path-geometry-straight-ot-geodesic-curved-variance-preserving-sde-nfe-to-approximate-t-low-path-is-straight-high-path-is-curved-unificationboth-models-solve-the-same-problemtextfind-t-text-such-that-t_sharp-mu-nu-quad-mu-mathcaln0mathbfiquad-nu-p_textdatathey-differ-only-in-how-t-is-parameterized-and-how-straight-its-trajectories-are.-rectified-flows-straight-paths-make-t-easier-to-approximate-numerically-this-is-the-geometric-reason-it-achieves-lower-fid-at-fewer-nfes." class="level1">
+<h1>Stage 8 — The Push-Forward View: Unifying DDPM and Rectified Flow## The Push-Forward OperatorFor a measurable map <span class="math inline">\(T: \mathbb{R}^d \to \mathbb{R}^d\)</span> and source distribution <span class="math inline">\(\mu\)</span>, the <strong>push-forward</strong> <span class="math inline">\(T_\sharp \mu = \nu\)</span> means:<span class="math display">\[\nu(A) = \mu(T^{-1}(A)) \quad \forall \text{ measurable } A\]</span>In plain terms: if you draw samples <span class="math inline">\(x \sim \mu\)</span> and apply <span class="math inline">\(T\)</span>, the outputs <span class="math inline">\(T(x)\)</span> are distributed as <span class="math inline">\(\nu\)</span>. Both DDPM and Rectified Flow learn different parameterizations of this map.—## Rectified Flow: Deterministic Push-ForwardThe ODE flow map <span class="math inline">\(\varphi_t: \mathbb{R}^d \to \mathbb{R}^d\)</span> integrates the learned velocity field from <span class="math inline">\(t=1\)</span> to <span class="math inline">\(t=0\)</span>:<span class="math display">\[\varphi_0(x) = x + \int_1^0 v_\theta(x_t, t)\, dt\]</span>The push-forward equation is:<span class="math display">\[(\varphi_0)_\sharp \mathcal{N}(0, \mathbf{I}) = p_{\text{data}}\]</span>The transport map is <span class="math inline">\(T = \varphi_0\)</span> — a <strong>single deterministic function</strong>.<span class="math inline">\(v_\theta\)</span> parameterizes <span class="math inline">\(T\)</span> as its infinitesimal generator: the network predicts local velocity arrows whose path integral accumulates into the full transport.Because Rectified Flow trains <span class="math inline">\(v_\theta\)</span> toward straight-line targets <span class="math inline">\((x_1 - x_0)\)</span>, the integral is nearly linear - Euler integration with few steps closely approximates the exact <span class="math inline">\(\varphi_0\)</span>.—## DDPM: Stochastic Push-Forward via Markov KernelDDPM defines a <strong>stochastic</strong> transport through a composition of Markov kernels:<span class="math display">\[T_\sharp \mu = (K_1 \circ K_2 \circ \cdots \circ K_T)_\sharp \mathcal{N}(0, \mathbf{I})\]</span>where each kernel <span class="math inline">\(K_t\)</span> samples from <span class="math inline">\(p_\theta(x_{t-1} \mid x_t)\)</span>.The push-forward is not a single deterministic map but a sequence of conditional Gaussians, each shifting probability mass by one denoising step.| | Rectified Flow | DDPM ||—|—|—|| Push-forward type | deterministic | stochastic || Transport map <span class="math inline">\(T\)</span> | <span class="math inline">\(\varphi_0\)</span> (ODE flow) | <span class="math inline">\(K_1 \circ \cdots \circ K_T\)</span> (Markov chain) || Generator | <span class="math inline">\(v_\theta\)</span> (velocity field) | <span class="math inline">\(\varepsilon_\theta\)</span> (score / noise predictor) || Path geometry | straight (≈ OT geodesic) | curved (variance-preserving SDE) || NFE to approximate <span class="math inline">\(T\)</span> | low (path is straight) | high (path is curved) |—## UnificationBoth models solve the same problem:<span class="math display">\[\text{find } T \text{ such that } T_\sharp \mu = \nu, \quad \mu = \mathcal{N}(0,\mathbf{I}),\quad \nu = p_{\text{data}}\]</span>They differ only in how <span class="math inline">\(T\)</span> is parameterized and how straight its trajectories are. Rectified Flow’s straight paths make <span class="math inline">\(T\)</span> easier to approximate numerically — this is the geometric reason it achieves lower FID at fewer NFEs.</h1>
+<div id="cell-33" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T04:58:18.607443Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T04:58:18.607786Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T04:58:18.614622Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T04:58:18.607707Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T04:58:18.613877Z&quot;}}" data-execution_count="31">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb459"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb459-1"><a href="#cb459-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 31 - compute inception statistics helperdef compute_inception_stats(images: torch.Tensor, batch_size: int=128,                             device: torch.device=DEVICE) -&gt; tuple[np.ndarray, np.ndarray]:    """    Compute mean and covariance of Inception-v3 pool3 features.    images: (N, 3, H, W) in [-1,1]. Returns (mu, sigma) for FID computation.    """    block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[2048]    inception = InceptionV3([block_idx]).to(device).eval()    # inception expects [0,1] and at least 75x75 - upsample cifar-10 32→75    imgs_01 = (images.clamp(-1, 1) + 1) / 2    imgs_up = F.interpolate(imgs_01, size=(75, 75), mode="bilinear", align_corners=False)    feats = []    loader = DataLoader(TensorDataset(imgs_up), batch_size=batch_size)    with torch.no_grad():        for (x,) in loader:            f = inception(x.to(device))[0].squeeze(-1).squeeze(-1) # (B, 2048)            feats.append(f.cpu())    feats = torch.cat(feats, dim=0).numpy()    mu = feats.mean(axis=0)    sigma = np.cov(feats, rowvar=False)    return mu, sigmaprint("inception stats function defined!")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>inception stats function defined!</code></pre>
+</div>
+</div>
+<div id="cell-34" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T04:58:18.615584Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T04:58:18.615986Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T04:58:43.481871Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T04:58:18.615937Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T04:58:43.481259Z&quot;}}" data-execution_count="32">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb461"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb461-1"><a href="#cb461-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 32 - precompute real data inception statistics (done once)print("computing real data inception stats on 10,000 cifar-10 samples...")real_loader  = DataLoader(train_set, batch_size=256, shuffle=True)real_imgs = []for imgs, _ in real_loader:    real_imgs.append(imgs)    if len(torch.cat(real_imgs)) &gt;= 10000:        breakreal_imgs = torch.cat(real_imgs)[:10000] # (10000, 3, 32, 32) in [-1,1]mu_real, sigma_real = compute_inception_stats(real_imgs)print(f"real stats computed — mu shape: {mu_real.shape} sigma shape: {sigma_real.shape}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>computing real data inception stats on 10,000 cifar-10 samples...</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Downloading: "https://github.com/mseitzer/pytorch-fid/releases/download/fid_weights/pt_inception-2015-12-05-6726825d.pth" to /root/.cache/torch/hub/checkpoints/pt_inception-2015-12-05-6726825d.pth
+100%|██████████| 91.2M/91.2M [00:00&lt;00:00, 208MB/s]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>real stats computed — mu shape: (2048,) sigma shape: (2048, 2048)</code></pre>
+</div>
+</div>
+<div id="cell-35" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T04:58:43.482566Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T04:58:43.482830Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T04:59:14.848421Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T04:58:43.482801Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T04:59:14.847488Z&quot;}}" data-execution_count="33">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb465"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb465-1"><a href="#cb465-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 33 - fid computation functiondef compute_fid(mu1, sigma1, mu2, sigma2) -&gt; float:    """    Frechet Inception Distance between two Gaussian distributions.    FID = ||mu1-mu2||² + Tr(sigma1 + sigma2 − 2*sqrt(sigma1@sigma2))    """    diff = mu1 - mu2    covmean, _ = linalg.sqrtm(sigma1 @ sigma2, disp=False)    if np.iscomplexobj(covmean):        covmean = covmean.real    fid = diff @ diff + np.trace(sigma1 + sigma2 - 2 * covmean)    return float(fid)# sanity check: fid of real vs real should be ≈ 0mu_real2, sigma_real2 = compute_inception_stats(real_imgs[:5000])mu_real3, sigma_real3 = compute_inception_stats(real_imgs[5000:])fid_sanity = compute_fid(mu_real2, sigma_real2, mu_real3, sigma_real3)print(f"fid (real vs real split): {fid_sanity:.4f} (expected &lt; 12.0)")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/tmp/ipykernel_182/2021247524.py:8: DeprecationWarning: The `disp` argument is deprecated and will be removed in SciPy 1.18.0.
+  covmean, _ = linalg.sqrtm(sigma1 @ sigma2, disp=False)</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>fid (real vs real split): 10.2679 (expected &lt; 12.0)</code></pre>
+</div>
+</div>
+<div id="cell-36" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T04:59:14.849479Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T04:59:14.850168Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T05:24:27.905569Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T04:59:14.850133Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T05:24:27.904932Z&quot;}}" data-execution_count="34">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb468"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb468-1"><a href="#cb468-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 34 - run benchmark across nfe budgetsNFE_BUDGETS  = [10, 20, 50, 100, 200]N_EVAL = 10000EVAL_BATCH = 500def generate_samples(sampler_fn, n_total: int, batch: int) -&gt; torch.Tensor:    """generate n_total samples in batches using sampler_fn."""    out = []    for _ in tqdm(range(n_total // batch), desc="generating"):        s, _ = sampler_fn(batch)        out.append(s.cpu())    return torch.cat(out, dim=0)ddpm_fids = {}rf_fids = {}model.eval()rf_model.eval()for nfe in tqdm(NFE_BUDGETS, desc="nfe budgets"):    print(f"\nnfe={nfe}")    ddpm_fn = lambda n, k=nfe: ddpm_sample_strided(model, alpha_bars, betas, n_samples=n, n_steps=k, device=DEVICE)    rf_fn = lambda n, k=nfe: rf_sample(rf_model, n_samples=n, n_steps=k, device=DEVICE)    ddpm_imgs = generate_samples(ddpm_fn, N_EVAL, EVAL_BATCH)    rf_imgs = generate_samples(rf_fn, N_EVAL, EVAL_BATCH)    mu_ddpm, s_ddpm = compute_inception_stats(ddpm_imgs)    mu_rf, s_rf = compute_inception_stats(rf_imgs)    ddpm_fids[nfe] = compute_fid(mu_real, sigma_real, mu_ddpm, s_ddpm)    rf_fids[nfe] = compute_fid(mu_real, sigma_real, mu_rf, s_rf)    print(f" ddpm fid: {ddpm_fids[nfe]:.2f}")    print(f" rf fid: {rf_fids[nfe]:.2f}")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>nfe budgets:   0%|          | 0/5 [00:00&lt;?, ?it/s]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+nfe=10</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+generating:   0%|          | 0/20 [00:00&lt;?, ?it/s]
+generating:   5%|▌         | 1/20 [00:00&lt;00:15,  1.24it/s]
+generating:  10%|█         | 2/20 [00:01&lt;00:14,  1.25it/s]
+generating:  15%|█▌        | 3/20 [00:02&lt;00:13,  1.25it/s]
+generating:  20%|██        | 4/20 [00:03&lt;00:12,  1.25it/s]
+generating:  25%|██▌       | 5/20 [00:04&lt;00:11,  1.25it/s]
+generating:  30%|███       | 6/20 [00:04&lt;00:11,  1.25it/s]
+generating:  35%|███▌      | 7/20 [00:05&lt;00:10,  1.25it/s]
+generating:  40%|████      | 8/20 [00:06&lt;00:09,  1.25it/s]
+generating:  45%|████▌     | 9/20 [00:07&lt;00:08,  1.25it/s]
+generating:  50%|█████     | 10/20 [00:08&lt;00:08,  1.25it/s]
+generating:  55%|█████▌    | 11/20 [00:08&lt;00:07,  1.25it/s]
+generating:  60%|██████    | 12/20 [00:09&lt;00:06,  1.25it/s]
+generating:  65%|██████▌   | 13/20 [00:10&lt;00:05,  1.25it/s]
+generating:  70%|███████   | 14/20 [00:11&lt;00:04,  1.25it/s]
+generating:  75%|███████▌  | 15/20 [00:12&lt;00:04,  1.25it/s]
+generating:  80%|████████  | 16/20 [00:12&lt;00:03,  1.25it/s]
+generating:  85%|████████▌ | 17/20 [00:13&lt;00:02,  1.25it/s]
+generating:  90%|█████████ | 18/20 [00:14&lt;00:01,  1.25it/s]
+generating:  95%|█████████▌| 19/20 [00:15&lt;00:00,  1.25it/s]
+generating: 100%|██████████| 20/20 [00:16&lt;00:00,  1.25it/s]
+
+generating:   0%|          | 0/20 [00:00&lt;?, ?it/s]
+generating:   5%|▌         | 1/20 [00:00&lt;00:15,  1.26it/s]
+generating:  10%|█         | 2/20 [00:01&lt;00:14,  1.26it/s]
+generating:  15%|█▌        | 3/20 [00:02&lt;00:13,  1.26it/s]
+generating:  20%|██        | 4/20 [00:03&lt;00:12,  1.26it/s]
+generating:  25%|██▌       | 5/20 [00:03&lt;00:11,  1.26it/s]
+generating:  30%|███       | 6/20 [00:04&lt;00:11,  1.26it/s]
+generating:  35%|███▌      | 7/20 [00:05&lt;00:10,  1.26it/s]
+generating:  40%|████      | 8/20 [00:06&lt;00:09,  1.26it/s]
+generating:  45%|████▌     | 9/20 [00:07&lt;00:08,  1.26it/s]
+generating:  50%|█████     | 10/20 [00:07&lt;00:07,  1.26it/s]
+generating:  55%|█████▌    | 11/20 [00:08&lt;00:07,  1.26it/s]
+generating:  60%|██████    | 12/20 [00:09&lt;00:06,  1.26it/s]
+generating:  65%|██████▌   | 13/20 [00:10&lt;00:05,  1.26it/s]
+generating:  70%|███████   | 14/20 [00:11&lt;00:04,  1.26it/s]
+generating:  75%|███████▌  | 15/20 [00:11&lt;00:03,  1.26it/s]
+generating:  80%|████████  | 16/20 [00:12&lt;00:03,  1.26it/s]
+generating:  85%|████████▌ | 17/20 [00:13&lt;00:02,  1.26it/s]
+generating:  90%|█████████ | 18/20 [00:14&lt;00:01,  1.26it/s]
+generating:  95%|█████████▌| 19/20 [00:15&lt;00:00,  1.26it/s]
+generating: 100%|██████████| 20/20 [00:15&lt;00:00,  1.26it/s]
+/tmp/ipykernel_182/2021247524.py:8: DeprecationWarning: The `disp` argument is deprecated and will be removed in SciPy 1.18.0.
+  covmean, _ = linalg.sqrtm(sigma1 @ sigma2, disp=False)
+nfe budgets:  20%|██        | 1/5 [01:34&lt;06:16, 94.08s/it]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code> ddpm fid: 405.60
+ rf fid: 47.39
+
+nfe=20</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+generating:   0%|          | 0/20 [00:00&lt;?, ?it/s]
+generating:   5%|▌         | 1/20 [00:01&lt;00:30,  1.60s/it]
+generating:  10%|█         | 2/20 [00:03&lt;00:28,  1.60s/it]
+generating:  15%|█▌        | 3/20 [00:04&lt;00:27,  1.60s/it]
+generating:  20%|██        | 4/20 [00:06&lt;00:25,  1.59s/it]
+generating:  25%|██▌       | 5/20 [00:07&lt;00:23,  1.59s/it]
+generating:  30%|███       | 6/20 [00:09&lt;00:22,  1.59s/it]
+generating:  35%|███▌      | 7/20 [00:11&lt;00:20,  1.59s/it]
+generating:  40%|████      | 8/20 [00:12&lt;00:19,  1.59s/it]
+generating:  45%|████▌     | 9/20 [00:14&lt;00:17,  1.59s/it]
+generating:  50%|█████     | 10/20 [00:15&lt;00:15,  1.59s/it]
+generating:  55%|█████▌    | 11/20 [00:17&lt;00:14,  1.59s/it]
+generating:  60%|██████    | 12/20 [00:19&lt;00:12,  1.59s/it]
+generating:  65%|██████▌   | 13/20 [00:20&lt;00:11,  1.59s/it]
+generating:  70%|███████   | 14/20 [00:22&lt;00:09,  1.59s/it]
+generating:  75%|███████▌  | 15/20 [00:23&lt;00:07,  1.59s/it]
+generating:  80%|████████  | 16/20 [00:25&lt;00:06,  1.59s/it]
+generating:  85%|████████▌ | 17/20 [00:27&lt;00:04,  1.59s/it]
+generating:  90%|█████████ | 18/20 [00:28&lt;00:03,  1.59s/it]
+generating:  95%|█████████▌| 19/20 [00:30&lt;00:01,  1.59s/it]
+generating: 100%|██████████| 20/20 [00:31&lt;00:00,  1.59s/it]
+
+generating:   0%|          | 0/20 [00:00&lt;?, ?it/s]
+generating:   5%|▌         | 1/20 [00:01&lt;00:30,  1.58s/it]
+generating:  10%|█         | 2/20 [00:03&lt;00:28,  1.58s/it]
+generating:  15%|█▌        | 3/20 [00:04&lt;00:26,  1.58s/it]
+generating:  20%|██        | 4/20 [00:06&lt;00:25,  1.58s/it]
+generating:  25%|██▌       | 5/20 [00:07&lt;00:23,  1.58s/it]
+generating:  30%|███       | 6/20 [00:09&lt;00:22,  1.58s/it]
+generating:  35%|███▌      | 7/20 [00:11&lt;00:20,  1.58s/it]
+generating:  40%|████      | 8/20 [00:12&lt;00:18,  1.58s/it]
+generating:  45%|████▌     | 9/20 [00:14&lt;00:17,  1.58s/it]
+generating:  50%|█████     | 10/20 [00:15&lt;00:15,  1.58s/it]
+generating:  55%|█████▌    | 11/20 [00:17&lt;00:14,  1.58s/it]
+generating:  60%|██████    | 12/20 [00:19&lt;00:12,  1.58s/it]
+generating:  65%|██████▌   | 13/20 [00:20&lt;00:11,  1.58s/it]
+generating:  70%|███████   | 14/20 [00:22&lt;00:09,  1.58s/it]
+generating:  75%|███████▌  | 15/20 [00:23&lt;00:07,  1.58s/it]
+generating:  80%|████████  | 16/20 [00:25&lt;00:06,  1.58s/it]
+generating:  85%|████████▌ | 17/20 [00:26&lt;00:04,  1.58s/it]
+generating:  90%|█████████ | 18/20 [00:28&lt;00:03,  1.58s/it]
+generating:  95%|█████████▌| 19/20 [00:30&lt;00:01,  1.58s/it]
+generating: 100%|██████████| 20/20 [00:31&lt;00:00,  1.58s/it]
+nfe budgets:  40%|████      | 2/5 [03:39&lt;05:37, 112.47s/it]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code> ddpm fid: 431.21
+ rf fid: 45.37
+
+nfe=50</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+generating:   0%|          | 0/20 [00:00&lt;?, ?it/s]
+generating:   5%|▌         | 1/20 [00:03&lt;01:15,  3.99s/it]
+generating:  10%|█         | 2/20 [00:07&lt;01:11,  3.98s/it]
+generating:  15%|█▌        | 3/20 [00:11&lt;01:07,  3.98s/it]
+generating:  20%|██        | 4/20 [00:15&lt;01:03,  3.98s/it]
+generating:  25%|██▌       | 5/20 [00:19&lt;00:59,  3.98s/it]
+generating:  30%|███       | 6/20 [00:23&lt;00:55,  3.98s/it]
+generating:  35%|███▌      | 7/20 [00:27&lt;00:51,  3.98s/it]
+generating:  40%|████      | 8/20 [00:31&lt;00:47,  3.98s/it]
+generating:  45%|████▌     | 9/20 [00:35&lt;00:43,  3.98s/it]
+generating:  50%|█████     | 10/20 [00:39&lt;00:39,  3.98s/it]
+generating:  55%|█████▌    | 11/20 [00:43&lt;00:35,  3.98s/it]
+generating:  60%|██████    | 12/20 [00:47&lt;00:31,  3.98s/it]
+generating:  65%|██████▌   | 13/20 [00:51&lt;00:27,  3.98s/it]
+generating:  70%|███████   | 14/20 [00:55&lt;00:23,  3.98s/it]
+generating:  75%|███████▌  | 15/20 [00:59&lt;00:19,  3.98s/it]
+generating:  80%|████████  | 16/20 [01:03&lt;00:15,  3.98s/it]
+generating:  85%|████████▌ | 17/20 [01:07&lt;00:11,  3.98s/it]
+generating:  90%|█████████ | 18/20 [01:11&lt;00:07,  3.98s/it]
+generating:  95%|█████████▌| 19/20 [01:15&lt;00:03,  3.98s/it]
+generating: 100%|██████████| 20/20 [01:19&lt;00:00,  3.98s/it]
+
+generating:   0%|          | 0/20 [00:00&lt;?, ?it/s]
+generating:   5%|▌         | 1/20 [00:03&lt;01:15,  3.96s/it]
+generating:  10%|█         | 2/20 [00:07&lt;01:11,  3.96s/it]
+generating:  15%|█▌        | 3/20 [00:11&lt;01:07,  3.96s/it]
+generating:  20%|██        | 4/20 [00:15&lt;01:03,  3.96s/it]
+generating:  25%|██▌       | 5/20 [00:19&lt;00:59,  3.96s/it]
+generating:  30%|███       | 6/20 [00:23&lt;00:55,  3.96s/it]
+generating:  35%|███▌      | 7/20 [00:27&lt;00:51,  3.96s/it]
+generating:  40%|████      | 8/20 [00:31&lt;00:47,  3.96s/it]
+generating:  45%|████▌     | 9/20 [00:35&lt;00:43,  3.96s/it]
+generating:  50%|█████     | 10/20 [00:39&lt;00:39,  3.96s/it]
+generating:  55%|█████▌    | 11/20 [00:43&lt;00:35,  3.96s/it]
+generating:  60%|██████    | 12/20 [00:47&lt;00:31,  3.96s/it]
+generating:  65%|██████▌   | 13/20 [00:51&lt;00:27,  3.96s/it]
+generating:  70%|███████   | 14/20 [00:55&lt;00:23,  3.96s/it]
+generating:  75%|███████▌  | 15/20 [00:59&lt;00:19,  3.96s/it]
+generating:  80%|████████  | 16/20 [01:03&lt;00:15,  3.96s/it]
+generating:  85%|████████▌ | 17/20 [01:07&lt;00:11,  3.96s/it]
+generating:  90%|█████████ | 18/20 [01:11&lt;00:07,  3.96s/it]
+generating:  95%|█████████▌| 19/20 [01:15&lt;00:03,  3.96s/it]
+generating: 100%|██████████| 20/20 [01:19&lt;00:00,  3.96s/it]
+nfe budgets:  60%|██████    | 3/5 [07:19&lt;05:23, 161.61s/it]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code> ddpm fid: 436.92
+ rf fid: 43.96
+
+nfe=100</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+generating:   0%|          | 0/20 [00:00&lt;?, ?it/s]
+generating:   5%|▌         | 1/20 [00:07&lt;02:31,  7.96s/it]
+generating:  10%|█         | 2/20 [00:15&lt;02:23,  7.95s/it]
+generating:  15%|█▌        | 3/20 [00:23&lt;02:15,  7.95s/it]
+generating:  20%|██        | 4/20 [00:31&lt;02:07,  7.95s/it]
+generating:  25%|██▌       | 5/20 [00:39&lt;01:59,  7.95s/it]
+generating:  30%|███       | 6/20 [00:47&lt;01:51,  7.95s/it]
+generating:  35%|███▌      | 7/20 [00:55&lt;01:43,  7.95s/it]
+generating:  40%|████      | 8/20 [01:03&lt;01:35,  7.95s/it]
+generating:  45%|████▌     | 9/20 [01:11&lt;01:27,  7.95s/it]
+generating:  50%|█████     | 10/20 [01:19&lt;01:19,  7.95s/it]
+generating:  55%|█████▌    | 11/20 [01:27&lt;01:11,  7.95s/it]
+generating:  60%|██████    | 12/20 [01:35&lt;01:03,  7.95s/it]
+generating:  65%|██████▌   | 13/20 [01:43&lt;00:55,  7.95s/it]
+generating:  70%|███████   | 14/20 [01:51&lt;00:47,  7.95s/it]
+generating:  75%|███████▌  | 15/20 [01:59&lt;00:39,  7.95s/it]
+generating:  80%|████████  | 16/20 [02:07&lt;00:31,  7.95s/it]
+generating:  85%|████████▌ | 17/20 [02:15&lt;00:23,  7.95s/it]
+generating:  90%|█████████ | 18/20 [02:23&lt;00:15,  7.95s/it]
+generating:  95%|█████████▌| 19/20 [02:31&lt;00:07,  7.95s/it]
+generating: 100%|██████████| 20/20 [02:39&lt;00:00,  7.95s/it]
+
+generating:   0%|          | 0/20 [00:00&lt;?, ?it/s]
+generating:   5%|▌         | 1/20 [00:07&lt;02:30,  7.92s/it]
+generating:  10%|█         | 2/20 [00:15&lt;02:22,  7.91s/it]
+generating:  15%|█▌        | 3/20 [00:23&lt;02:14,  7.91s/it]
+generating:  20%|██        | 4/20 [00:31&lt;02:06,  7.91s/it]
+generating:  25%|██▌       | 5/20 [00:39&lt;01:58,  7.90s/it]
+generating:  30%|███       | 6/20 [00:47&lt;01:50,  7.90s/it]
+generating:  35%|███▌      | 7/20 [00:55&lt;01:42,  7.90s/it]
+generating:  40%|████      | 8/20 [01:03&lt;01:34,  7.90s/it]
+generating:  45%|████▌     | 9/20 [01:11&lt;01:26,  7.90s/it]
+generating:  50%|█████     | 10/20 [01:19&lt;01:18,  7.90s/it]
+generating:  55%|█████▌    | 11/20 [01:26&lt;01:11,  7.90s/it]
+generating:  60%|██████    | 12/20 [01:34&lt;01:03,  7.90s/it]
+generating:  65%|██████▌   | 13/20 [01:42&lt;00:55,  7.90s/it]
+generating:  70%|███████   | 14/20 [01:50&lt;00:47,  7.90s/it]
+generating:  75%|███████▌  | 15/20 [01:58&lt;00:39,  7.90s/it]
+generating:  80%|████████  | 16/20 [02:06&lt;00:31,  7.90s/it]
+generating:  85%|████████▌ | 17/20 [02:14&lt;00:23,  7.90s/it]
+generating:  90%|█████████ | 18/20 [02:22&lt;00:15,  7.90s/it]
+generating:  95%|█████████▌| 19/20 [02:30&lt;00:07,  7.90s/it]
+generating: 100%|██████████| 20/20 [02:38&lt;00:00,  7.90s/it]
+nfe budgets:  80%|████████  | 4/5 [13:38&lt;04:07, 247.32s/it]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code> ddpm fid: 435.09
+ rf fid: 43.01
+
+nfe=200</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+generating:   0%|          | 0/20 [00:00&lt;?, ?it/s]
+generating:   5%|▌         | 1/20 [00:15&lt;05:01, 15.87s/it]
+generating:  10%|█         | 2/20 [00:31&lt;04:45, 15.87s/it]
+generating:  15%|█▌        | 3/20 [00:47&lt;04:29, 15.87s/it]
+generating:  20%|██        | 4/20 [01:03&lt;04:13, 15.87s/it]
+generating:  25%|██▌       | 5/20 [01:19&lt;03:57, 15.86s/it]
+generating:  30%|███       | 6/20 [01:35&lt;03:42, 15.86s/it]
+generating:  35%|███▌      | 7/20 [01:51&lt;03:26, 15.86s/it]
+generating:  40%|████      | 8/20 [02:06&lt;03:10, 15.86s/it]
+generating:  45%|████▌     | 9/20 [02:22&lt;02:54, 15.86s/it]
+generating:  50%|█████     | 10/20 [02:38&lt;02:38, 15.86s/it]
+generating:  55%|█████▌    | 11/20 [02:54&lt;02:22, 15.86s/it]
+generating:  60%|██████    | 12/20 [03:10&lt;02:06, 15.86s/it]
+generating:  65%|██████▌   | 13/20 [03:26&lt;01:51, 15.87s/it]
+generating:  70%|███████   | 14/20 [03:42&lt;01:35, 15.86s/it]
+generating:  75%|███████▌  | 15/20 [03:57&lt;01:19, 15.86s/it]
+generating:  80%|████████  | 16/20 [04:13&lt;01:03, 15.86s/it]
+generating:  85%|████████▌ | 17/20 [04:29&lt;00:47, 15.86s/it]
+generating:  90%|█████████ | 18/20 [04:45&lt;00:31, 15.87s/it]
+generating:  95%|█████████▌| 19/20 [05:01&lt;00:15, 15.87s/it]
+generating: 100%|██████████| 20/20 [05:17&lt;00:00, 15.87s/it]
+
+generating:   0%|          | 0/20 [00:00&lt;?, ?it/s]
+generating:   5%|▌         | 1/20 [00:15&lt;05:00, 15.80s/it]
+generating:  10%|█         | 2/20 [00:31&lt;04:44, 15.80s/it]
+generating:  15%|█▌        | 3/20 [00:47&lt;04:28, 15.80s/it]
+generating:  20%|██        | 4/20 [01:03&lt;04:12, 15.80s/it]
+generating:  25%|██▌       | 5/20 [01:18&lt;03:56, 15.80s/it]
+generating:  30%|███       | 6/20 [01:34&lt;03:41, 15.80s/it]
+generating:  35%|███▌      | 7/20 [01:50&lt;03:25, 15.80s/it]
+generating:  40%|████      | 8/20 [02:06&lt;03:09, 15.80s/it]
+generating:  45%|████▌     | 9/20 [02:22&lt;02:53, 15.80s/it]
+generating:  50%|█████     | 10/20 [02:37&lt;02:37, 15.80s/it]
+generating:  55%|█████▌    | 11/20 [02:53&lt;02:22, 15.80s/it]
+generating:  60%|██████    | 12/20 [03:09&lt;02:06, 15.80s/it]
+generating:  65%|██████▌   | 13/20 [03:25&lt;01:50, 15.80s/it]
+generating:  70%|███████   | 14/20 [03:41&lt;01:34, 15.80s/it]
+generating:  75%|███████▌  | 15/20 [03:56&lt;01:18, 15.80s/it]
+generating:  80%|████████  | 16/20 [04:12&lt;01:03, 15.80s/it]
+generating:  85%|████████▌ | 17/20 [04:28&lt;00:47, 15.80s/it]
+generating:  90%|█████████ | 18/20 [04:44&lt;00:31, 15.80s/it]
+generating:  95%|█████████▌| 19/20 [05:00&lt;00:15, 15.80s/it]
+generating: 100%|██████████| 20/20 [05:15&lt;00:00, 15.80s/it]
+nfe budgets: 100%|██████████| 5/5 [25:13&lt;00:00, 302.61s/it]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code> ddpm fid: 434.03
+ rf fid: 43.02</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+</div>
+<div id="cell-37" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T05:24:27.906795Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T05:24:27.907246Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T05:24:28.163456Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T05:24:27.907216Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T05:24:28.162850Z&quot;}}" data-execution_count="35">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb482"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb482-1"><a href="#cb482-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 35 - plot fid vs nfe curvesfig, ax = plt.subplots(figsize=(8, 5))ax.plot(NFE_BUDGETS, [ddpm_fids[n] for n in NFE_BUDGETS], "o-", label="ddpm")ax.plot(NFE_BUDGETS, [rf_fids[n] for n in NFE_BUDGETS], "s-", label="rectified flow")ax.set_xlabel("nfe (number of function evaluations)")ax.set_ylabel("fid ↓")ax.set_title("fid vs nfe: ddpm vs rectified flow")ax.set_xscale("log")ax.legend()plt.tight_layout()plt.show()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_4_score_based_gm_with_ot_guided_sampling_files/figure-html/cell-36-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-38" class="cell" data-trusted="true" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.status.busy&quot;:&quot;2026-06-02T05:24:28.164302Z&quot;,&quot;iopub.execute_input&quot;:&quot;2026-06-02T05:24:28.164626Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-06-02T05:24:28.169519Z&quot;,&quot;shell.execute_reply.started&quot;:&quot;2026-06-02T05:24:28.164587Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-06-02T05:24:28.168764Z&quot;}}" data-execution_count="36">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb483"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb483-1"><a href="#cb483-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cell 36 - results tableprint(f"{'nfe':&gt;6} | {'ddpm fid':&gt;10} | {'rf fid':&gt;10} | {'rf advantage':&gt;12}")print("-" * 46)for nfe in NFE_BUDGETS:    adv = ddpm_fids[nfe] - rf_fids[nfe]    print(f"{nfe:&gt;6} | {ddpm_fids[nfe]:&gt;10.2f} | {rf_fids[nfe]:&gt;10.2f} | {adv:&gt;+12.2f}")print("\n(+) rf advantage = ddpm fid − rf fid; positive means rf is better")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   nfe |   ddpm fid |     rf fid | rf advantage
+----------------------------------------------
+    10 |     405.60 |      47.39 |      +358.21
+    20 |     431.21 |      45.37 |      +385.84
+    50 |     436.92 |      43.96 |      +392.96
+   100 |     435.09 |      43.01 |      +392.07
+   200 |     434.03 |      43.02 |      +391.02
+
+(+) rf advantage = ddpm fid − rf fid; positive means rf is better</code></pre>
+</div>
+</div>
+<div id="cell-39" class="cell" data-trusted="true">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb485"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

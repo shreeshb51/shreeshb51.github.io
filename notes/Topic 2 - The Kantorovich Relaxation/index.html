@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2026-06-23">
+
+<title>Topic 2 - The Kantorovich Relaxation – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Topic 2 - The Kantorovich Relaxation</li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#topic-2---the-kantorovich-relaxation-why-we-need-to-split-mass" id="toc-topic-2---the-kantorovich-relaxation-why-we-need-to-split-mass" class="nav-link active" data-scroll-target="#topic-2---the-kantorovich-relaxation-why-we-need-to-split-mass">Topic 2 - The Kantorovich Relaxation: Why We Need to Split Mass</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#layer-1-story" id="toc-layer-1-story" class="nav-link" data-scroll-target="#layer-1-story">Layer 1 (Story)</a></li>
+  <li><a href="#layer-2-mathematics" id="toc-layer-2-mathematics" class="nav-link" data-scroll-target="#layer-2-mathematics">Layer 2 (Mathematics)</a></li>
+  <li><a href="#layer-3-bridge" id="toc-layer-3-bridge" class="nav-link" data-scroll-target="#layer-3-bridge">Layer 3 (Bridge)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Topic 2 - The Kantorovich Relaxation</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">June 23, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="topic-2---the-kantorovich-relaxation-why-we-need-to-split-mass" class="level1">
+<h1>Topic 2 - The Kantorovich Relaxation: Why We Need to Split Mass</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>The Monge problem gave you the cleanest possible formulation of Optimal Transport: find the deterministic map that moves mass from one distribution to another at minimum cost. It is the right formulation for many physical problems — grain really does go from one specific location to another, not split between multiple destinations simultaneously. And when it works — when the source is absolutely continuous and the cost is quadratic — the Brenier theorem gives a beautiful answer: the optimal map is the gradient of a convex potential.</p>
+<p>But the Monge problem has two fundamental weaknesses that limit its mathematical and computational usefulness.</p>
+<p>The first weakness is infeasibility. When the source distribution has atoms — discrete concentrations of mass at single points — no deterministic map can split that atom between multiple destinations, and the push-forward constraint <span class="math inline">\(T_\#\mu = \nu\)</span> may be unsatisfiable. The Monge problem is infeasible in precisely the situations where the source and target distributions are discrete, which is the most computationally important case. If <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> are both empirical distributions over finite sets of data points — the typical setting in machine learning — the Monge problem may have no solution at all.</p>
+<p>The second weakness is non-convexity. Even when a Monge map exists, the set of valid transport maps <span class="math inline">\(\mathcal{T}(\mu,\nu)\)</span> is not a convex set — the average of two valid transport maps is not generally a valid transport map. The optimization is therefore non-convex, the standard tools of convex analysis do not apply, and there is no general certificate of global optimality.</p>
+<p>The Kantorovich relaxation resolves both weaknesses simultaneously by making a single, principled modification to the problem: instead of requiring all the mass at each source location to go to a single destination, allow it to be split among multiple destinations. Each grain particle at location <span class="math inline">\(x\)</span> can now be distributed across a cloud of destinations, with the distribution over destinations described by a probability measure. The resulting object is not a transport map but a transport plan — a joint probability distribution <span class="math inline">\(\pi\)</span> over pairs <span class="math inline">\((x,y)\)</span> that describes, for each source location <span class="math inline">\(x\)</span> and each target location <span class="math inline">\(y\)</span>, the fraction of mass at <span class="math inline">\(x\)</span> that is sent to <span class="math inline">\(y\)</span>.</p>
+<p>This single modification transforms the problem completely. The set of valid transport plans — the set of all joint distributions with prescribed marginals <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> — is a convex set. The objective <span class="math inline">\(\int c(x,y)\,d\pi\)</span> is a linear functional of the transport plan <span class="math inline">\(\pi\)</span>. The Kantorovich problem is therefore a linear program over a convex set — the most tractable class of optimization problems in the entire roadmap. The tools of Chapter 2 of Phase 0 — convexity, duality, KKT conditions — all apply directly.</p>
+<p>The topic has three subtopics.</p>
+<p>The first subtopic is <strong>the coupling formulation</strong> — the precise definition of a transport plan <span class="math inline">\(\pi \in \Pi(\mu,\nu)\)</span> as a joint probability measure on <span class="math inline">\(\mathcal{X} \times \mathcal{Y}\)</span> with marginals <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span>, the interpretation of $(A B) = $ fraction of mass transported from region <span class="math inline">\(A\)</span> to region <span class="math inline">\(B\)</span>, and the geometric structure of the set <span class="math inline">\(\Pi(\mu,\nu)\)</span> of all couplings as a convex compact subset of <span class="math inline">\(\mathcal{P}(\mathcal{X} \times \mathcal{Y})\)</span>. The coupling formulation is the probabilistic generalization of the transport map: deterministic maps correspond to couplings concentrated on a graph, while general couplings allow mass splitting.</p>
+<p>The second subtopic is <strong>the Kantorovich problem as a linear program</strong> — the formulation <span class="math inline">\(\min_{\pi \in \Pi(\mu,\nu)}\int c\,d\pi\)</span> as an infinite-dimensional linear program, the conditions under which the minimum is attained, and the relationship between the Kantorovich minimum and the Monge infimum. The key theorem is that the Kantorovich minimum always exists under mild conditions on <span class="math inline">\(c\)</span> — the compactness of <span class="math inline">\(\Pi(\mu,\nu)\)</span> in the weak topology guarantees existence by lower semicontinuity — while the Monge infimum may not be attained or may even be infinite.</p>
+<p>The third subtopic is <strong>the relationship between couplings and transport maps</strong> — when is the optimal Kantorovich coupling also a Monge map? The answer connects back to the Brenier theorem: for quadratic cost with absolutely continuous <span class="math inline">\(\mu\)</span>, the optimal Kantorovich coupling is concentrated on the graph of the Brenier map, making it simultaneously the solution to the Kantorovich problem and the Monge problem. For general costs and general measures, the Kantorovich coupling strictly relaxes the Monge problem — the optimal coupling may genuinely split mass.</p>
+<p>By the end of this topic, you will understand why the Kantorovich relaxation is not merely a mathematical convenience but the correct and natural formulation of Optimal Transport. The coupling <span class="math inline">\(\pi\)</span> is not an approximation to the transport map — it is the more fundamental object, reducing to a transport map only under special conditions. Every subsequent development in Phase 1 — the Wasserstein distance, the Kantorovich dual, the Sinkhorn algorithm — is built on the coupling formulation, not the map formulation.</p>
+<p><strong>ALL THREE SUBTOPICS ARE TREATED AS A SINGLE TOPIC FOR EASY COMPREHENSION.</strong></p>
+<hr>
+</section>
+<section id="layer-1-story" class="level2">
+<h2 class="anchored" data-anchor-id="layer-1-story">Layer 1 (Story)</h2>
+<p>You are still the logistics director for the Nepal Food Corporation, but your senior consultant — the mathematician — has returned with a critique of your planning framework.</p>
+<p>She says: your Monge formulation is too rigid. You have been insisting that every tonne of grain at Kanchanpur must go to a single specific destination. But real logistics do not work this way. A single truck from Kanchanpur does not have to deliver its entire load to one district — it can split its cargo at a junction, drop 300 tonnes in Taplejung and continue with 200 tonnes to Panchthar. A warehouse can receive grain from multiple sources and redistribute it. A supply chain is not a collection of point-to-point arrows — it is a network of flows, and flows can split and merge.</p>
+<p>More fundamentally, she argues, the Monge formulation breaks down precisely when you need it most — when you are trying to compare two discrete distributions. Your real data is not a continuous density of grain spread across the Terai. It is a finite list of storage facilities, each with a specific tonnage. And when you try to apply the Monge formulation to match discrete storage locations to discrete deficit locations with different tonnages, there is often no valid assignment at all.</p>
+<p>She proposes a relaxation. Instead of asking “where does the grain from location <span class="math inline">\(x\)</span> go?” — a question that demands a single answer — ask “how is the grain from location <span class="math inline">\(x\)</span> distributed across destinations?” — a question that allows a probabilistic answer. Each grain particle can be routed to a distribution over destinations. The routing plan is no longer a function but a joint distribution — a probability measure over pairs (source location, destination location) that describes the full stochastic routing of every particle.</p>
+<p>This joint distribution is the coupling. And the Kantorovich problem is the search for the coupling that minimizes the expected transport cost.</p>
+<hr>
+<p><strong>The coupling as a joint distribution</strong></p>
+<p>Your consultant draws a picture. On the horizontal axis she plots the source locations — the western surplus facilities. On the vertical axis she plots the target locations — the eastern deficit districts. In the interior of this two-dimensional rectangle, she draws a two-dimensional density — a joint distribution <span class="math inline">\(\pi(x,y)\)</span> that describes, for each pair (source <span class="math inline">\(x\)</span>, destination <span class="math inline">\(y\)</span>), the amount of grain flowing from <span class="math inline">\(x\)</span> to <span class="math inline">\(y\)</span>.</p>
+<p>The joint distribution <span class="math inline">\(\pi\)</span> must satisfy two marginal conditions. If you sum <span class="math inline">\(\pi(x,y)\)</span> over all possible destinations <span class="math inline">\(y\)</span>, you get the total grain sent from location <span class="math inline">\(x\)</span> — which must equal the surplus at <span class="math inline">\(x\)</span>, the source distribution <span class="math inline">\(\mu(x)\)</span>. Conversely, if you sum <span class="math inline">\(\pi(x,y)\)</span> over all possible sources <span class="math inline">\(x\)</span>, you get the total grain arriving at location <span class="math inline">\(y\)</span> — which must equal the deficit at <span class="math inline">\(y\)</span>, the target distribution <span class="math inline">\(\nu(y)\)</span>.</p>
+<p>These two marginal conditions are the coupling constraints:</p>
+<p><span class="math display">\[\int_\mathcal{Y} \pi(x,y)\,dy = \mu(x) \quad \text{for all } x \quad \text{(send all the surplus)}\]</span> <span class="math display">\[\int_\mathcal{X} \pi(x,y)\,dx = \nu(y) \quad \text{for all } y \quad \text{(fill all the deficit)}\]</span></p>
+<p>A joint distribution <span class="math inline">\(\pi\)</span> satisfying both marginal constraints is called a <strong>coupling</strong> of <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span>, and the set of all couplings is written <span class="math inline">\(\Pi(\mu,\nu)\)</span>. The Kantorovich problem is to find the coupling in <span class="math inline">\(\Pi(\mu,\nu)\)</span> that minimizes the expected transport cost <span class="math inline">\(\int c(x,y)\,d\pi(x,y)\)</span>.</p>
+<hr>
+<p><strong>Why the relaxation is natural</strong></p>
+<p>Your consultant explains why the coupling formulation is not just a mathematical convenience — it is the correct and complete description of any logistics plan.</p>
+<p>Consider any deterministic Monge map <span class="math inline">\(T\)</span> from <span class="math inline">\(\mu\)</span> to <span class="math inline">\(\nu\)</span>. The map assigns to each source location <span class="math inline">\(x\)</span> a single destination <span class="math inline">\(T(x)\)</span>. In the coupling language, this corresponds to a very special joint distribution: the probability mass at each pair <span class="math inline">\((x,y)\)</span> is concentrated on the graph <span class="math inline">\(\{(x,T(x)) : x \in \mathcal{X}\}\)</span> — the joint distribution is zero everywhere except on the curve that traces the assignment <span class="math inline">\(T\)</span>. This joint distribution is the <strong>deterministic coupling</strong> induced by <span class="math inline">\(T\)</span>:</p>
+<p><span class="math display">\[\pi_T = (\text{id}, T)_\#\mu\]</span></p>
+<p>It is a coupling — its marginals are <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> by the push-forward property of <span class="math inline">\(T\)</span>. And its transport cost is exactly the Monge cost: <span class="math inline">\(\int c(x,y)\,d\pi_T = \int c(x,T(x))\,d\mu\)</span>.</p>
+<p>So every Monge map is a special case of a coupling: a coupling whose mass is concentrated on a graph. The coupling formulation strictly generalizes the Monge formulation — every Monge plan is a coupling plan, but not every coupling plan is a Monge plan. By allowing couplings that are not concentrated on graphs, the Kantorovich formulation includes all Monge plans and additionally allows plans where mass splits between multiple destinations.</p>
+<p>The Kantorovich minimum is therefore always at most the Monge infimum: you are optimizing over a strictly larger set, so the minimum can only decrease. The Kantorovich problem is a relaxation in the precise mathematical sense.</p>
+<hr>
+<p><strong>The coupling set is convex</strong></p>
+<p>Your consultant now makes the observation that transforms the problem. The set <span class="math inline">\(\Pi(\mu,\nu)\)</span> of all couplings is convex: if <span class="math inline">\(\pi_1\)</span> and <span class="math inline">\(\pi_2\)</span> are both couplings — both satisfy the marginal constraints — then any convex combination <span class="math inline">\(\lambda\pi_1 + (1-\lambda)\pi_2\)</span> for <span class="math inline">\(\lambda \in [0,1]\)</span> is also a coupling.</p>
+<p>The proof is immediate: the marginal constraints are linear in <span class="math inline">\(\pi\)</span>. If <span class="math inline">\(\int_\mathcal{Y}\pi_1(x,y)\,dy = \mu(x)\)</span> and <span class="math inline">\(\int_\mathcal{Y}\pi_2(x,y)\,dy = \mu(x)\)</span>, then <span class="math inline">\(\int_\mathcal{Y}(\lambda\pi_1 + (1-\lambda)\pi_2)(x,y)\,dy = \lambda\mu(x) + (1-\lambda)\mu(x) = \mu(x)\)</span>. The marginal constraints are linear equalities in <span class="math inline">\(\pi\)</span>, so the feasible set is a convex set — the intersection of two halfspaces in the infinite-dimensional space of probability measures.</p>
+<p>The objective <span class="math inline">\(\int c(x,y)\,d\pi(x,y)\)</span> is also linear in <span class="math inline">\(\pi\)</span>. The Kantorovich problem is therefore a linear program over a convex set — minimizing a linear objective over a convex feasible region. This is the most tractable possible optimization structure. Every tool from Chapter 2 of Phase 0 — strong duality, KKT conditions, the Legendre-Fenchel transform — applies.</p>
+<p>Contrast this with the Monge problem, where the feasible set <span class="math inline">\(\mathcal{T}(\mu,\nu)\)</span> of transport maps is not convex: the average of two valid transport maps is generally not a valid transport map. The Kantorovich relaxation convexifies the problem by expanding the feasible set from maps to couplings, and this convexification is what makes the problem mathematically tractable.</p>
+<hr>
+<p><strong>The extreme points: deterministic couplings</strong></p>
+<p>Your consultant draws attention to the geometric structure of the coupling set <span class="math inline">\(\Pi(\mu,\nu)\)</span>. It is a convex set, but some couplings are special — they cannot be written as convex combinations of other couplings. These are the extreme points of <span class="math inline">\(\Pi(\mu,\nu)\)</span>.</p>
+<p>In the discrete case, where <span class="math inline">\(\mu = \sum_i \mu_i \delta_{x_i}\)</span> and <span class="math inline">\(\nu = \sum_j \nu_j \delta_{y_j}\)</span> are both discrete measures, the coupling <span class="math inline">\(\pi\)</span> is a matrix with entries <span class="math inline">\(\pi_{ij} \geq 0\)</span> satisfying <span class="math inline">\(\sum_j \pi_{ij} = \mu_i\)</span> (row sums equal source masses) and <span class="math inline">\(\sum_i \pi_{ij} = \nu_j\)</span> (column sums equal target masses). The extreme points of this polytope are the basic feasible solutions of the associated linear program — matrices with at most <span class="math inline">\(m + n - 1\)</span> nonzero entries, where <span class="math inline">\(m\)</span> and <span class="math inline">\(n\)</span> are the numbers of source and target locations.</p>
+<p>The extreme points of <span class="math inline">\(\Pi(\mu,\nu)\)</span> in the continuous case are the deterministic couplings induced by transport maps — exactly the couplings that are concentrated on graphs. By the fundamental theorem of linear programming, the minimum of a linear objective over a convex polytope is always achieved at an extreme point. This is the formal reason why the minimum of the Kantorovich problem is often achieved by a deterministic coupling — a Monge map — when one exists. The extreme point is the deterministic plan, and the linear objective prefers extreme points.</p>
+<hr>
+<p><strong>The independent coupling and its cost</strong></p>
+<p>Before finding the optimal coupling, your consultant considers the worst possible coupling — the one with maximum expected cost. In the logistics story, this corresponds to routing grain from each source to each destination completely at random, with no attempt to match nearby sources to nearby destinations.</p>
+<p>The <strong>independent coupling</strong> is <span class="math inline">\(\pi^{\text{ind}} = \mu \otimes \nu\)</span> — the product measure that assigns to each pair <span class="math inline">\((x,y)\)</span> the probability <span class="math inline">\(\mu(x) \cdot \nu(y)\)</span>, treating source and destination as independent. Its marginals are <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> by construction. Its expected transport cost is:</p>
+<p><span class="math display">\[\int c(x,y)\,d(\mu\otimes\nu) = \int_\mathcal{X}\int_\mathcal{Y} c(x,y)\,d\nu(y)\,d\mu(x) = \mathbb{E}_{X\sim\mu,Y\sim\nu}[c(X,Y)]\]</span></p>
+<p>This is the expected cost when source and destination are chosen independently — the worst-case coupling that ignores all geographic information. Any coupling that exploits the geographic proximity of source and destination locations will have lower expected cost than the independent coupling. The Kantorovich problem searches for the coupling that minimizes this expected cost — the opposite extreme from the independent coupling.</p>
+<p>The gap between the optimal coupling’s cost and the independent coupling’s cost measures how much can be saved by intelligently routing grain rather than routing randomly. In practice, this gap is large: the optimal coupling routes nearby sources to nearby destinations, drastically reducing the average transport distance.</p>
+<hr>
+<p><strong>The discrete coupling as a matrix and the transportation polytope</strong></p>
+<p>For the discrete case with <span class="math inline">\(m\)</span> sources and <span class="math inline">\(n\)</span> destinations, the coupling is a matrix <span class="math inline">\(P \in \mathbb{R}^{m\times n}_+\)</span> with row sums <span class="math inline">\(\sum_j P_{ij} = \mu_i\)</span> and column sums <span class="math inline">\(\sum_i P_{ij} = \nu_j\)</span>. The Kantorovich problem becomes:</p>
+<p><span class="math display">\[\min_{P \in \mathbb{R}^{m\times n}_+} \sum_{i,j} c_{ij} P_{ij} \quad \text{subject to} \quad P\mathbf{1} = \mu, \quad P^T\mathbf{1} = \nu\]</span></p>
+<p>This is a linear program with <span class="math inline">\(mn\)</span> variables and <span class="math inline">\(m+n\)</span> equality constraints (one redundant). The feasible set is the <strong>transportation polytope</strong> — a well-studied polytope in the theory of linear programming, first analyzed by Hitchcock and Koopmans in the 1940s. The LP has a sparse optimal solution with at most <span class="math inline">\(m+n-1\)</span> nonzero entries (a basic feasible solution), which is the discrete analogue of the deterministic coupling.</p>
+<p>Your consultant points out that this LP is exactly the kind of problem you solved in MATH 304 — a balanced transportation problem. The Kantorovich problem is the continuous generalization of the balanced transportation LP, and every algorithm you learned for transportation LPs (the northwest corner method, Vogel’s approximation, the simplex method for transportation) is a special case of algorithms for the discrete Kantorovich problem.</p>
+<hr>
+<p><strong>The break moment: mass splitting can be strictly better</strong></p>
+<p>Here is the break moment. The naive assumption — reinforced by the Brenier theorem — is that the optimal coupling is always a deterministic map. After all, for the quadratic cost with absolutely continuous sources, the optimal coupling is the Brenier map, which is deterministic. Surely splitting mass is never optimal?</p>
+<p>This breaks for general cost functions and general source measures.</p>
+<p>Consider a simple example. Source <span class="math inline">\(\mu = \delta_0\)</span> — all mass at the origin. Target <span class="math inline">\(\nu = \frac{1}{2}\delta_{-1} + \frac{1}{2}\delta_1\)</span> — equal mass at <span class="math inline">\(\pm 1\)</span>. Cost <span class="math inline">\(c(x,y) = |x-y|\)</span>.</p>
+<p>The Monge problem is infeasible: any transport map <span class="math inline">\(T\)</span> satisfies <span class="math inline">\(T(0) \in \{-1, 1\}\)</span> (a single point), giving <span class="math inline">\(T_\#\delta_0 = \delta_{T(0)} \neq \nu\)</span>. No deterministic map can split the atom at 0.</p>
+<p>The Kantorovich problem is feasible and has an obvious optimal coupling: <span class="math inline">\(\pi^* = \frac{1}{2}\delta_{(0,-1)} + \frac{1}{2}\delta_{(0,1)}\)</span> — send half the mass to <span class="math inline">\(-1\)</span> and half to <span class="math inline">\(+1\)</span>. Its cost is <span class="math inline">\(\frac{1}{2}|0-(-1)| + \frac{1}{2}|0-1| = 1\)</span>. There is no coupling with lower cost (since every unit of mass must travel at least distance 1 to reach either <span class="math inline">\(\pm 1\)</span>). The optimal Kantorovich coupling genuinely splits mass — it cannot be represented as a deterministic map — and the Kantorovich minimum (value 1) is strictly less than the Monge infimum (<span class="math inline">\(+\infty\)</span>, since the Monge problem is infeasible).</p>
+<p>This example shows that the Kantorovich relaxation is not merely a mathematical convenience for the absolutely continuous case. It is a genuine extension that handles discrete measures, solves cases where the Monge problem is infeasible, and sometimes achieves strictly lower cost by allowing mass splitting. The coupling is the fundamental object of Optimal Transport, not the map.</p>
+<hr>
+<p><strong>The connection to the Wasserstein distance</strong></p>
+<p>Your consultant now reveals the most important consequence of the Kantorovich formulation. The minimum cost coupling defines a distance between distributions — the <strong>Wasserstein distance</strong>:</p>
+<p><span class="math display">\[W_p(\mu,\nu) = \left(\min_{\pi\in\Pi(\mu,\nu)}\int \|x-y\|^p\,d\pi(x,y)\right)^{1/p}\]</span></p>
+<p>This distance measures the minimum expected <span class="math inline">\(p\)</span>-th power cost of transporting mass from <span class="math inline">\(\mu\)</span> to <span class="math inline">\(\nu\)</span> — the cheapest possible routing, allowing mass splitting. It is always finite when <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> have finite <span class="math inline">\(p\)</span>-th moments, always symmetric (<span class="math inline">\(W_p(\mu,\nu) = W_p(\nu,\mu)\)</span> since <span class="math inline">\(\Pi(\mu,\nu) = \Pi(\nu,\mu)\)</span> by symmetry), and always satisfies the triangle inequality (by the gluing lemma — a technical tool that allows couplings to be composed).</p>
+<p>The Wasserstein distance is the fundamental geometric quantity of Phase 1. The entire theory of Optimal Transport is organized around it: the Kantorovich problem defines it, the Kantorovich dual characterizes it, the Sinkhorn algorithm computes it, and the displacement interpolation is its geodesic.</p>
+<hr>
+<p>Hold three pictures simultaneously.</p>
+<p>The coupling matrix in the discrete case: a non-negative matrix with prescribed row sums <span class="math inline">\(\mu_i\)</span> and column sums <span class="math inline">\(\nu_j\)</span>, a point in the transportation polytope, with the optimal coupling being a sparse basic feasible solution with at most <span class="math inline">\(m+n-1\)</span> nonzero entries.</p>
+<p>The coupling as a joint distribution: a two-dimensional density <span class="math inline">\(\pi(x,y)\)</span> over source-destination pairs, with marginals <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span>, with the Monge map corresponding to a distribution concentrated on a graph and the general coupling allowing mass to spread across destinations.</p>
+<p>The break moment example: <span class="math inline">\(\mu = \delta_0\)</span>, <span class="math inline">\(\nu = \frac{1}{2}\delta_{-1} + \frac{1}{2}\delta_1\)</span>, optimal coupling splits mass equally — the Monge problem is infeasible, the Kantorovich problem has a clean solution, and mass splitting is genuinely necessary and strictly optimal.</p>
+<hr>
+</section>
+<section id="layer-2-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="layer-2-mathematics">Layer 2 (Mathematics)</h2>
+<p>We build the formalism in six stages: the precise definition of couplings and the coupling set, the Kantorovich problem and existence of optimal couplings, the discrete transportation polytope, the relationship between Monge maps and Kantorovich couplings, the gluing lemma and the triangle inequality for Wasserstein distances, and the connection to the Strassen theorem for stochastic dominance.</p>
+<section id="couplings-precise-definition" class="level3">
+<h3 class="anchored" data-anchor-id="couplings-precise-definition">Couplings — Precise Definition</h3>
+<p>Let <span class="math inline">\((\mathcal{X}, \mathcal{F}_\mathcal{X})\)</span> and <span class="math inline">\((\mathcal{Y}, \mathcal{F}_\mathcal{Y})\)</span> be measurable spaces and let <span class="math inline">\(\mu \in \mathcal{P}(\mathcal{X})\)</span> and <span class="math inline">\(\nu \in \mathcal{P}(\mathcal{Y})\)</span> be probability measures.</p>
+<p>A <strong>coupling</strong> of <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> is a probability measure <span class="math inline">\(\pi \in \mathcal{P}(\mathcal{X} \times \mathcal{Y})\)</span> on the product space whose marginals are <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span>:</p>
+<p><span class="math display">\[\pi(A \times \mathcal{Y}) = \mu(A) \quad \forall A \in \mathcal{F}_\mathcal{X}\]</span> <span class="math display">\[\pi(\mathcal{X} \times B) = \nu(B) \quad \forall B \in \mathcal{F}_\mathcal{Y}\]</span></p>
+<p>Equivalently, for any measurable functions <span class="math inline">\(f \in L^1(\mu)\)</span> and <span class="math inline">\(g \in L^1(\nu)\)</span>:</p>
+<p><span class="math display">\[\int_{\mathcal{X}\times\mathcal{Y}} f(x)\,d\pi(x,y) = \int_\mathcal{X} f\,d\mu, \qquad \int_{\mathcal{X}\times\mathcal{Y}} g(y)\,d\pi(x,y) = \int_\mathcal{Y} g\,d\nu\]</span></p>
+<p>The <strong>set of all couplings</strong> is:</p>
+<p><span class="math display">\[\Pi(\mu,\nu) = \{\pi \in \mathcal{P}(\mathcal{X}\times\mathcal{Y}) : (\text{proj}_\mathcal{X})_\#\pi = \mu, \; (\text{proj}_\mathcal{Y})_\#\pi = \nu\}\]</span></p>
+<p>where <span class="math inline">\(\text{proj}_\mathcal{X}: \mathcal{X}\times\mathcal{Y} \to \mathcal{X}\)</span> and <span class="math inline">\(\text{proj}_\mathcal{Y}: \mathcal{X}\times\mathcal{Y}\to\mathcal{Y}\)</span> are the canonical projections.</p>
+<p><strong>Non-emptiness.</strong> <span class="math inline">\(\Pi(\mu,\nu) \neq \emptyset\)</span> always: the <strong>independent coupling</strong> <span class="math inline">\(\mu \otimes \nu\)</span> — the product measure defined by <span class="math inline">\((\mu\otimes\nu)(A\times B) = \mu(A)\nu(B)\)</span> — is always a valid coupling. Therefore the Kantorovich problem is always feasible.</p>
+<p><strong>Convexity.</strong> <span class="math inline">\(\Pi(\mu,\nu)\)</span> is a convex set: for <span class="math inline">\(\pi_1, \pi_2 \in \Pi(\mu,\nu)\)</span> and <span class="math inline">\(\lambda \in [0,1]\)</span>, the measure <span class="math inline">\(\lambda\pi_1 + (1-\lambda)\pi_2\)</span> satisfies both marginal constraints by linearity.</p>
+<p><strong>Compactness.</strong> When <span class="math inline">\(\mathcal{X}\)</span> and <span class="math inline">\(\mathcal{Y}\)</span> are Polish spaces (complete separable metric spaces), <span class="math inline">\(\Pi(\mu,\nu)\)</span> is compact in the weak topology — the topology of weak convergence of probability measures. This follows from Prokhorov’s theorem: <span class="math inline">\(\Pi(\mu,\nu)\)</span> is tight (since both <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> are tight as probability measures on Polish spaces) and closed (since marginal constraints are preserved under weak limits).</p>
+<hr>
+</section>
+<section id="the-kantorovich-problem" class="level3">
+<h3 class="anchored" data-anchor-id="the-kantorovich-problem">The Kantorovich Problem</h3>
+<p>Let <span class="math inline">\(c: \mathcal{X}\times\mathcal{Y} \to [0,\infty]\)</span> be a lower semicontinuous cost function. The <strong>Kantorovich problem</strong> is:</p>
+<p><span class="math display">\[\mathcal{K}(\mu,\nu) = \inf_{\pi\in\Pi(\mu,\nu)} \int_{\mathcal{X}\times\mathcal{Y}} c(x,y)\,d\pi(x,y)\]</span></p>
+<p><strong>Theorem (Existence of Optimal Couplings).</strong> If <span class="math inline">\(\mathcal{X}\)</span> and <span class="math inline">\(\mathcal{Y}\)</span> are Polish spaces and <span class="math inline">\(c\)</span> is lower semicontinuous and bounded below, then the infimum is attained:</p>
+<p><span class="math display">\[\mathcal{K}(\mu,\nu) = \min_{\pi\in\Pi(\mu,\nu)}\int c\,d\pi\]</span></p>
+<p><strong>Proof.</strong> The functional <span class="math inline">\(\pi \mapsto \int c\,d\pi\)</span> is lower semicontinuous in the weak topology (since <span class="math inline">\(c\)</span> is lower semicontinuous and non-negative, <span class="math inline">\(\int c\,d\pi\)</span> is the supremum of <span class="math inline">\(\int c_n\,d\pi\)</span> over continuous bounded functions <span class="math inline">\(c_n \nearrow c\)</span>, and each <span class="math inline">\(\pi\mapsto\int c_n\,d\pi\)</span> is continuous). The minimum of a lower semicontinuous function over a compact set is attained. Since <span class="math inline">\(\Pi(\mu,\nu)\)</span> is compact (by Prokhorov) and <span class="math inline">\(\pi\mapsto\int c\,d\pi\)</span> is lower semicontinuous, the minimum is attained at some <span class="math inline">\(\pi^* \in \Pi(\mu,\nu)\)</span>. <span class="math inline">\(\square\)</span></p>
+<p>An optimal coupling <span class="math inline">\(\pi^*\)</span> achieving the minimum is called an <strong>optimal transport plan</strong>.</p>
+<hr>
+</section>
+<section id="the-transportation-polytope-discrete-case" class="level3">
+<h3 class="anchored" data-anchor-id="the-transportation-polytope-discrete-case">The Transportation Polytope — Discrete Case</h3>
+<p>For discrete measures <span class="math inline">\(\mu = \sum_{i=1}^m \mu_i\delta_{x_i}\)</span> and <span class="math inline">\(\nu = \sum_{j=1}^n \nu_j\delta_{y_j}\)</span> with <span class="math inline">\(\mu_i &gt; 0\)</span>, <span class="math inline">\(\nu_j &gt; 0\)</span>, <span class="math inline">\(\sum_i\mu_i = \sum_j\nu_j = 1\)</span>, a coupling is a matrix <span class="math inline">\(P = (P_{ij}) \in \mathbb{R}^{m\times n}\)</span> with:</p>
+<p><span class="math display">\[P_{ij} \geq 0, \quad \sum_j P_{ij} = \mu_i \; \forall i, \quad \sum_i P_{ij} = \nu_j \; \forall j\]</span></p>
+<p>The <strong>transportation polytope</strong> is:</p>
+<p><span class="math display">\[\mathcal{U}(\mu,\nu) = \{P \in \mathbb{R}^{m\times n}_+ : P\mathbf{1}_n = \mu, P^T\mathbf{1}_m = \nu\}\]</span></p>
+<p>This is a convex polytope with <span class="math inline">\(mn\)</span> variables and <span class="math inline">\(m+n-1\)</span> independent equality constraints (the <span class="math inline">\(m+n\)</span> constraints have one redundancy since <span class="math inline">\(\sum_i\mu_i = \sum_j\nu_j = 1\)</span>).</p>
+<p>The Kantorovich problem in the discrete case is the <strong>transportation LP</strong>:</p>
+<p><span class="math display">\[\min_{P \in \mathcal{U}(\mu,\nu)} \langle C, P\rangle = \min_{P\geq 0, P\mathbf{1}=\mu, P^T\mathbf{1}=\nu} \sum_{i,j} c_{ij}P_{ij}\]</span></p>
+<p>where <span class="math inline">\(C = (c_{ij})\)</span> is the cost matrix and <span class="math inline">\(\langle C,P\rangle = \text{tr}(C^TP) = \sum_{i,j}c_{ij}P_{ij}\)</span> is the Frobenius inner product.</p>
+<p><strong>Vertices of the transportation polytope.</strong> The extreme points of <span class="math inline">\(\mathcal{U}(\mu,\nu)\)</span> are the basic feasible solutions of the LP — matrices with at most <span class="math inline">\(m+n-1\)</span> nonzero entries. These correspond to spanning trees of the complete bipartite graph <span class="math inline">\(K_{m,n}\)</span> on the vertex sets <span class="math inline">\(\{x_1,\ldots,x_m\}\)</span> and <span class="math inline">\(\{y_1,\ldots,y_n\}\)</span>.</p>
+<p><strong>Complexity.</strong> The transportation LP can be solved in <span class="math inline">\(O(\min(m,n)^{1/2}mn\log(mn))\)</span> time using specialized interior point methods, or in <span class="math inline">\(O(mn\min(m,n))\)</span> using the network simplex method. Exact solution costs <span class="math inline">\(O(n^3)\)</span> for balanced problems with <span class="math inline">\(m=n\)</span>.</p>
+<hr>
+</section>
+<section id="monge-maps-as-deterministic-couplings" class="level3">
+<h3 class="anchored" data-anchor-id="monge-maps-as-deterministic-couplings">Monge Maps as Deterministic Couplings</h3>
+<p>Every transport map <span class="math inline">\(T: \mathcal{X}\to\mathcal{Y}\)</span> with <span class="math inline">\(T_\#\mu = \nu\)</span> induces a coupling:</p>
+<p><span class="math display">\[\pi_T = (\text{id},T)_\#\mu \in \Pi(\mu,\nu)\]</span></p>
+<p>defined by <span class="math inline">\(\pi_T(A\times B) = \mu(A\cap T^{-1}(B))\)</span>. This coupling is <strong>concentrated on the graph of <span class="math inline">\(T\)</span></strong>: <span class="math inline">\(\pi_T(\{(x,y): y\neq T(x)\}) = 0\)</span>.</p>
+<p>The cost of the induced coupling equals the Monge cost:</p>
+<p><span class="math display">\[\int c(x,y)\,d\pi_T(x,y) = \int c(x,T(x))\,d\mu(x)\]</span></p>
+<p><strong>Theorem (Monge <span class="math inline">\(\geq\)</span> Kantorovich).</strong> For any cost <span class="math inline">\(c\)</span>:</p>
+<p><span class="math display">\[\inf_{T_\#\mu=\nu}\int c(x,T(x))\,d\mu \geq \min_{\pi\in\Pi(\mu,\nu)}\int c\,d\pi\]</span></p>
+<p>with equality when the optimal Kantorovich coupling <span class="math inline">\(\pi^*\)</span> is concentrated on a graph.</p>
+<p><strong>Characterization of deterministic couplings.</strong> A coupling <span class="math inline">\(\pi \in \Pi(\mu,\nu)\)</span> is induced by a transport map if and only if it is <strong>concentrated on a graph</strong>: there exists a measurable map <span class="math inline">\(T:\mathcal{X}\to\mathcal{Y}\)</span> such that <span class="math inline">\(\pi(\{(x,y):y\neq T(x)\}) = 0\)</span>.</p>
+<p>When <span class="math inline">\(\mu\ll\lambda^n\)</span>, the Brenier theorem guarantees that the optimal Kantorovich coupling is concentrated on the graph of <span class="math inline">\(T^* = \nabla\phi\)</span> for quadratic cost — the Monge and Kantorovich problems coincide. For general measures or general costs, the optimal Kantorovich coupling may genuinely split mass.</p>
+<hr>
+</section>
+<section id="cyclically-monotone-support" class="level3">
+<h3 class="anchored" data-anchor-id="cyclically-monotone-support">Cyclically Monotone Support</h3>
+<p>The optimal transport plan <span class="math inline">\(\pi^*\)</span> for lower semicontinuous cost <span class="math inline">\(c\)</span> has a specific support structure.</p>
+<p><strong>Definition.</strong> A set <span class="math inline">\(\Gamma \subseteq \mathcal{X}\times\mathcal{Y}\)</span> is <strong><span class="math inline">\(c\)</span>-cyclically monotone</strong> if for any finite collection <span class="math inline">\((x_1,y_1),\ldots,(x_k,y_k) \in \Gamma\)</span> and any permutation <span class="math inline">\(\sigma\)</span>:</p>
+<p><span class="math display">\[\sum_{i=1}^k c(x_i,y_i) \leq \sum_{i=1}^k c(x_i,y_{\sigma(i)})\]</span></p>
+<p>The optimal coupling does no better than the identity permutation on any finite subset of its support.</p>
+<p><strong>Theorem.</strong> Any optimal coupling <span class="math inline">\(\pi^*\)</span> for a lower semicontinuous cost <span class="math inline">\(c\)</span> is supported on a <span class="math inline">\(c\)</span>-cyclically monotone set.</p>
+<p><strong>Proof sketch.</strong> If the support of <span class="math inline">\(\pi^*\)</span> were not <span class="math inline">\(c\)</span>-cyclically monotone, there would exist a finite set of points where a cyclic permutation of destinations reduces the cost — contradicting the optimality of <span class="math inline">\(\pi^*\)</span> (by modifying <span class="math inline">\(\pi^*\)</span> to implement the permutation on the finite set). <span class="math inline">\(\square\)</span></p>
+<p>For <span class="math inline">\(c(x,y) = \|x-y\|^2\)</span>: <span class="math inline">\(c\)</span>-cyclical monotonicity reduces to ordinary cyclical monotonicity <span class="math inline">\(\sum_i\langle x_i,T(x_i)\rangle \geq \sum_i\langle x_i,T(x_{\sigma(i)})\rangle\)</span> — equivalent to the map being a gradient of a convex function, recovering the Brenier theorem.</p>
+<hr>
+</section>
+<section id="the-gluing-lemma-and-triangle-inequality" class="level3">
+<h3 class="anchored" data-anchor-id="the-gluing-lemma-and-triangle-inequality">The Gluing Lemma and Triangle Inequality</h3>
+<p>The <strong>gluing lemma</strong> is the technical tool that allows couplings to be composed, enabling the proof of the triangle inequality for Wasserstein distances.</p>
+<p><strong>Lemma (Gluing).</strong> Let <span class="math inline">\(\mu\in\mathcal{P}(\mathcal{X})\)</span>, <span class="math inline">\(\nu\in\mathcal{P}(\mathcal{Y})\)</span>, <span class="math inline">\(\rho\in\mathcal{P}(\mathcal{Z})\)</span> be probability measures on Polish spaces. If <span class="math inline">\(\pi_1\in\Pi(\mu,\nu)\)</span> and <span class="math inline">\(\pi_2\in\Pi(\nu,\rho)\)</span>, then there exists a probability measure <span class="math inline">\(\tilde\pi\in\mathcal{P}(\mathcal{X}\times\mathcal{Y}\times\mathcal{Z})\)</span> with marginals <span class="math inline">\((\text{proj}_{\mathcal{X}\times\mathcal{Y}})_\#\tilde\pi = \pi_1\)</span> and <span class="math inline">\((\text{proj}_{\mathcal{Y}\times\mathcal{Z}})_\#\tilde\pi = \pi_2\)</span>.</p>
+<p>The glued measure <span class="math inline">\(\tilde\pi\)</span> is the <strong>three-way coupling</strong> that simultaneously realizes <span class="math inline">\(\pi_1\)</span> for the <span class="math inline">\((\mathcal{X},\mathcal{Y})\)</span> pair and <span class="math inline">\(\pi_2\)</span> for the <span class="math inline">\((\mathcal{Y},\mathcal{Z})\)</span> pair, with the common <span class="math inline">\(\mathcal{Y}\)</span> marginal being <span class="math inline">\(\nu\)</span>.</p>
+<p><strong>Proof.</strong> Use the disintegration theorem to write <span class="math inline">\(\pi_1(dx,dy) = \mu(dx)K_1(x,dy)\)</span> and <span class="math inline">\(\pi_2(dy,dz) = \nu(dy)K_2(y,dz)\)</span> as regular conditional distributions. Define <span class="math inline">\(\tilde\pi(dx,dy,dz) = \mu(dx)K_1(x,dy)K_2(y,dz)\)</span>. Verify the marginals. <span class="math inline">\(\square\)</span></p>
+<p><strong>Theorem (Triangle Inequality for <span class="math inline">\(W_p\)</span>).</strong> For <span class="math inline">\(\mu,\nu,\rho\in\mathcal{P}_p(\mathbb{R}^n)\)</span>:</p>
+<p><span class="math display">\[W_p(\mu,\rho) \leq W_p(\mu,\nu) + W_p(\nu,\rho)\]</span></p>
+<p><strong>Proof.</strong> Let <span class="math inline">\(\pi_1^*\in\Pi(\mu,\nu)\)</span> and <span class="math inline">\(\pi_2^*\in\Pi(\nu,\rho)\)</span> be optimal couplings. By the gluing lemma, there exists <span class="math inline">\(\tilde\pi\in\mathcal{P}(\mathbb{R}^n\times\mathbb{R}^n\times\mathbb{R}^n)\)</span> with marginals <span class="math inline">\(\pi_1^*\)</span> and <span class="math inline">\(\pi_2^*\)</span>. The projection <span class="math inline">\((\text{proj}_{\mathcal{X}},\text{proj}_\mathcal{Z})_\#\tilde\pi \in \Pi(\mu,\rho)\)</span> is a (generally suboptimal) coupling of <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\rho\)</span>. By the triangle inequality for <span class="math inline">\(\|\cdot\|_p\)</span> and Jensen’s inequality:</p>
+<p><span class="math display">\[W_p(\mu,\rho)^p \leq \int \|x-z\|^p\,d\tilde\pi \leq \left(\int\|x-y\|^p\,d\tilde\pi + \int\|y-z\|^p\,d\tilde\pi\right) \leq (W_p(\mu,\nu) + W_p(\nu,\rho))^p\]</span></p>
+<p>The last step uses Minkowski’s inequality. <span class="math inline">\(\square\)</span></p>
+<hr>
+</section>
+<section id="the-wasserstein-distance-formal-definition" class="level3">
+<h3 class="anchored" data-anchor-id="the-wasserstein-distance-formal-definition">The Wasserstein Distance — Formal Definition</h3>
+<p><strong>Definition.</strong> For <span class="math inline">\(p \in [1,\infty)\)</span> and <span class="math inline">\(\mu,\nu \in \mathcal{P}_p(\mathbb{R}^n)\)</span> (probability measures with finite <span class="math inline">\(p\)</span>-th moment: <span class="math inline">\(\int \|x\|^p\,d\mu &lt; \infty\)</span>), the <strong><span class="math inline">\(p\)</span>-Wasserstein distance</strong> is:</p>
+<p><span class="math display">\[W_p(\mu,\nu) = \left(\min_{\pi\in\Pi(\mu,\nu)}\int_{\mathbb{R}^n\times\mathbb{R}^n}\|x-y\|^p\,d\pi(x,y)\right)^{1/p}\]</span></p>
+<p><strong>Theorem.</strong> <span class="math inline">\(W_p\)</span> is a metric on <span class="math inline">\(\mathcal{P}_p(\mathbb{R}^n)\)</span>:</p>
+<p><span class="math display">\[\text{(i) } W_p(\mu,\nu) \geq 0 \text{ with equality iff } \mu = \nu\]</span> <span class="math display">\[\text{(ii) } W_p(\mu,\nu) = W_p(\nu,\mu)\]</span> <span class="math display">\[\text{(iii) } W_p(\mu,\rho) \leq W_p(\mu,\nu) + W_p(\nu,\rho)\]</span></p>
+<p><strong>Proof of (i).</strong> <span class="math inline">\(W_p(\mu,\nu) \geq 0\)</span> is clear. If <span class="math inline">\(W_p(\mu,\nu) = 0\)</span>, the optimal coupling <span class="math inline">\(\pi^*\)</span> has <span class="math inline">\(\int\|x-y\|^p\,d\pi^* = 0\)</span>, so <span class="math inline">\(\pi^*\)</span> is concentrated on <span class="math inline">\(\{(x,y):x=y\}\)</span> — the diagonal. This forces <span class="math inline">\(\mu = (\text{proj}_\mathcal{X})_\#\pi^* = (\text{proj}_\mathcal{Y})_\#\pi^* = \nu\)</span>. <span class="math inline">\(\square\)</span></p>
+<p><strong>Metrization of weak convergence.</strong> For <span class="math inline">\(p \geq 1\)</span>, a sequence <span class="math inline">\((\mu_k)\)</span> satisfies <span class="math inline">\(W_p(\mu_k,\mu) \to 0\)</span> if and only if <span class="math inline">\(\mu_k \rightharpoonup \mu\)</span> (weak convergence) and <span class="math inline">\(\int\|x\|^p\,d\mu_k \to \int\|x\|^p\,d\mu\)</span> (convergence of <span class="math inline">\(p\)</span>-th moments). The Wasserstein distance metrizes weak convergence plus moment convergence — a strictly stronger topology than weak convergence alone.</p>
+<hr>
+</section>
+<section id="relationship-to-other-distances" class="level3">
+<h3 class="anchored" data-anchor-id="relationship-to-other-distances">Relationship to Other Distances</h3>
+<p>The Wasserstein distance is related to other common probability distances in precise ways.</p>
+<p><strong>Total variation.</strong> For any <span class="math inline">\(\mu,\nu\)</span>: <span class="math inline">\(\text{TV}(\mu,\nu) = \min_{\pi\in\Pi(\mu,\nu)}\pi(\{(x,y):x\neq y\}) = 1 - \pi(\{(x,x):x\in\mathcal{X}\})\)</span> — the total variation distance is the minimum probability of disagreement over all couplings. This is the <strong>coupling characterization of total variation</strong>, which gives <span class="math inline">\(\text{TV}(\mu,\nu) = \inf_{\pi\in\Pi(\mu,\nu)}P_\pi[X\neq Y]\)</span>.</p>
+<p><strong>KL divergence.</strong> The KL divergence <span class="math inline">\(D_{KL}(\mu\|\nu)\)</span> does not have a direct coupling characterization, but it bounds the Wasserstein distance through the <strong>Talagrand inequality</strong>: for <span class="math inline">\(\nu = \mathcal{N}(0,I)\)</span>:</p>
+<p><span class="math display">\[W_2^2(\mu,\nu) \leq 2D_{KL}(\mu\|\nu)\]</span></p>
+<p>This inequality appears in the convergence analysis of Langevin dynamics and score-based generative models.</p>
+<p><strong>Comparison of metrics.</strong> For probability measures on a bounded domain of diameter <span class="math inline">\(D\)</span>:</p>
+<p><span class="math display">\[W_1(\mu,\nu) \leq W_2(\mu,\nu) \leq \cdots \leq W_p(\mu,\nu) \leq D\]</span> <span class="math display">\[\text{TV}(\mu,\nu) \leq \frac{1}{2}\sqrt{2D_{KL}(\mu\|\nu)} \quad \text{(Pinsker)}\]</span> <span class="math display">\[\text{TV}(\mu,\nu)^2 \leq \frac{1}{2D}W_1(\mu,\nu) \quad \text{(if domain has diameter }D\text{)}\]</span></p>
+<hr>
+</section>
+<section id="strassens-theorem-couplings-and-stochastic-orders" class="level3">
+<h3 class="anchored" data-anchor-id="strassens-theorem-couplings-and-stochastic-orders">Strassen’s Theorem — Couplings and Stochastic Orders</h3>
+<p>The coupling formulation has a deep application to stochastic dominance.</p>
+<p><strong>Theorem (Strassen).</strong> For <span class="math inline">\(\mu,\nu\in\mathcal{P}(\mathbb{R})\)</span>, the following are equivalent:</p>
+<p><span class="math display">\[\text{(i) } \int f\,d\mu \leq \int f\,d\nu \text{ for all convex } f: \mathbb{R}\to\mathbb{R} \quad \text{(convex order: } \mu \leq_{cx} \nu\text{)}\]</span> <span class="math display">\[\text{(ii) There exists a coupling } \pi\in\Pi(\mu,\nu) \text{ such that } \mathbb{E}_\pi[Y|X] = X \quad \text{(martingale coupling)}\]</span></p>
+<p>The convex order <span class="math inline">\(\mu \leq_{cx} \nu\)</span> says <span class="math inline">\(\nu\)</span> is more spread out than <span class="math inline">\(\mu\)</span> (by Jensen’s inequality). The martingale coupling condition says <span class="math inline">\(Y\)</span> is a martingale extension of <span class="math inline">\(X\)</span> — on average, <span class="math inline">\(Y\)</span> equals <span class="math inline">\(X\)</span>. Strassen’s theorem connects a functional analytic condition (convex order) to a probabilistic object (martingale coupling) through the coupling framework.</p>
+<p>The martingale optimal transport problem — minimize <span class="math inline">\(\int c\,d\pi\)</span> over martingale couplings satisfying <span class="math inline">\(\mathbb{E}[Y|X]=X\)</span> — is an active research area with applications to model-free option pricing, where the martingale constraint models the no-arbitrage condition in financial markets.</p>
+<hr>
+</section>
+<section id="why-this-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-matters">WHY THIS MATTERS</h3>
+<p>In MATH 304 (Computational Operations Research), the balanced transportation problem — <span class="math inline">\(\min_{P\geq 0}\langle C,P\rangle\)</span> subject to row and column sum constraints — is the discrete Kantorovich problem. The northwest corner method, Vogel’s approximation, and the transportation simplex are algorithms for finding basic feasible solutions of <span class="math inline">\(\mathcal{U}(\mu,\nu)\)</span> — extreme points of the transportation polytope — which correspond to deterministic couplings with sparse support. The LP duality you computed in MATH 304 for transportation problems is the discrete case of the Kantorovich duality theorem of Topic 4, and the dual variables (shadow prices) are the discrete potential functions <span class="math inline">\(\phi_i\)</span> and <span class="math inline">\(\psi_j\)</span>. In MATH 208 (Statistics and Probability), the joint distribution of a random vector <span class="math inline">\((X,Y)\)</span> is a coupling of its marginals — every joint distribution you computed, every conditional expectation, every covariance computation was working with a coupling. The independent coupling <span class="math inline">\(\mu\otimes\nu\)</span> is the distribution of <span class="math inline">\((X,Y)\)</span> when <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> are independent. The optimal coupling is the joint distribution that minimizes the expected cost — a joint distribution with maximally strong dependence in the direction that reduces transport cost. In MATH 213 (Analysis I), weak convergence of probability measures — which the Wasserstein distance metrizes — is the convergence of <span class="math inline">\(\int f\,d\mu_k \to \int f\,d\mu\)</span> for all bounded continuous <span class="math inline">\(f\)</span>, exactly the kind of functional convergence you studied in Analysis I applied to the space of probability measures.</p>
+<hr>
+</section>
+</section>
+<section id="layer-3-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="layer-3-bridge">Layer 3 (Bridge)</h2>
+<p>Every element of the Nepal Food Corporation coupling story has a precise mathematical address. Let us walk through them one by one, until the joint distribution of grain flows, the transportation polytope, the break moment example, and the full formal apparatus are completely fused into a single picture.</p>
+<hr>
+<p><strong>The Nepal Food Corporation’s relaxed logistics plan — describing not where each tonne goes but the full distribution of flows between every source-destination pair — is the coupling <span class="math inline">\(\pi \in \Pi(\mu,\nu)\)</span>, the joint probability measure on <span class="math inline">\(\mathcal{X}\times\mathcal{Y}\)</span> with marginals <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span>.</strong> The joint measure <span class="math inline">\(\pi(A\times B)\)</span> is the fraction of total grain flowing from source region <span class="math inline">\(A\)</span> to destination region <span class="math inline">\(B\)</span> simultaneously. It is not a function — it does not assign a single destination to each source. It is a two-dimensional density over pairs: for each source location <span class="math inline">\(x\)</span> and destination location <span class="math inline">\(y\)</span>, the value <span class="math inline">\(\pi(dx,dy)\)</span> describes the infinitesimal amount of grain flowing from the infinitesimal source region around <span class="math inline">\(x\)</span> to the infinitesimal destination region around <span class="math inline">\(y\)</span>. The coupling is the complete probabilistic description of the routing plan, encoding not just the average flow but the full joint distribution of source-destination pairs.</p>
+<p><strong>The two marginal constraints — send all the surplus and fill all the deficit — are the conditions <span class="math inline">\((\text{proj}_\mathcal{X})_\#\pi = \mu\)</span> and <span class="math inline">\((\text{proj}_\mathcal{Y})_\#\pi = \nu\)</span>.</strong> The first condition <span class="math inline">\(\pi(A\times\mathcal{Y}) = \mu(A)\)</span> says: the total grain flowing out of source region <span class="math inline">\(A\)</span> — summed over all possible destinations — equals the surplus at <span class="math inline">\(A\)</span> given by <span class="math inline">\(\mu(A)\)</span>. No grain is left at the source. The second condition <span class="math inline">\(\pi(\mathcal{X}\times B) = \nu(B)\)</span> says: the total grain arriving at destination region <span class="math inline">\(B\)</span> — summed over all possible sources — equals the deficit at <span class="math inline">\(B\)</span> given by <span class="math inline">\(\nu(B)\)</span>. No deficit goes unmet. Both constraints are linear in <span class="math inline">\(\pi\)</span> — they are linear equality constraints on the joint measure — which is precisely what makes the coupling set <span class="math inline">\(\Pi(\mu,\nu)\)</span> a convex set and the Kantorovich problem a linear program.</p>
+<p><strong>The independent coupling <span class="math inline">\(\mu\otimes\nu\)</span> — routing grain from each source to each destination completely at random with no geographic coordination — is the worst-case coupling, always in <span class="math inline">\(\Pi(\mu,\nu)\)</span> but maximally expensive.</strong> The independent coupling assigns to each pair <span class="math inline">\((x,y)\)</span> the product probability <span class="math inline">\(\mu(x)\cdot\nu(y)\)</span> — the grain at location <span class="math inline">\(x\)</span> is distributed across all destinations proportional to their deficit, regardless of distance. Its cost <span class="math inline">\(\int c(x,y)\,d(\mu\otimes\nu) = \mathbb{E}_{X\sim\mu,Y\sim\nu}[c(X,Y)]\)</span> is the expected cost when source and destination are chosen independently — the baseline that any intelligent routing plan improves upon. The independent coupling is always feasible (it always has the right marginals) but never optimal for any non-trivial cost function with geographic structure.</p>
+<hr>
+<p><strong>The deterministic coupling induced by the Monge map <span class="math inline">\(T\)</span> — the joint measure <span class="math inline">\(\pi_T = (\text{id},T)_\#\mu\)</span> concentrated on the graph <span class="math inline">\(\{(x,T(x))\}\)</span> — is the special case of a coupling that corresponds to a transport map.</strong> The graph <span class="math inline">\(\{(x,T(x)):x\in\mathcal{X}\}\)</span> is a curve in the product space <span class="math inline">\(\mathcal{X}\times\mathcal{Y}\)</span>, and the coupling <span class="math inline">\(\pi_T\)</span> assigns all its mass to this curve — <span class="math inline">\(\pi_T(\{(x,y):y\neq T(x)\}) = 0\)</span>. The coupling is a joint measure that, when you condition on the source location being <span class="math inline">\(x\)</span>, always assigns the destination to be exactly <span class="math inline">\(T(x)\)</span> — no splitting, no randomness in the routing. Every Monge plan is a coupling concentrated on a graph. The Kantorovich set <span class="math inline">\(\Pi(\mu,\nu)\)</span> contains all such graph-concentrated measures and additionally all measures that spread mass across multiple destinations — the relaxation from Monge to Kantorovich is exactly the relaxation from graph-concentrated measures to general joint measures.</p>
+<p><strong>The convexity of <span class="math inline">\(\Pi(\mu,\nu)\)</span> — the proof that any convex combination of two valid couplings is a valid coupling — is the linearity of the marginal constraints making the feasible set an intersection of halfspaces.</strong> If <span class="math inline">\(\pi_1\)</span> routes 70% of Kanchanpur’s grain to Taplejung and 30% to Panchthar, and <span class="math inline">\(\pi_2\)</span> routes 40% to Taplejung and 60% to Panchthar, then <span class="math inline">\(\frac{1}{2}\pi_1 + \frac{1}{2}\pi_2\)</span> routes 55% to Taplejung and 45% to Panchthar — still a valid routing. The average of two valid logistics plans is a valid logistics plan. This is the linearity of the constraints: <span class="math inline">\(\int_\mathcal{Y}(\lambda\pi_1+(1-\lambda)\pi_2)(x,\cdot)\,dy = \lambda\mu(x)+(1-\lambda)\mu(x) = \mu(x)\)</span>. Convexity of the feasible set follows immediately from linearity of the marginal conditions, and this is what makes the Kantorovich problem — minimize a linear objective over a convex set — a linear program.</p>
+<hr>
+<p><strong>The transportation polytope in the discrete case — the set <span class="math inline">\(\mathcal{U}(\mu,\nu) = \{P\in\mathbb{R}^{m\times n}_+: P\mathbf{1}=\mu, P^T\mathbf{1}=\nu\}\)</span> of non-negative matrices with prescribed row and column sums — is the coupling set for discrete distributions.</strong> Each entry <span class="math inline">\(P_{ij}\)</span> is the fraction of total grain flowing from source <span class="math inline">\(i\)</span> to destination <span class="math inline">\(j\)</span>. The row sum constraint <span class="math inline">\(\sum_j P_{ij} = \mu_i\)</span> says all of source <span class="math inline">\(i\)</span>’s surplus is shipped. The column sum constraint <span class="math inline">\(\sum_i P_{ij} = \nu_j\)</span> says all of destination <span class="math inline">\(j\)</span>’s deficit is filled. The matrix <span class="math inline">\(P\)</span> is the discrete analogue of the joint density <span class="math inline">\(\pi(x,y)\)</span> — a non-negative table with prescribed marginals. The transportation polytope is the convex set whose vertices are the sparse basic feasible solutions with at most <span class="math inline">\(m+n-1\)</span> nonzero entries — the sparse routing plans where each source sends its grain to at most one destination and each destination receives from at most one source, corresponding to spanning trees of the bipartite routing graph.</p>
+<p><strong>The LP structure of the discrete Kantorovich problem — <span class="math inline">\(\min_{P\in\mathcal{U}(\mu,\nu)}\langle C,P\rangle\)</span> — is the balanced transportation LP from MATH 304, now recognized as the discrete instance of the Kantorovich problem.</strong> The cost matrix <span class="math inline">\(C_{ij} = c(x_i,y_j)\)</span> encodes the transport cost per unit of grain flowing from source <span class="math inline">\(i\)</span> to destination <span class="math inline">\(j\)</span>. The objective <span class="math inline">\(\langle C,P\rangle = \sum_{i,j}C_{ij}P_{ij}\)</span> is the total cost of the routing plan <span class="math inline">\(P\)</span>. The LP has <span class="math inline">\(mn\)</span> variables and <span class="math inline">\(m+n-1\)</span> independent equality constraints. The dual LP — which will be derived precisely in Topic 4 — has <span class="math inline">\(m+n\)</span> variables (one per source, one per destination) with the interpretation of potential functions. The shadow prices you computed in MATH 304 for transportation LPs are the dual potential functions <span class="math inline">\(\phi_i\)</span> and <span class="math inline">\(\psi_j\)</span> of the Kantorovich dual, and the complementary slackness conditions of MATH 304 are the optimality conditions of the Kantorovich problem.</p>
+<hr>
+<p><strong>The compactness of <span class="math inline">\(\Pi(\mu,\nu)\)</span> in the weak topology — the guarantee that the infimum is always attained — is Prokhorov’s theorem applied to the coupling set.</strong> The set <span class="math inline">\(\Pi(\mu,\nu)\)</span> is tight: for any <span class="math inline">\(\varepsilon &gt; 0\)</span>, there exists a compact set <span class="math inline">\(K\subseteq\mathcal{X}\times\mathcal{Y}\)</span> with <span class="math inline">\(\pi(K^c) &lt; \varepsilon\)</span> for all <span class="math inline">\(\pi\in\Pi(\mu,\nu)\)</span>, because <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> are individually tight (as probability measures on Polish spaces). Tightness plus closedness under weak limits (marginal constraints are preserved under weak convergence) gives compactness by Prokhorov’s theorem. The Kantorovich functional <span class="math inline">\(\pi\mapsto\int c\,d\pi\)</span> is lower semicontinuous in the weak topology when <span class="math inline">\(c\)</span> is lower semicontinuous. A lower semicontinuous function on a compact set attains its minimum. Therefore the Kantorovich problem always has a solution — an optimal transport plan always exists — even when the Monge problem may have no solution or only an infimum that is not attained.</p>
+<p><strong>The cyclically monotone support of the optimal coupling — the condition that the support <span class="math inline">\(\Gamma\)</span> of <span class="math inline">\(\pi^*\)</span> satisfies <span class="math inline">\(\sum_i c(x_i,y_i)\leq\sum_i c(x_i,y_{\sigma(i)})\)</span> for all finite subsets and permutations — is the continuous generalization of the no-crossing principle.</strong> In the grain logistics story: the optimal routing plan <span class="math inline">\(\pi^*\)</span> never has a finite set of source-destination pairs where rerouting the grain cyclically reduces cost. For <span class="math inline">\(k=2\)</span>: the optimal plan never has two pairs <span class="math inline">\((x_1,y_1)\)</span> and <span class="math inline">\((x_2,y_2)\)</span> in its support where swapping destinations to <span class="math inline">\((x_1,y_2)\)</span> and <span class="math inline">\((x_2,y_1)\)</span> would be cheaper — the no-crossing principle of Topic 1. For <span class="math inline">\(k\geq 3\)</span>: the optimal plan never has three or more pairs where any cyclic permutation of destinations reduces cost. The cyclical monotonicity of the support is the complete generalization of the no-crossing principle to all permutations, and it is equivalent to the support being concentrated on the subdifferential of a <span class="math inline">\(c\)</span>-convex function — the generalization of the Brenier potential to arbitrary cost functions.</p>
+<hr>
+<p><strong>The break moment example — <span class="math inline">\(\mu=\delta_0\)</span>, <span class="math inline">\(\nu=\frac{1}{2}\delta_{-1}+\frac{1}{2}\delta_1\)</span>, optimal coupling splits mass — is the formal demonstration that the Kantorovich relaxation is a strict relaxation, not merely a reformulation.</strong> The Monge problem is infeasible: any map <span class="math inline">\(T\)</span> satisfies <span class="math inline">\(T_\#\delta_0 = \delta_{T(0)}\)</span>, a point mass at a single point, which cannot equal <span class="math inline">\(\nu = \frac{1}{2}\delta_{-1}+\frac{1}{2}\delta_1\)</span>. The Kantorovich problem is feasible with optimal coupling <span class="math inline">\(\pi^* = \frac{1}{2}\delta_{(0,-1)}+\frac{1}{2}\delta_{(0,1)}\)</span> — send half the mass at <span class="math inline">\(0\)</span> to <span class="math inline">\(-1\)</span> and half to <span class="math inline">\(+1\)</span>. The cost is <span class="math inline">\(\frac{1}{2}\cdot|0-(-1)|+\frac{1}{2}\cdot|0-1|=1\)</span>. This is the minimum possible cost since every unit of mass must travel at least distance 1 to reach either <span class="math inline">\(\pm 1\)</span>. The Kantorovich coupling is not a graph-concentrated measure — it genuinely distributes the mass at <span class="math inline">\(0\)</span> between two destinations. Mass splitting is not only permitted — it is the unique optimal solution. The infeasibility of the Monge problem (<span class="math inline">\(+\infty\)</span> cost) versus the Kantorovich optimum (cost 1) quantifies exactly how much the relaxation gains.</p>
+<p><strong>The Wasserstein distance <span class="math inline">\(W_p(\mu,\nu) = (\min_{\pi\in\Pi(\mu,\nu)}\int\|x-y\|^p\,d\pi)^{1/p}\)</span> — the minimum cost coupling converted to a metric — is the fundamental geometric quantity that the coupling formulation defines.</strong> The minimization over <span class="math inline">\(\Pi(\mu,\nu)\)</span> is the Kantorovich problem for the cost <span class="math inline">\(c(x,y)=\|x-y\|^p\)</span>. The <span class="math inline">\(p\)</span>-th root converts the cost (which scales as <span class="math inline">\(p\)</span>-th power of distance) into a distance (which scales linearly). The three metric axioms — positivity, symmetry, triangle inequality — follow from: (i) the zero cost coupling being the diagonal measure <span class="math inline">\(\pi=(\text{id},\text{id})_\#\mu\)</span> only when <span class="math inline">\(\mu=\nu\)</span>; (ii) the symmetry <span class="math inline">\(\Pi(\mu,\nu)=\Pi(\nu,\mu)\)</span> since swapping coordinates maps any coupling of <span class="math inline">\((\mu,\nu)\)</span> to a coupling of <span class="math inline">\((\nu,\mu)\)</span>; (iii) the gluing lemma allowing couplings to be composed via the three-way measure, proving the triangle inequality.</p>
+<p><strong>The gluing lemma — the existence of a three-way coupling <span class="math inline">\(\tilde\pi\)</span> on <span class="math inline">\(\mathcal{X}\times\mathcal{Y}\times\mathcal{Z}\)</span> given marginal couplings <span class="math inline">\(\pi_1\in\Pi(\mu,\nu)\)</span> and <span class="math inline">\(\pi_2\in\Pi(\nu,\rho)\)</span> — is the grain logistics version of connecting two separate routing plans through a common intermediate hub.</strong> If you have an optimal routing plan from western surplus to Kathmandu (coupling <span class="math inline">\(\pi_1\)</span> of <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span>) and an optimal routing plan from Kathmandu to eastern deficit (coupling <span class="math inline">\(\pi_2\)</span> of <span class="math inline">\(\nu\)</span> and <span class="math inline">\(\rho\)</span>), the gluing lemma produces a joint plan for the full west-to-east routing (<span class="math inline">\(\tilde\pi\)</span> on <span class="math inline">\(\mu\)</span>, <span class="math inline">\(\nu\)</span>, <span class="math inline">\(\rho\)</span>) that simultaneously realizes both sub-plans. The projection onto western-eastern pairs is a coupling of <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\rho\)</span> — generally suboptimal but valid — and the triangle inequality follows because its cost is at most the sum of the two sub-plan costs.</p>
+<hr>
+<p><strong>The connection to MATH 304 (Computational Operations Research) is now complete and bidirectional.</strong> The balanced transportation LP that you solved using the northwest corner method and the transportation simplex is the discrete Kantorovich problem. The northwest corner solution is a basic feasible solution of the transportation polytope — a coupling with at most <span class="math inline">\(m+n-1\)</span> nonzero entries, corresponding to a partial Monge assignment that routes each source to at most one destination and each destination from at most one source. Vogel’s approximation method selects the initial basic feasible solution by considering the cost differences between the cheapest and second-cheapest options — a greedy heuristic that approximates the optimal coupling. The transportation simplex pivots between basic feasible solutions — moves between vertices of the transportation polytope — improving the objective at each step, exactly as the general simplex method moves between vertices of a linear programming feasible set. Every algorithm you learned for transportation LPs in MATH 304 is a special case of an algorithm for the discrete Kantorovich problem.</p>
+<p><strong>The connection to MATH 208 (Statistics and Probability) closes through joint distributions and covariance.</strong> The joint distribution of any pair of random variables <span class="math inline">\((X,Y)\)</span> is a coupling of their marginals <span class="math inline">\(\mu_X\)</span> and <span class="math inline">\(\mu_Y\)</span>. The independent coupling <span class="math inline">\(\mu_X\otimes\mu_Y\)</span> corresponds to independent <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>, with zero covariance. The optimal coupling for the quadratic cost minimizes <span class="math inline">\(\mathbb{E}[\|X-Y\|^2] = \mathbb{E}[\|X\|^2] + \mathbb{E}[\|Y\|^2] - 2\mathbb{E}[\langle X,Y\rangle]\)</span>, which is equivalent to maximizing the cross-term <span class="math inline">\(\mathbb{E}[\langle X,Y\rangle]\)</span> — the coupling that maximizes the inner product between the two random variables. For one-dimensional Gaussians <span class="math inline">\(\mu=\mathcal{N}(m_1,\sigma_1^2)\)</span> and <span class="math inline">\(\nu=\mathcal{N}(m_2,\sigma_2^2)\)</span>, the optimal coupling is the jointly Gaussian <span class="math inline">\((X,Y)\)</span> with perfect positive correlation: <span class="math inline">\(Y = m_2 + \frac{\sigma_2}{\sigma_1}(X-m_1)\)</span>, giving <span class="math inline">\(W_2^2 = (m_1-m_2)^2 + (\sigma_1-\sigma_2)^2\)</span> — the squared Euclidean distance between the mean-standard deviation pairs. Every joint distribution you computed in MATH 208 was a coupling, and the independence and covariance structure you analyzed was the structure of that coupling.</p>
+<p><strong>The connection to MATH 213 (Analysis I) runs through weak convergence and the metrization result.</strong> The Wasserstein distance <span class="math inline">\(W_p(\mu_k,\mu)\to 0\)</span> if and only if <span class="math inline">\(\mu_k\rightharpoonup\mu\)</span> weakly (all bounded continuous test functions converge in expectation) plus convergence of <span class="math inline">\(p\)</span>-th moments. The weak convergence part is the Analysis I notion of convergence for sequences of functions tested against bounded continuous functions — the distributional convergence you computed when finding limits of probability measures on <span class="math inline">\(\mathbb{R}\)</span>. The moment convergence is the additional tightness condition that prevents mass from escaping to infinity — the quantitative control that makes Wasserstein convergence stronger than purely distributional convergence. Every convergence-in-distribution argument in MATH 208 was weak convergence of probability measures, and the Wasserstein distance strengthens this to include geometric information about how far apart the distributions are in the underlying metric space.</p>
+<hr>
+<p><strong>Looking forward across the roadmap</strong>, the coupling formulation is the foundation of everything that follows. In Topic 3, the Wasserstein distance is defined as the minimum cost coupling — the <span class="math inline">\(p\)</span>-th root of the Kantorovich minimum — and its metric properties follow from the coupling set’s structure. In Topic 4, the Kantorovich dual converts the primal coupling problem into a dual potential problem — the shadow prices of the marginal constraints become the potential functions, and the LP duality of the transportation problem becomes the Kantorovich duality theorem. In Phase 1’s Chapter 2, the Sinkhorn algorithm minimizes the entropically regularized Kantorovich problem — adding a KL divergence penalty to the objective, converting the linear program into a smooth strongly convex problem whose unique solution is a coupling that is strictly interior to the transportation polytope. The Sinkhorn iterations are coordinate ascent on the dual of this regularized problem, alternately updating the row and column scaling factors of the coupling. In Phase 3, the JKO scheme minimizes a functional over the space of probability measures by finding the optimal coupling between the current distribution and the target distribution at each step — the coupling formulation is the tool that makes each JKO step a well-posed optimization problem.</p>
+<p>The grain logistics plan — the joint distribution <span class="math inline">\(\pi(x,y)\)</span> over source-destination pairs, satisfying the marginal constraints, minimizing the expected transport cost — is not an approximation to the Monge map. It is the more fundamental object. The Monge map is the special case where the coupling is concentrated on a graph. The coupling is the full probabilistic generalization that handles discrete measures, guarantees existence of optimal plans, convexifies the feasible set, and makes the duality theory of Topic 4 possible.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

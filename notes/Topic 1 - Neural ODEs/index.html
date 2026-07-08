@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2026-07-07">
+
+<title>Topic 1 - Neural ODEs – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Topic 1 - Neural ODEs</li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#topic-1---neural-odes-learning-continuous-transformations" id="toc-topic-1---neural-odes-learning-continuous-transformations" class="nav-link active" data-scroll-target="#topic-1---neural-odes-learning-continuous-transformations">Topic 1 - Neural ODEs: Learning Continuous Transformations</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#layer-1-story" id="toc-layer-1-story" class="nav-link" data-scroll-target="#layer-1-story">Layer 1 (Story)</a></li>
+  <li><a href="#layer-2-mathematics" id="toc-layer-2-mathematics" class="nav-link" data-scroll-target="#layer-2-mathematics">Layer 2 (Mathematics)</a></li>
+  <li><a href="#layer-3-bridge" id="toc-layer-3-bridge" class="nav-link" data-scroll-target="#layer-3-bridge">Layer 3 (Bridge)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Topic 1 - Neural ODEs</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">July 7, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="topic-1---neural-odes-learning-continuous-transformations" class="level1">
+<h1>Topic 1 - Neural ODEs: Learning Continuous Transformations</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>Every deep neural network you have encountered in your mathematical training has been a discrete object. A multilayer perceptron with <span class="math inline">\(L\)</span> layers applies <span class="math inline">\(L\)</span> successive transformations: <span class="math inline">\(x \mapsto \sigma(W_1 x + b_1) \mapsto \sigma(W_2(\cdots) + b_2) \mapsto \cdots \mapsto y\)</span>. A residual network adds skip connections: <span class="math inline">\(x_{l+1} = x_l + f_\theta(x_l)\)</span>, where each block adds a small perturbation to the current representation. Both are finite compositions of functions — a discrete sequence of transformations indexed by the layer number <span class="math inline">\(l \in \{1, 2, \ldots, L\}\)</span>.</p>
+<p>The neural ODE asks: what happens in the limit as the number of layers goes to infinity and the step size goes to zero? The residual update <span class="math inline">\(x_{l+1} = x_l + f_\theta(x_l)\)</span> becomes the Euler discretization of the ODE <span class="math inline">\(\dot x_t = f_\theta(x_t, t)\)</span>, and in the continuous limit the discrete layer stack becomes a continuous flow. The neural network no longer maps input to output through a fixed number of discrete steps — it maps input to output through the solution of an ordinary differential equation, integrated from <span class="math inline">\(t=0\)</span> to <span class="math inline">\(t=1\)</span>.</p>
+<p>This is not merely a mathematical curiosity. The continuous-depth network has properties that its discrete counterparts do not: it computes an exact probability flow (not an approximation), it trains with constant memory cost regardless of integration depth (through the adjoint method), and it provides exact log-likelihoods for generative modeling (through the instantaneous change of variables formula). The neural ODE is the foundational architecture of continuous normalizing flows — the family of generative models that Chapter 2 builds upon.</p>
+<p>The shift from discrete to continuous depth is the first of three conceptual moves that this topic makes, and it is worth dwelling on its mathematical content before proceeding.</p>
+<p>A standard residual block <span class="math inline">\(x_{l+1} = x_l + \Delta t\, f_\theta(x_l, t_l)\)</span> with step size <span class="math inline">\(\Delta t = 1/L\)</span> is the Euler method for the ODE <span class="math inline">\(\dot x_t = f_\theta(x_t, t)\)</span> with step size <span class="math inline">\(1/L\)</span>. As <span class="math inline">\(L\to\infty\)</span> and <span class="math inline">\(\Delta t\to 0\)</span>, the Euler approximation converges to the exact ODE solution — the flow map <span class="math inline">\(\phi_t: x_0\mapsto x_t\)</span> defined by <span class="math inline">\(\frac{d}{dt}\phi_t(x_0) = f_\theta(\phi_t(x_0), t)\)</span>, <span class="math inline">\(\phi_0(x_0) = x_0\)</span>. The neural ODE replaces the Euler approximation with the exact solution, using a numerical ODE solver — Runge-Kutta, Adams-Bashforth, or an adaptive solver — to integrate the dynamics. The number of function evaluations is determined by the solver’s error tolerance, not by the architecture’s depth, giving the neural ODE its flexibility: use a coarse solver for fast generation, a fine solver for exact likelihood computation.</p>
+<p>This topic develops the neural ODE framework across three components that build in strict logical order.</p>
+<p>The first component is <strong>the neural ODE as a continuous normalizing flow and the instantaneous change of variables formula</strong>. A normalizing flow is a generative model that learns an invertible transformation <span class="math inline">\(T: \mathbb{R}^d\to\mathbb{R}^d\)</span> mapping a simple base distribution (Gaussian) to the data distribution, with the log-likelihood of any data point computable via the change of variables formula <span class="math inline">\(\log p_{\text{data}}(x) = \log p_{\text{base}}(T^{-1}(x)) - \log|\det\nabla T(x)|\)</span>. Classical normalizing flows use specific invertible architectures (affine coupling layers, autoregressive flows) that make the Jacobian determinant <span class="math inline">\(\det\nabla T\)</span> tractable. The neural ODE replaces the discrete invertible map with a continuous flow <span class="math inline">\(\phi_1: x_0\mapsto x_1\)</span>, making every neural ODE a normalizing flow. The Jacobian determinant of the flow is computed not all at once but incrementally, through the <strong>instantaneous change of variables formula</strong>: <span class="math inline">\(\frac{d}{dt}\log p(x_t) = -\nabla\cdot f_\theta(x_t, t)\)</span>, where <span class="math inline">\(\nabla\cdot f_\theta\)</span> is the divergence of the velocity field — the trace of its Jacobian. Integrating this ODE alongside the state <span class="math inline">\(x_t\)</span> gives the exact log-likelihood at any point, without computing the full <span class="math inline">\(d\times d\)</span> Jacobian matrix. This is the formula that connects the neural ODE to the continuity equation <span class="math inline">\(\partial_t\rho_t + \nabla\cdot(\rho_t f_\theta) = 0\)</span> of Chapter 1: the Fokker-Planck equation with <span class="math inline">\(\sigma=0\)</span> is exactly the continuity equation, and the instantaneous change of variables formula is its characteristic equation along flow trajectories.</p>
+<p>The second component is <strong>the adjoint method for training</strong>. Training a neural ODE requires computing gradients of a loss function with respect to the neural network parameters <span class="math inline">\(\theta\)</span>. The loss depends on the ODE solution <span class="math inline">\(x_1 = \phi_1(x_0; \theta)\)</span>, which is computed by a numerical solver that takes many intermediate steps. Naively backpropagating through every solver step — the standard automatic differentiation approach — requires storing all intermediate states in memory, with memory cost proportional to the number of solver steps. For a high-accuracy solver taking thousands of steps, this is prohibitive. The <strong>adjoint sensitivity method</strong> resolves this by computing gradients without storing intermediate states: instead of backpropagating forward through the solver, it solves a backward ODE for the adjoint state <span class="math inline">\(a(t) = \partial\mathcal{L}/\partial x_t\)</span> — the gradient of the loss with respect to the state at each time — and simultaneously accumulates the parameter gradient <span class="math inline">\(\partial\mathcal{L}/\partial\theta\)</span>. The adjoint ODE runs backward in time from <span class="math inline">\(t=1\)</span> to <span class="math inline">\(t=0\)</span>, requiring only the current state (recomputed by the forward solver running backward) and the current adjoint, never storing the full forward trajectory. The memory cost is <span class="math inline">\(O(d)\)</span> regardless of the number of solver steps — constant memory training for arbitrary-depth continuous networks.</p>
+<p>The third component is <strong>the connection to optimal control and the relationship to score-based models</strong>. The neural ODE training problem — find parameters <span class="math inline">\(\theta\)</span> that minimize a loss function over ODE trajectories — is an optimal control problem: minimize <span class="math inline">\(\mathcal{L}(x_1)\)</span> subject to <span class="math inline">\(\dot x_t = f_\theta(x_t,t)\)</span>, <span class="math inline">\(x_0 = x_{\text{init}}\)</span>. The adjoint method is Pontryagin’s minimum principle applied to this control problem — the classical result from optimal control theory that characterizes the optimal control through the Hamiltonian and the adjoint (costate) equations. This connection is not merely formal: understanding the neural ODE as an optimal control problem clarifies what the training is doing geometrically — it is finding the velocity field <span class="math inline">\(f_\theta\)</span> that moves probability mass from the base distribution to the data distribution along paths that minimize the chosen loss. The relationship to score-based models is through the probability flow ODE of Chapter 1: the probability flow ODE <span class="math inline">\(\dot x_t = b_t(x_t) - \frac{\sigma_t^2}{2}s_t(x_t)\)</span> is a neural ODE with a specific velocity field determined by the learned score function. The neural ODE framework provides the general architecture; score matching provides one way to learn the specific velocity field that defines the correct probability flow.</p>
+<p>The connections to your curriculum are the most concrete of any topic in Phase 3.</p>
+<p>Your MATH 217 course on ODEs is the primary scaffold at the deepest level. The existence and uniqueness theorem (Picard-Lindelöf) from MATH 217 guarantees that the neural ODE <span class="math inline">\(\dot x_t = f_\theta(x_t,t)\)</span> has a unique solution for any initial condition when <span class="math inline">\(f_\theta\)</span> is Lipschitz — the same theorem that guarantees unique geodesics on Riemannian manifolds and unique solutions to the Fokker-Planck equation. The Euler method and Runge-Kutta methods from MATH 217’s numerical ODE section are the specific solvers used inside the neural ODE’s forward pass. Gronwall’s inequality from MATH 217 — the key tool for bounding ODE solution errors — is what makes the adjoint method work: it bounds the error in the recomputed forward trajectory used during the backward pass.</p>
+<p>Your MATH 304 course on Computational Operations Research provides the Lagrangian duality framework underlying the adjoint method. The adjoint sensitivity method is identical in structure to the Lagrangian multiplier method from MATH 304: the adjoint variables <span class="math inline">\(a(t)\)</span> are the Lagrange multipliers enforcing the ODE constraint <span class="math inline">\(\dot x_t = f_\theta(x_t,t)\)</span>, and the adjoint ODE <span class="math inline">\(\dot a(t) = -a(t)^\top\nabla_x f_\theta(x_t,t)\)</span> is the first-order optimality condition for the Lagrangian with respect to <span class="math inline">\(x_t\)</span>. Pontryagin’s minimum principle — the continuous-time analogue of the KKT conditions from MATH 304 — is the complete characterization of optimality for the neural ODE optimal control problem.</p>
+<p>Your MATH 201 course on Advanced Calculus provides the instantaneous change of variables formula through Liouville’s theorem: the rate of change of the log-density along flow trajectories is <span class="math inline">\(d\log p(x_t)/dt = -\text{tr}(\nabla_x f_\theta(x_t,t)) = -\nabla\cdot f_\theta\)</span>, where the trace of the Jacobian is the divergence computed using the chain rule from MATH 201. The change of variables formula for probability distributions — <span class="math inline">\(p_1(x_1)|\det\nabla\phi_1(x_0)| = p_0(x_0)\)</span> — uses the multivariate substitution theorem from MATH 201, with the Jacobian determinant of the flow measuring how much the transformation expands or contracts volume elements.</p>
+<p>By the end of this topic, the neural ODE will feel not like an exotic continuous-depth network but like the natural continuous limit of the residual networks that you already understand — the same architecture in the limit as depth goes to infinity and step size goes to zero. The adjoint method will feel not like a mysterious backpropagation trick but like Pontryagin’s minimum principle applied to the optimal control problem of learning a probability flow. And the instantaneous change of variables formula will feel not like an ad hoc computational shortcut but like the characteristic equation of the continuity equation — the scalar ODE that tracks log-density along the trajectories of the probability flow. These three realizations together give you the complete mathematical picture of neural ODEs as a generative modeling architecture: the continuous flow as the generative model, the adjoint as the training algorithm, and the divergence as the likelihood computation.</p>
+<hr>
+</section>
+<section id="layer-1-story" class="level2">
+<h2 class="anchored" data-anchor-id="layer-1-story">Layer 1 (Story)</h2>
+<p>It is 2021. The International Centre for Integrated Mountain Development has commissioned a comprehensive hydrological mapping project of Nepal’s river systems. Your team’s specific assignment is the most technically demanding: map the complete flow field of the Gandaki river basin — the network of rivers, streams, and drainage channels that collectively carry meltwater from the Annapurna and Dhaulagiri massifs down through the gorges of the middle hills and into the Gangetic plain. The goal is not merely to record where the rivers are today but to learn the underlying flow field — the velocity vector at every point in the basin — so that the team can predict where water starting at any location will end up, how long it will take to arrive, and what path it will follow.</p>
+<p>The hydrological flow field is a function <span class="math inline">\(f(x,t)\)</span>: at each geographic location <span class="math inline">\(x\)</span> in the basin and each season <span class="math inline">\(t\)</span>, it gives the direction and speed of water flow. Learn <span class="math inline">\(f\)</span> from observations, and you can simulate any water particle’s trajectory by solving the ODE <span class="math inline">\(\dot x_t = f(x_t, t)\)</span> — starting at any point <span class="math inline">\(x_0\)</span>, integrate the flow field forward to find where the water goes.</p>
+<p>Your team has a problem. Direct measurement of the flow field at every point in the basin is impossible — the basin is 46,000 square kilometres, and you have seventeen researchers and four boats. What you can observe is where specific marked water particles end up: you release GPS-tagged buoys at various locations upstream, let them drift for a fixed time period, and record their final positions. From the start points and end points of many buoy trajectories, you must infer the flow field <span class="math inline">\(f\)</span> that produced those trajectories.</p>
+<p>This inverse problem — learn the velocity field <span class="math inline">\(f\)</span> from observations of where particles start and end up — is exactly the training problem of a neural ODE generative model.</p>
+<hr>
+<p><strong>The discrete approximation: the expedition’s first attempt.</strong></p>
+<p>Your team’s junior hydrologist, Priya, tries the obvious approach. She divides the observation period into ten discrete time steps. At each step, she fits a local vector field — a function mapping current position to velocity — by interpolating between the observed buoy displacements. The result is ten separate vector fields, one per time step, stitched together to approximate the continuous flow.</p>
+<p>The approximation works reasonably well in the river channels, where the buoy density is high and the flow is predictable. It fails in the side valleys, where buoys are sparse and the interpolated field is unreliable. It fails at transitions between time steps, where the stitched vector fields jump discontinuously. Most importantly, it fails to generalize: the ten-step approximation is tuned to the specific observation interval and cannot be evaluated at intermediate times or integrated over longer or shorter intervals.</p>
+<p>Priya presents the results. The senior hydrologist, Ram Bahadur, examines the discontinuous jumps at time-step boundaries and says: the river does not have discontinuities. The flow field is continuous in time. We should fit a single continuous function <span class="math inline">\(f(x,t)\)</span> — parameterized by a neural network — and train it to reproduce the observed start-to-end displacements. The ten-step approximation is the Euler method for the ODE <span class="math inline">\(\dot x_t = f(x_t,t)\)</span>; we should use the exact ODE solution.</p>
+<p>This is the neural ODE: replace the discrete ten-step approximation with a single neural network <span class="math inline">\(f_\theta(x,t)\)</span> and train it so that the ODE solution <span class="math inline">\(\phi_1(x_0;\theta)\)</span> matches the observed buoy endpoints <span class="math inline">\(x_1\)</span> for every start point <span class="math inline">\(x_0\)</span>.</p>
+<hr>
+<p><strong>The flow map: from velocity field to particle trajectory.</strong></p>
+<p>Ram Bahadur draws the key picture on the whiteboard. Given a velocity field <span class="math inline">\(f_\theta(x,t)\)</span>, the trajectory of a buoy starting at position <span class="math inline">\(x_0\)</span> is the curve <span class="math inline">\(x_t = \phi_t(x_0)\)</span> satisfying:</p>
+<p><span class="math display">\[\dot x_t = f_\theta(x_t, t), \quad x_0 = \text{starting position}\]</span></p>
+<p>The function <span class="math inline">\(\phi_t: x_0\mapsto x_t\)</span> is the flow map — it takes any starting position and returns the position at time <span class="math inline">\(t\)</span>. For <span class="math inline">\(t=0\)</span>: <span class="math inline">\(\phi_0 = \text{Id}\)</span> (no movement yet). For <span class="math inline">\(t=1\)</span>: <span class="math inline">\(\phi_1(x_0)\)</span> is the predicted endpoint of the buoy starting at <span class="math inline">\(x_0\)</span>.</p>
+<p>The flow map has a critical property: it is invertible. If you know where a buoy ends up, you can run the ODE backward — integrate <span class="math inline">\(\dot x_t = f_\theta(x_t,t)\)</span> from <span class="math inline">\(t=1\)</span> back to <span class="math inline">\(t=0\)</span> — to find where it started. The neural ODE is therefore an invertible transformation: you can move forward from starting positions to endpoints, or backward from endpoints to starting positions. This invertibility is what makes the neural ODE a normalizing flow — a generative model that can both generate samples (run the ODE forward from noise) and evaluate likelihoods (run the ODE backward from data and apply the change of variables formula).</p>
+<p>The training objective is simple in principle: for each observed buoy <span class="math inline">\((x_0^{(i)}, x_1^{(i)})\)</span> — start point and end point — minimize the loss:</p>
+<p><span class="math display">\[\mathcal{L}(\theta) = \frac{1}{n}\sum_{i=1}^n \|phi_1(x_0^{(i)};\theta) - x_1^{(i)}\|^2\]</span></p>
+<p>This is a mean squared error between predicted and observed endpoints. The predicted endpoint <span class="math inline">\(\phi_1(x_0^{(i)};\theta)\)</span> is computed by numerically integrating the neural network <span class="math inline">\(f_\theta\)</span> from <span class="math inline">\(t=0\)</span> to <span class="math inline">\(t=1\)</span> starting at <span class="math inline">\(x_0^{(i)}\)</span> — running an ODE solver with <span class="math inline">\(f_\theta\)</span> as the right-hand side.</p>
+<hr>
+<p><strong>The memory problem: why naive backpropagation fails.</strong></p>
+<p>Priya implements the neural ODE and tries to train it using standard automatic differentiation. The ODE solver takes 500 steps to integrate <span class="math inline">\(f_\theta\)</span> from <span class="math inline">\(t=0\)</span> to <span class="math inline">\(t=1\)</span> with the required accuracy. At each step, the solver evaluates <span class="math inline">\(f_\theta\)</span> and computes the next position. Standard backpropagation requires storing all 500 intermediate positions to compute gradients — the backward pass walks backward through every solver step, using the stored intermediate states to compute the gradient of the loss with respect to the neural network parameters <span class="math inline">\(\theta\)</span>.</p>
+<p>The memory cost is catastrophic: 500 stored intermediate states, each a <span class="math inline">\(d\)</span>-dimensional vector, multiplied by the batch size and the model size. For a high-dimensional data space (images, molecular structures) with a large batch and a deep neural network, storing 500 intermediate states requires more GPU memory than is available.</p>
+<p>Ram Bahadur identifies the problem: we are trying to remember the entire river’s history to compute where we went wrong. But we do not need to remember the entire history. The physics of the river gives us a shortcut.</p>
+<hr>
+<p><strong>The adjoint method: the ghost buoy that runs backward.</strong></p>
+<p>Ram Bahadur proposes the following procedure. Instead of storing the forward trajectory, release a ghost buoy at the endpoint <span class="math inline">\(x_1\)</span> and let it drift backward through time under the reversed flow field <span class="math inline">\(-f_\theta(x_t, t)\)</span>. As the ghost buoy drifts backward, simultaneously track two additional quantities: how sensitive the final loss is to the current position (the adjoint <span class="math inline">\(a(t) = \partial\mathcal{L}/\partial x_t\)</span>), and how much each parameter contributed to the trajectory error (the parameter gradient <span class="math inline">\(\partial\mathcal{L}/\partial\theta\)</span>).</p>
+<p>The ghost buoy’s backward trajectory retraces the forward trajectory without storing it: the solver integrates backward from <span class="math inline">\(t=1\)</span> to <span class="math inline">\(t=0\)</span>, recomputing the forward positions as needed (by running a short forward integration from the current backward position). The adjoint <span class="math inline">\(a(t)\)</span> evolves according to its own ODE — the adjoint equation — which involves the transpose of the Jacobian of <span class="math inline">\(f_\theta\)</span>. The parameter gradient accumulates continuously as the backward integration proceeds.</p>
+<p>At the end of the backward integration, you have both <span class="math inline">\(x_0\)</span> (the reconstructed starting position) and <span class="math inline">\(\partial\mathcal{L}/\partial\theta\)</span> (the gradient needed for parameter update). No intermediate states were stored. The memory cost is <span class="math inline">\(O(d)\)</span> — just the current position and adjoint — regardless of how many solver steps the forward integration took.</p>
+<p>This is the adjoint sensitivity method: compute gradients through an ODE solver using a backward ODE for the adjoint state, without storing forward intermediate states. The memory cost is constant. The computational cost is approximately twice the forward pass (one forward integration to evaluate the loss, one backward integration to compute the gradient). The trade-off — constant memory at twice the compute — is the neural ODE’s central efficiency innovation.</p>
+<hr>
+<p><strong>The adjoint as a shadow measurement.</strong></p>
+<p>The ghost buoy analogy is worth developing. The adjoint <span class="math inline">\(a(t) = \partial\mathcal{L}/\partial x_t\)</span> measures how much a small perturbation to the buoy’s position at time <span class="math inline">\(t\)</span> would change the final loss. At <span class="math inline">\(t=1\)</span> (the endpoint), <span class="math inline">\(a(1) = \partial\mathcal{L}/\partial x_1\)</span> — the gradient of the loss with respect to the observed endpoint, which is straightforward to compute from the MSE loss. At earlier times, <span class="math inline">\(a(t)\)</span> measures the sensitivity of the loss to earlier positions — how much a small push to the buoy at time <span class="math inline">\(t\)</span> would affect where it ends up.</p>
+<p>The adjoint evolves backward in time according to the equation <span class="math inline">\(\dot a(t) = -a(t)^\top \nabla_x f_\theta(x_t, t)\)</span> — a linear ODE driven by the transpose of the Jacobian of <span class="math inline">\(f_\theta\)</span>. Intuitively: if the velocity field is strongly converging at some point (particles near that point are being squeezed together), then small perturbations to the position are damped out quickly — the adjoint decreases rapidly. If the velocity field is diverging (particles spreading apart), then small perturbations are amplified — the adjoint increases.</p>
+<p>The parameter gradient is the time integral of the adjoint times the gradient of <span class="math inline">\(f_\theta\)</span> with respect to parameters:</p>
+<p><span class="math display">\[\frac{\partial\mathcal{L}}{\partial\theta} = -\int_0^1 a(t)^\top \frac{\partial f_\theta(x_t,t)}{\partial\theta}\,dt\]</span></p>
+<p>The integrand <span class="math inline">\(a(t)^\top\partial f_\theta/\partial\theta\)</span> is the influence of parameter <span class="math inline">\(\theta\)</span> on the velocity at time <span class="math inline">\(t\)</span>, weighted by the loss sensitivity <span class="math inline">\(a(t)\)</span> at that time. A parameter that affects the velocity heavily in a region where the adjoint is large contributes much to the loss; a parameter that only affects velocity in regions where the adjoint is small contributes little.</p>
+<hr>
+<p><strong>The density tracking problem: how probability mass changes under the flow.</strong></p>
+<p>After mapping the flow field, the team’s next task is density estimation. They know the flow field <span class="math inline">\(f_\theta\)</span>. They want to know: if we release not one buoy but a cloud of buoys — a probability distribution <span class="math inline">\(\rho_0\)</span> of starting positions — how does the density <span class="math inline">\(\rho_t\)</span> of the buoy cloud evolve as the flow field carries it?</p>
+<p>From Chapter 1, you know the answer: the continuity equation <span class="math inline">\(\partial_t\rho_t + \nabla\cdot(\rho_t f_\theta) = 0\)</span>. The density changes because the flow field carries mass around. But computing <span class="math inline">\(\rho_t\)</span> by directly solving the continuity equation is expensive — it requires evolving a full density function over the basin.</p>
+<p>The neural ODE offers a shortcut: instead of evolving the density, track how the density at a single point changes along the trajectory of that point. A buoy starting at <span class="math inline">\(x_0\)</span> follows the trajectory <span class="math inline">\(x_t = \phi_t(x_0)\)</span>. The density at the buoy’s current position <span class="math inline">\(\rho_t(x_t)\)</span> changes according to:</p>
+<p><span class="math display">\[\frac{d}{dt}\log\rho_t(x_t) = -\nabla\cdot f_\theta(x_t, t)\]</span></p>
+<p>The log-density decreases at a rate equal to the divergence of the velocity field at the current position. Positive divergence (the flow is spreading outward — the river is entering a wide floodplain) means density decreases (the buoys spread apart, each region gets fewer). Negative divergence (the flow is converging inward — the river is entering a narrow gorge) means density increases (the buoys pile up, concentration increases).</p>
+<p>This is the instantaneous change of variables formula. Integrating it along the trajectory from <span class="math inline">\(t=0\)</span> to <span class="math inline">\(t=1\)</span>:</p>
+<p><span class="math display">\[\log\rho_1(x_1) = \log\rho_0(x_0) - \int_0^1\nabla\cdot f_\theta(x_t,t)\,dt\]</span></p>
+<p>The log-density at the endpoint equals the log-density at the start point minus the integrated divergence along the path. This gives exact log-likelihoods without computing a Jacobian determinant — the neural ODE’s key advantage over discrete normalizing flows.</p>
+<hr>
+<p><strong>The break moment: why the divergence trace is enough.</strong></p>
+<p>You might think: this formula replaces the Jacobian determinant <span class="math inline">\(\log|\det\nabla\phi_1|\)</span> with an integral of the divergence <span class="math inline">\(\int\nabla\cdot f_\theta\,dt\)</span>. But computing <span class="math inline">\(\nabla\cdot f_\theta = \text{tr}(\nabla_x f_\theta)\)</span> still requires computing the Jacobian of <span class="math inline">\(f_\theta\)</span> — a <span class="math inline">\(d\times d\)</span> matrix — and taking its trace. For large <span class="math inline">\(d\)</span> (high-dimensional data), computing the full Jacobian costs <span class="math inline">\(O(d^2)\)</span> time and memory — just as expensive as the original Jacobian determinant.</p>
+<p>The naive assumption is that this formula has solved the computational problem. It breaks in high dimensions.</p>
+<p>The fix comes from Hutchinson’s trace estimator: instead of computing <span class="math inline">\(\text{tr}(J) = \sum_i e_i^\top J e_i\)</span> by evaluating <span class="math inline">\(J\)</span> at all <span class="math inline">\(d\)</span> standard basis vectors, use a random vector <span class="math inline">\(z\sim\mathcal{N}(0,I)\)</span> and estimate <span class="math inline">\(\text{tr}(J) \approx z^\top Jz\)</span>. Since <span class="math inline">\(\mathbb{E}[z^\top Jz] = \text{tr}(J)\)</span> for any matrix <span class="math inline">\(J\)</span> (by the trace identity <span class="math inline">\(\text{tr}(J) = \mathbb{E}_z[z^\top Jz]\)</span> for <span class="math inline">\(z\sim\mathcal{N}(0,I)\)</span>), this gives an unbiased estimator of the divergence using only a single Jacobian-vector product <span class="math inline">\(Jz = \nabla_x(f_\theta\cdot z)\)</span> — computable in the same time as one gradient evaluation of <span class="math inline">\(f_\theta\)</span> using automatic differentiation. The full Jacobian never needs to be materialized.</p>
+<p>The Hutchinson estimator reduces the cost of the instantaneous change of variables formula from <span class="math inline">\(O(d^2)\)</span> to <span class="math inline">\(O(d)\)</span> per time step — making continuous normalizing flows computationally tractable in high dimensions. This stochastic trace estimation is the break moment’s resolution: exact log-likelihoods, without the full Jacobian, using a single random vector per step.</p>
+<hr>
+<p><strong>The generative model: from noise to data.</strong></p>
+<p>The complete generative model works as follows. The base distribution is the standard Gaussian <span class="math inline">\(\rho_0 = \mathcal{N}(0,I)\)</span> — easy to sample from, easy to evaluate. The neural ODE flow <span class="math inline">\(\phi_1\)</span> transforms Gaussian samples into data samples. Training minimizes the negative log-likelihood of the training data:</p>
+<p><span class="math display">\[\mathcal{L}(\theta) = -\frac{1}{n}\sum_{i=1}^n\log\rho_1(x_1^{(i)})\]</span></p>
+<p>where each <span class="math inline">\(\log\rho_1(x_1^{(i)})\)</span> is computed by running the ODE backward from <span class="math inline">\(x_1^{(i)}\)</span> to find <span class="math inline">\(x_0^{(i)} = \phi_1^{-1}(x_1^{(i)})\)</span> and integrating the divergence:</p>
+<p><span class="math display">\[\log\rho_1(x_1) = \log\rho_0(x_0) - \int_0^1\nabla\cdot f_\theta(x_t,t)\,dt\]</span></p>
+<p><span class="math inline">\(\log\rho_0(x_0)\)</span> is the Gaussian log-density — analytically computable. The integral of the divergence is computed alongside the backward ODE integration using the Hutchinson estimator.</p>
+<p>Generation is the forward pass: sample <span class="math inline">\(x_0\sim\mathcal{N}(0,I)\)</span> and integrate the ODE forward from <span class="math inline">\(t=0\)</span> to <span class="math inline">\(t=1\)</span> to produce <span class="math inline">\(x_1 = \phi_1(x_0)\)</span> — a new sample from the learned data distribution.</p>
+<p>The Gandaki basin analogy: the base distribution is the Himalayan glaciers, distributed according to a Gaussian snow deposition pattern. The neural ODE flow is the river system — it takes each snowmelt droplet (Gaussian sample) and flows it through the basin (ODE integration) to its endpoint in the Terai (data sample). Training learns the river network (velocity field) so that the distribution of endpoints matches the data distribution. Generation releases a new Gaussian sample (a new snowmelt droplet) and flows it through the learned river network to produce a new data point.</p>
+<hr>
+<p><strong>The connection to residual networks and depth.</strong></p>
+<p>Ram Bahadur draws the final picture. The standard ResNet with <span class="math inline">\(L\)</span> blocks is:</p>
+<p><span class="math display">\[x_{l+1} = x_l + \frac{1}{L}f_\theta(x_l, l/L)\]</span></p>
+<p>This is the Euler method for <span class="math inline">\(\dot x_t = f_\theta(x_t,t)\)</span> with step size <span class="math inline">\(1/L\)</span>. As <span class="math inline">\(L\to\infty\)</span>, the Euler approximation converges to the ODE solution — the neural ODE is the <span class="math inline">\(L=\infty\)</span> limit of the ResNet. The continuous-depth network does not need to choose how deep to make the network: depth is replaced by the ODE solver’s error tolerance, which can be set adaptively depending on the required accuracy. A coarse tolerance gives a fast but approximate flow; a fine tolerance gives a slow but exact flow. The network architecture — the function <span class="math inline">\(f_\theta(x,t)\)</span> — is fixed; only the integration precision varies.</p>
+<p>This is the depth-accuracy trade-off of neural ODEs: more computation gives more accurate flow integration, without changing the neural network’s parameters. At test time, you can use a high-accuracy solver for exact likelihoods or a low-accuracy solver for fast generation, using the same trained network. No other neural network architecture offers this flexibility.</p>
+<hr>
+<p><strong>Three pictures to carry into the mathematics.</strong></p>
+<p>The first picture: the Gandaki basin flow field <span class="math inline">\(f_\theta(x,t)\)</span> — a vector at every location and time pointing in the direction of flow. Buoys follow ODE trajectories <span class="math inline">\(\dot x_t = f_\theta(x_t,t)\)</span>, starting from Gaussian noise (Himalayan snowmelt) and ending at data samples (Terai endpoints). Training matches predicted endpoints to observed endpoints. Generation integrates the learned flow field forward from a fresh Gaussian sample.</p>
+<p>The second picture: the ghost buoy running backward — the adjoint state <span class="math inline">\(a(t) = \partial\mathcal{L}/\partial x_t\)</span> evolving under the adjoint ODE <span class="math inline">\(\dot a = -a^\top\nabla_x f_\theta\)</span>, accumulating the parameter gradient <span class="math inline">\(\partial\mathcal{L}/\partial\theta = -\int a^\top\partial f_\theta/\partial\theta\,dt\)</span> without storing forward intermediate states. Constant memory, twice the compute, exact gradients.</p>
+<p>The third picture: the log-density tracking — <span class="math inline">\(\frac{d}{dt}\log\rho_t(x_t) = -\nabla\cdot f_\theta(x_t,t)\)</span>, the instantaneous change of variables formula, integrating the divergence of the velocity field along each trajectory to compute exact log-likelihoods. The Hutchinson estimator <span class="math inline">\(\text{tr}(J)\approx z^\top Jz\)</span> for <span class="math inline">\(z\sim\mathcal{N}(0,I)\)</span> reduces this from <span class="math inline">\(O(d^2)\)</span> to <span class="math inline">\(O(d)\)</span> per step, making high-dimensional likelihood computation tractable.</p>
+<hr>
+</section>
+<section id="layer-2-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="layer-2-mathematics">Layer 2 (Mathematics)</h2>
+<p>We build the formalism in six stages: the neural ODE as a continuous dynamical system and its well-posedness, the flow map and its properties, the instantaneous change of variables formula and continuous normalizing flows, the adjoint sensitivity method and its derivation from optimal control theory, the Hutchinson trace estimator and stochastic likelihood computation, and the connection to the probability flow ODE of Chapter 1.</p>
+<section id="neural-odes-definition-and-well-posedness" class="level3">
+<h3 class="anchored" data-anchor-id="neural-odes-definition-and-well-posedness">Neural ODEs: Definition and Well-Posedness</h3>
+<p><strong>Definition (Neural ODE).</strong> A <strong>neural ODE</strong> is a continuous dynamical system:</p>
+<p><span class="math display">\[\frac{dx_t}{dt} = f_\theta(x_t, t), \quad x_0 = x_{\text{init}} \in \mathbb{R}^d\]</span></p>
+<p>where <span class="math inline">\(f_\theta: \mathbb{R}^d \times [0,T] \to \mathbb{R}^d\)</span> is a neural network with parameters <span class="math inline">\(\theta \in \mathbb{R}^p\)</span>, and <span class="math inline">\(t \in [0,T]\)</span> is the continuous depth parameter.</p>
+<p><strong>Well-posedness (Picard-Lindelöf).</strong> Under the conditions: - <strong>Lipschitz in <span class="math inline">\(x\)</span>:</strong> <span class="math inline">\(\|f_\theta(x,t) - f_\theta(y,t)\| \leq L\|x-y\|\)</span> for all <span class="math inline">\(x,y\in\mathbb{R}^d\)</span>, <span class="math inline">\(t\in[0,T]\)</span> - <strong>Continuity in <span class="math inline">\(t\)</span>:</strong> <span class="math inline">\(t\mapsto f_\theta(x,t)\)</span> continuous for each <span class="math inline">\(x\)</span></p>
+<p>there exists a unique solution <span class="math inline">\(x: [0,T]\to\mathbb{R}^d\)</span> with <span class="math inline">\(x\in C^1([0,T];\mathbb{R}^d)\)</span>.</p>
+<p><strong>Relation to ResNets.</strong> The ResNet update <span class="math inline">\(x_{l+1} = x_l + \frac{1}{L}f_\theta(x_l, l/L)\)</span> is the Euler method for <span class="math inline">\(\dot x_t = f_\theta(x_t,t)\)</span> with step size <span class="math inline">\(h = 1/L\)</span>. By the global error bound for Euler’s method from MATH 217:</p>
+<p><span class="math display">\[\max_{l}\|x_{t_l}^{\text{Euler}} - x_{t_l}^{\text{exact}}\| \leq \frac{hT}{2}\max_t\|\ddot x_t\| \cdot e^{LT} = O(h) = O(1/L)\]</span></p>
+<p>As <span class="math inline">\(L\to\infty\)</span>, the ResNet converges to the neural ODE solution at rate <span class="math inline">\(O(1/L)\)</span>.</p>
+<hr>
+</section>
+<section id="the-flow-map-and-its-properties" class="level3">
+<h3 class="anchored" data-anchor-id="the-flow-map-and-its-properties">The Flow Map and Its Properties</h3>
+<p><strong>Definition (Flow map).</strong> The <strong>flow map</strong> <span class="math inline">\(\phi: [0,T]\times\mathbb{R}^d \to \mathbb{R}^d\)</span> of the neural ODE is:</p>
+<p><span class="math display">\[\phi_t(x_0) = x_0 + \int_0^t f_\theta(x_s, s)\,ds\]</span></p>
+<p>where <span class="math inline">\(x_s = \phi_s(x_0)\)</span> is the unique solution with initial condition <span class="math inline">\(x_0\)</span>.</p>
+<p><strong>Properties of the flow map:</strong></p>
+<p><strong>Identity at zero:</strong> <span class="math inline">\(\phi_0 = \text{Id}_{\mathbb{R}^d}\)</span>.</p>
+<p><strong>Group property:</strong> <span class="math inline">\(\phi_t \circ \phi_s^{-1} = \phi_{t-s}\)</span> for the autonomous case (<span class="math inline">\(f_\theta\)</span> independent of <span class="math inline">\(t\)</span>); more generally, <span class="math inline">\(\phi_t = \phi_{t,s}\circ\phi_{s,0}\)</span> where <span class="math inline">\(\phi_{t,s}\)</span> is the flow from time <span class="math inline">\(s\)</span> to <span class="math inline">\(t\)</span>.</p>
+<p><strong>Invertibility:</strong> <span class="math inline">\(\phi_t\)</span> is a diffeomorphism for each <span class="math inline">\(t\)</span>, with inverse <span class="math inline">\(\phi_t^{-1} = \phi_{-t}\)</span> (integrate backward). Specifically: <span class="math inline">\(\frac{d}{dt}\phi_t^{-1}(x) = -f_\theta(\phi_t^{-1}(x), t)\)</span>.</p>
+<p><strong>Jacobian of the flow map.</strong> Let <span class="math inline">\(J_t(x_0) = \nabla_{x_0}\phi_t(x_0) \in \mathbb{R}^{d\times d}\)</span> be the Jacobian of the flow map. It satisfies the <strong>variational equation</strong> (linearized ODE):</p>
+<p><span class="math display">\[\frac{d}{dt}J_t(x_0) = \nabla_x f_\theta(\phi_t(x_0), t)\cdot J_t(x_0), \quad J_0(x_0) = I_d\]</span></p>
+<p><strong>Liouville’s formula.</strong> The determinant of the Jacobian satisfies:</p>
+<p><span class="math display">\[\frac{d}{dt}\log|\det J_t(x_0)| = \text{tr}\!\left(\nabla_x f_\theta(\phi_t(x_0), t)\right) = \nabla_x\cdot f_\theta(\phi_t(x_0), t)\]</span></p>
+<p><strong>Proof.</strong> By Jacobi’s formula: <span class="math inline">\(\frac{d}{dt}\det J = \det(J)\cdot\text{tr}(J^{-1}\dot J) = \det(J)\cdot\text{tr}(J^{-1}\nabla_x f\cdot J) = \det(J)\cdot\text{tr}(\nabla_x f)\)</span>. Dividing by <span class="math inline">\(\det J\)</span>: <span class="math inline">\(\frac{d}{dt}\log|\det J| = \text{tr}(\nabla_x f) = \nabla\cdot f_\theta\)</span>. <span class="math inline">\(\square\)</span></p>
+<hr>
+</section>
+<section id="instantaneous-change-of-variables-and-continuous-normalizing-flows" class="level3">
+<h3 class="anchored" data-anchor-id="instantaneous-change-of-variables-and-continuous-normalizing-flows">Instantaneous Change of Variables and Continuous Normalizing Flows</h3>
+<p><strong>Change of variables formula.</strong> For a diffeomorphism <span class="math inline">\(\phi_1: \mathbb{R}^d\to\mathbb{R}^d\)</span> mapping base density <span class="math inline">\(\rho_0\)</span> to pushforward density <span class="math inline">\(\rho_1 = (\phi_1)_\#\rho_0\)</span>:</p>
+<p><span class="math display">\[\rho_1(\phi_1(x_0)) = \frac{\rho_0(x_0)}{|\det\nabla_{x_0}\phi_1(x_0)|}\]</span></p>
+<p>equivalently: <span class="math inline">\(\log\rho_1(\phi_1(x_0)) = \log\rho_0(x_0) - \log|\det\nabla_{x_0}\phi_1(x_0)|\)</span></p>
+<p><strong>Theorem (Instantaneous change of variables — Chen et al.&nbsp;2018).</strong> Along the trajectory <span class="math inline">\(x_t = \phi_t(x_0)\)</span> of the neural ODE, the log-density satisfies:</p>
+<p><span class="math display">\[\frac{d}{dt}\log\rho_t(x_t) = -\nabla_x\cdot f_\theta(x_t, t)\]</span></p>
+<p><strong>Proof.</strong> From Liouville’s formula: <span class="math inline">\(\frac{d}{dt}\log|\det J_t| = \nabla\cdot f_\theta(x_t,t)\)</span>. From the change of variables formula along the flow: <span class="math inline">\(\log\rho_t(x_t) = \log\rho_0(x_0) - \log|\det J_t(x_0)|\)</span>. Differentiating: <span class="math inline">\(\frac{d}{dt}\log\rho_t(x_t) = -\frac{d}{dt}\log|\det J_t(x_0)| = -\nabla\cdot f_\theta(x_t,t)\)</span>. <span class="math inline">\(\square\)</span></p>
+<p><strong>Integrated form.</strong> The log-density at time <span class="math inline">\(T\)</span> is:</p>
+<p><span class="math display">\[\log\rho_T(x_T) = \log\rho_0(x_0) - \int_0^T \nabla_x\cdot f_\theta(x_t, t)\,dt\]</span></p>
+<p><strong>Definition (Continuous Normalizing Flow).</strong> A <strong>continuous normalizing flow (CNF)</strong> is a generative model defined by:</p>
+<ul>
+<li><strong>Base distribution:</strong> <span class="math inline">\(\rho_0 = \mathcal{N}(0, I_d)\)</span></li>
+<li><strong>Flow:</strong> neural ODE <span class="math inline">\(\dot x_t = f_\theta(x_t, t)\)</span> mapping <span class="math inline">\(x_0 \sim \rho_0\)</span> to <span class="math inline">\(x_1 \sim \rho_1 \approx p_{\text{data}}\)</span></li>
+<li><strong>Log-likelihood:</strong> <span class="math inline">\(\log p_{\text{data}}(x_1) \approx \log\rho_0(x_0) - \int_0^1\nabla\cdot f_\theta(x_t,t)\,dt\)</span></li>
+</ul>
+<p>where <span class="math inline">\(x_0 = \phi_1^{-1}(x_1)\)</span> is found by integrating the ODE backward.</p>
+<p><strong>Training objective (maximum likelihood):</strong></p>
+<p><span class="math display">\[\mathcal{L}_{\text{MLE}}(\theta) = -\mathbb{E}_{x_1\sim p_{\text{data}}}\!\left[\log\rho_0(\phi_1^{-1}(x_1;\theta)) - \int_0^1\nabla\cdot f_\theta(x_t,t)\,dt\right]\]</span></p>
+<p><strong>Augmented ODE.</strong> Compute <span class="math inline">\((x_t, \log\rho_t)\)</span> jointly by solving the augmented system:</p>
+<p><span class="math display">\[\frac{d}{dt}\begin{pmatrix}x_t \\ \log\rho_t\end{pmatrix} = \begin{pmatrix}f_\theta(x_t,t) \\ -\nabla\cdot f_\theta(x_t,t)\end{pmatrix}, \quad \begin{pmatrix}x_0\\\log\rho_0\end{pmatrix} = \begin{pmatrix}x_{\text{init}}\\\log\rho_0(x_{\text{init}})\end{pmatrix}\]</span></p>
+<hr>
+</section>
+<section id="the-adjoint-sensitivity-method" class="level3">
+<h3 class="anchored" data-anchor-id="the-adjoint-sensitivity-method">The Adjoint Sensitivity Method</h3>
+<p><strong>Problem setup.</strong> Given loss <span class="math inline">\(\mathcal{L} = \ell(x_T)\)</span> where <span class="math inline">\(x_T = \phi_T(x_0;\theta)\)</span> satisfies <span class="math inline">\(\dot x_t = f_\theta(x_t,t)\)</span>, compute <span class="math inline">\(\frac{d\mathcal{L}}{d\theta}\)</span> and <span class="math inline">\(\frac{d\mathcal{L}}{dx_0}\)</span>.</p>
+<p><strong>Definition (Adjoint state).</strong> The <strong>adjoint state</strong> is:</p>
+<p><span class="math display">\[a(t) = \frac{\partial\mathcal{L}}{\partial x_t} \in \mathbb{R}^d\]</span></p>
+<p>the gradient of the loss with respect to the state at time <span class="math inline">\(t\)</span>.</p>
+<p><strong>Theorem (Adjoint ODE — Pontryagin).</strong> The adjoint satisfies the backward ODE:</p>
+<p><span class="math display">\[\frac{da}{dt} = -a(t)^\top \nabla_x f_\theta(x_t, t)\]</span></p>
+<p>with terminal condition <span class="math inline">\(a(T) = \frac{\partial\ell}{\partial x_T}\)</span>.</p>
+<p><strong>Proof.</strong> The loss depends on <span class="math inline">\(x_T\)</span>, which depends on <span class="math inline">\(x_t\)</span> through the ODE. By the chain rule:</p>
+<p><span class="math display">\[a(t) = \frac{\partial\mathcal{L}}{\partial x_t} = \frac{\partial\mathcal{L}}{\partial x_T}\cdot\frac{\partial x_T}{\partial x_t} = a(T)\cdot J_{T,t}\]</span></p>
+<p>where <span class="math inline">\(J_{T,t} = \nabla_{x_t}x_T\)</span> is the Jacobian of <span class="math inline">\(x_T\)</span> with respect to <span class="math inline">\(x_t\)</span>. Differentiating with respect to <span class="math inline">\(t\)</span>:</p>
+<p><span class="math display">\[\frac{da}{dt} = a(T)\cdot\frac{dJ_{T,t}}{dt}\]</span></p>
+<p>From the variational equation: <span class="math inline">\(\frac{d}{dt}J_{T,t} = -J_{T,t}\cdot\nabla_x f_\theta(x_t,t)\)</span> (backward variational equation). Therefore:</p>
+<p><span class="math display">\[\frac{da}{dt} = -a(t)\cdot\nabla_x f_\theta(x_t,t) = -a(t)^\top\nabla_x f_\theta(x_t,t) \qquad \square\]</span></p>
+<p><strong>Parameter gradient.</strong> Using the variational derivative with respect to <span class="math inline">\(\theta\)</span>:</p>
+<p><span class="math display">\[\frac{d\mathcal{L}}{d\theta} = -\int_0^T a(t)^\top \frac{\partial f_\theta(x_t,t)}{\partial\theta}\,dt\]</span></p>
+<p><strong>Proof.</strong> By the chain rule through the ODE: <span class="math inline">\(\frac{d\mathcal{L}}{d\theta} = a(T)\cdot\frac{\partial x_T}{\partial\theta}\)</span>. The sensitivity <span class="math inline">\(\frac{\partial x_T}{\partial\theta}\)</span> satisfies: <span class="math inline">\(\frac{d}{dt}\frac{\partial x_t}{\partial\theta} = \nabla_x f_\theta\cdot\frac{\partial x_t}{\partial\theta} + \frac{\partial f_\theta}{\partial\theta}\)</span>, with <span class="math inline">\(\frac{\partial x_0}{\partial\theta} = 0\)</span>. Solving via variation of constants and substituting into <span class="math inline">\(a(T)\cdot\frac{\partial x_T}{\partial\theta}\)</span> gives the stated formula. <span class="math inline">\(\square\)</span></p>
+<p><strong>Algorithm (Adjoint method).</strong></p>
+<ol type="1">
+<li><strong>Forward pass:</strong> Solve <span class="math inline">\(\dot x_t = f_\theta(x_t,t)\)</span> from <span class="math inline">\(t=0\)</span> to <span class="math inline">\(t=T\)</span>. Store only <span class="math inline">\(x_T\)</span>.</li>
+<li><strong>Initialize adjoint:</strong> <span class="math inline">\(a(T) = \partial\ell/\partial x_T\)</span>.</li>
+<li><strong>Backward pass:</strong> Solve the augmented backward ODE from <span class="math inline">\(t=T\)</span> to <span class="math inline">\(t=0\)</span>:</li>
+</ol>
+<p><span class="math display">\[\frac{d}{dt}\begin{pmatrix}x_t \\ a(t) \\ g(t)\end{pmatrix} = \begin{pmatrix}-f_\theta(x_t,t) \\ -a(t)^\top\nabla_x f_\theta(x_t,t) \\ -a(t)^\top\frac{\partial f_\theta(x_t,t)}{\partial\theta}\end{pmatrix}\]</span></p>
+<p>with initial conditions <span class="math inline">\((x_T, a(T), 0)\)</span> at <span class="math inline">\(t=T\)</span>. The backward solver recomputes <span class="math inline">\(x_t\)</span> by integrating <span class="math inline">\(-f_\theta\)</span> backward (forward time corresponds to decreasing <span class="math inline">\(t\)</span> in the backward ODE).</p>
+<ol start="4" type="1">
+<li><strong>Output:</strong> <span class="math inline">\(\frac{d\mathcal{L}}{dx_0} = a(0)\)</span>, <span class="math inline">\(\frac{d\mathcal{L}}{d\theta} = g(0)\)</span>.</li>
+</ol>
+<p><strong>Memory complexity:</strong> <span class="math inline">\(O(d + p)\)</span> — the state <span class="math inline">\(x_t\)</span>, adjoint <span class="math inline">\(a(t)\)</span>, and accumulated gradient <span class="math inline">\(g(t)\)</span>, recomputed at each backward step without storing intermediate states.</p>
+<p><strong>Pontryagin’s minimum principle connection.</strong> The neural ODE training problem is:</p>
+<p><span class="math display">\[\min_\theta\ell(x_T) \quad \text{s.t.}\quad \dot x_t = f_\theta(x_t,t),\; x_0 = x_{\text{init}}\]</span></p>
+<p>This is an optimal control problem with state <span class="math inline">\(x_t\)</span>, control <span class="math inline">\(\theta\)</span> (constant), and terminal cost <span class="math inline">\(\ell(x_T)\)</span>. The <strong>Hamiltonian</strong> is:</p>
+<p><span class="math display">\[H(x,a,\theta,t) = a^\top f_\theta(x,t)\]</span></p>
+<p>Pontryagin’s conditions: state equation <span class="math inline">\(\dot x_t = \nabla_a H = f_\theta(x_t,t)\)</span>; adjoint equation <span class="math inline">\(\dot a = -\nabla_x H = -a^\top\nabla_x f_\theta\)</span>; stationarity <span class="math inline">\(\nabla_\theta H = a^\top\nabla_\theta f_\theta = 0\)</span> at optimum. The adjoint ODE is exactly the costate equation of Pontryagin’s minimum principle.</p>
+<hr>
+</section>
+<section id="hutchinsons-trace-estimator" class="level3">
+<h3 class="anchored" data-anchor-id="hutchinsons-trace-estimator">Hutchinson’s Trace Estimator</h3>
+<p><strong>Problem.</strong> Computing <span class="math inline">\(\nabla\cdot f_\theta(x,t) = \text{tr}(\nabla_x f_\theta(x,t))\)</span> requires <span class="math inline">\(d\)</span> Jacobian-vector products — one per standard basis vector <span class="math inline">\(e_i\)</span>: <span class="math inline">\(\text{tr}(J) = \sum_{i=1}^d e_i^\top J e_i\)</span>. Cost: <span class="math inline">\(O(d)\)</span> backward passes, total <span class="math inline">\(O(d^2)\)</span> or <span class="math inline">\(O(dp)\)</span> depending on implementation.</p>
+<p><strong>Hutchinson’s estimator.</strong> For <span class="math inline">\(z\sim\mathcal{N}(0,I_d)\)</span> (or any distribution with <span class="math inline">\(\mathbb{E}[zz^\top] = I_d\)</span>):</p>
+<p><span class="math display">\[\mathbb{E}_z[z^\top J z] = \mathbb{E}_z[\text{tr}(zz^\top J)] = \text{tr}(\mathbb{E}_z[zz^\top]J) = \text{tr}(I_d J) = \text{tr}(J)\]</span></p>
+<p><strong>Proof.</strong> <span class="math inline">\(z^\top Jz = \sum_{i,j}z_iJ_{ij}z_j\)</span>. Taking expectation: <span class="math inline">\(\mathbb{E}[z_iz_j] = \delta_{ij}\)</span> for <span class="math inline">\(z\sim\mathcal{N}(0,I)\)</span>. Therefore <span class="math inline">\(\mathbb{E}[z^\top Jz] = \sum_i J_{ii} = \text{tr}(J)\)</span>. <span class="math inline">\(\square\)</span></p>
+<p><strong>Stochastic estimator:</strong></p>
+<p><span class="math display">\[\nabla\cdot f_\theta(x,t) \approx z^\top\nabla_x f_\theta(x,t)z = z^\top(Jz)\]</span></p>
+<p>where <span class="math inline">\(Jz = \nabla_x(f_\theta(x,t)\cdot z)\)</span> is computed by a single backward pass (JVP via reverse-mode autodiff): cost <span class="math inline">\(O(p)\)</span> — one gradient computation.</p>
+<p><strong>Variance.</strong> For <span class="math inline">\(z\sim\mathcal{N}(0,I)\)</span>: <span class="math inline">\(\text{Var}(z^\top Jz) = \|J + J^\top\|_F^2/2 \leq 2\|J\|_F^2\)</span>.</p>
+<p><strong>Multi-sample estimator.</strong> Using <span class="math inline">\(K\)</span> independent samples <span class="math inline">\(z^{(1)},\ldots,z^{(K)}\)</span>:</p>
+<p><span class="math display">\[\nabla\cdot f_\theta(x,t) \approx \frac{1}{K}\sum_{k=1}^K z^{(k)\top}\nabla_x f_\theta(x,t)z^{(k)}\]</span></p>
+<p>with variance reduced by factor <span class="math inline">\(K\)</span>. In practice <span class="math inline">\(K=1\)</span> is used during training; <span class="math inline">\(K\)</span> larger for evaluation.</p>
+<p><strong>Stochastic log-likelihood:</strong></p>
+<p><span class="math display">\[\log\rho_T(x_T) \approx \log\rho_0(x_0) - \int_0^T z^\top\nabla_x f_\theta(x_t,t)z\,dt\]</span></p>
+<p>where the integral is accumulated alongside the ODE integration at each solver step using the same random <span class="math inline">\(z\)</span> throughout (Skilling-Hutchinson estimator for the trace integral).</p>
+<hr>
+</section>
+<section id="ffjord-free-form-jacobian-of-reversible-dynamics" class="level3">
+<h3 class="anchored" data-anchor-id="ffjord-free-form-jacobian-of-reversible-dynamics">FFJORD: Free-Form Jacobian of Reversible Dynamics</h3>
+<p><strong>Definition (FFJORD — Grathwohl et al.&nbsp;2018).</strong> The <strong>Free-Form Jacobian of Reversible Dynamics</strong> model combines:</p>
+<ul>
+<li>Neural ODE dynamics: <span class="math inline">\(\dot x_t = f_\theta(x_t,t)\)</span> with unconstrained <span class="math inline">\(f_\theta\)</span></li>
+<li>Stochastic trace estimation: <span class="math inline">\(\nabla\cdot f_\theta \approx z^\top\nabla_x f_\theta z\)</span> via Hutchinson</li>
+<li>Adjoint training: constant-memory backpropagation</li>
+</ul>
+<p><strong>Training:</strong> Maximize the stochastic log-likelihood:</p>
+<p><span class="math display">\[\mathcal{L}_{\text{FFJORD}}(\theta) = \mathbb{E}_{x_1\sim p_{\text{data}},\, z\sim\mathcal{N}(0,I)}\!\left[\log\rho_0(x_0) - \int_0^1 z^\top\nabla_x f_\theta(x_t,t)z\,dt\right]\]</span></p>
+<p><strong>Generation:</strong> Sample <span class="math inline">\(x_0\sim\mathcal{N}(0,I)\)</span>, integrate <span class="math inline">\(\dot x_t = f_\theta(x_t,t)\)</span> forward to get <span class="math inline">\(x_1\sim\hat p_{\text{data}}\)</span>.</p>
+<p><strong>Computational complexity per training step:</strong> - Forward ODE: <span class="math inline">\(O(N_{\text{steps}}\cdot p)\)</span> where <span class="math inline">\(N_{\text{steps}}\)</span> is adaptive - Stochastic trace: <span class="math inline">\(O(N_{\text{steps}}\cdot p)\)</span> — one JVP per step - Backward adjoint: <span class="math inline">\(O(N_{\text{steps}}\cdot p)\)</span> - Total: <span class="math inline">\(O(N_{\text{steps}}\cdot p)\)</span> — linear in <span class="math inline">\(N_{\text{steps}}\)</span> and model size</p>
+<hr>
+</section>
+<section id="connection-to-probability-flow-ode" class="level3">
+<h3 class="anchored" data-anchor-id="connection-to-probability-flow-ode">Connection to Probability Flow ODE</h3>
+<p><strong>Theorem.</strong> The continuous normalizing flow trained by maximum likelihood is, at optimum, the probability flow ODE of the forward diffusion process.</p>
+<p><strong>Proof sketch.</strong> At optimum, the CNF velocity field <span class="math inline">\(f_\theta^*\)</span> satisfies: <span class="math inline">\(\frac{\partial\rho_t}{\partial t} = -\nabla\cdot(\rho_t f_\theta^*)\)</span> (continuity equation). The probability flow ODE derived from the forward SDE <span class="math inline">\(dX_t = b_t dt + \sigma_t dW_t\)</span> has velocity field <span class="math inline">\(v_t = b_t - \frac{\sigma_t^2}{2}\nabla\log\rho_t\)</span>. At optimum, <span class="math inline">\(f_\theta^* = v_t\)</span> — the learned velocity field equals the probability flow ODE velocity field. <span class="math inline">\(\square\)</span></p>
+<p><strong>Parameterization via score function.</strong> The probability flow ODE velocity decomposes as:</p>
+<p><span class="math display">\[f_\theta(x,t) = b(x,t) - \frac{\sigma_t^2}{2}s_\theta(x,t)\]</span></p>
+<p>where <span class="math inline">\(s_\theta \approx \nabla\log\rho_t\)</span> is a learned score network. This connects neural ODEs (continuous normalizing flows) to score-based models (Topic 2): score matching learns <span class="math inline">\(s_\theta\)</span>, which determines the probability flow ODE velocity field, which defines the CNF.</p>
+<p><strong>DDIM as a neural ODE.</strong> The DDIM sampler (Song et al.&nbsp;2020) is the Euler method for the probability flow ODE with the OU forward process:</p>
+<p><span class="math display">\[x_{t-1} = \sqrt{\bar\alpha_{t-1}}\underbrace{\frac{x_t - \sqrt{1-\bar\alpha_t}\epsilon_\theta(x_t,t)}{\sqrt{\bar\alpha_t}}}_{\text{predicted }x_0} + \sqrt{1-\bar\alpha_{t-1}}\epsilon_\theta(x_t,t)\]</span></p>
+<p>This is deterministic (no stochastic term) — the ODE version of DDPM’s stochastic reverse SDE. Using higher-order solvers (DPM-Solver, DEIS) gives faster convergence with fewer function evaluations.</p>
+<hr>
+</section>
+<section id="why-this-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-matters">WHY THIS MATTERS</h3>
+<p>In <strong>MATH 217 (ODEs and PDEs)</strong>, the Picard-Lindelöf theorem guarantees unique solutions to <span class="math inline">\(\dot x = f_\theta(x,t)\)</span> under Lipschitz conditions — the same theorem applied to the geodesic equation in Phase 0 and the parallel transport equation in Phase 2. The Euler and Runge-Kutta methods from MATH 217’s numerical section are the specific solvers used inside neural ODE forward and backward passes. Gronwall’s inequality — bounding ODE solution errors by <span class="math inline">\(e^{Lt}\)</span> times the initial error — guarantees that the backward recomputation of <span class="math inline">\(x_t\)</span> in the adjoint method is accurate: the error in the recomputed trajectory is bounded by the solver tolerance times an exponential factor involving the Lipschitz constant <span class="math inline">\(L\)</span> of <span class="math inline">\(f_\theta\)</span>. Liouville’s formula <span class="math inline">\(\frac{d}{dt}\log|\det J_t| = \text{tr}(\nabla_x f)\)</span> is the trace formula for the time evolution of volume elements under an ODE flow — a standard result in the qualitative theory of ODEs from MATH 217, connecting the local expansion/contraction rate (divergence of <span class="math inline">\(f\)</span>) to the global volume change rate (log Jacobian determinant).</p>
+<p>In <strong>MATH 304 (Computational Operations Research)</strong>, the adjoint method is Lagrangian duality applied to the optimal control problem <span class="math inline">\(\min_\theta\ell(x_T)\)</span> s.t. <span class="math inline">\(\dot x = f_\theta(x,t)\)</span>. The Lagrangian is <span class="math inline">\(\mathcal{L}(x,a,\theta) = \ell(x_T) + \int_0^T a(t)^\top(\dot x_t - f_\theta(x_t,t))dt\)</span>, with Lagrange multipliers <span class="math inline">\(a(t)\)</span> (the adjoint states) enforcing the ODE constraint. The first-order optimality conditions with respect to <span class="math inline">\(x_t\)</span> give the adjoint ODE <span class="math inline">\(\dot a = -a^\top\nabla_x f_\theta\)</span> — exactly Pontryagin’s minimum principle, which is the continuous-time analogue of the KKT conditions from MATH 304. The stationarity condition with respect to <span class="math inline">\(\theta\)</span> gives the parameter gradient formula <span class="math inline">\(d\mathcal{L}/d\theta = -\int a^\top\partial f_\theta/\partial\theta\,dt\)</span>. The Legendre-Fenchel transform from Phase 0 and MATH 304’s duality theory connects the primal ODE problem (minimizing over trajectories) to the dual adjoint problem (solving the backward costate equation) — the neural ODE adjoint method is the computational implementation of this duality.</p>
+<p>In <strong>MATH 201 (Advanced Calculus)</strong>, the change of variables formula <span class="math inline">\(\rho_1(\phi_1(x_0))|\det\nabla\phi_1(x_0)| = \rho_0(x_0)\)</span> is the multivariate substitution theorem — the same theorem used in probability theory (MATH 208) for transformations of random variables. Jacobi’s formula <span class="math inline">\(d\det(J)/dt = \det(J)\cdot\text{tr}(J^{-1}\dot J)\)</span> is the matrix differentiation result from MATH 201’s treatment of matrix calculus. The divergence theorem <span class="math inline">\(\int_\Omega\nabla\cdot v\,dx = \int_{\partial\Omega}v\cdot n\,dA\)</span> from MATH 201 underlies the integration by parts used to derive the continuity equation from the ODE flow, and Hutchinson’s identity <span class="math inline">\(\mathbb{E}_z[z^\top Jz] = \text{tr}(J)\)</span> for <span class="math inline">\(z\sim\mathcal{N}(0,I)\)</span> uses <span class="math inline">\(\mathbb{E}[z_iz_j] = \delta_{ij}\)</span> — the covariance identity of the standard Gaussian from MATH 208.</p>
+<hr>
+</section>
+</section>
+<section id="layer-3-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="layer-3-bridge">Layer 3 (Bridge)</h2>
+<p>Every element of the ICIMOD Gandaki basin mapping story has a precise mathematical address. We walk through them completely — the GPS buoy trajectories, Ram Bahadur’s continuous flow field, Priya’s ten-step failure, the ghost buoy running backward, the density tracking through gorges and floodplains, the break moment of the full Jacobian, and the Hutchinson shadow measurement — until the story and the formalism are a single object seen from two angles.</p>
+<hr>
+<p><strong>The GPS-tagged buoys drifting from upstream start points to downstream endpoints — observed pairs <span class="math inline">\((x_0^{(i)}, x_1^{(i)})\)</span> of starting and ending positions — are the training data <span class="math inline">\(\{(x_0^{(i)}, x_1^{(i)})\}_{i=1}^n\)</span> of the continuous normalizing flow, where <span class="math inline">\(x_0^{(i)}\in\mathbb{R}^d\)</span> is the noise sample and <span class="math inline">\(x_1^{(i)}\in\mathbb{R}^d\)</span> is the data sample.</strong> In the generative modeling context, the start points <span class="math inline">\(x_0^{(i)}\sim\rho_0 = \mathcal{N}(0,I)\)</span> are Gaussian noise samples and the endpoints <span class="math inline">\(x_1^{(i)}\sim p_{\text{data}}\)</span> are data points — images, molecular structures, or weather states. The training objective is to find the neural network parameters <span class="math inline">\(\theta\)</span> such that the ODE flow <span class="math inline">\(\phi_1(\cdot;\theta)\)</span> maps the Gaussian distribution to the data distribution. The mean squared error loss <span class="math inline">\(\mathcal{L}(\theta) = \frac{1}{n}\sum_i\|\phi_1(x_0^{(i)};\theta) - x_1^{(i)}\|^2\)</span> minimizes the discrepancy between predicted and observed endpoints — learning the river’s flow field from observations of where buoys start and end.</p>
+<p><strong>The continuous flow field <span class="math inline">\(f_\theta(x,t)\)</span> — the velocity vector at each basin location <span class="math inline">\(x\)</span> and each season <span class="math inline">\(t\)</span> — is the neural network parameterizing the right-hand side of the neural ODE <span class="math inline">\(\dot x_t = f_\theta(x_t,t)\)</span>, <span class="math inline">\(x_0 = x_{\text{init}}\)</span>.</strong> Ram Bahadur’s insistence that the river has no discontinuities — that the flow field is continuous in time — is the mathematical statement that <span class="math inline">\(f_\theta\)</span> is a smooth function of both <span class="math inline">\(x\)</span> and <span class="math inline">\(t\)</span>, satisfying the Lipschitz condition <span class="math inline">\(\|f_\theta(x,t)-f_\theta(y,t)\|\leq L\|x-y\|\)</span> that guarantees well-posedness by Picard-Lindelöf. The neural network architecture for <span class="math inline">\(f_\theta\)</span> is unconstrained — any sufficiently expressive architecture works — because the continuous normalizing flow framework (FFJORD) imposes no structural constraints on <span class="math inline">\(f_\theta\)</span> for invertibility, unlike discrete normalizing flows that require specific invertible architectures. The Lipschitz condition is ensured in practice by spectral normalization of the network’s weight matrices, which bounds the Lipschitz constant by the product of spectral norms of the layers.</p>
+<hr>
+<p><strong>Priya’s ten-step approximation — ten discrete vector fields stitched together — is the Euler method for <span class="math inline">\(\dot x = f_\theta(x,t)\)</span> with step size <span class="math inline">\(h = 1/10\)</span>, converging to the exact neural ODE solution at rate <span class="math inline">\(O(h) = O(1/10)\)</span> by the global error bound from MATH 217.</strong> The discontinuities at time-step boundaries that Ram Bahadur objects to are the Euler method’s <span class="math inline">\(O(h^2)\)</span> local truncation errors accumulating to <span class="math inline">\(O(h)\)</span> global errors — finite-difference artifacts absent from the exact ODE solution. The failure in sparse side valleys corresponds to the overfitting of the ten separate vector fields to the local training data, without the regularization that a single smooth continuous field <span class="math inline">\(f_\theta(x,t)\)</span> provides. The neural ODE’s adaptive solver — choosing step sizes based on a local error estimate, using more steps in regions of high curvature and fewer in smooth regions — automatically allocates computation where the flow field requires it, unlike the uniform ten-step discretization. The ResNet convergence <span class="math inline">\(\max_l\|x_{t_l}^{\text{Euler}} - x_{t_l}^{\text{exact}}\|\leq \frac{hT}{2}\max_t\|\ddot x_t\|\cdot e^{LT}\)</span> quantifies exactly how far Priya’s approximation is from Ram Bahadur’s exact flow.</p>
+<hr>
+<p><strong>The flow map <span class="math inline">\(\phi_t(x_0) = x_0 + \int_0^t f_\theta(x_s,s)\,ds\)</span> — the function mapping each buoy’s starting position to its position at time <span class="math inline">\(t\)</span> — is the diffeomorphism whose invertibility makes the neural ODE a normalizing flow.</strong> The group property <span class="math inline">\(\phi_t = \phi_{t,s}\circ\phi_{s,0}\)</span> is the statement that following the river’s flow from <span class="math inline">\(0\)</span> to <span class="math inline">\(s\)</span> and then from <span class="math inline">\(s\)</span> to <span class="math inline">\(t\)</span> gives the same result as following it from <span class="math inline">\(0\)</span> to <span class="math inline">\(t\)</span> directly — the composition of partial flows is the total flow. The invertibility <span class="math inline">\(\phi_t^{-1} = \phi_{-t}\)</span> — integrating the ODE backward with <span class="math inline">\(-f_\theta\)</span> to find where each buoy started given where it ended — is the generative model’s reverse pass: given a data point <span class="math inline">\(x_1\)</span>, find the corresponding noise <span class="math inline">\(x_0 = \phi_1^{-1}(x_1)\)</span> by running the ODE backward. The variational equation <span class="math inline">\(\dot J_t = \nabla_x f_\theta(\phi_t(x_0),t)\cdot J_t\)</span> for the Jacobian <span class="math inline">\(J_t = \nabla_{x_0}\phi_t(x_0)\)</span> is the linearization of the flow around a trajectory — how a small cloud of buoys near <span class="math inline">\(x_0\)</span> deforms as the flow carries it forward, with the Jacobian matrix encoding the shape of the deformation at each time.</p>
+<p><strong>Liouville’s formula <span class="math inline">\(\frac{d}{dt}\log|\det J_t(x_0)| = \nabla\cdot f_\theta(\phi_t(x_0),t)\)</span> — the rate of change of the log-Jacobian determinant equals the divergence of the velocity field — is the key identity connecting volume deformation to flow field divergence, proved by Jacobi’s matrix differentiation formula from MATH 201.</strong> The divergence <span class="math inline">\(\nabla\cdot f_\theta(x,t) = \text{tr}(\nabla_x f_\theta(x,t))\)</span> measures whether the flow field is locally expanding or contracting at each point: positive divergence in the wide floodplain (buoys spreading apart, volume expanding, density decreasing) and negative divergence in the narrow gorge (buoys converging, volume contracting, density increasing). The instantaneous change of variables formula <span class="math inline">\(\frac{d}{dt}\log\rho_t(x_t) = -\nabla\cdot f_\theta(x_t,t)\)</span> follows directly: differentiating <span class="math inline">\(\log\rho_t(x_t) = \log\rho_0(x_0) - \log|\det J_t|\)</span> with respect to <span class="math inline">\(t\)</span> and applying Liouville’s formula gives <span class="math inline">\(-\nabla\cdot f_\theta(x_t,t)\)</span>. The integrated form <span class="math inline">\(\log\rho_T(x_T) = \log\rho_0(x_0) - \int_0^T\nabla\cdot f_\theta(x_t,t)\,dt\)</span> says the log-density at the endpoint equals the log-density at the start minus the accumulated divergence along the trajectory — the total expansion or contraction experienced by the buoy cloud along its path.</p>
+<hr>
+<p><strong>The memory catastrophe of naive backpropagation — storing all 500 intermediate buoy positions to compute gradients — is the <span class="math inline">\(O(N_{\text{steps}}\cdot d)\)</span> memory cost of reverse-mode automatic differentiation through an ODE solver, which becomes prohibitive for deep integration and high-dimensional state spaces.</strong> Standard automatic differentiation builds a computational graph through every solver step, storing the intermediate activations needed for the backward pass. For <span class="math inline">\(N_{\text{steps}} = 500\)</span> solver steps each producing a <span class="math inline">\(d\)</span>-dimensional state, the stored intermediate states require <span class="math inline">\(500\cdot d\)</span> memory — scaling linearly with both integration depth and state dimension. For high-dimensional data (images with <span class="math inline">\(d = 256\times 256\times 3\approx 200{,}000\)</span>) and high-accuracy integration (<span class="math inline">\(N_{\text{steps}} = 1000\)</span>), this is <span class="math inline">\(2\times 10^8\)</span> floats per sample — far exceeding GPU memory capacity for any reasonable batch size.</p>
+<p><strong>The adjoint state <span class="math inline">\(a(t) = \partial\mathcal{L}/\partial x_t\)</span> — the ghost buoy’s sensitivity measurement, encoding how much a small perturbation to the buoy’s position at time <span class="math inline">\(t\)</span> would change the final loss — satisfies the backward adjoint ODE <span class="math inline">\(\dot a(t) = -a(t)^\top\nabla_x f_\theta(x_t,t)\)</span> with terminal condition <span class="math inline">\(a(T) = \partial\ell/\partial x_T\)</span>.</strong> The terminal condition is the gradient of the loss with respect to the endpoint — easily computable from the MSE loss as <span class="math inline">\(a(1) = 2(x_1 - x_1^{\text{observed}})\)</span>. The adjoint ODE is the backward linearized system driven by the transpose Jacobian <span class="math inline">\(\nabla_x f_\theta^\top\)</span> — the same Jacobian as in the forward variational equation, but transposed and with a sign flip. Intuitively: where <span class="math inline">\(\nabla_x f_\theta\)</span> is large (the flow is sensitive to position), the adjoint changes rapidly; where <span class="math inline">\(\nabla_x f_\theta\)</span> is small (the flow is smooth), the adjoint changes slowly. The proof by differentiating <span class="math inline">\(a(t) = a(T)\cdot J_{T,t}\)</span> and applying the backward variational equation <span class="math inline">\(\dot J_{T,t} = -J_{T,t}\nabla_x f_\theta\)</span> gives the adjoint ODE directly.</p>
+<p><strong>The parameter gradient <span class="math inline">\(\frac{d\mathcal{L}}{d\theta} = -\int_0^T a(t)^\top\frac{\partial f_\theta(x_t,t)}{\partial\theta}\,dt\)</span> — accumulated continuously as the ghost buoy drifts backward — is the time integral of the adjoint’s inner product with the parameter sensitivity of the velocity field, the continuous-time version of the backpropagation chain rule.</strong> The integrand <span class="math inline">\(a(t)^\top\frac{\partial f_\theta}{\partial\theta}\)</span> is the influence of each parameter on the velocity at time <span class="math inline">\(t\)</span>, weighted by the loss sensitivity <span class="math inline">\(a(t)\)</span>: a parameter that strongly affects the velocity in a region where <span class="math inline">\(a(t)\)</span> is large (high loss sensitivity) contributes much to the gradient; a parameter that only affects velocity where <span class="math inline">\(a(t)\approx 0\)</span> contributes little. This is the Pontryagin minimum principle applied to the neural ODE optimal control problem: the Hamiltonian <span class="math inline">\(H = a^\top f_\theta(x,t)\)</span> gives the adjoint equation <span class="math inline">\(\dot a = -\nabla_x H = -a^\top\nabla_x f_\theta\)</span> and the parameter gradient <span class="math inline">\(\frac{d\mathcal{L}}{d\theta} = -\int\nabla_\theta H\,dt = -\int a^\top\frac{\partial f_\theta}{\partial\theta}\,dt\)</span>. The augmented backward ODE integrating <span class="math inline">\((x_t, a(t), g(t))\)</span> simultaneously — with <span class="math inline">\(g(t)\)</span> accumulating the parameter gradient — requires <span class="math inline">\(O(d+p)\)</span> memory regardless of <span class="math inline">\(N_{\text{steps}}\)</span>: the ghost buoy’s current position, its sensitivity measurement, and the accumulated gradient, nothing more.</p>
+<p><strong>The Pontryagin minimum principle connection — the adjoint ODE is the costate equation of the optimal control problem <span class="math inline">\(\min_\theta\ell(x_T)\)</span> subject to <span class="math inline">\(\dot x_t = f_\theta(x_t,t)\)</span> — is the MATH 304 Lagrangian duality lifted to continuous time.</strong> The Lagrangian <span class="math inline">\(\mathcal{L}(x,a,\theta) = \ell(x_T) + \int_0^T a(t)^\top(\dot x_t - f_\theta(x_t,t))dt\)</span> treats the adjoint <span class="math inline">\(a(t)\)</span> as the Lagrange multiplier enforcing the ODE constraint <span class="math inline">\(\dot x_t = f_\theta(x_t,t)\)</span> at every time <span class="math inline">\(t\)</span> simultaneously — the continuous-time analogue of the KKT multipliers enforcing equality constraints in MATH 304’s constrained optimization. The first-order optimality condition <span class="math inline">\(\delta\mathcal{L}/\delta x_t = 0\)</span> (varying the Lagrangian with respect to the state trajectory) gives the adjoint equation; <span class="math inline">\(\delta\mathcal{L}/\delta\theta = 0\)</span> gives the parameter gradient; <span class="math inline">\(\delta\mathcal{L}/\delta a(t) = 0\)</span> recovers the ODE constraint <span class="math inline">\(\dot x_t = f_\theta\)</span>. The KKT conditions of MATH 304 are the <span class="math inline">\(T=0\)</span> special case; Pontryagin is the <span class="math inline">\(T &gt; 0\)</span> generalization.</p>
+<hr>
+<p><strong>The break moment — the instantaneous change of variables formula still requiring <span class="math inline">\(O(d^2)\)</span> computation for the full Jacobian <span class="math inline">\(\nabla_x f_\theta\in\mathbb{R}^{d\times d}\)</span> — is the formal bottleneck of exact log-likelihood computation in high dimensions, resolved by the Hutchinson trace estimator <span class="math inline">\(\text{tr}(J)\approx z^\top Jz\)</span> for <span class="math inline">\(z\sim\mathcal{N}(0,I)\)</span>.</strong> Computing the full Jacobian <span class="math inline">\(\nabla_x f_\theta\)</span> requires <span class="math inline">\(d\)</span> backward passes — one per output dimension — costing <span class="math inline">\(O(dp)\)</span> where <span class="math inline">\(p\)</span> is the parameter count. For <span class="math inline">\(d=200{,}000\)</span> (high-resolution image) this is <span class="math inline">\(2\times 10^5\)</span> backward passes per sample per solver step — completely intractable. The Hutchinson estimator reduces this to a single Jacobian-vector product <span class="math inline">\(Jz = \nabla_x(f_\theta\cdot z)\)</span>, computed by a single reverse-mode autodiff pass at cost <span class="math inline">\(O(p)\)</span>. The proof <span class="math inline">\(\mathbb{E}_z[z^\top Jz] = \text{tr}(J)\)</span> for <span class="math inline">\(z\sim\mathcal{N}(0,I)\)</span> uses <span class="math inline">\(\mathbb{E}[z_iz_j] = \delta_{ij}\)</span>: <span class="math inline">\(\mathbb{E}[\sum_{i,j}z_iJ_{ij}z_j] = \sum_{i,j}J_{ij}\mathbb{E}[z_iz_j] = \sum_{i,j}J_{ij}\delta_{ij} = \sum_i J_{ii} = \text{tr}(J)\)</span>. The variance <span class="math inline">\(\text{Var}(z^\top Jz) \leq 2\|J\|_F^2\)</span> — proportional to the squared Frobenius norm of the Jacobian — means the estimator is accurate when the Jacobian is sparse or low-rank, which holds for well-trained smooth flows where most entries of <span class="math inline">\(\nabla_x f_\theta\)</span> are small.</p>
+<hr>
+<p><strong>The FFJORD training loss <span class="math inline">\(\mathcal{L}_{\text{FFJORD}} = \mathbb{E}_{x_1,z}[\log\rho_0(x_0) - \int_0^1 z^\top\nabla_x f_\theta(x_t,t)z\,dt]\)</span> — the maximum likelihood objective with stochastic trace estimation — combines all three components: the neural ODE flow, the adjoint method for gradients, and the Hutchinson estimator for the log-density.</strong> The term <span class="math inline">\(\log\rho_0(x_0)\)</span> is the Gaussian log-likelihood <span class="math inline">\(-\frac{d}{2}\log(2\pi) - \frac{1}{2}\|x_0\|^2\)</span>, analytically computable. The integral <span class="math inline">\(\int_0^1 z^\top\nabla_x f_\theta(x_t,t)z\,dt\)</span> is accumulated alongside the ODE integration — at each solver step, evaluate <span class="math inline">\(z^\top Jz\)</span> using one JVP and add to the running integral. The outer expectation over <span class="math inline">\(z\sim\mathcal{N}(0,I)\)</span> means a fresh random vector <span class="math inline">\(z\)</span> is drawn each training step, making the log-likelihood estimator unbiased: the training objective is the true maximum likelihood objective in expectation, with variance decreasing as training proceeds and <span class="math inline">\(f_\theta\)</span> becomes smoother. The computational complexity <span class="math inline">\(O(N_{\text{steps}}\cdot p)\)</span> — linear in solver steps and model size — makes FFJORD tractable for the Gandaki basin problem and for high-dimensional generative modeling.</p>
+<p><strong>The probability flow ODE connection <span class="math inline">\(f_\theta(x,t) = b_t(x) - \frac{\sigma_t^2}{2}s_\theta(x,t)\)</span> — the trained CNF velocity field equals the probability flow ODE velocity of the forward diffusion process — closes the loop between neural ODEs (Topic 1), score matching (Topic 2), and the Fokker-Planck equation (Chapter 1, Topic 2).</strong> At optimum, the CNF’s velocity field produces the same marginals <span class="math inline">\(\rho_t\)</span> as the forward SDE, verified by the continuity equation: <span class="math inline">\(\partial_t\rho_t = -\nabla\cdot(\rho_t f_\theta^*)\)</span> must equal the Fokker-Planck marginal evolution <span class="math inline">\(\partial_t\rho_t = -\nabla\cdot(\rho_t b_t) + \frac{\sigma_t^2}{2}\Delta\rho_t\)</span>, which after rewriting the diffusion term as <span class="math inline">\(-\nabla\cdot(\rho_t(-\frac{\sigma_t^2}{2}s_t))\)</span> gives <span class="math inline">\(f_\theta^* = b_t - \frac{\sigma_t^2}{2}s_t\)</span>. The DDIM sampler — the Euler method for this probability flow ODE — is the neural ODE with <span class="math inline">\(f_\theta = b_t - \frac{\sigma_t^2}{2}s_\theta\)</span>, discretized with step size <span class="math inline">\(h = 1/N\)</span>: more steps gives more accurate flow integration; fewer steps gives faster generation at the cost of distributional accuracy, exactly the depth-accuracy trade-off that Ram Bahadur identified.</p>
+<hr>
+<p><strong>The connection to MATH 217 is through Picard-Lindelöf, Euler’s method, Liouville’s formula, and Gronwall’s inequality.</strong> Picard-Lindelöf guarantees unique buoy trajectories from any start point when <span class="math inline">\(f_\theta\)</span> is Lipschitz — the same theorem that guaranteed unique geodesics in Phase 0 and unique SDE solutions in Chapter 1 Topic 2. The global Euler error bound <span class="math inline">\(O(h) = O(1/L)\)</span> quantifies Priya’s approximation quality — the ten-step scheme’s error relative to the exact neural ODE. Liouville’s formula <span class="math inline">\(\frac{d}{dt}\log|\det J_t| = \text{tr}(\nabla_x f_\theta)\)</span> connects volume deformation (how the buoy cloud spreads) to the velocity field’s divergence — the same formula from MATH 217’s qualitative ODE theory. Gronwall’s inequality bounds the backward recomputation error in the adjoint method — ensuring the ghost buoy’s recomputed trajectory is accurate enough for the parameter gradient to be meaningful. <strong>The connection to MATH 304 is through Pontryagin and Lagrangian duality.</strong> The adjoint method is the KKT conditions of the continuous-time constrained optimization problem, with the adjoint <span class="math inline">\(a(t)\)</span> as the Lagrange multiplier for the ODE constraint at each <span class="math inline">\(t\)</span> — the infinite-dimensional generalization of MATH 304’s Lagrange multipliers for finite equality constraints. The Hamiltonian <span class="math inline">\(H = a^\top f_\theta\)</span> and the Pontryagin conditions <span class="math inline">\(\dot x = \nabla_a H\)</span>, <span class="math inline">\(\dot a = -\nabla_x H\)</span>, <span class="math inline">\(\nabla_\theta H = 0\)</span> are the continuous-time KKT system. <strong>The connection to MATH 201 is through the change of variables formula, Jacobi’s formula, and Hutchinson’s identity.</strong> The multivariate substitution theorem <span class="math inline">\(\rho_1(\phi_1(x_0))|\det\nabla\phi_1| = \rho_0(x_0)\)</span> from MATH 201 is the static version of the instantaneous change of variables formula; Jacobi’s matrix differentiation formula <span class="math inline">\(d\det(J)/dt = \det(J)\text{tr}(J^{-1}\dot J)\)</span> proves Liouville; and Hutchinson’s identity <span class="math inline">\(\mathbb{E}[z^\top Jz] = \text{tr}(J)\)</span> for <span class="math inline">\(z\sim\mathcal{N}(0,I)\)</span> uses the second moment formula <span class="math inline">\(\mathbb{E}[z_iz_j] = \delta_{ij}\)</span> from MATH 208.</p>
+<hr>
+<p>The ICIMOD Gandaki river expedition — the GPS buoys, Ram Bahadur’s continuous flow field, Priya’s ten-step failure, the flow map’s invertibility, the log-density tracking through gorges and floodplains, the memory catastrophe, the ghost buoy running backward as the adjoint state, the parameter gradient accumulated as a time integral, the Pontryagin Hamiltonian, the Jacobian determinant bottleneck, and the Hutchinson shadow measurement — is now completely dissolved into its mathematical form. The buoy trajectories are ODE solutions <span class="math inline">\(x_t = \phi_t(x_0)\)</span>. The continuous flow field is <span class="math inline">\(f_\theta(x,t)\)</span>. The flow map is <span class="math inline">\(\phi_t: x_0\mapsto x_t\)</span>. Liouville’s formula is <span class="math inline">\(\frac{d}{dt}\log|\det J_t| = \nabla\cdot f_\theta\)</span>. The instantaneous change of variables is <span class="math inline">\(\frac{d}{dt}\log\rho_t(x_t) = -\nabla\cdot f_\theta(x_t,t)\)</span>. The log-likelihood is <span class="math inline">\(\log\rho_1(x_1) = \log\rho_0(x_0) - \int_0^1\nabla\cdot f_\theta\,dt\)</span>. The adjoint is <span class="math inline">\(a(t) = \partial\mathcal{L}/\partial x_t\)</span> satisfying <span class="math inline">\(\dot a = -a^\top\nabla_x f_\theta\)</span>. The parameter gradient is <span class="math inline">\(d\mathcal{L}/d\theta = -\int a^\top\partial f_\theta/\partial\theta\,dt\)</span>. The Hutchinson estimator is <span class="math inline">\(\text{tr}(J)\approx z^\top Jz\)</span> for <span class="math inline">\(z\sim\mathcal{N}(0,I)\)</span>. The FFJORD loss combines all three. The probability flow ODE velocity is <span class="math inline">\(f_\theta^* = b_t - \frac{\sigma_t^2}{2}s_t\)</span>.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

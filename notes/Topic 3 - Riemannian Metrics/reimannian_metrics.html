@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>reimannian_metrics – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#topic-3---reimannian-metrics-distance-angle-and-the-geometry-of-curved-space" id="toc-topic-3---reimannian-metrics-distance-angle-and-the-geometry-of-curved-space" class="nav-link active" data-scroll-target="#topic-3---reimannian-metrics-distance-angle-and-the-geometry-of-curved-space">Topic 3 - Reimannian Metrics: Distance, Angle, and the Geometry of Curved Space</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#layer-1-story" id="toc-layer-1-story" class="nav-link" data-scroll-target="#layer-1-story">Layer 1 (Story)</a></li>
+  <li><a href="#layer-2-mathematics" id="toc-layer-2-mathematics" class="nav-link" data-scroll-target="#layer-2-mathematics">Layer 2 (Mathematics)</a></li>
+  <li><a href="#layer-3-bridge" id="toc-layer-3-bridge" class="nav-link" data-scroll-target="#layer-3-bridge">Layer 3 (Bridge)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<section id="topic-3---reimannian-metrics-distance-angle-and-the-geometry-of-curved-space" class="level1">
+<h1>Topic 3 - Reimannian Metrics: Distance, Angle, and the Geometry of Curved Space</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>You have now built two of the three foundational structures of differential geometry. The manifold gave you the space — a curved domain where points live and smooth maps operate, described by charts and atlases. The tangent bundle gave you the velocities — at each point, a local vector space of directions and speeds, assembled into a smooth <span class="math inline">\(2n\)</span>-dimensional arena where vector fields, integral curves, and flows all reside.</p>
+<p>What you do not yet have is measurement.</p>
+<p>The manifold, as you built it in Topic 1, is a purely topological object. It tells you which points are near each other — which sequences converge, which sets are open — but it assigns no numerical distances. Two points on the manifold are either close or far in the topological sense, but you cannot say they are exactly 3.7 kilometres apart, or that the angle between two paths crossing at a point is 45 degrees, or that a curve connecting them has length 12. The smooth structure added differentiability — the ability to take derivatives — but still no distances, no angles, no lengths. The tangent bundle gave you a vector space at each point, but without an inner product, you cannot measure the length of a tangent vector, cannot compute the angle between two tangent vectors, cannot even say whether two directions at a point are perpendicular.</p>
+<p>The Riemannian metric is the structure that supplies all of this. It is a smooth assignment of an inner product to each tangent space — a rule that, at every point <span class="math inline">\(p\)</span> of the manifold, tells you how to measure the length of any tangent vector at <span class="math inline">\(p\)</span> and the angle between any two tangent vectors at <span class="math inline">\(p\)</span>. Once a Riemannian metric is in place, every geometric measurement becomes possible: the length of a curve, the distance between two points, the angle at which two paths cross, the volume of a region, the gradient of a function as a tangent vector rather than a covector. The metric turns the differentiable manifold into a geometric one — a space with both shape and scale.</p>
+<p>The roadmap describes this topic with a precise phrase: defining distance and angle on a curve. This is an exact description. The Riemannian metric is the minimal additional structure needed to measure distances and angles on a manifold — it is the curved-space generalization of the Euclidean inner product that you have used since MATH 101 and MATH 103.</p>
+<p>The chapter has four subtopics building the Riemannian metric’s theory in logical order.</p>
+<p>The first subtopic is <strong>the Riemannian metric tensor</strong> — the precise definition of a smoothly varying family of inner products on the tangent spaces, how it is expressed in local coordinates as a matrix <span class="math inline">\(g_{ij}(p)\)</span> at each point, and how the metric coefficients transform under chart changes. The metric tensor is the fundamental object: everything else in Riemannian geometry is derived from it.</p>
+<p>The second subtopic is <strong>arc length and the Riemannian distance function</strong> — how the metric tensor is used to measure the length of a smooth curve on the manifold by integrating the lengths of its velocity vectors, and how the distance between two points is defined as the infimum of arc lengths over all curves connecting them. The Riemannian distance function makes the manifold into a metric space in the sense of Topic 1 of Chapter 1 — it is the curved-space generalization of the Euclidean distance.</p>
+<p>The third subtopic is <strong>the gradient of a function on a Riemannian manifold</strong> — how the metric converts the exterior derivative <span class="math inline">\(df\)</span> (a covector field, an element of <span class="math inline">\(T^*M\)</span>) into the gradient vector field <span class="math inline">\(\text{grad}(f)\)</span> (a tangent vector field, an element of <span class="math inline">\(TM\)</span>), and why this conversion requires the metric and not just the smooth structure. This subtopic makes precise the gradient that appears in gradient descent on manifolds, in score matching, and in the JKO scheme.</p>
+<p>The fourth subtopic is <strong>canonical examples of Riemannian metrics</strong> — the Euclidean metric on <span class="math inline">\(\mathbb{R}^n\)</span>, the round metric on the sphere <span class="math inline">\(S^n\)</span>, the hyperbolic metric on the hyperbolic space <span class="math inline">\(\mathbb{H}^n\)</span>, and the Fisher information metric on the statistical manifold. Each example is a specific choice of inner product on each tangent space, producing a specific geometry — specific distances, specific angles, specific shortest paths — on a specific manifold. The Fisher information metric is particularly important for the roadmap: it is the Riemannian metric that makes the statistical manifold of probability distributions a genuine geometric object, and it is the metric that governs natural gradient descent and information geometry.</p>
+<p>By the end of this topic, when you see the flow matching loss written as <span class="math inline">\(\mathbb{E}[\|F_\theta(x,t) - \dot{x}(t)\|_{T_{x}M}^2]\)</span>, you will know exactly what <span class="math inline">\(\|\cdot\|_{T_xM}\)</span> means: it is the norm induced by the Riemannian metric <span class="math inline">\(g_x\)</span> on the tangent space <span class="math inline">\(T_xM\)</span> at the point <span class="math inline">\(x\)</span>. The loss penalizes the discrepancy between the learned velocity field and the true velocity, measured by the inner product that the Riemannian metric places on the tangent space at each trajectory point. Without the Riemannian metric, the flow matching loss cannot be evaluated. With it, the loss is a well-defined real number at every trajectory point, and its gradient with respect to <span class="math inline">\(\theta\)</span> is computable by differentiating through the metric.</p>
+<p><strong>ALL FOUR SUBTOPICS ARE TREATED AS A SINGLE TOPIC FOR EASY COMPREHENSION.</strong></p>
+<hr>
+</section>
+<section id="layer-1-story" class="level2">
+<h2 class="anchored" data-anchor-id="layer-1-story">Layer 1 (Story)</h2>
+<p>You are a land surveyor working for the Surveyor General of Nepal, and you have been assigned to measure the Langtang valley — a high glacial valley north of Kathmandu, flanked by peaks exceeding 7,000 metres on both sides. Your task is not merely to map the valley’s shape — the atlas of charts from Topic 1 handles that — but to measure it. You need to answer questions with precise numbers: how far is it from Kyanjin Gompa to the snout of the Langtang glacier? What angle does the ridge between Langtang Lirung and Gangchenpo make when it meets the main valley floor? How long is the trekking route from Lama Hotel to Kyanjin Ri? These are measurement questions — they require a notion of distance, angle, and length that the smooth structure of the manifold alone cannot provide.</p>
+<p>You arrive in the valley with your survey equipment: a theodolite for measuring angles, a total station for measuring distances, and a GPS device for verifying positions. Your equipment works locally — it measures angles and distances in the immediate vicinity of the instrument’s position. At each survey station, your equipment gives you a precise local measurement capability: given any two directions from that station, you can measure the angle between them; given any short displacement from that station, you can measure its length.</p>
+<p>This local measurement capability — the ability to measure angles and lengths at each point, varying smoothly from station to station — is precisely what a Riemannian metric provides. At each point <span class="math inline">\(p\)</span> of the manifold, the Riemannian metric is the surveyor’s equipment: a rule that assigns a length to every tangent vector at <span class="math inline">\(p\)</span> and an angle to every pair of tangent vectors at <span class="math inline">\(p\)</span>.</p>
+<hr>
+<p><strong>The inner product at each survey station</strong></p>
+<p>Set up your theodolite at Kyanjin Gompa, at an elevation of 3,870 metres. From this station, you can measure two things: the length of any short displacement in any direction, and the angle between any two directions. These two measurements are precisely what an inner product provides. Given two tangent vectors <span class="math inline">\(u, v \in T_pM\)</span> at your station <span class="math inline">\(p\)</span>:</p>
+<p>The <strong>length</strong> of <span class="math inline">\(u\)</span> is <span class="math inline">\(\|u\|_p = \sqrt{g_p(u,u)}\)</span>, where <span class="math inline">\(g_p(u,u)\)</span> is the inner product of <span class="math inline">\(u\)</span> with itself.</p>
+<p>The <strong>angle</strong> <span class="math inline">\(\theta\)</span> between <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span> satisfies <span class="math inline">\(\cos\theta = \frac{g_p(u,v)}{\|u\|_p \|v\|_p}\)</span>, where <span class="math inline">\(g_p(u,v)\)</span> is the inner product of <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span>.</p>
+<p>The inner product <span class="math inline">\(g_p\)</span> at your station must satisfy the same axioms as any inner product: it is symmetric (<span class="math inline">\(g_p(u,v) = g_p(v,u)\)</span>), bilinear (linear in each argument), and positive definite (<span class="math inline">\(g_p(v,v) &gt; 0\)</span> for all <span class="math inline">\(v \neq 0\)</span>). These three axioms are exactly the conditions your survey equipment implicitly satisfies: the angle from <span class="math inline">\(u\)</span> to <span class="math inline">\(v\)</span> is the same as from <span class="math inline">\(v\)</span> to <span class="math inline">\(u\)</span> (symmetry), scaling a direction scales its length proportionally (linearity), and every nonzero direction has a positive length (positive definiteness).</p>
+<p>The Riemannian metric <span class="math inline">\(g\)</span> is not a single inner product — it is a smooth family of inner products, one at each point of the manifold. At Kyanjin Gompa, the metric <span class="math inline">\(g_p\)</span> measures distances and angles in the flat valley floor. At the ridge crest of Langtang Lirung, the metric <span class="math inline">\(g_q\)</span> measures distances and angles on the steep, curved ridge. At each point, the metric is the local measurement rule — the surveyor’s equipment calibrated to that specific location on the curved terrain.</p>
+<hr>
+<p><strong>The metric in local coordinates — the matrix of coefficients</strong></p>
+<p>Your survey team works in the local coordinate chart of the Langtang valley — the topo map grid with eastings <span class="math inline">\(x^1\)</span> and northings <span class="math inline">\(x^2\)</span> at each point. In this coordinate system, the two coordinate basis vectors at each point <span class="math inline">\(p\)</span> are <span class="math inline">\(\partial/\partial x^1|_p\)</span> (pointing east along the grid) and <span class="math inline">\(\partial/\partial x^2|_p\)</span> (pointing north along the grid). These basis vectors are not necessarily orthogonal or unit-length with respect to the Riemannian metric — the terrain is curved and the coordinate grid may be distorted.</p>
+<p>The metric at <span class="math inline">\(p\)</span> is completely determined by its values on the coordinate basis vectors:</p>
+<p><span class="math display">\[g_{11}(p) = g_p\!\left(\frac{\partial}{\partial x^1}, \frac{\partial}{\partial x^1}\right), \quad g_{12}(p) = g_p\!\left(\frac{\partial}{\partial x^1}, \frac{\partial}{\partial x^2}\right), \quad g_{22}(p) = g_p\!\left(\frac{\partial}{\partial x^2}, \frac{\partial}{\partial x^2}\right)\]</span></p>
+<p>The three numbers <span class="math inline">\(g_{11}(p)\)</span>, <span class="math inline">\(g_{12}(p)\)</span>, <span class="math inline">\(g_{22}(p)\)</span> are the <strong>metric coefficients</strong> at <span class="math inline">\(p\)</span>, and they encode the complete local measurement capability of the metric. For any two tangent vectors <span class="math inline">\(u = u^1 \partial/\partial x^1 + u^2 \partial/\partial x^2\)</span> and <span class="math inline">\(v = v^1 \partial/\partial x^1 + v^2 \partial/\partial x^2\)</span>, the inner product is:</p>
+<p><span class="math display">\[g_p(u, v) = g_{11}(p) u^1 v^1 + g_{12}(p)(u^1 v^2 + u^2 v^1) + g_{22}(p) u^2 v^2 = \sum_{i,j} g_{ij}(p) u^i v^j\]</span></p>
+<p>The matrix <span class="math inline">\(G(p) = \begin{pmatrix} g_{11}(p) &amp; g_{12}(p) \\ g_{12}(p) &amp; g_{22}(p) \end{pmatrix}\)</span> is the <strong>metric matrix</strong> or <strong>metric tensor in coordinates</strong>. It must be symmetric (because the inner product is symmetric) and positive definite (because the inner product is positive definite) at every point.</p>
+<p>In the flat valley floor, the coordinate grid is approximately orthogonal and the metric coefficients are approximately <span class="math inline">\(g_{11} = g_{22} = 1\)</span> and <span class="math inline">\(g_{12} = 0\)</span> — the metric is approximately Euclidean. On the steep ridge where the terrain curves sharply, the metric coefficients deviate significantly from the flat Euclidean values — distances in the steep direction are longer than the coordinate grid suggests, and the grid lines are no longer orthogonal with respect to the true metric.</p>
+<hr>
+<p><strong>Measuring the length of a trekking route</strong></p>
+<p>Your first measurement task is to compute the length of the trekking route from Lama Hotel to Kyanjin Ri — a route that winds through the valley, gaining elevation steadily, covering approximately 22 kilometres in horizontal distance but much more in actual trekking distance along the curved terrain.</p>
+<p>The route is a smooth curve <span class="math inline">\(\gamma: [0,1] \to M\)</span> on the manifold, parameterized so that <span class="math inline">\(\gamma(0)\)</span> is Lama Hotel and <span class="math inline">\(\gamma(1)\)</span> is Kyanjin Ri. At each moment <span class="math inline">\(t\)</span>, the trekker is at position <span class="math inline">\(\gamma(t)\)</span> on the terrain, moving with velocity <span class="math inline">\(\gamma'(t) \in T_{\gamma(t)}M\)</span>. The speed of the trekker at time <span class="math inline">\(t\)</span> is the length of the velocity vector, measured by the metric at that point:</p>
+<p><span class="math display">\[\text{speed}(t) = \|\gamma'(t)\|_{\gamma(t)} = \sqrt{g_{\gamma(t)}(\gamma'(t), \gamma'(t))}\]</span></p>
+<p>The total length of the route is the integral of the speed over the entire parameterization:</p>
+<p><span class="math display">\[L(\gamma) = \int_0^1 \|\gamma'(t)\|_{\gamma(t)} \, dt = \int_0^1 \sqrt{g_{\gamma(t)}(\gamma'(t), \gamma'(t))} \, dt\]</span></p>
+<p>This is the <strong>arc length formula</strong> — the length of a curve on a Riemannian manifold. It integrates the metric-induced speed of the curve at each point to produce the total length. In flat Euclidean space with the standard metric, this formula reduces to the familiar arc length formula from MATH 201: <span class="math inline">\(L = \int_0^1 \|\gamma'(t)\|_2 \, dt\)</span>. The Riemannian metric is the curved-space generalization — it replaces the constant Euclidean inner product with a smoothly varying family of inner products.</p>
+<p>Notice that the length <span class="math inline">\(L(\gamma)\)</span> is independent of the parameterization. If you walk the same route slowly, covering it in two hours, or quickly in one hour, the route length does not change — only the parameterization speed changes. The metric measures the route’s intrinsic geometric length, not a time-dependent speed.</p>
+<hr>
+<p><strong>The distance between two points</strong></p>
+<p>You want to know the true distance between Kyanjin Gompa and the glacier snout — the shortest possible route through the valley terrain. The valley has no straight-line path between these two points: the terrain curves, the glacier’s surface is undulating, and any path must navigate the physical constraints of the landscape.</p>
+<p>The <strong>Riemannian distance</strong> between two points <span class="math inline">\(p\)</span> and <span class="math inline">\(q\)</span> on the manifold is the infimum of arc lengths over all smooth curves connecting them:</p>
+<p><span class="math display">\[d(p, q) = \inf_\gamma \left\{ L(\gamma) : \gamma(0) = p, \gamma(1) = q, \gamma \text{ smooth} \right\}\]</span></p>
+<p>This distance function <span class="math inline">\(d: M \times M \to [0,\infty)\)</span> has all the properties you need. It is symmetric: the distance from Kyanjin Gompa to the glacier snout is the same as from the snout to Kyanjin Gompa. It satisfies the triangle inequality: going from <span class="math inline">\(p\)</span> to <span class="math inline">\(r\)</span> to <span class="math inline">\(q\)</span> is never shorter than going directly from <span class="math inline">\(p\)</span> to <span class="math inline">\(q\)</span>. And it is zero if and only if <span class="math inline">\(p = q\)</span>.</p>
+<p>Together, these properties make <span class="math inline">\((M, d)\)</span> a metric space — the Riemannian metric induces a genuine metric space structure on the manifold, in exactly the sense of Topic 1 of Chapter 1. The circle is now complete: the Riemannian metric on the manifold induces the kind of distance function that Chapter 1 used to define metric spaces. The metric space of Chapter 1 and the Riemannian metric of Chapter 3 are two levels of the same geometric hierarchy.</p>
+<p>The curve that achieves the infimum — the shortest path between <span class="math inline">\(p\)</span> and <span class="math inline">\(q\)</span> — is a <strong>geodesic</strong>. Geodesics are the subject of the next topic, and they are the curved-space generalization of straight lines. For now, it is enough to know that they exist (at least locally) and that the Riemannian distance is determined by the lengths of geodesics.</p>
+<hr>
+<p><strong>The gradient of a function — converting a covector to a vector</strong></p>
+<p>Your team wants to compute the direction of steepest ascent from any point in the Langtang valley — the direction in which elevation gains most rapidly per unit of horizontal distance. This is the gradient of the elevation function.</p>
+<p>In flat Euclidean space, the gradient <span class="math inline">\(\nabla f\)</span> of a function <span class="math inline">\(f\)</span> is a vector: you compute the partial derivatives, assemble them into a vector <span class="math inline">\((\partial f/\partial x^1, \partial f/\partial x^2)\)</span>, and that vector points in the direction of steepest ascent with magnitude equal to the rate of ascent. This is the computation you performed routinely in MATH 201.</p>
+<p>On a curved manifold, the situation is more subtle. The partial derivatives <span class="math inline">\(\partial f/\partial x^i\)</span> are the components of the exterior derivative <span class="math inline">\(df\)</span> — a covector, an element of the cotangent space <span class="math inline">\(T_p^*M\)</span>, not the tangent space <span class="math inline">\(T_pM\)</span>. The covector <span class="math inline">\(df_p\)</span> is a linear functional on tangent vectors: given a direction <span class="math inline">\(v\)</span>, it returns <span class="math inline">\(df_p(v) = v(f)\)</span>, the rate of change of <span class="math inline">\(f\)</span> in the direction <span class="math inline">\(v\)</span>. But a covector is not a vector — it lives in the dual space, not the tangent space itself.</p>
+<p>To convert the covector <span class="math inline">\(df_p\)</span> into a tangent vector — the gradient vector <span class="math inline">\(\text{grad}(f)|_p \in T_pM\)</span> — you need the Riemannian metric. The gradient vector is the unique tangent vector satisfying:</p>
+<p><span class="math display">\[g_p(\text{grad}(f)|_p, v) = df_p(v) = v(f) \quad \forall v \in T_pM\]</span></p>
+<p>The gradient is the tangent vector that, when paired with any direction <span class="math inline">\(v\)</span> using the metric’s inner product, gives the same result as the covector <span class="math inline">\(df_p\)</span> acting on <span class="math inline">\(v\)</span>. In coordinates, this means:</p>
+<p><span class="math display">\[\text{grad}(f)|_p = \sum_{i,j} g^{ij}(p) \frac{\partial f}{\partial x^j}\bigg|_p \frac{\partial}{\partial x^i}\bigg|_p\]</span></p>
+<p>where <span class="math inline">\(g^{ij}(p)\)</span> are the entries of the inverse metric matrix <span class="math inline">\(G(p)^{-1}\)</span>. The inverse metric is the tool that converts covector components <span class="math inline">\(\partial f/\partial x^j\)</span> into vector components.</p>
+<p>In flat Euclidean space with the standard metric <span class="math inline">\(g_{ij} = \delta_{ij}\)</span>, the inverse metric is also <span class="math inline">\(g^{ij} = \delta^{ij}\)</span>, and the gradient reduces to <span class="math inline">\(\text{grad}(f) = \sum_i \frac{\partial f}{\partial x^i} \frac{\partial}{\partial x^i}\)</span> — the familiar gradient vector from MATH 201. On a curved manifold with a non-trivial metric, the gradient is distorted by the metric coefficients: the steepest direction is not simply the direction of largest partial derivative, but the direction of largest rate of change per unit of metric distance. The metric corrects for the stretching and distortion introduced by the coordinate system and the curvature of the space.</p>
+<p>This is the gradient that appears in the JKO scheme of Phase 3: the direction of steepest descent of the energy functional in the Wasserstein space, computed with the Wasserstein metric rather than the Euclidean metric. Without the Riemannian metric, the JKO scheme’s gradient cannot be defined.</p>
+<hr>
+<p><strong>The Fisher information metric — the geometry of probability distributions</strong></p>
+<p>Now here is the connection to the roadmap’s most important application of Riemannian geometry. Your survey department has been asked to measure distances not between physical locations in the Langtang valley, but between probability distributions — between different models of the distribution of monsoon rainfall across Nepal.</p>
+<p>The statistical manifold of probability distributions — the set of all parameterized densities <span class="math inline">\(\{p_\theta : \theta \in \Theta\}\)</span> — is a smooth manifold whose points are probability distributions and whose tangent vectors are perturbations of distributions. But what is the natural notion of distance between two distributions on this manifold? Two distributions that are statistically indistinguishable by any experiment should be close together; two distributions that any experiment can reliably distinguish should be far apart.</p>
+<p>The natural answer is the <strong>Fisher information metric</strong>: the Riemannian metric on the statistical manifold defined by:</p>
+<p><span class="math display">\[g_{ij}(\theta) = \mathbb{E}_{p_\theta}\!\left[\frac{\partial \log p_\theta(X)}{\partial \theta^i} \frac{\partial \log p_\theta(X)}{\partial \theta^j}\right]\]</span></p>
+<p>This is the Fisher information matrix — the expected outer product of the score function’s components. It is symmetric and positive definite (under mild regularity conditions), making it a valid Riemannian metric. Geometrically, it measures the curvature of the log-likelihood surface: in directions where the log-likelihood changes rapidly, the metric assigns large distances; in directions where the log-likelihood is flat, the metric assigns small distances.</p>
+<p>The gradient descent on the statistical manifold with respect to the Fisher information metric is the <strong>natural gradient</strong> — the update rule that accounts for the curved geometry of the distribution space. Standard gradient descent minimizes the loss function using the Euclidean metric on parameter space, which ignores the curvature of the statistical manifold and can be inefficient. Natural gradient descent uses the Fisher metric’s inverse to convert the gradient covector into a tangent vector in the correct curved geometry, producing updates that are invariant to reparameterization and often converge much faster.</p>
+<hr>
+<p>Here is the break moment. The naive assumption is that the Euclidean metric — the standard inner product from MATH 101 and MATH 103 — is the correct or natural metric on any manifold, and that the Riemannian metric is merely a generalization for exotic curved spaces that arise in pure mathematics but rarely in practice.</p>
+<p>This breaks completely in machine learning. Consider two Gaussian distributions: <span class="math inline">\(\mathcal{N}(0,1)\)</span> and <span class="math inline">\(\mathcal{N}(0.01, 1)\)</span> — differing only in mean by 0.01 units. And consider <span class="math inline">\(\mathcal{N}(0,1)\)</span> and <span class="math inline">\(\mathcal{N}(0, 1.01)\)</span> — differing only in variance by 0.01 units. In Euclidean parameter space, these pairs have the same distance of 0.01. But statistically, they are not equally distinguishable: the mean shift produces a much more noticeable distributional change than the variance shift at these parameter values, because the Fisher information in the mean direction is much larger than in the variance direction near these parameter values.</p>
+<p>The Fisher metric sees this difference — it assigns different lengths to the mean direction and the variance direction, reflecting the statistical geometry of the distributions. Euclidean gradient descent, which treats mean and variance directions as equally weighted, takes steps that are too large in the variance direction and too small in the mean direction, converging slowly. Natural gradient descent, which uses the Fisher metric, takes steps calibrated to the statistical geometry of the manifold, converging much faster. The choice of metric is not a mathematical technicality — it is a practical engineering decision that determines how fast and accurately a model learns.</p>
+<p>In Phase 3, the flow matching loss <span class="math inline">\(\mathbb{E}[\|F_\theta - \dot{x}\|_{T_xM}^2]\)</span> uses the Riemannian metric of the data manifold — not the Euclidean metric of the ambient space — to measure the discrepancy between the learned and true velocity fields. If the data lives on a sphere (protein orientations, molecular conformations), the correct metric is the round metric on the sphere, not the Euclidean metric of the ambient <span class="math inline">\(\mathbb{R}^3\)</span>. Using the wrong metric produces a model that learns efficiently in the ambient space but generates samples that lie off the data manifold or that do not respect the manifold’s geometry. The Riemannian metric is not exotic mathematics — it is the correct tool for every problem where data lives on a curved space.</p>
+<hr>
+<p>Hold four pictures simultaneously.</p>
+<p>The surveyor’s equipment at Kyanjin Gompa: measuring the length of every tangent vector and the angle between every pair of tangent vectors at that specific point — a local, point-specific inner product, the Riemannian metric at one point.</p>
+<p>The metric coefficients <span class="math inline">\(g_{ij}(p)\)</span>: the <span class="math inline">\(2\times 2\)</span> matrix encoding the inner product in the coordinate basis at <span class="math inline">\(p\)</span>, varying smoothly from point to point across the valley, the complete local description of the metric.</p>
+<p>The arc length formula: integrating the metric-induced speed of a curve to measure its true geometric length, the tool that converts the local inner product into a global measurement of distances between points.</p>
+<p>The Fisher information metric: the Riemannian metric on the statistical manifold, measuring distances between probability distributions in terms of statistical distinguishability, the metric that governs natural gradient descent and information geometry.</p>
+<p>When you have all four pictures clearly in mind, let me know and we will move to Layer 2, where we give the Riemannian metric its full and precise mathematical form.</p>
+<hr>
+</section>
+<section id="layer-2-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="layer-2-mathematics">Layer 2 (Mathematics)</h2>
+<p>We build the formalism in six stages: the precise definition of the Riemannian metric tensor, its coordinate representation and transformation law, the arc length functional and Riemannian distance, the gradient and musical isomorphisms, canonical examples, and the Fisher information metric with its role in natural gradient descent.</p>
+<section id="the-riemannian-metric-tensor" class="level3">
+<h3 class="anchored" data-anchor-id="the-riemannian-metric-tensor">The Riemannian Metric Tensor</h3>
+<p>Let <span class="math inline">\(M\)</span> be a smooth <span class="math inline">\(n\)</span>-manifold. A <strong>Riemannian metric</strong> <span class="math inline">\(g\)</span> on <span class="math inline">\(M\)</span> is a smooth symmetric positive definite <span class="math inline">\((0,2)\)</span>-tensor field — a smooth assignment, to each point <span class="math inline">\(p \in M\)</span>, of a bilinear form:</p>
+<p><span class="math display">\[g_p: T_pM \times T_pM \to \mathbb{R}\]</span></p>
+<p>satisfying three axioms for all <span class="math inline">\(p \in M\)</span> and all <span class="math inline">\(u, v, w \in T_pM\)</span>, <span class="math inline">\(\lambda \in \mathbb{R}\)</span>:</p>
+<p><span class="math display">\[\text{(i) Symmetry: } g_p(u,v) = g_p(v,u)\]</span> <span class="math display">\[\text{(ii) Bilinearity: } g_p(\lambda u + v, w) = \lambda g_p(u,w) + g_p(v,w)\]</span> <span class="math display">\[\text{(iii) Positive definiteness: } g_p(v,v) &gt; 0 \quad \forall v \neq 0\]</span></p>
+<p>The smoothness condition means: for any two smooth vector fields <span class="math inline">\(X, Y \in \mathfrak{X}(M)\)</span>, the function <span class="math inline">\(p \mapsto g_p(X(p), Y(p))\)</span> is smooth. The pair <span class="math inline">\((M, g)\)</span> is called a <strong>Riemannian manifold</strong>.</p>
+<p>The metric <span class="math inline">\(g\)</span> induces a norm on each tangent space:</p>
+<p><span class="math display">\[\|v\|_p = \sqrt{g_p(v,v)}, \qquad v \in T_pM\]</span></p>
+<p>and an angle between nonzero tangent vectors:</p>
+<p><span class="math display">\[\cos\angle(u,v) = \frac{g_p(u,v)}{\|u\|_p \|v\|_p}\]</span></p>
+<p>Two tangent vectors are <strong>orthogonal</strong> at <span class="math inline">\(p\)</span> if <span class="math inline">\(g_p(u,v) = 0\)</span>.</p>
+<p><strong>Existence theorem.</strong> Every smooth manifold admits a Riemannian metric. The proof uses a partition of unity: pull back the Euclidean metric through each chart, then blend the local metrics using a partition of unity subordinate to the atlas. The resulting global metric is smooth and positive definite everywhere.</p>
+<hr>
+</section>
+<section id="coordinate-representation-and-transformation-law" class="level3">
+<h3 class="anchored" data-anchor-id="coordinate-representation-and-transformation-law">Coordinate Representation and Transformation Law</h3>
+<p>In a chart <span class="math inline">\((U, \phi)\)</span> with local coordinates <span class="math inline">\((x^1, \ldots, x^n)\)</span>, the metric is determined by its values on coordinate basis vectors. Define the <strong>metric coefficients</strong>:</p>
+<p><span class="math display">\[g_{ij}(p) = g_p\!\left(\frac{\partial}{\partial x^i}\bigg|_p, \frac{\partial}{\partial x^j}\bigg|_p\right), \quad i,j = 1,\ldots,n\]</span></p>
+<p>The metric coefficients form a symmetric positive definite matrix <span class="math inline">\(G(p) = (g_{ij}(p))\)</span> at each <span class="math inline">\(p \in U\)</span>, with <span class="math inline">\(g_{ij}(p) = g_{ji}(p)\)</span>. The inner product of two tangent vectors <span class="math inline">\(u = \sum_i u^i \partial/\partial x^i\)</span> and <span class="math inline">\(v = \sum_j v^j \partial/\partial x^j\)</span> is:</p>
+<p><span class="math display">\[g_p(u,v) = \sum_{i,j=1}^n g_{ij}(p) u^i v^j = u^T G(p) v\]</span></p>
+<p>The metric is often written in the classical notation as a <strong>line element</strong>:</p>
+<p><span class="math display">\[ds^2 = \sum_{i,j=1}^n g_{ij}(x) \, dx^i \otimes dx^j\]</span></p>
+<p>or more informally as <span class="math inline">\(ds^2 = \sum_{i,j} g_{ij} dx^i dx^j\)</span>, where <span class="math inline">\(dx^i \otimes dx^j\)</span> is the tensor product of coordinate covectors.</p>
+<p><strong>Transformation law.</strong> Under a change of coordinates <span class="math inline">\(\tilde{x}^k = \tau^k(x^1,\ldots,x^n)\)</span> with Jacobian <span class="math inline">\(J_\tau\)</span>, the metric coefficients transform as:</p>
+<p><span class="math display">\[\tilde{g}_{kl}(p) = \sum_{i,j=1}^n \frac{\partial x^i}{\partial \tilde{x}^k}\bigg|_p \frac{\partial x^j}{\partial \tilde{x}^l}\bigg|_p g_{ij}(p) = \left(J_\tau^{-T} G \, J_\tau^{-1}\right)_{kl}\]</span></p>
+<p>In matrix form: <span class="math inline">\(\tilde{G} = J_\tau^{-T} G J_\tau^{-1}\)</span>. The metric coefficients transform as a covariant <span class="math inline">\((0,2)\)</span>-tensor — by the inverse Jacobian on each index. This is opposite to the transformation of tangent vector components (which transform by the Jacobian), reflecting the duality between vectors and covectors.</p>
+<hr>
+</section>
+<section id="arc-length-and-riemannian-distance" class="level3">
+<h3 class="anchored" data-anchor-id="arc-length-and-riemannian-distance">Arc Length and Riemannian Distance</h3>
+<p><strong>Arc length.</strong> For a smooth curve <span class="math inline">\(\gamma: [a,b] \to M\)</span>, the <strong>arc length</strong> is:</p>
+<p><span class="math display">\[L(\gamma) = \int_a^b \|\gamma'(t)\|_{\gamma(t)} \, dt = \int_a^b \sqrt{g_{\gamma(t)}(\gamma'(t), \gamma'(t))} \, dt\]</span></p>
+<p>In local coordinates, with <span class="math inline">\(\gamma(t) = (x^1(t), \ldots, x^n(t))\)</span> and <span class="math inline">\(\gamma'(t) = \sum_i \dot{x}^i(t) \partial/\partial x^i\)</span>:</p>
+<p><span class="math display">\[L(\gamma) = \int_a^b \sqrt{\sum_{i,j} g_{ij}(\gamma(t)) \dot{x}^i(t) \dot{x}^j(t)} \, dt\]</span></p>
+<p>Arc length is invariant under reparameterization: if <span class="math inline">\(\sigma: [c,d] \to [a,b]\)</span> is a smooth increasing bijection and <span class="math inline">\(\tilde\gamma = \gamma \circ \sigma\)</span>, then <span class="math inline">\(L(\tilde\gamma) = L(\gamma)\)</span>.</p>
+<p><strong>Arc length parameterization.</strong> A curve <span class="math inline">\(\gamma\)</span> is <strong>parameterized by arc length</strong> if <span class="math inline">\(\|\gamma'(t)\|_{\gamma(t)} = 1\)</span> for all <span class="math inline">\(t\)</span> — the speed is constantly 1. For any smooth curve with nonvanishing velocity, an arc length reparameterization exists and the arc length parameter <span class="math inline">\(s\)</span> satisfies <span class="math inline">\(ds/dt = \|\gamma'(t)\|\)</span>.</p>
+<p><strong>Riemannian distance.</strong> The <strong>Riemannian distance function</strong> <span class="math inline">\(d_g: M \times M \to [0,\infty)\)</span> is:</p>
+<p><span class="math display">\[d_g(p,q) = \inf\{L(\gamma) : \gamma \text{ smooth}, \gamma(0) = p, \gamma(1) = q\}\]</span></p>
+<p><strong>Theorem.</strong> <span class="math inline">\((M, d_g)\)</span> is a metric space: <span class="math inline">\(d_g\)</span> is symmetric, satisfies the triangle inequality, and <span class="math inline">\(d_g(p,q) = 0 \iff p = q\)</span>.</p>
+<p>The proof uses the positive definiteness of <span class="math inline">\(g\)</span> to establish <span class="math inline">\(d_g(p,q) &gt; 0\)</span> for <span class="math inline">\(p \neq q\)</span> (by computing the infimum of arc lengths in a chart neighborhood), and the triangle inequality follows by concatenating curves.</p>
+<p><strong>Theorem (Hopf-Rinow).</strong> If <span class="math inline">\((M,g)\)</span> is a connected Riemannian manifold, the following are equivalent: (i) <span class="math inline">\((M, d_g)\)</span> is a complete metric space, (ii) every geodesic can be extended to all of <span class="math inline">\(\mathbb{R}\)</span>, (iii) every bounded closed subset of <span class="math inline">\(M\)</span> is compact. A manifold satisfying these conditions is called <strong>geodesically complete</strong>. For geodesically complete manifolds, the distance <span class="math inline">\(d_g(p,q)\)</span> is always realized by a geodesic — the infimum is achieved.</p>
+<hr>
+</section>
+<section id="the-musical-isomorphisms-gradient-and-its-dual" class="level3">
+<h3 class="anchored" data-anchor-id="the-musical-isomorphisms-gradient-and-its-dual">The Musical Isomorphisms — Gradient and Its Dual</h3>
+<p>The Riemannian metric provides a canonical isomorphism between the tangent bundle <span class="math inline">\(TM\)</span> and the cotangent bundle <span class="math inline">\(T^*M\)</span>, called the <strong>musical isomorphisms</strong> (from the notation <span class="math inline">\(\flat\)</span> and <span class="math inline">\(\sharp\)</span>, like musical flat and sharp signs).</p>
+<p><strong>The flat map <span class="math inline">\(\flat: TM \to T^*M\)</span>.</strong> For each <span class="math inline">\(v \in T_pM\)</span>, define the covector <span class="math inline">\(v^\flat \in T_p^*M\)</span> by:</p>
+<p><span class="math display">\[v^\flat(u) = g_p(v, u) \quad \forall u \in T_pM\]</span></p>
+<p>In coordinates: if <span class="math inline">\(v = \sum_i v^i \partial/\partial x^i\)</span>, then <span class="math inline">\(v^\flat = \sum_{i,j} g_{ij} v^i dx^j = \sum_j \left(\sum_i g_{ij} v^i\right) dx^j\)</span>. The flat map lowers the index: <span class="math inline">\(v_j = \sum_i g_{ij} v^i\)</span>.</p>
+<p><strong>The sharp map <span class="math inline">\(\sharp: T^*M \to TM\)</span>.</strong> For each covector <span class="math inline">\(\omega \in T_p^*M\)</span>, define the tangent vector <span class="math inline">\(\omega^\sharp \in T_pM\)</span> by:</p>
+<p><span class="math display">\[g_p(\omega^\sharp, u) = \omega(u) \quad \forall u \in T_pM\]</span></p>
+<p>In coordinates: if <span class="math inline">\(\omega = \sum_j \omega_j dx^j\)</span>, then <span class="math inline">\(\omega^\sharp = \sum_{i,j} g^{ij} \omega_j \partial/\partial x^i\)</span>, where <span class="math inline">\(g^{ij}\)</span> are the entries of the inverse metric matrix <span class="math inline">\(G^{-1}\)</span>. The sharp map raises the index: <span class="math inline">\(\omega^i = \sum_j g^{ij} \omega_j\)</span>.</p>
+<p>The two maps are inverses: <span class="math inline">\((\flat)^{-1} = \sharp\)</span> and <span class="math inline">\((\sharp)^{-1} = \flat\)</span>. Together they provide the canonical identification between <span class="math inline">\(TM\)</span> and <span class="math inline">\(T^*M\)</span> that the metric supplies.</p>
+<p><strong>The gradient.</strong> The <strong>gradient</strong> of a smooth function <span class="math inline">\(f \in C^\infty(M)\)</span> is the vector field:</p>
+<p><span class="math display">\[\text{grad}(f) = (df)^\sharp\]</span></p>
+<p>It is the unique vector field satisfying:</p>
+<p><span class="math display">\[g_p(\text{grad}(f)|_p, v) = df_p(v) = v(f) \quad \forall v \in T_pM\]</span></p>
+<p>In coordinates:</p>
+<p><span class="math display">\[\text{grad}(f) = \sum_{i,j} g^{ij} \frac{\partial f}{\partial x^j} \frac{\partial}{\partial x^i}\]</span></p>
+<p>The gradient points in the direction of steepest ascent of <span class="math inline">\(f\)</span>, measured with respect to the Riemannian metric. Its magnitude <span class="math inline">\(\|\text{grad}(f)\|_p = \sqrt{\sum_{i,j} g^{ij} \frac{\partial f}{\partial x^i} \frac{\partial f}{\partial x^j}}\)</span> is the maximum directional derivative of <span class="math inline">\(f\)</span> at <span class="math inline">\(p\)</span>.</p>
+<p>For the Euclidean metric on <span class="math inline">\(\mathbb{R}^n\)</span> with <span class="math inline">\(g_{ij} = \delta_{ij}\)</span> and <span class="math inline">\(g^{ij} = \delta^{ij}\)</span>: <span class="math inline">\(\text{grad}(f) = \sum_i \frac{\partial f}{\partial x^i} \frac{\partial}{\partial x^i} = \nabla f\)</span>, recovering the familiar gradient from MATH 201.</p>
+<hr>
+</section>
+<section id="the-riemannian-volume-form" class="level3">
+<h3 class="anchored" data-anchor-id="the-riemannian-volume-form">The Riemannian Volume Form</h3>
+<p>The Riemannian metric induces a canonical <strong>volume form</strong> <span class="math inline">\(\text{vol}_g\)</span> — a smooth <span class="math inline">\(n\)</span>-form on <span class="math inline">\(M\)</span> that assigns a volume to every open subset. In local coordinates:</p>
+<p><span class="math display">\[\text{vol}_g = \sqrt{\det G(x)} \, dx^1 \wedge \cdots \wedge dx^n\]</span></p>
+<p>where <span class="math inline">\(\det G(x) = \det(g_{ij}(x)) &gt; 0\)</span> (positive definite metric has positive determinant) and <span class="math inline">\(dx^1 \wedge \cdots \wedge dx^n\)</span> is the coordinate volume form. The factor <span class="math inline">\(\sqrt{\det G}\)</span> corrects for the metric’s distortion of the coordinate volume element.</p>
+<p>The <strong>integral of a function</strong> <span class="math inline">\(f \in C^\infty(M)\)</span> over a Riemannian manifold is:</p>
+<p><span class="math display">\[\int_M f \, \text{vol}_g = \int_{\mathbb{R}^n} f(\phi^{-1}(x)) \sqrt{\det G(x)} \, dx^1 \cdots dx^n\]</span></p>
+<p>in any chart <span class="math inline">\((U, \phi)\)</span> covering <span class="math inline">\(M\)</span> (using a partition of unity for the global definition). This is the Riemannian version of the Lebesgue integral — it uses the metric to define the correct notion of area or volume on the curved manifold.</p>
+<hr>
+</section>
+<section id="canonical-examples" class="level3">
+<h3 class="anchored" data-anchor-id="canonical-examples">Canonical Examples</h3>
+<p><strong>1. Euclidean metric on <span class="math inline">\(\mathbb{R}^n\)</span>.</strong> The standard Riemannian metric is <span class="math inline">\(g_{ij} = \delta_{ij}\)</span> everywhere:</p>
+<p><span class="math display">\[g_p(u,v) = \sum_{i=1}^n u^i v^i = u \cdot v\]</span></p>
+<p>The arc length formula reduces to <span class="math inline">\(L(\gamma) = \int_a^b \|\gamma'(t)\|_2 \, dt\)</span> and the Riemannian distance is the Euclidean distance <span class="math inline">\(d_g(p,q) = \|p-q\|_2\)</span>. The gradient is the standard gradient <span class="math inline">\(\nabla f\)</span>.</p>
+<p><strong>2. Round metric on <span class="math inline">\(S^n\)</span>.</strong> The unit sphere <span class="math inline">\(S^n \subset \mathbb{R}^{n+1}\)</span> inherits the <strong>round metric</strong> (or <strong>standard metric</strong>) <span class="math inline">\(g_{\text{round}}\)</span> as the pullback of the Euclidean metric on <span class="math inline">\(\mathbb{R}^{n+1}\)</span> to the tangent spaces of <span class="math inline">\(S^n\)</span>. For <span class="math inline">\(S^2\)</span> in spherical coordinates <span class="math inline">\((\theta, \phi)\)</span>:</p>
+<p><span class="math display">\[ds^2 = d\theta^2 + \sin^2\!\theta \, d\phi^2, \quad G = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; \sin^2\theta \end{pmatrix}\]</span></p>
+<p>The factor <span class="math inline">\(\sin^2\theta\)</span> reflects the shrinking of longitude circles near the poles — a circle of constant latitude <span class="math inline">\(\theta\)</span> near the pole (<span class="math inline">\(\theta \approx 0\)</span>) has circumference <span class="math inline">\(2\pi\sin\theta \approx 2\pi\theta\)</span>, shrinking to zero at the pole. Distances on <span class="math inline">\(S^2\)</span> measured by <span class="math inline">\(g_{\text{round}}\)</span> are the great-circle distances — the arc lengths along great circles.</p>
+<p><strong>3. Hyperbolic metric on <span class="math inline">\(\mathbb{H}^n\)</span>.</strong> The upper half-space model <span class="math inline">\(\mathbb{H}^n = \{(x^1,\ldots,x^n) \in \mathbb{R}^n : x^n &gt; 0\}\)</span> carries the <strong>hyperbolic metric</strong>:</p>
+<p><span class="math display">\[g_{ij}(x) = \frac{\delta_{ij}}{(x^n)^2}, \quad ds^2 = \frac{(dx^1)^2 + \cdots + (dx^n)^2}{(x^n)^2}\]</span></p>
+<p>The metric scales the Euclidean metric by <span class="math inline">\(1/(x^n)^2\)</span> — distances are magnified near <span class="math inline">\(x^n = 0\)</span> (the boundary) and shrink to zero as <span class="math inline">\(x^n \to \infty\)</span>. Hyperbolic space has constant negative sectional curvature <span class="math inline">\(-1\)</span>, making it the canonical model of negatively curved geometry. It arises in machine learning as the natural embedding space for hierarchical data (trees and hierarchies embed isometrically in <span class="math inline">\(\mathbb{H}^n\)</span>) and in the Poincaré embeddings framework.</p>
+<p><strong>4. Pullback metric.</strong> If <span class="math inline">\(F: M \to (N, h)\)</span> is a smooth map and <span class="math inline">\((N,h)\)</span> is a Riemannian manifold, the <strong>pullback metric</strong> <span class="math inline">\(F^*h\)</span> on <span class="math inline">\(M\)</span> is defined by:</p>
+<p><span class="math display">\[(F^*h)_p(u,v) = h_{F(p)}(dF_p(u), dF_p(v)) \quad u,v \in T_pM\]</span></p>
+<p>The pullback metric is the metric induced on <span class="math inline">\(M\)</span> by measuring lengths using <span class="math inline">\(F\)</span> and <span class="math inline">\(h\)</span>. If <span class="math inline">\(F\)</span> is an embedding, <span class="math inline">\(F^*h\)</span> is the induced metric — the natural metric on a submanifold. The round metric on <span class="math inline">\(S^n\)</span> is the pullback of the Euclidean metric under the inclusion <span class="math inline">\(\iota: S^n \hookrightarrow \mathbb{R}^{n+1}\)</span>: <span class="math inline">\(g_{\text{round}} = \iota^* g_{\text{Euclidean}}\)</span>.</p>
+<hr>
+</section>
+<section id="the-fisher-information-metric" class="level3">
+<h3 class="anchored" data-anchor-id="the-fisher-information-metric">The Fisher Information Metric</h3>
+<p>Let <span class="math inline">\(\mathcal{M} = \{p_\theta : \theta \in \Theta \subseteq \mathbb{R}^d\}\)</span> be a smooth family of probability densities on <span class="math inline">\((\mathcal{X}, \mathcal{F}, \lambda)\)</span>, parameterized by <span class="math inline">\(\theta\)</span>. The statistical manifold <span class="math inline">\(\mathcal{M}\)</span> is a <span class="math inline">\(d\)</span>-dimensional smooth manifold. The <strong>Fisher information metric</strong> is the Riemannian metric <span class="math inline">\(g^F\)</span> on <span class="math inline">\(\mathcal{M}\)</span> with coefficients:</p>
+<p><span class="math display">\[g^F_{ij}(\theta) = \mathbb{E}_{p_\theta}\!\left[\frac{\partial \log p_\theta(X)}{\partial \theta^i} \frac{\partial \log p_\theta(X)}{\partial \theta^j}\right] = \int \frac{\partial \log p_\theta(x)}{\partial \theta^i} \frac{\partial \log p_\theta(x)}{\partial \theta^j} p_\theta(x) \, d\lambda(x)\]</span></p>
+<p>This is the <strong>Fisher information matrix</strong> <span class="math inline">\(I(\theta)\)</span>. It is symmetric and positive semidefinite by construction; it is positive definite (a valid Riemannian metric) under identifiability conditions.</p>
+<p><strong>Equivalent formulations.</strong> Using <span class="math inline">\(\frac{\partial \log p_\theta}{\partial \theta^i} = \frac{1}{p_\theta} \frac{\partial p_\theta}{\partial \theta^i}\)</span> and the fact that <span class="math inline">\(\int p_\theta \, d\lambda = 1\)</span> implies <span class="math inline">\(\int \frac{\partial p_\theta}{\partial \theta^i} \, d\lambda = 0\)</span>:</p>
+<p><span class="math display">\[g^F_{ij}(\theta) = -\mathbb{E}_{p_\theta}\!\left[\frac{\partial^2 \log p_\theta(X)}{\partial \theta^i \partial \theta^j}\right]\]</span></p>
+<p>The Fisher metric equals the negative expected Hessian of the log-likelihood — the curvature of the log-likelihood surface. Large curvature in a direction means small steps in that direction produce large likelihood changes — the distribution changes rapidly, meaning that direction is statistically informative and should receive large metric weight. Small curvature means the distribution changes slowly — that direction is statistically uninformative.</p>
+<p><strong>Reparameterization invariance.</strong> The Fisher metric is invariant under reparameterization: if <span class="math inline">\(\tilde\theta = \tau(\theta)\)</span> is a smooth bijection, the Fisher metrics in the two parameterizations are related by <span class="math inline">\(\tilde{g}^F = J_\tau^{-T} g^F J_\tau^{-1}\)</span> — exactly the transformation law for Riemannian metrics. This invariance is the precise statement that the Fisher metric measures intrinsic statistical geometry, not parameter-dependent geometry.</p>
+<p><strong>Cramér-Rao bound.</strong> For any unbiased estimator <span class="math inline">\(\hat\theta\)</span> of <span class="math inline">\(\theta\)</span> based on a single observation from <span class="math inline">\(p_\theta\)</span>:</p>
+<p><span class="math display">\[\text{Cov}(\hat\theta) \succeq I(\theta)^{-1} = (g^F(\theta))^{-1}\]</span></p>
+<p>The inverse Fisher metric bounds the covariance of any estimator — it is the minimum achievable variance. The Fisher metric determines the fundamental limits of statistical estimation.</p>
+<hr>
+</section>
+<section id="natural-gradient-descent" class="level3">
+<h3 class="anchored" data-anchor-id="natural-gradient-descent">Natural Gradient Descent</h3>
+<p>Standard gradient descent on a loss function <span class="math inline">\(\mathcal{L}(\theta)\)</span> uses the Euclidean metric on parameter space:</p>
+<p><span class="math display">\[\theta_{t+1} = \theta_t - \eta \nabla_\theta \mathcal{L}(\theta_t)\]</span></p>
+<p>The update direction <span class="math inline">\(\nabla_\theta \mathcal{L}\)</span> is the gradient in Euclidean space — the sharp map <span class="math inline">\((d\mathcal{L})^\sharp\)</span> with respect to the Euclidean metric <span class="math inline">\(g_{ij} = \delta_{ij}\)</span>.</p>
+<p><strong>Natural gradient descent</strong> replaces the Euclidean metric with the Fisher information metric:</p>
+<p><span class="math display">\[\theta_{t+1} = \theta_t - \eta I(\theta_t)^{-1} \nabla_\theta \mathcal{L}(\theta_t)\]</span></p>
+<p>The update direction <span class="math inline">\(I(\theta_t)^{-1} \nabla_\theta \mathcal{L}(\theta_t)\)</span> is the gradient with respect to the Fisher metric: <span class="math inline">\((d\mathcal{L})^\sharp\)</span> with respect to <span class="math inline">\(g^F\)</span>. In coordinates: <span class="math inline">\(\text{grad}_{g^F}(\mathcal{L})^i = \sum_j (g^F)^{ij} \frac{\partial \mathcal{L}}{\partial \theta^j} = \sum_j I(\theta)^{-1}_{ij} \frac{\partial \mathcal{L}}{\partial \theta^j}\)</span>.</p>
+<p>Natural gradient descent is reparameterization-invariant: changing the parameterization of the model does not change the update direction in distribution space. This invariance makes natural gradient faster and more robust than standard gradient descent, particularly for models where different parameter directions have very different statistical effects — as in deep neural networks and diffusion models.</p>
+<p><strong>Connection to KL divergence.</strong> The Fisher metric is the Hessian of the KL divergence at the diagonal:</p>
+<p><span class="math display">\[g^F_{ij}(\theta) = \frac{\partial^2}{\partial \epsilon^i \partial \epsilon^j}\bigg|_{\epsilon=0} D_{KL}(p_\theta \| p_{\theta+\epsilon})\]</span></p>
+<p>The Fisher metric measures how fast the KL divergence grows when you perturb the parameters — it is the local curvature of the KL divergence landscape. Natural gradient descent takes steps of constant KL divergence size, not constant Euclidean parameter size.</p>
+<hr>
+</section>
+<section id="the-levi-civita-connection-preview" class="level3">
+<h3 class="anchored" data-anchor-id="the-levi-civita-connection-preview">The Levi-Civita Connection — Preview</h3>
+<p>The Riemannian metric determines a unique <strong>connection</strong> on <span class="math inline">\(TM\)</span> — the <strong>Levi-Civita connection</strong> <span class="math inline">\(\nabla\)</span> — satisfying two conditions: compatibility with the metric (<span class="math inline">\(\nabla g = 0\)</span>) and torsion-freeness (<span class="math inline">\(\nabla_X Y - \nabla_Y X = [X,Y]\)</span>). The Levi-Civita connection is the tool for differentiating vector fields along curves on the manifold, and it is what defines the geodesic equation. We will encounter it explicitly in the next topic on geodesics.</p>
+<p>In coordinates, the Levi-Civita connection is determined by the <strong>Christoffel symbols</strong>:</p>
+<p><span class="math display">\[\Gamma^k_{ij} = \frac{1}{2}\sum_l g^{kl}\!\left(\frac{\partial g_{jl}}{\partial x^i} + \frac{\partial g_{il}}{\partial x^j} - \frac{\partial g_{ij}}{\partial x^l}\right)\]</span></p>
+<p>The Christoffel symbols encode how the coordinate basis vectors change as you move along the manifold — they measure the rate at which the metric coefficients vary. For the Euclidean metric, <span class="math inline">\(\frac{\partial g_{ij}}{\partial x^k} = 0\)</span> everywhere, so <span class="math inline">\(\Gamma^k_{ij} = 0\)</span> — the connection is flat, and there is no rotation of basis vectors as you move through space.</p>
+<hr>
+</section>
+<section id="why-this-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-matters">WHY THIS MATTERS</h3>
+<p>In MATH 103 (Linear Algebra), the Euclidean inner product <span class="math inline">\(\langle u,v\rangle = u^T v\)</span> is the Riemannian metric on <span class="math inline">\(\mathbb{R}^n\)</span> in the standard basis — the simplest Riemannian metric, with <span class="math inline">\(g_{ij} = \delta_{ij}\)</span> constant everywhere. Every inner product computation in MATH 103 — dot products, orthogonality, projections, Gram-Schmidt — was a Riemannian geometry computation in the flat metric. The general Riemannian metric <span class="math inline">\(g_{ij}(p)\)</span> is a position-dependent generalization: the inner product varies from point to point, reflecting the curvature of the manifold. In MATH 201 (Advanced Calculus), the arc length formula <span class="math inline">\(L = \int_a^b \|\gamma'(t)\|_2 \, dt\)</span> for a curve in <span class="math inline">\(\mathbb{R}^n\)</span> is the arc length formula for the Euclidean Riemannian metric. The gradient <span class="math inline">\(\nabla f\)</span> is the gradient vector field for the Euclidean metric — the sharp map of <span class="math inline">\(df\)</span> under <span class="math inline">\(g_{ij} = \delta_{ij}\)</span>. Every arc length computation in MATH 201 was an arc length computation on the Riemannian manifold <span class="math inline">\((\mathbb{R}^n, g_{\text{Euclidean}})\)</span>. In MATH 208 (Statistics and Probability), the Fisher information matrix <span class="math inline">\(I(\theta)\)</span> appeared as the inverse of the Cramér-Rao lower bound. It is now recognized as the metric tensor of the statistical manifold — the Riemannian metric that makes parameter space into a curved geometric object whose geometry reflects statistical distinguishability.</p>
+<hr>
+</section>
+</section>
+<section id="layer-3-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="layer-3-bridge">Layer 3 (Bridge)</h2>
+<p>Every element of the Langtang valley survey story has a precise mathematical address. Let us walk through them one by one, until the theodolite, the metric coefficients, the trekking route length, and the full formal apparatus are completely fused into a single picture.</p>
+<hr>
+<p><strong>The Langtang valley terrain — the curved two-dimensional surface being surveyed — is the smooth manifold <span class="math inline">\((M, g)\)</span>, now equipped with a Riemannian metric.</strong> The manifold <span class="math inline">\(M\)</span> existed before the metric: it was the smooth surface described by charts and atlases in Topic 1, the arena of tangent vectors and vector fields in Topic 2. But <span class="math inline">\(M\)</span> without a metric is a purely topological and differential object — it has shape but no scale. The Riemannian metric <span class="math inline">\(g\)</span> is the additional structure that gives the manifold both shape and measurement capability simultaneously. It is the metric that makes the valley a genuine geometric object — a space where questions like “how far?” and “at what angle?” have precise numerical answers.</p>
+<p><strong>The survey team’s theodolite and total station at each survey station — the equipment that measures angles and distances locally at each point — is the inner product <span class="math inline">\(g_p: T_pM \times T_pM \to \mathbb{R}\)</span> at the point <span class="math inline">\(p\)</span>.</strong> The equipment at Kyanjin Gompa measures angles and distances in the immediate vicinity of that station. It cannot measure distances to Lama Hotel directly — those require integrating along a path. But it can measure, with arbitrary precision, the angle between any two directions from the station and the length of any short displacement from the station. This local measurement capability is exactly what the inner product <span class="math inline">\(g_p\)</span> provides: given any two tangent vectors <span class="math inline">\(u, v \in T_pM\)</span>, it returns <span class="math inline">\(g_p(u,v)\)</span> — a real number encoding both lengths and angles through the formulas <span class="math inline">\(\|v\|_p = \sqrt{g_p(v,v)}\)</span> and <span class="math inline">\(\cos\theta = g_p(u,v)/(\|u\|_p\|v\|_p)\)</span>.</p>
+<p><strong>The three axioms of the inner product — symmetry, bilinearity, positive definiteness — are the three physical properties that the survey equipment implicitly satisfies.</strong> Symmetry <span class="math inline">\(g_p(u,v) = g_p(v,u)\)</span> is the fact that the angle from direction <span class="math inline">\(u\)</span> to direction <span class="math inline">\(v\)</span> equals the angle from <span class="math inline">\(v\)</span> to <span class="math inline">\(u\)</span> — the theodolite reads the same angle regardless of which direction you designate as first. Bilinearity is the fact that doubling a displacement doubles its measured length, and that the measurement is additive in each argument separately. Positive definiteness <span class="math inline">\(g_p(v,v) &gt; 0\)</span> for <span class="math inline">\(v \neq 0\)</span> is the fact that every nonzero displacement has positive length — the total station never measures a zero distance for a genuine movement in any direction. These three axioms are not mathematical impositions on the survey equipment — they are properties the equipment already has, made explicit.</p>
+<hr>
+<p><strong>The metric coefficients <span class="math inline">\(g_{ij}(p) = g_p(\partial/\partial x^i|_p, \partial/\partial x^j|_p)\)</span> — the three numbers <span class="math inline">\(g_{11}\)</span>, <span class="math inline">\(g_{12}\)</span>, <span class="math inline">\(g_{22}\)</span> encoding the inner product in the coordinate basis at <span class="math inline">\(p\)</span> — are the survey team’s calibration data at each station.</strong> The coordinate basis vectors <span class="math inline">\(\partial/\partial x^1|_p\)</span> and <span class="math inline">\(\partial/\partial x^2|_p\)</span> are the unit steps in the easting and northing directions of the topo map grid. The metric coefficient <span class="math inline">\(g_{11}(p)\)</span> is the squared length of the easting unit step at <span class="math inline">\(p\)</span> — how much actual terrain distance corresponds to one grid unit east. The coefficient <span class="math inline">\(g_{22}(p)\)</span> is the squared length of the northing unit step. The coefficient <span class="math inline">\(g_{12}(p)\)</span> is the inner product of the easting and northing unit steps — zero if the grid is orthogonal at <span class="math inline">\(p\)</span>, nonzero if the grid is skewed. In the flat valley floor, <span class="math inline">\(g_{11} \approx g_{22} \approx 1\)</span> and <span class="math inline">\(g_{12} \approx 0\)</span>: the grid is approximately orthogonal and the coordinate steps have approximately unit terrain length. On the steep ridge, <span class="math inline">\(g_{11}\)</span> and <span class="math inline">\(g_{22}\)</span> deviate significantly from 1 — the terrain distance corresponding to one grid unit is much larger than in the flat valley — and <span class="math inline">\(g_{12}\)</span> may be nonzero if the ridge runs diagonally across the grid.</p>
+<p><strong>The metric matrix <span class="math inline">\(G(p) = (g_{ij}(p))\)</span> being symmetric positive definite at every <span class="math inline">\(p\)</span> is the condition that the survey equipment is nondegenerate and consistent.</strong> Symmetry <span class="math inline">\(g_{ij} = g_{ji}\)</span> reflects the symmetry of the inner product. Positive definiteness means <span class="math inline">\(v^T G(p) v &gt; 0\)</span> for all nonzero <span class="math inline">\(v\)</span> — every nonzero displacement at <span class="math inline">\(p\)</span> has positive squared length. A degenerate metric (with <span class="math inline">\(G(p)\)</span> only positive semidefinite) would mean some nonzero direction has zero length — a physically impossible situation for a genuine two-dimensional terrain. The condition <span class="math inline">\(\det G(p) &gt; 0\)</span> — which follows from positive definiteness — is what makes the volume form <span class="math inline">\(\sqrt{\det G} \, dx^1 dx^2\)</span> well-defined and positive: the metric assigns positive area to every region of the terrain.</p>
+<p><strong>The transformation law <span class="math inline">\(\tilde{G} = J_\tau^{-T} G J_\tau^{-1}\)</span> under a change of coordinates is the statement that the terrain’s physical geometry is independent of which survey grid you use.</strong> If the guide company switches from easting-northing coordinates to a polar coordinate system centered at Kyanjin Gompa, the metric coefficients change — the matrix <span class="math inline">\(G(p)\)</span> looks different in the new chart. But the inner product <span class="math inline">\(g_p(u,v)\)</span> is the same geometric number regardless of which coordinate system expresses <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span>. The transformation law encodes exactly this chart-independence: it tells you how to convert <span class="math inline">\(G\)</span> from one chart to another so that the geometric content is preserved. Comparing <span class="math inline">\(g_{11}\)</span> values across different charts without applying the transformation law is meaningless — they refer to different coordinate directions and are not directly comparable.</p>
+<hr>
+<p><strong>The trekking route from Lama Hotel to Kyanjin Ri — the smooth curve <span class="math inline">\(\gamma: [0,1] \to M\)</span> — has a well-defined geometric length <span class="math inline">\(L(\gamma) = \int_0^1 \sqrt{g_{\gamma(t)}(\gamma'(t), \gamma'(t))} \, dt\)</span> given by the arc length formula.</strong> At each moment <span class="math inline">\(t\)</span>, the trekker is at position <span class="math inline">\(\gamma(t)\)</span> on the terrain with velocity <span class="math inline">\(\gamma'(t) \in T_{\gamma(t)}M\)</span>. The speed at time <span class="math inline">\(t\)</span> is <span class="math inline">\(\|\gamma'(t)\|_{\gamma(t)} = \sqrt{g_{\gamma(t)}(\gamma'(t), \gamma'(t))}\)</span> — the metric-induced length of the velocity vector at the current position. Integrating the speed over the entire journey gives the total route length. In the topo map coordinates, this is <span class="math inline">\(L(\gamma) = \int_0^1 \sqrt{\sum_{i,j} g_{ij}(\gamma(t)) \dot{x}^i(t) \dot{x}^j(t)} \, dt\)</span> — the metric coefficients weight the coordinate velocity components to produce the true terrain speed. The familiar arc length formula <span class="math inline">\(\int_a^b \|\gamma'(t)\|_2 \, dt\)</span> from MATH 201 is this formula with <span class="math inline">\(g_{ij} = \delta_{ij}\)</span> — the Euclidean metric. The Riemannian formula replaces the constant Euclidean inner product with the position-dependent metric <span class="math inline">\(g_{\gamma(t)}\)</span>, accounting for the terrain’s curvature.</p>
+<p><strong>The independence of <span class="math inline">\(L(\gamma)\)</span> from the parameterization is the physical fact that the trekking route’s length does not depend on how fast the trekker walks.</strong> A slow trekker covering the route in two hours and a fast trekker covering it in one hour trace the same geometric path and the same geometric length. The parameterization changes — the function <span class="math inline">\(\gamma\)</span> changes — but the image <span class="math inline">\(\gamma([0,1])\)</span> and the integral <span class="math inline">\(L(\gamma)\)</span> are the same. This is not a mathematical convenience — it is the physical requirement that length is a geometric property of the path, not a dynamical property of the motion along it.</p>
+<p><strong>The Riemannian distance <span class="math inline">\(d_g(p,q) = \inf_\gamma L(\gamma)\)</span> — the shortest route between Kyanjin Gompa and the glacier snout, measured along the terrain — is the Riemannian distance function.</strong> The infimum is over all smooth curves connecting the two points. The shortest curve — the one achieving the infimum — is the geodesic between <span class="math inline">\(p\)</span> and <span class="math inline">\(q\)</span>, the subject of the next topic. The Riemannian distance satisfies all the axioms of a metric space from Topic 1 of Chapter 1: positivity, symmetry, and the triangle inequality. The circle connecting Chapter 1 and Chapter 3 is now explicit: the metric space of Chapter 1 was always the Riemannian metric of Chapter 3, viewed at the level of the distance function rather than the inner product.</p>
+<hr>
+<p><strong>The direction of steepest ascent from any survey station — the gradient of the elevation function — is <span class="math inline">\(\text{grad}(f) = (df)^\sharp\)</span>, the sharp map converting the covector <span class="math inline">\(df\)</span> to the tangent vector <span class="math inline">\(\text{grad}(f)\)</span>.</strong> The exterior derivative <span class="math inline">\(df_p\)</span> is a covector: it acts on tangent vectors by <span class="math inline">\(df_p(v) = v(f)\)</span>, returning the rate of elevation change in the direction <span class="math inline">\(v\)</span>. But a covector is not a direction — it is a linear functional on directions. To convert it to a direction — the direction of steepest ascent — you need the Riemannian metric. The gradient vector <span class="math inline">\(\text{grad}(f)|_p\)</span> is the unique tangent vector satisfying <span class="math inline">\(g_p(\text{grad}(f)|_p, v) = df_p(v)\)</span> for all <span class="math inline">\(v\)</span>. In coordinates: <span class="math inline">\(\text{grad}(f)|_p = \sum_{i,j} g^{ij}(p) \frac{\partial f}{\partial x^j}|_p \frac{\partial}{\partial x^i}|_p\)</span>. The inverse metric <span class="math inline">\(g^{ij}\)</span> is the crucial ingredient: it converts the covector components <span class="math inline">\(\partial f/\partial x^j\)</span> into vector components. In the flat valley floor where <span class="math inline">\(g^{ij} \approx \delta^{ij}\)</span>, the gradient reduces to the familiar <span class="math inline">\(\nabla f\)</span> from MATH 201. On the steep ridge where <span class="math inline">\(g^{ij}\)</span> deviates from <span class="math inline">\(\delta^{ij}\)</span>, the gradient is rotated and rescaled by the inverse metric — the steepest direction in terrain geometry is not the same as the largest partial derivative in the coordinate grid.</p>
+<p><strong>The flat map <span class="math inline">\(v^\flat(u) = g_p(v,u)\)</span> and the sharp map <span class="math inline">\(\omega^\sharp\)</span> satisfying <span class="math inline">\(g_p(\omega^\sharp, u) = \omega(u)\)</span> are the surveyor’s conversion tools between directions and measurements.</strong> The flat map converts a tangent vector (a direction) into a covector (a measurement rule): <span class="math inline">\(v^\flat\)</span> is the rule that measures the component of any displacement in the direction of <span class="math inline">\(v\)</span>, using the metric to define the projection. The sharp map converts a covector (a measurement rule) into a tangent vector (a direction): <span class="math inline">\(\omega^\sharp\)</span> is the direction that maximizes <span class="math inline">\(\omega\)</span> per unit metric length. The gradient is the sharp map applied to the exterior derivative: <span class="math inline">\(\text{grad}(f) = (df)^\sharp\)</span> — the direction that maximizes the rate of elevation change per unit terrain distance. Without the metric, this conversion is impossible. The metric is the bridge between the world of directions (tangent vectors) and the world of measurements (covectors).</p>
+<hr>
+<p><strong>The round metric on <span class="math inline">\(S^2\)</span> in spherical coordinates — <span class="math inline">\(ds^2 = d\theta^2 + \sin^2\theta \, d\phi^2\)</span> with <span class="math inline">\(G = \text{diag}(1, \sin^2\theta)\)</span> — is the metric tensor for the Earth’s surface as a physical measuring instrument.</strong> The coefficient <span class="math inline">\(g_{\theta\theta} = 1\)</span> means that one radian of latitude subtends one radian of arc length along any meridian — moving north or south, one degree of latitude is one degree of arc regardless of where you are. The coefficient <span class="math inline">\(g_{\phi\phi} = \sin^2\theta\)</span> means that one radian of longitude subtends <span class="math inline">\(\sin\theta\)</span> radians of arc length along a parallel at colatitude <span class="math inline">\(\theta\)</span> — moving east or west, one degree of longitude corresponds to <span class="math inline">\(\cos(\text{latitude})\)</span> degrees of arc, shrinking to zero at the poles. The off-diagonal coefficient <span class="math inline">\(g_{\theta\phi} = 0\)</span> means latitude and longitude directions are orthogonal everywhere. In the Langtang valley at latitude <span class="math inline">\(\theta \approx 28°\)</span> north (<span class="math inline">\(\theta \approx 62°\)</span> colatitude in spherical convention), <span class="math inline">\(\sin\theta \approx 0.88\)</span>, so one degree of longitude corresponds to approximately <span class="math inline">\(0.88\)</span> degrees of arc length — a nontrivial correction that a flat Euclidean model would miss.</p>
+<p><strong>The Fisher information metric <span class="math inline">\(g^F_{ij}(\theta) = \mathbb{E}_{p_\theta}[\frac{\partial \log p_\theta}{\partial \theta^i} \frac{\partial \log p_\theta}{\partial \theta^j}]\)</span> is the survey equipment applied to the statistical manifold — measuring the angle and distance between probability distributions.</strong> The statistical manifold’s points are probability distributions <span class="math inline">\(p_\theta\)</span>. Its tangent vectors at <span class="math inline">\(p_\theta\)</span> are directions of perturbation — infinitesimal changes <span class="math inline">\(\dot\theta\)</span> in the parameters. The Fisher metric assigns to each perturbation direction <span class="math inline">\(\dot\theta\)</span> the length <span class="math inline">\(\|\dot\theta\|_{g^F} = \sqrt{\dot\theta^T I(\theta) \dot\theta}\)</span> — the statistical distinguishability of the perturbation, measured by how much the log-likelihood changes. A perturbation that changes the distribution a lot (large score function inner product) has large metric length. A perturbation that barely changes the distribution (flat log-likelihood) has small metric length. The Fisher metric is the Riemannian metric that makes statistical distinguishability into a geometric distance.</p>
+<p><strong>The break moment — the Euclidean metric being wrong for the statistical manifold — is made precise by the reparameterization invariance of the Fisher metric.</strong> Two Gaussian parameterizations — one in terms of mean and variance <span class="math inline">\((\mu, \sigma^2)\)</span>, another in terms of mean and log-variance <span class="math inline">\((\mu, \log\sigma^2)\)</span> — represent the same statistical manifold with the same distributions at the same geometric points. The Euclidean metric on parameter space gives different distances depending on which parameterization you use: the Euclidean distance between <span class="math inline">\((\mu, \sigma^2)\)</span> and <span class="math inline">\((\mu, \sigma^2 + 0.01)\)</span> is <span class="math inline">\(0.01\)</span>, but the Euclidean distance between <span class="math inline">\((\mu, \log\sigma^2)\)</span> and <span class="math inline">\((\mu, \log\sigma^2 + 0.01/(sigma^2))\)</span> is <span class="math inline">\(0.01/\sigma^2\)</span>, which depends on <span class="math inline">\(\sigma^2\)</span>. The Fisher metric gives the same distance regardless of parameterization — it measures the intrinsic statistical geometry, not the coordinate-dependent Euclidean geometry. This is the formal content of the Fisher metric’s reparameterization invariance: <span class="math inline">\(\tilde{g}^F = J_\tau^{-T} g^F J_\tau^{-1}\)</span>, the transformation law that makes the metric coordinate-independent.</p>
+<p><strong>Natural gradient descent — <span class="math inline">\(\theta_{t+1} = \theta_t - \eta I(\theta_t)^{-1} \nabla_\theta \mathcal{L}(\theta_t)\)</span> — is gradient descent on the statistical manifold using the Fisher metric rather than the Euclidean metric.</strong> The standard gradient <span class="math inline">\(\nabla_\theta \mathcal{L}\)</span> is the exterior derivative <span class="math inline">\(d\mathcal{L}\)</span> — a covector in the cotangent space of the parameter manifold. Converting it to a tangent vector — the gradient vector field <span class="math inline">\(\text{grad}_{g^F}(\mathcal{L})\)</span> — using the Euclidean metric gives <span class="math inline">\(\nabla_\theta \mathcal{L}\)</span> directly. Converting it using the Fisher metric gives <span class="math inline">\(I(\theta)^{-1} \nabla_\theta \mathcal{L}\)</span> — the natural gradient. The natural gradient is the direction of steepest descent in the Fisher metric geometry — the direction that decreases the loss most rapidly per unit of KL divergence from the current distribution. This is why natural gradient converges faster: it takes steps proportional to statistical change rather than parameter change, avoiding the spurious metric dependence that makes standard gradient descent slow when the statistical geometry is highly curved.</p>
+<hr>
+<p><strong>The connection to MATH 103 (Linear Algebra) is now total and explicit.</strong> Every inner product computation in MATH 103 — the dot product <span class="math inline">\(u \cdot v = u^T v\)</span>, the Gram matrix <span class="math inline">\(G_{ij} = \langle e_i, e_j\rangle\)</span>, the orthogonality condition <span class="math inline">\(u \cdot v = 0\)</span>, the projection formula <span class="math inline">\(\hat{u} = (u \cdot v/\|v\|^2)v\)</span> — was Riemannian geometry on <span class="math inline">\(\mathbb{R}^n\)</span> with the Euclidean metric <span class="math inline">\(g_{ij} = \delta_{ij}\)</span>. The Gram-Schmidt orthogonalization process is the construction of an orthonormal basis for <span class="math inline">\(T_p\mathbb{R}^n\)</span> using the Euclidean inner product — a flat-space version of the same process that constructs orthonormal frames on Riemannian manifolds. The matrix of the inner product in a non-standard basis — <span class="math inline">\(G_{ij} = \langle e_i, e_j\rangle\)</span> — is the metric matrix <span class="math inline">\(g_{ij}\)</span> in the basis <span class="math inline">\(\{e_i\}\)</span>. The change-of-basis formula for the Gram matrix — <span class="math inline">\(\tilde{G} = P^T G P\)</span> for a change-of-basis matrix <span class="math inline">\(P\)</span> — is the metric transformation law <span class="math inline">\(\tilde{G} = J_\tau^{-T} G J_\tau^{-1}\)</span> with <span class="math inline">\(J_\tau = P^{-1}\)</span>.</p>
+<p><strong>The connection to MATH 201 (Advanced Calculus) closes through the arc length formula and the gradient.</strong> The arc length formula <span class="math inline">\(L = \int_a^b \|\gamma'(t)\|_2 \, dt\)</span> from MATH 201 is the Riemannian arc length formula with <span class="math inline">\(g_{ij} = \delta_{ij}\)</span>. The gradient <span class="math inline">\(\nabla f\)</span> from MATH 201 is the sharp map <span class="math inline">\((df)^\sharp\)</span> with respect to the Euclidean metric — the conversion from the covector <span class="math inline">\(df\)</span> to the tangent vector <span class="math inline">\(\nabla f\)</span> using <span class="math inline">\(g^{ij} = \delta^{ij}\)</span>. The directional derivative formula <span class="math inline">\(D_v f = \nabla f \cdot v\)</span> from MATH 201 is the identity <span class="math inline">\(g_p(\text{grad}(f)|_p, v) = df_p(v)\)</span> — the defining property of the gradient, now recognized as the musical isomorphism condition. Every gradient computation, every directional derivative, every arc length integral in MATH 201 was Riemannian geometry on the flat manifold <span class="math inline">\(\mathbb{R}^n\)</span>.</p>
+<p><strong>The connection to MATH 208 (Statistics and Probability) closes through the Fisher information matrix.</strong> The Fisher information matrix <span class="math inline">\(I(\theta) = \mathbb{E}_{p_\theta}[\nabla_\theta \log p_\theta \cdot \nabla_\theta \log p_\theta^T]\)</span> that appeared in MATH 208 as the inverse of the Cramér-Rao bound is now recognized as the Riemannian metric tensor of the statistical manifold. The Cramér-Rao bound <span class="math inline">\(\text{Cov}(\hat\theta) \succeq I(\theta)^{-1}\)</span> is the statement that the inverse Fisher metric provides a lower bound on the covariance of any estimator — the metric geometry of the statistical manifold limits what any estimation procedure can achieve. The MLE’s asymptotic efficiency — the fact that the MLE achieves the Cramér-Rao bound — is the statement that the MLE is the geodesic-following estimator on the statistical manifold in the Fisher metric geometry.</p>
+<hr>
+<p><strong>Looking forward across the roadmap</strong>, the Riemannian metric is the measurement tool of every phase. In Phase 1, the Wasserstein-2 distance <span class="math inline">\(W_2(\mu,\nu)\)</span> is the Riemannian distance on the Wasserstein manifold equipped with the <span class="math inline">\(L^2\)</span> metric on tangent vectors — transport plans are geodesics in this metric, and the geodesic length is <span class="math inline">\(W_2\)</span>. The JKO scheme performs gradient descent in the Wasserstein metric — gradient descent using the Riemannian gradient in the Fisher-like metric on distribution space. In Phase 2, the equivariance conditions of graph neural networks are conditions on the isometry group of the data manifold’s Riemannian metric — transformations that preserve metric distances. The graph Laplacian eigenmaps use the graph’s combinatorial metric as an approximation to the data manifold’s Riemannian metric, and the eigenmaps are the harmonic maps — energy-minimizing maps — with respect to this metric. In Phase 3, the flow matching loss <span class="math inline">\(\mathbb{E}[\|F_\theta(x,t) - \dot{x}(t)\|_{T_xM}^2]\)</span> uses the Riemannian metric <span class="math inline">\(g_x\)</span> to measure the discrepancy between the learned and true velocity fields at each trajectory point. For data on the sphere — protein orientations, directional data — the correct metric is the round metric <span class="math inline">\(g_{\text{round}}\)</span>, not the Euclidean metric of the ambient <span class="math inline">\(\mathbb{R}^3\)</span>. Riemannian flow matching on the sphere uses geodesics of the round metric as the reference trajectories, and the flow matching loss is evaluated in the round metric’s tangent space norm. The Riemannian metric is not a mathematical decoration — it is the measurement instrument that makes every geometric computation in the roadmap quantitatively correct.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

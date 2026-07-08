@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>weisfeiler_lehman – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#topic-3---the-weisfeiler-lehman-isomorphism-test-the-theoretical-limits-of-gnn-expressive-power" id="toc-topic-3---the-weisfeiler-lehman-isomorphism-test-the-theoretical-limits-of-gnn-expressive-power" class="nav-link active" data-scroll-target="#topic-3---the-weisfeiler-lehman-isomorphism-test-the-theoretical-limits-of-gnn-expressive-power">Topic 3 - The Weisfeiler-Lehman Isomorphism Test: The Theoretical Limits of GNN Expressive Power</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#layer-1-story" id="toc-layer-1-story" class="nav-link" data-scroll-target="#layer-1-story">Layer 1 (Story)</a></li>
+  <li><a href="#layer-2-mathematics" id="toc-layer-2-mathematics" class="nav-link" data-scroll-target="#layer-2-mathematics">Layer 2 (Mathematics)</a></li>
+  <li><a href="#layer-3-bridge" id="toc-layer-3-bridge" class="nav-link" data-scroll-target="#layer-3-bridge">Layer 3 (Bridge)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<section id="topic-3---the-weisfeiler-lehman-isomorphism-test-the-theoretical-limits-of-gnn-expressive-power" class="level1">
+<h1>Topic 3 - The Weisfeiler-Lehman Isomorphism Test: The Theoretical Limits of GNN Expressive Power</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>Topic 1 gave you the operational engine of graph neural networks — the message passing framework, derived from first principles as the unique <span class="math inline">\(S_n\)</span>-equivariant architecture respecting sparse local graph structure. Topic 2 gave you the spectral foundation beneath it — the graph Fourier transform, the ChebNet polynomial approximation, and the GCN as a first-order low-pass filter derived from the Laplace-Beltrami operator. Both topics built upward: here is what GNNs can do, here is why they work, here is the mathematical machinery that makes them principled.</p>
+<p>Topic 3 turns the question around. Not what can GNNs do — but what can they not do? Not how do they work — but where do they fail, and why, and with what mathematical precision can we characterize the boundary?</p>
+<p>Every powerful tool has a fundamental limit. The Fourier transform cannot localize a signal simultaneously in time and frequency — the Heisenberg uncertainty principle is the precise quantification of that limit. The Turing machine cannot decide its own halting problem — Rice’s theorem is the precise quantification of that limit. The message passing GNN cannot distinguish certain pairs of non-isomorphic graphs — the Weisfeiler-Lehman test is the precise quantification of that limit. In each case, the limit is not a failure of engineering. It is a structural theorem about what the computational model can represent, proved mathematically and not escapable by clever implementation.</p>
+<p>The Weisfeiler-Lehman test is a classical algorithm from combinatorics, developed in 1968 by Boris Weisfeiler and Andrei Lehman as a heuristic for the graph isomorphism problem — the computational problem of deciding whether two graphs are structurally identical up to node relabeling. The test works iteratively: assign initial color labels to nodes based on their features, then repeatedly update each node’s color by hashing together its current color and the multiset of its neighbors’ colors. If at any iteration the two graphs produce different color histograms, they are declared non-isomorphic. If the color histograms stabilize to the same distribution, the test declares the graphs potentially isomorphic — it cannot confirm isomorphism, only rule it out.</p>
+<p>The connection between this 1968 combinatorics algorithm and modern deep learning was established in 2019 by Xu, Hu, Leskovec, and Jegelka in the paper “How Powerful are Graph Neural Networks?” The central theorem of that paper is precise and bilateral: any message-passing GNN is at most as powerful as the WL test at distinguishing non-isomorphic graphs, and there exists a specific GNN — the Graph Isomorphism Network, which you already met in Topic 1 — that achieves exactly that power. The WL test is simultaneously the ceiling and the target of message-passing expressiveness.</p>
+<p>Understanding this theorem requires understanding three things in sequence, which are the three components of this topic.</p>
+<p>The first component is the <strong>Weisfeiler-Lehman test itself</strong> — its algorithmic definition, its execution on concrete graphs, and the precise class of graphs it cannot distinguish. The WL test is not an abstraction invented for the purpose of analyzing GNNs. It is a concrete, executable algorithm with a specific computational history and a well-studied failure mode: there exist pairs of non-isomorphic graphs — graphs with genuinely different structure — that the WL test assigns identical color histograms to, and therefore cannot tell apart. The most important such pair is the class of regular graphs — graphs where every node has the same degree — where the WL test collapses to comparing degree sequences and cannot detect any structural differences among graphs with the same degree sequence. Understanding which graphs fool the WL test is equivalent to understanding which graph structures are invisible to any message-passing GNN.</p>
+<p>The second component is the <strong>equivalence theorem</strong> — the precise statement and proof that any message-passing GNN is at most as powerful as the WL test, and that GIN achieves exactly WL power. The proof of the upper bound — that GNNs cannot exceed WL — proceeds by showing that two nodes receiving identical WL colorings at every iteration will also receive identical feature vectors from any message-passing GNN at every layer. The proof of the lower bound — that GIN achieves WL — proceeds by showing that GIN’s injective aggregation (sum over neighborhood features, applied through a universal function approximator) exactly simulates the WL color refinement procedure. Together, the two bounds give the tight characterization: message-passing GNNs occupy exactly the WL complexity class, no more and no less.</p>
+<p>The third component is the <strong>hierarchy beyond WL</strong> — the <span class="math inline">\(k\)</span>-dimensional WL test, higher-order GNNs, and the open landscape of expressiveness beyond the standard message-passing paradigm. The 1-WL test, which is what is usually meant by the WL test, has a natural generalization: the <span class="math inline">\(k\)</span>-WL test colors <span class="math inline">\(k\)</span>-tuples of nodes rather than individual nodes, with dramatically increased distinguishing power. The 3-WL test can distinguish any pair of graphs that the 1-WL test cannot, and so on up the hierarchy. The architectural counterpart — the <span class="math inline">\(k\)</span>-order invariant graph network — achieves <span class="math inline">\(k\)</span>-WL power, at the cost of <span class="math inline">\(O(n^k)\)</span> computational complexity. Understanding the WL hierarchy gives you the complete map of the expressiveness landscape: where standard message-passing GNNs sit, what lies above them, and what the computational cost of climbing the hierarchy is.</p>
+<p>The connection to your curriculum here runs through two courses simultaneously, and the connection is deeper than usual.</p>
+<p>From your COMP 323 course on Graph Theory, you already know the graph isomorphism problem — the question of whether two graphs are structurally identical. You know that graph isomorphism is in NP but not known to be NP-complete, placing it in the rare and mysterious complexity class of problems that might be intermediate between P and NP-complete. The WL test is one of the classical polynomial-time heuristics for graph isomorphism — it solves the problem correctly for almost all graphs (the fraction of <span class="math inline">\(n\)</span>-node graphs it fails on shrinks to zero as <span class="math inline">\(n\)</span> grows) but fails on specific structured families. The GNN expressiveness result connects this classical combinatorics question directly to the representational capacity of neural networks — a connection that would have seemed surprising in 1968 but is, in retrospect, the inevitable consequence of the fact that GNNs are <span class="math inline">\(S_n\)</span>-equivariant functions on graphs, and <span class="math inline">\(S_n\)</span>-equivariant functions on graphs must respect the same structural distinctions that the WL test makes.</p>
+<p>From your MCSC 201 course on Discrete Structures, you know the counting arguments that characterize the distinguishing power of color refinement algorithms — the combinatorics of multisets, the pigeonhole principle applied to color classes, and the recursive structure of tree-like computation. The WL test is precisely a color refinement algorithm, and its analysis uses exactly the discrete mathematics tools from that course: injectivity of multiset functions, the relationship between tree unfoldings of graphs and WL colorings, and the counting of equivalence classes under the WL refinement.</p>
+<p>By the end of this topic, the Weisfeiler-Lehman test will feel not like an obscure combinatorics algorithm imported into machine learning from a 1968 paper, but like the inevitable theoretical boundary that the architecture of message-passing GNNs draws around itself. You will be able to look at any two graphs and determine, in principle, whether any message-passing GNN can distinguish them. You will understand exactly which structural properties of graphs are invisible to local neighborhood aggregation — and therefore which tasks require going beyond the standard GNN framework to higher-order architectures. The WL test is the mirror that shows message-passing GNNs their own reflection — and the reflection reveals both what they are and, precisely, what they are not.</p>
+<hr>
+</section>
+<section id="layer-1-story" class="level2">
+<h2 class="anchored" data-anchor-id="layer-1-story">Layer 1 (Story)</h2>
+<p>It is 2005. The Government of Nepal has launched a national census of mountain villages across the Himalayan districts. The census bureau in Kathmandu has hired two independent teams — Team A and Team B — to survey the same set of districts and produce structural reports on the village networks. Each team travels to the villages, maps the connections between them, records local features, and returns with a graph describing the social and geographic structure of the region.</p>
+<p>The bureau chief receives two reports. Each report is a graph: nodes are villages, edges are roads connecting them, and each node carries a label describing the village type — agricultural, trading, or administrative. The bureau chief’s question is simple: did the two teams survey the same network, or are these two genuinely different networks that merely look similar at first glance?</p>
+<p>This is the graph isomorphism problem. Not a machine learning problem. Not a neural network problem. A pure structural question: are these two graphs, possibly with different node numberings, actually the same graph up to relabeling?</p>
+<hr>
+<p><strong>Why isomorphism is hard.</strong></p>
+<p>The bureau chief tries the obvious approach: compare the two graphs directly. Graph A has twelve villages and fifteen roads. Graph B also has twelve villages and fifteen roads. Same size, same number of connections. Possibly the same graph — but possibly not. Two graphs can have the same number of nodes and edges and still be structurally different.</p>
+<p>The chief tries harder: compare the degree sequences. In Graph A, three villages have degree two (two roads each), six have degree three, and three have degree four. Graph B has exactly the same degree sequence. Still possibly the same graph — but a degree sequence comparison cannot distinguish graphs with the same degree profile but different connection patterns.</p>
+<p>The chief considers the exhaustive approach: try all possible bijections between the twelve villages of Graph A and the twelve villages of Graph B, checking whether any bijection makes the adjacency matrices match. There are <span class="math inline">\(12! = 479{,}001{,}600\)</span> possible bijections. At one check per microsecond, this would take nearly eight minutes — for twelve villages. For a network of a thousand villages, <span class="math inline">\(1000!\)</span> is a number with over two thousand digits. Exhaustive search is computationally dead.</p>
+<p>The bureau chief needs a heuristic — a practical procedure that can efficiently rule out the possibility that two graphs are the same, even if it cannot always confirm they are the same.</p>
+<hr>
+<p><strong>The census fieldworker’s insight: iterative neighborhood coloring.</strong></p>
+<p>A young fieldworker on Team A proposes a clever procedure. Instead of comparing the graphs globally, compare them locally and iteratively. Assign each village an initial color based only on its own label — agricultural, trading, or administrative. Now, repeatedly refine the colors: at each round, a village’s new color is determined by its current color and the multiset of its neighbors’ current colors. Two villages in the same graph, or across the two graphs, receive the same color at round <span class="math inline">\(k\)</span> if and only if their entire <span class="math inline">\(k\)</span>-hop neighborhood structure looks identical.</p>
+<p>The fieldworker calls this the color refinement procedure. After enough rounds, the color histogram of Graph A — how many villages of each color there are — is compared to the color histogram of Graph B. If the histograms ever differ, the two graphs are definitively different: no relabeling of one graph can produce the other. If the histograms stabilize to the same distribution, the two graphs might be the same — or they might not be, but the procedure cannot tell the difference.</p>
+<p>This is the Weisfeiler-Lehman test. Let us watch it execute on a concrete example.</p>
+<hr>
+<p><strong>Round Zero: Initial coloring by village type.</strong></p>
+<p>The two graphs each have four villages for simplicity. In Graph A: village 1 is a trading post (color T), village 2 is agricultural (color A), village 3 is agricultural (color A), village 4 is a trading post (color T). The edges are: 1-2, 2-3, 3-4, and 4-1 — a four-cycle with alternating village types.</p>
+<p>In Graph B: village 1 is a trading post (color T), village 2 is a trading post (color T), village 3 is agricultural (color A), village 4 is agricultural (color A). The edges are: 1-3, 3-2, 2-4, and 4-1 — also a four-cycle, but the village types are arranged differently.</p>
+<p>Initial color histograms: both graphs have two T-colored villages and two A-colored villages. The histograms match at Round Zero.</p>
+<p><strong>Round One: Refine by neighborhood multisets.</strong></p>
+<p>In Graph A, village 1 (color T) has neighbors village 2 (A) and village 4 (T). Its neighborhood multiset is <span class="math inline">\(\{A, T\}\)</span>. Village 2 (color A) has neighbors village 1 (T) and village 3 (A). Its neighborhood multiset is <span class="math inline">\(\{T, A\} = \{A, T\}\)</span>. Village 3 (color A) has neighbors village 2 (A) and village 4 (T). Its neighborhood multiset is <span class="math inline">\(\{A, T\}\)</span>. Village 4 (color T) has neighbors village 3 (A) and village 1 (T). Its neighborhood multiset is <span class="math inline">\(\{A, T\}\)</span>.</p>
+<p>Every village in Graph A has the same neighborhood multiset <span class="math inline">\(\{A, T\}\)</span>, so after Round One, every village receives the same new color — call it color <span class="math inline">\(c_1\)</span> derived from the hash of (current color, <span class="math inline">\(\{A, T\}\)</span>). But wait: village 1 has current color T and multiset <span class="math inline">\(\{A, T\}\)</span>, while village 2 has current color A and multiset <span class="math inline">\(\{A, T\}\)</span>. The new color is the hash of the pair (current color, neighborhood multiset), so T-villages get a different new color than A-villages even if their neighborhood multisets are the same. Village 1 gets new color <span class="math inline">\(\text{hash}(T, \{A,T\})\)</span> and village 2 gets new color <span class="math inline">\(\text{hash}(A, \{A,T\})\)</span>.</p>
+<p>After Round One in Graph A: villages 1 and 4 (originally T) both get new color <span class="math inline">\(c_T = \text{hash}(T, \{A,T\})\)</span>. Villages 2 and 3 (originally A) both get new color <span class="math inline">\(c_A = \text{hash}(A, \{A,T\})\)</span>. Color histogram: two villages with color <span class="math inline">\(c_T\)</span>, two with color <span class="math inline">\(c_A\)</span>.</p>
+<p>In Graph B, village 1 (T) has neighbors village 3 (A) and village 4 (A). Neighborhood multiset: <span class="math inline">\(\{A, A\}\)</span>. Village 2 (T) has neighbors village 3 (A) and village 4 (A). Neighborhood multiset: <span class="math inline">\(\{A, A\}\)</span>. Village 3 (A) has neighbors village 1 (T) and village 2 (T). Neighborhood multiset: <span class="math inline">\(\{T, T\}\)</span>. Village 4 (A) has neighbors village 1 (T) and village 2 (T). Neighborhood multiset: <span class="math inline">\(\{T, T\}\)</span>.</p>
+<p>After Round One in Graph B: villages 1 and 2 (originally T) get new color <span class="math inline">\(\text{hash}(T, \{A,A\})\)</span>. Villages 3 and 4 (originally A) get new color <span class="math inline">\(\text{hash}(A, \{T,T\})\)</span>.</p>
+<p>Now compare the histograms. Graph A has colors <span class="math inline">\(\{c_T, c_A, c_A, c_T\}\)</span> where <span class="math inline">\(c_T = \text{hash}(T, \{A,T\})\)</span> and <span class="math inline">\(c_A = \text{hash}(A, \{A,T\})\)</span>. Graph B has colors <span class="math inline">\(\{\text{hash}(T,\{A,A\}), \text{hash}(T,\{A,A\}), \text{hash}(A,\{T,T\}), \text{hash}(A,\{T,T\})\}\)</span>. Since <span class="math inline">\(\{A,T\} \neq \{A,A\}\)</span> and <span class="math inline">\(\{A,T\} \neq \{T,T\}\)</span>, the new colors in Graph A and Graph B are completely different. The histograms do not match. The WL test has successfully distinguished these two graphs after one round — they are definitively non-isomorphic.</p>
+<hr>
+<p><strong>When the WL test succeeds: the typical case.</strong></p>
+<p>In the vast majority of real-world graphs — sparse random graphs, molecular graphs, social networks — the WL color refinement converges to a stable coloring within a small number of rounds, and the final color histogram correctly identifies whether the two graphs are isomorphic. The WL test is fast: each round costs <span class="math inline">\(O(n + m)\)</span> time (one pass over all nodes and edges), and convergence typically happens within <span class="math inline">\(O(n)\)</span> rounds. For almost all graphs, it is correct.</p>
+<p>The bureau chief uses the WL test throughout the census. Two village networks that differ in any local structural property — degree sequence, triangle count, cycle lengths, neighborhood diversity — will be caught by the WL test within a small number of rounds. The test becomes the standard tool for checking whether two submitted reports describe the same or different networks.</p>
+<hr>
+<p><strong>The failure case: when the WL test goes blind.</strong></p>
+<p>Several months into the census, a peculiar pair of graphs arrives at the bureau. Both describe networks of six villages. Both have the same number of roads. Both have every village connected to exactly three other villages — every village is a degree-three node. The bureau chief runs the WL test.</p>
+<p>Round Zero: all villages receive the same initial color, because all villages have the same type — let us say all are trading posts. Color histogram: six villages, all color T. Both graphs: identical histograms.</p>
+<p>Round One: every village has current color T and three neighbors, all of color T. Every village in both graphs has neighborhood multiset <span class="math inline">\(\{T, T, T\}\)</span>. Every village in both graphs receives the new color <span class="math inline">\(\text{hash}(T, \{T,T,T\})\)</span>. Color histograms: both graphs have six villages of the same new color. Still identical.</p>
+<p>Round Two: every village now has color <span class="math inline">\(\text{hash}(T, \{T,T,T\})\)</span> and three neighbors, all with the same color. Every village in both graphs has the same neighborhood multiset. Every village receives the same new color. The coloring has stabilized — no further refinement is possible.</p>
+<p>The WL test declares the two graphs potentially isomorphic. But the bureau chief, suspicious, draws them out carefully. Graph A is the utility graph <span class="math inline">\(K_{3,3}\)</span> — six villages split into two groups of three, with every village in the first group connected to every village in the second group, and no connections within a group. Graph B is the prism graph — two triangles (three-cycles) connected by three parallel edges, one edge between corresponding vertices of the two triangles.</p>
+<p>These two graphs are genuinely, structurally different. <span class="math inline">\(K_{3,3}\)</span> is bipartite — its villages can be two-colored with no two same-colored villages sharing a road. The prism graph is not bipartite — it contains odd cycles. They have completely different topological properties. But the WL test cannot see the difference, because the WL test only looks at rooted neighborhoods, and every node in both graphs has a locally identical rooted neighborhood up to any finite depth. The test has gone blind.</p>
+<hr>
+<p><strong>Why the WL test goes blind: the rooted tree unfolding argument.</strong></p>
+<p>Here is the precise reason. The WL test, at round <span class="math inline">\(k\)</span>, assigns each node a color that encodes its entire <span class="math inline">\(k\)</span>-hop rooted neighborhood — the subgraph seen by a depth-<span class="math inline">\(k\)</span> BFS tree rooted at that node. Two nodes receive the same color at round <span class="math inline">\(k\)</span> if and only if their depth-<span class="math inline">\(k\)</span> BFS trees are isomorphic as rooted labeled trees.</p>
+<p>For the <span class="math inline">\(K_{3,3}\)</span> and prism graph example: root any node in <span class="math inline">\(K_{3,3}\)</span>. The depth-1 neighborhood is three nodes, all of the same color. The depth-2 neighborhood adds the two remaining nodes in the same partition — each of the three depth-1 nodes is connected to both. The depth-3 neighborhood cycles back to the root’s partition. Now root any node in the prism graph and trace the same BFS tree. At every depth, the rooted neighborhood structure is identical — the same number of nodes at each level, the same connection pattern between levels — because both graphs are 3-regular with the same girth properties at the local level. The WL test cannot see the global topology — it can only see local trees, and locally these two graphs look the same.</p>
+<p>This is the fundamental limitation. The WL test is a local test. It sees trees, not cycles. It sees neighborhoods, not global structure. It cannot detect: whether a graph is bipartite, how many triangles a graph contains, whether a graph is planar, the length of the shortest odd cycle, or any other property that requires global structural information. These invisible properties define the boundary of what any message-passing GNN can compute — because, as the equivalence theorem will show, any message-passing GNN is exactly as blind as the WL test.</p>
+<hr>
+<p><strong>The connection to message passing: the census fieldworker sees the parallel.</strong></p>
+<p>The young fieldworker who proposed the color refinement procedure looks at the message passing framework from Topic 1 and immediately recognizes what she has built.</p>
+<p>In Round <span class="math inline">\(k\)</span> of the WL test, each village computes its new color by hashing its current color with the multiset of its neighbors’ current colors. In Layer <span class="math inline">\(k\)</span> of a message passing GNN, each node computes its new feature vector by aggregating its neighbors’ current feature vectors and updating with its own current feature. The procedures are structurally identical: both propagate information one hop per round, both combine a node’s own information with an aggregated summary of its neighborhood, both produce a representation that encodes the entire <span class="math inline">\(k\)</span>-hop rooted neighborhood after <span class="math inline">\(k\)</span> rounds.</p>
+<p>The difference is in the representation: the WL test uses discrete color labels (from a hash function), while the GNN uses continuous feature vectors (from learned neural network functions). The WL test’s hash function is injective by design — distinct inputs always produce distinct outputs, guaranteed. The GNN’s aggregation function may or may not be injective, depending on the specific choice of message, aggregation, and update functions. If the GNN’s aggregation is injective — if distinct neighborhood multisets always produce distinct aggregated features — then the GNN is at least as powerful as the WL test at distinguishing nodes. If the aggregation is not injective — if two different neighborhood multisets can produce the same aggregated feature — then the GNN is strictly weaker than the WL test.</p>
+<p>This is the key insight of the 2019 theorem: the expressive power of a message-passing GNN is determined entirely by whether its aggregation function is injective on neighborhood multisets. Sum aggregation with a universal function approximator is injective — it is GIN, and it achieves exactly WL power. Mean aggregation is not injective — it collapses neighborhoods of different sizes with the same element-wise average to the same representation. Max aggregation is not injective — it collapses neighborhoods with the same maximum but different lower elements. The break moment from Topic 1’s aggregation discussion is now revealed to be not just a practical concern about counting neighbors, but the precise point at which a GNN either reaches or falls below the WL ceiling.</p>
+<hr>
+<p><strong>What lies above the WL ceiling: the higher-order census.</strong></p>
+<p>The bureau chief, frustrated by the WL test’s blindness to global structure, commissions a more powerful census procedure. Instead of assigning colors to individual villages, assign colors to pairs of villages — every ordered pair <span class="math inline">\((i, j)\)</span> receives a color encoding the local structure around that pair. Then refine: update each pair’s color based on the multisets of colors of pairs sharing a village with it. This is the 2-dimensional WL test, or 2-WL. It is strictly more powerful than 1-WL: pairs of graphs that fool 1-WL can often be distinguished by 2-WL, because pair colorings encode edge-level structural information that node colorings cannot see.</p>
+<p>The 3-WL test colors triples of villages. The <span class="math inline">\(k\)</span>-WL test colors <span class="math inline">\(k\)</span>-tuples. Each level of the hierarchy is strictly more powerful than the previous, at the cost of <span class="math inline">\(O(n^k)\)</span> memory and computation — coloring all <span class="math inline">\(n^k\)</span> possible <span class="math inline">\(k\)</span>-tuples is expensive. The <span class="math inline">\(k\)</span>-WL test can distinguish any two graphs that the <span class="math inline">\((k-1)\)</span>-WL test cannot, for all <span class="math inline">\(k \geq 2\)</span>. The hierarchy is strict and infinite.</p>
+<p>The architectural counterpart is the <span class="math inline">\(k\)</span>-order invariant graph network of Maron et al.&nbsp;(2019), which uses tensor features indexed by <span class="math inline">\(k\)</span>-tuples of nodes and linear layers that are <span class="math inline">\(S_n\)</span>-equivariant with respect to simultaneous permutation of all <span class="math inline">\(k\)</span> indices. These networks achieve <span class="math inline">\(k\)</span>-WL expressive power, with the Bell number <span class="math inline">\(B_{2k}\)</span> parameter count from Chapter 1’s Schur’s lemma analysis giving the dimension of the equivariant layer space. The census hierarchy — from individual villages to pairs to triples to <span class="math inline">\(k\)</span>-tuples — is the expressiveness hierarchy of graph networks, from message-passing GNNs at the bottom to full <span class="math inline">\(k\)</span>-order networks climbing toward graph isomorphism.</p>
+<hr>
+<p><strong>The landscape of invisible graph properties.</strong></p>
+<p>Hold the following map clearly before the mathematics. The WL test — and therefore any message-passing GNN — cannot detect:</p>
+<p>Triangle counts: two graphs with the same degree sequence but different numbers of triangles can be WL-identical if their local tree neighborhoods look the same. Triangle counting requires seeing three-cycles, which are global structures invisible to rooted tree unfoldings.</p>
+<p>Cycle lengths: the length of the shortest cycle in a graph (its girth) can differ between two WL-identical graphs. The <span class="math inline">\(K_{3,3}\)</span> versus prism example shows exactly this — <span class="math inline">\(K_{3,3}\)</span> has girth 4, the prism has girth 3, but WL cannot distinguish them.</p>
+<p>Planarity: whether a graph can be drawn in the plane without crossing edges is a global topological property invisible to local neighborhood structure.</p>
+<p>Bipartiteness: whether a graph’s nodes can be two-colored with no monochromatic edge — which the <span class="math inline">\(K_{3,3}\)</span> versus prism example demonstrates directly.</p>
+<p>Graph diameter: the longest shortest path between any two nodes in the graph requires global information that <span class="math inline">\(K\)</span>-layer message passing can only approximate for <span class="math inline">\(K\)</span> at least the diameter.</p>
+<p>Each invisible property is a task that no message-passing GNN — regardless of depth, width, or choice of aggregation — can solve correctly on all graphs. These are not failures of training or architecture choice. They are information-theoretic impossibilities, as hard as asking a person to count the floors of a building they cannot see by interviewing only their immediate neighbors.</p>
+<p>The WL test and its equivalence to message-passing GNNs is the theorem that places all of these impossibilities under one roof — a single, clean theoretical boundary that tells you exactly where the message-passing paradigm ends and where higher-order methods must begin.</p>
+<hr>
+</section>
+<section id="layer-2-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="layer-2-mathematics">Layer 2 (Mathematics)</h2>
+<p>We build the formalism in five stages: the precise algorithmic definition of the 1-WL test and its convergence properties, the graph isomorphism partial order and WL equivalence classes, the expressiveness theorem and its two-directional proof, the injectivity characterization of aggregation functions, and the <span class="math inline">\(k\)</span>-WL hierarchy with its architectural counterparts.</p>
+<section id="the-1-wl-color-refinement-algorithm" class="level3">
+<h3 class="anchored" data-anchor-id="the-1-wl-color-refinement-algorithm">The 1-WL Color Refinement Algorithm</h3>
+<p><strong>Definition (Graph isomorphism).</strong> Two graphs <span class="math inline">\(G = (V_G, E_G, X_G)\)</span> and <span class="math inline">\(H = (V_H, E_H, X_H)\)</span> with node feature matrices <span class="math inline">\(X_G, X_H \in \mathbb{R}^{n \times d}\)</span> are <strong>isomorphic</strong>, written <span class="math inline">\(G \cong H\)</span>, if there exists a bijection <span class="math inline">\(\phi: V_G \to V_H\)</span> such that:</p>
+<p><span class="math display">\[(u, v) \in E_G \Leftrightarrow (\phi(u), \phi(v)) \in E_H \quad \text{and} \quad X_G[u] = X_H[\phi(u)] \quad \forall u \in V_G\]</span></p>
+<p>Graph isomorphism is in NP, not known to be in P or NP-complete — it occupies the rare intermediate complexity class GI.</p>
+<p><strong>Definition (1-WL test).</strong> The <strong>1-dimensional Weisfeiler-Lehman color refinement</strong> algorithm operates on a graph <span class="math inline">\(G = (V, E, X)\)</span> as follows.</p>
+<p><strong>Initialization:</strong> Assign initial colors based on node features:</p>
+<p><span class="math display">\[c_v^{(0)} = \text{hash}(X[v]) \quad \forall v \in V\]</span></p>
+<p>For graphs without node features, <span class="math inline">\(c_v^{(0)} = \text{hash}(\deg(v))\)</span> or a uniform constant.</p>
+<p><strong>Refinement:</strong> For <span class="math inline">\(t = 1, 2, \ldots\)</span> iterate:</p>
+<p><span class="math display">\[c_v^{(t)} = \text{hash}\!\left(c_v^{(t-1)},\, \{\!\{ c_u^{(t-1)} : u \in \mathcal{N}(v) \}\!\}\right)\]</span></p>
+<p>where <span class="math inline">\(\{\!\{ \cdot \}\!\}\)</span> denotes a <strong>multiset</strong> (a set allowing repeated elements) and <span class="math inline">\(\text{hash}\)</span> is an injective function mapping distinct inputs to distinct outputs.</p>
+<p><strong>Termination:</strong> The algorithm terminates at iteration <span class="math inline">\(T^*\)</span> when the color partition stabilizes:</p>
+<p><span class="math display">\[\{\!\{ c_v^{(T^*)} : v \in V \}\!\} = \{\!\{ c_v^{(T^*-1)} : v \in V \}\!\}\]</span></p>
+<p>as multisets — no node changes color. For a graph with <span class="math inline">\(n\)</span> nodes, convergence occurs within <span class="math inline">\(T^* \leq n\)</span> iterations.</p>
+<p><strong>WL test decision:</strong> Given two graphs <span class="math inline">\(G\)</span> and <span class="math inline">\(H\)</span>, the 1-WL test runs color refinement on both simultaneously. At each iteration <span class="math inline">\(t\)</span>: - If <span class="math inline">\(\{\!\{ c_v^{(t)} : v \in V_G \}\!\} \neq \{\!\{ c_v^{(t)} : v \in V_H \}\!\}\)</span> as multisets: declare <span class="math inline">\(G \not\cong H\)</span> (non-isomorphic). <strong>Terminate.</strong> - If both colorings have stabilized with equal histograms: declare <span class="math inline">\(G \stackrel{\text{WL}}{\sim} H\)</span> (WL-indistinguishable). <strong>Terminate.</strong></p>
+<p><strong>Computational complexity.</strong> Each refinement iteration costs <span class="math inline">\(O((n + m)\log n)\)</span> with appropriate hashing. Total: <span class="math inline">\(O(n(n+m)\log n)\)</span>, polynomial in graph size.</p>
+<hr>
+</section>
+<section id="wl-equivalence-and-the-rooted-subtree-characterization" class="level3">
+<h3 class="anchored" data-anchor-id="wl-equivalence-and-the-rooted-subtree-characterization">WL Equivalence and the Rooted Subtree Characterization</h3>
+<p><strong>Definition (WL equivalence).</strong> Two graphs <span class="math inline">\(G\)</span> and <span class="math inline">\(H\)</span> are <strong>WL-equivalent</strong>, written <span class="math inline">\(G \stackrel{\text{WL}}{\sim} H\)</span>, if the 1-WL test fails to distinguish them — their color histograms stabilize to identical multisets. Two nodes <span class="math inline">\(v \in V_G\)</span> and <span class="math inline">\(u \in V_H\)</span> are <strong>WL-equivalent</strong>, written <span class="math inline">\(v \stackrel{\text{WL}}{\sim} u\)</span>, if they receive identical color sequences <span class="math inline">\(c_v^{(t)} = c_u^{(t)}\)</span> for all <span class="math inline">\(t \geq 0\)</span>.</p>
+<p><strong>Theorem (Rooted subtree characterization).</strong> Two nodes <span class="math inline">\(v \in V_G\)</span> and <span class="math inline">\(u \in V_H\)</span> satisfy <span class="math inline">\(v \stackrel{\text{WL}}{\sim} u\)</span> after <span class="math inline">\(t\)</span> iterations if and only if their <strong>rooted subtrees of depth <span class="math inline">\(t\)</span></strong> are isomorphic as rooted labeled trees.</p>
+<p><strong>Definition (Rooted subtree).</strong> The rooted subtree <span class="math inline">\(T_v^{(t)}\)</span> of depth <span class="math inline">\(t\)</span> at node <span class="math inline">\(v\)</span> is the tree obtained by unrolling the BFS computation from <span class="math inline">\(v\)</span> to depth <span class="math inline">\(t\)</span>: the root is <span class="math inline">\(v\)</span> with label <span class="math inline">\(c_v^{(0)}\)</span>; the children of each node <span class="math inline">\(w\)</span> at depth <span class="math inline">\(d &lt; t\)</span> are copies of <span class="math inline">\(w\)</span>’s neighbors in <span class="math inline">\(G\)</span>, with labels <span class="math inline">\(c_{\cdot}^{(0)}\)</span>; cycles in <span class="math inline">\(G\)</span> are broken by treating already-visited nodes as leaves.</p>
+<p><strong>Proof sketch.</strong> By induction on <span class="math inline">\(t\)</span>. Base case: <span class="math inline">\(c_v^{(0)} = \text{hash}(X[v])\)</span>, so <span class="math inline">\(c_v^{(0)} = c_u^{(0)}\)</span> iff <span class="math inline">\(X[v] = X[u]\)</span> iff the depth-0 trees (single labeled nodes) are isomorphic. Inductive step: <span class="math inline">\(c_v^{(t)} = \text{hash}(c_v^{(t-1)}, \{\!\{c_w^{(t-1)} : w \in \mathcal{N}(v)\}\!\})\)</span>. Since hash is injective, <span class="math inline">\(c_v^{(t)} = c_u^{(t)}\)</span> iff <span class="math inline">\(c_v^{(t-1)} = c_u^{(t-1)}\)</span> and <span class="math inline">\(\{\!\{c_w^{(t-1)}: w\in\mathcal{N}(v)\}\!\} = \{\!\{c_w^{(t-1)}: w\in\mathcal{N}(u)\}\!\}\)</span>. By the inductive hypothesis, the first condition means depth-<span class="math inline">\((t-1)\)</span> trees at <span class="math inline">\(v\)</span> and <span class="math inline">\(u\)</span> are isomorphic, and the second means the multisets of depth-<span class="math inline">\((t-1)\)</span> trees of their neighbors are equal as multisets — exactly the condition for isomorphism of the depth-<span class="math inline">\(t\)</span> trees. <span class="math inline">\(\square\)</span></p>
+<p><strong>Corollary.</strong> The 1-WL test cannot distinguish graphs that have the same multiset of rooted subtrees at every depth. Any graph property that cannot be expressed as a function of rooted subtree multisets is invisible to 1-WL.</p>
+<hr>
+</section>
+<section id="the-gnn-expressiveness-theorem" class="level3">
+<h3 class="anchored" data-anchor-id="the-gnn-expressiveness-theorem">The GNN Expressiveness Theorem</h3>
+<p><strong>Setup.</strong> A <strong>message-passing GNN</strong> with <span class="math inline">\(K\)</span> layers computes node representations via:</p>
+<p><span class="math display">\[h_v^{(0)} = X[v]\]</span></p>
+<p><span class="math display">\[h_v^{(k)} = \phi^{(k)}\!\left(h_v^{(k-1)},\, f^{(k)}\!\left(\{\!\{ h_u^{(k-1)} : u \in \mathcal{N}(v) \}\!\}\right)\right)\]</span></p>
+<p>where <span class="math inline">\(\phi^{(k)}\)</span> is the update function and <span class="math inline">\(f^{(k)}\)</span> is the aggregation function over the neighborhood multiset. The graph-level representation is:</p>
+<p><span class="math display">\[h_G = \rho\!\left(\{\!\{ h_v^{(K)} : v \in V \}\!\}\right)\]</span></p>
+<p>for some permutation-invariant readout <span class="math inline">\(\rho\)</span>.</p>
+<p><strong>Theorem (Upper bound — Xu et al.&nbsp;2019).</strong> Let <span class="math inline">\(\mathcal{A}\)</span> be any message-passing GNN. If the 1-WL test determines that two graphs <span class="math inline">\(G\)</span> and <span class="math inline">\(H\)</span> are non-isomorphic, then <span class="math inline">\(\mathcal{A}\)</span> maps <span class="math inline">\(G\)</span> and <span class="math inline">\(H\)</span> to different graph-level representations: <span class="math inline">\(h_G^{\mathcal{A}} \neq h_H^{\mathcal{A}}\)</span>. Equivalently: if <span class="math inline">\(G \stackrel{\text{WL}}{\sim} H\)</span> then <span class="math inline">\(h_G^{\mathcal{A}} = h_H^{\mathcal{A}}\)</span> for any MPNN <span class="math inline">\(\mathcal{A}\)</span>.</p>
+<p><strong>Proof.</strong> We show by induction on <span class="math inline">\(k\)</span> that if <span class="math inline">\(v \stackrel{\text{WL}}{\sim} u\)</span> after <span class="math inline">\(k\)</span> iterations, then <span class="math inline">\(h_v^{(k)} = h_u^{(k)}\)</span> for any MPNN.</p>
+<p><em>Base case (<span class="math inline">\(k=0\)</span>):</em> <span class="math inline">\(v \stackrel{\text{WL}}{\sim} u\)</span> after 0 iterations iff <span class="math inline">\(c_v^{(0)} = c_u^{(0)}\)</span> iff <span class="math inline">\(X[v] = X[u]\)</span> iff <span class="math inline">\(h_v^{(0)} = X[v] = X[u] = h_u^{(0)}\)</span>. <span class="math inline">\(\checkmark\)</span></p>
+<p><em>Inductive step:</em> Assume <span class="math inline">\(v \stackrel{\text{WL}}{\sim} u\)</span> after <span class="math inline">\(k\)</span> iterations implies <span class="math inline">\(h_v^{(k)} = h_u^{(k)}\)</span>. Suppose <span class="math inline">\(v \stackrel{\text{WL}}{\sim} u\)</span> after <span class="math inline">\(k+1\)</span> iterations. Then: 1. <span class="math inline">\(v \stackrel{\text{WL}}{\sim} u\)</span> after <span class="math inline">\(k\)</span> iterations <span class="math inline">\(\Rightarrow h_v^{(k)} = h_u^{(k)}\)</span> by inductive hypothesis. 2. <span class="math inline">\(\{\!\{c_w^{(k)}: w\in\mathcal{N}(v)\}\!\} = \{\!\{c_w^{(k)}: w\in\mathcal{N}(u)\}\!\}\)</span> since <span class="math inline">\(c_{v}^{(k+1)} = c_u^{(k+1)}\)</span> requires equal neighbor color multisets. 3. By the inductive hypothesis applied to each neighbor, <span class="math inline">\(\{\!\{h_w^{(k)}: w\in\mathcal{N}(v)\}\!\} = \{\!\{h_w^{(k)}: w\in\mathcal{N}(u)\}\!\}\)</span> as multisets. 4. Therefore <span class="math inline">\(f^{(k+1)}(\{\!\{h_w^{(k)}: w\in\mathcal{N}(v)\}\!\}) = f^{(k+1)}(\{\!\{h_w^{(k)}: w\in\mathcal{N}(u)\}\!\})\)</span>. 5. Therefore <span class="math inline">\(h_v^{(k+1)} = \phi^{(k+1)}(h_v^{(k)}, f^{(k+1)}(\cdots)) = \phi^{(k+1)}(h_u^{(k)}, f^{(k+1)}(\cdots)) = h_u^{(k+1)}\)</span>. <span class="math inline">\(\square\)</span></p>
+<p>The contrapositive: if <span class="math inline">\(h_v^{(k)} \neq h_u^{(k)}\)</span> for some MPNN, then <span class="math inline">\(v \not\stackrel{\text{WL}}{\sim} u\)</span> — the GNN can only distinguish nodes that WL distinguishes. MPNNs are at most as powerful as 1-WL.</p>
+<hr>
+</section>
+<section id="the-injectivity-characterization" class="level3">
+<h3 class="anchored" data-anchor-id="the-injectivity-characterization">The Injectivity Characterization</h3>
+<p><strong>Lemma (Xu et al.&nbsp;2019 — Characterization of injective multiset functions).</strong> Let <span class="math inline">\(\mathcal{X}\)</span> be a countable set. A function <span class="math inline">\(f: \{\!\{\cdots\}\!\}_{\mathcal{X}} \to \mathbb{R}^d\)</span> over multisets from <span class="math inline">\(\mathcal{X}\)</span> is injective (maps distinct multisets to distinct outputs) if and only if there exists a function <span class="math inline">\(\phi: \mathcal{X} \to \mathbb{R}^d\)</span> such that:</p>
+<p><span class="math display">\[f(\{\!\{x_1,\ldots,x_k\}\!\}) = \sum_{i=1}^{k} \phi(x_i)\]</span></p>
+<p><strong>Proof.</strong></p>
+<p><span class="math inline">\((\Leftarrow)\)</span> If <span class="math inline">\(f(X) = \sum_{x\in X}\phi(x)\)</span> with <span class="math inline">\(\phi\)</span> injective on a countable domain embeddable in <span class="math inline">\(\mathbb{R}^d\)</span>, then for any two distinct multisets <span class="math inline">\(X \neq Y\)</span>, there exists an element <span class="math inline">\(x\)</span> present in <span class="math inline">\(X\)</span> with different multiplicity than in <span class="math inline">\(Y\)</span>. Since <span class="math inline">\(\phi(x)\)</span> is nonzero and the sum tracks multiplicities, <span class="math inline">\(\sum_{x\in X}\phi(x) \neq \sum_{x\in Y}\phi(x)\)</span>.</p>
+<p><span class="math inline">\((\Rightarrow)\)</span> Mean aggregation fails injectivity: <span class="math inline">\(f_{\text{mean}}(\{\!\{1,1\}\!\}) = 1 = f_{\text{mean}}(\{\!\{1\}\!\})\)</span> — a two-element multiset and a one-element multiset with the same element produce the same mean. Max aggregation fails: <span class="math inline">\(f_{\text{max}}(\{\!\{1,2\}\!\}) = 2 = f_{\text{max}}(\{\!\{2\}\!\})\)</span>. Sum preserves both element values and multiplicities: <span class="math inline">\(\sum_{x\in\{\!\{1,1\}\!\}}\phi(x) = 2\phi(1) \neq \phi(1) = \sum_{x\in\{\!\{1\}\!\}}\phi(x)\)</span> for <span class="math inline">\(\phi(1)\neq 0\)</span>. <span class="math inline">\(\square\)</span></p>
+<p><strong>Corollary (Failure modes of mean and max aggregation).</strong></p>
+<p><em>Mean aggregation:</em> <span class="math inline">\(f_{\text{mean}}(\{\!\{a, a\}\!\}) = a = f_{\text{mean}}(\{\!\{a\}\!\})\)</span> — cannot distinguish multisets differing only in element multiplicity. It represents the ratio of features, not the count.</p>
+<p><em>Max aggregation:</em> <span class="math inline">\(f_{\text{max}}(\{\!\{a, b\}\!\}) = \max(a,b) = f_{\text{max}}(\{\!\{a, b, b\}\!\})\)</span> — cannot distinguish multisets with the same range but different element frequencies.</p>
+<p><em>Sum aggregation:</em> <span class="math inline">\(f_{\text{sum}}(\{\!\{x_1,\ldots,x_k\}\!\}) = \sum_i \phi(x_i)\)</span> — injective on multisets from a countable space when <span class="math inline">\(\phi\)</span> is injective, because it preserves both values and multiplicities.</p>
+<hr>
+</section>
+<section id="the-graph-isomorphism-network-gin" class="level3">
+<h3 class="anchored" data-anchor-id="the-graph-isomorphism-network-gin">The Graph Isomorphism Network (GIN)</h3>
+<p><strong>Theorem (Lower bound — Xu et al.&nbsp;2019).</strong> There exists a message-passing GNN that is as powerful as the 1-WL test: two graphs <span class="math inline">\(G \not\stackrel{\text{WL}}{\sim} H\)</span> implies <span class="math inline">\(h_G^{\text{GIN}} \neq h_H^{\text{GIN}}\)</span>.</p>
+<p><strong>Construction: GIN layer.</strong></p>
+<p><span class="math display">\[h_v^{(k)} = \text{MLP}^{(k)}\!\left((1 + \epsilon^{(k)}) \cdot h_v^{(k-1)} + \sum_{u \in \mathcal{N}(v)} h_u^{(k-1)}\right)\]</span></p>
+<p>where <span class="math inline">\(\epsilon^{(k)} \in \mathbb{R}\)</span> is a learnable (or fixed) scalar and <span class="math inline">\(\text{MLP}^{(k)}\)</span> is a multilayer perceptron.</p>
+<p><strong>Why <span class="math inline">\((1+\epsilon)h_v + \sum_{u\in\mathcal{N}(v)}h_u\)</span> is injective on <span class="math inline">\((h_v, \{\!\{h_u\}\!\})\)</span>.</strong></p>
+<p>The combined aggregation <span class="math inline">\((h_v^{(k-1)}, \{\!\{h_u^{(k-1)}: u\in\mathcal{N}(v)\}\!\}) \mapsto (1+\epsilon)h_v^{(k-1)} + \sum_{u\in\mathcal{N}(v)}h_u^{(k-1)}\)</span> is injective when <span class="math inline">\(\epsilon \neq -1\)</span>: the term <span class="math inline">\((1+\epsilon)h_v^{(k-1)}\)</span> ensures the self-feature contributes distinctly from the neighborhood sum (which has coefficient <span class="math inline">\(1\)</span>), and the sum aggregation is injective on neighborhood multisets by the lemma above.</p>
+<p><strong>Proof of the lower bound.</strong> We show by induction on <span class="math inline">\(k\)</span> that if <span class="math inline">\(v \not\stackrel{\text{WL}}{\sim} u\)</span> after <span class="math inline">\(k\)</span> iterations, then <span class="math inline">\(h_v^{(k)} \neq h_u^{(k)}\)</span> in GIN.</p>
+<p><em>Base case (<span class="math inline">\(k=0\)</span>):</em> <span class="math inline">\(v \not\stackrel{\text{WL}}{\sim} u\)</span> after 0 iterations iff <span class="math inline">\(X[v] \neq X[u]\)</span> iff <span class="math inline">\(h_v^{(0)} = X[v] \neq X[u] = h_u^{(0)}\)</span>. <span class="math inline">\(\checkmark\)</span></p>
+<p><em>Inductive step:</em> Suppose <span class="math inline">\(v \not\stackrel{\text{WL}}{\sim} u\)</span> after <span class="math inline">\(k+1\)</span> iterations. Then either:</p>
+<ol type="a">
+<li><p><span class="math inline">\(v \not\stackrel{\text{WL}}{\sim} u\)</span> after <span class="math inline">\(k\)</span> iterations: by inductive hypothesis <span class="math inline">\(h_v^{(k)} \neq h_u^{(k)}\)</span>, so <span class="math inline">\((1+\epsilon)h_v^{(k)} + \sum_w h_w^{(k)} \neq (1+\epsilon)h_u^{(k)} + \sum_w h_w^{(k)}\)</span>, and since MLP is injective on its argument (for an MLP of sufficient width and depth, by the universal approximation theorem), <span class="math inline">\(h_v^{(k+1)} \neq h_u^{(k+1)}\)</span>.</p></li>
+<li><p><span class="math inline">\(v \stackrel{\text{WL}}{\sim} u\)</span> after <span class="math inline">\(k\)</span> iterations but <span class="math inline">\(\{\!\{c_w^{(k)}: w\in\mathcal{N}(v)\}\!\} \neq \{\!\{c_w^{(k)}: w\in\mathcal{N}(u)\}\!\}\)</span>: by the inductive hypothesis, the neighborhood multisets <span class="math inline">\(\{\!\{h_w^{(k)}: w\in\mathcal{N}(v)\}\!\} \neq \{\!\{h_w^{(k)}: w\in\mathcal{N}(u)\}\!\}\)</span>. By the injectivity lemma, <span class="math inline">\(\sum_{w\in\mathcal{N}(v)}h_w^{(k)} \neq \sum_{w\in\mathcal{N}(u)}h_w^{(k)}\)</span>, so <span class="math inline">\((1+\epsilon)h_v^{(k)} + \sum_{w\in\mathcal{N}(v)}h_w^{(k)} \neq (1+\epsilon)h_u^{(k)} + \sum_{w\in\mathcal{N}(u)}h_w^{(k)}\)</span>, and MLP injectivity gives <span class="math inline">\(h_v^{(k+1)} \neq h_u^{(k+1)}\)</span>. <span class="math inline">\(\square\)</span></p></li>
+</ol>
+<p><strong>GIN readout.</strong> For graph-level tasks, GIN uses sum readout at every layer and concatenates across layers:</p>
+<p><span class="math display">\[h_G^{\text{GIN}} = \text{CONCAT}\!\left(\sum_{v\in V} h_v^{(k)} \,:\, k = 0, 1, \ldots, K\right)\]</span></p>
+<p>This multi-scale readout captures structural information at every hop depth simultaneously — analogous to jumping knowledge connections — preventing the loss of fine-grained structural information at early layers.</p>
+<hr>
+</section>
+<section id="specific-graph-structures-invisible-to-1-wl" class="level3">
+<h3 class="anchored" data-anchor-id="specific-graph-structures-invisible-to-1-wl">Specific Graph Structures Invisible to 1-WL</h3>
+<p><strong>Theorem (Triangle invisibility).</strong> There exist pairs of graphs <span class="math inline">\(G \stackrel{\text{WL}}{\sim} H\)</span> where <span class="math inline">\(G\)</span> contains triangles and <span class="math inline">\(H\)</span> does not.</p>
+<p><strong>Construction.</strong> The <strong>cycle graph</strong> <span class="math inline">\(C_6\)</span> (six nodes in a ring) and the <strong>disjoint union of two triangles</strong> <span class="math inline">\(2K_3\)</span> are WL-indistinguishable but not isomorphic: <span class="math inline">\(C_6\)</span> has no triangles; <span class="math inline">\(2K_3\)</span> has two.</p>
+<p><em>WL indistinguishability:</em> In <span class="math inline">\(C_6\)</span>, every node has degree 2 and two neighbors of degree 2. In <span class="math inline">\(2K_3\)</span>, every node has degree 2 and two neighbors of degree 2. The WL refinement produces identical color sequences at every iteration for both graphs. <span class="math inline">\(\square\)</span></p>
+<p><strong>Theorem (Regular graph indistinguishability).</strong> Any two <span class="math inline">\(r\)</span>-regular graphs on <span class="math inline">\(n\)</span> nodes (all nodes have degree <span class="math inline">\(r\)</span>) with the same number of nodes are WL-indistinguishable if they have the same initial node features.</p>
+<p><strong>Proof.</strong> At round 0: all nodes have the same color (uniform features). At round 1: every node has <span class="math inline">\(r\)</span> neighbors all of the same color — identical neighborhood multiset <span class="math inline">\(\{\!\{c^{(0)}, \ldots, c^{(0)}\}\!\}\)</span> (<span class="math inline">\(r\)</span> times). All nodes receive the same new color. Stabilization occurs at round 1. Both graphs have identical color histograms: <span class="math inline">\(n\)</span> nodes of the same color. <span class="math inline">\(\square\)</span></p>
+<p><strong>Corollary.</strong> No message-passing GNN can correctly compute triangle counts, cycle lengths, or determine bipartiteness on all graphs.</p>
+<hr>
+</section>
+<section id="the-k-wl-hierarchy" class="level3">
+<h3 class="anchored" data-anchor-id="the-k-wl-hierarchy">The <span class="math inline">\(k\)</span>-WL Hierarchy</h3>
+<p><strong>Definition (<span class="math inline">\(k\)</span>-WL test).</strong> The <strong><span class="math inline">\(k\)</span>-dimensional Weisfeiler-Lehman test</strong> operates on <span class="math inline">\(k\)</span>-tuples of nodes rather than individual nodes.</p>
+<p><strong>Initialization:</strong> For each <span class="math inline">\(k\)</span>-tuple <span class="math inline">\((v_1,\ldots,v_k) \in V^k\)</span>:</p>
+<p><span class="math display">\[c_{(v_1,\ldots,v_k)}^{(0)} = \text{hash}(\text{isomorphism type of the induced subgraph on } \{v_1,\ldots,v_k\})\]</span></p>
+<p><strong>Refinement:</strong> For <span class="math inline">\(j = 1,\ldots,k\)</span>, define the <span class="math inline">\(j\)</span>-th neighborhood of <span class="math inline">\((v_1,\ldots,v_k)\)</span> as:</p>
+<p><span class="math display">\[\mathcal{N}_j(v_1,\ldots,v_k) = \{(v_1,\ldots,v_{j-1}, w, v_{j+1},\ldots,v_k) : w \in V\}\]</span></p>
+<p>the set of <span class="math inline">\(k\)</span>-tuples obtained by replacing the <span class="math inline">\(j\)</span>-th component with any node <span class="math inline">\(w\)</span>. The refinement is:</p>
+<p><span class="math display">\[c_{(v_1,\ldots,v_k)}^{(t)} = \text{hash}\!\left(c_{(v_1,\ldots,v_k)}^{(t-1)},\, \left(\{\!\{ c_{\mathbf{v}'}^{(t-1)} : \mathbf{v}' \in \mathcal{N}_1(\mathbf{v}) \}\!\},\ldots,\{\!\{ c_{\mathbf{v}'}^{(t-1)} : \mathbf{v}' \in \mathcal{N}_k(\mathbf{v}) \}\!\}\right)\right)\]</span></p>
+<p><strong>Theorem (Strict hierarchy).</strong> For all <span class="math inline">\(k \geq 1\)</span>: <span class="math inline">\((k+1)\)</span>-WL is strictly more powerful than <span class="math inline">\(k\)</span>-WL. There exist pairs of graphs distinguishable by <span class="math inline">\((k+1)\)</span>-WL but not by <span class="math inline">\(k\)</span>-WL.</p>
+<p><strong>Complexity.</strong> <span class="math inline">\(k\)</span>-WL requires <span class="math inline">\(O(n^k)\)</span> memory and <span class="math inline">\(O(n^{k+1})\)</span> time per iteration — exponential growth in <span class="math inline">\(k\)</span>.</p>
+<p><strong>The <span class="math inline">\(k\)</span>-order Invariant Graph Network (Maron et al.&nbsp;2019).</strong> The <span class="math inline">\(k\)</span>-IGN uses tensor features <span class="math inline">\(T \in (\mathbb{R}^n)^{\otimes k}\)</span> and linear layers that are <span class="math inline">\(S_n\)</span>-equivariant with respect to simultaneous permutation of all <span class="math inline">\(k\)</span> indices. By Schur’s lemma:</p>
+<p><span class="math display">\[\dim\!\left(\text{Hom}_{S_n}\!\left((\mathbb{R}^n)^{\otimes k}, (\mathbb{R}^n)^{\otimes k}\right)\right) = B_{2k}\]</span></p>
+<p>where <span class="math inline">\(B_{2k}\)</span> is the Bell number — the number of set partitions of <span class="math inline">\(\{1,\ldots,2k\}\)</span>. For <span class="math inline">\(k=1\)</span>: <span class="math inline">\(B_2 = 2\)</span> parameters (the <span class="math inline">\(\alpha I + \beta\mathbf{1}\mathbf{1}^\top\)</span> from Schur’s lemma). For <span class="math inline">\(k=2\)</span>: <span class="math inline">\(B_4 = 15\)</span> parameters. For <span class="math inline">\(k=3\)</span>: <span class="math inline">\(B_6 = 203\)</span> parameters.</p>
+<p><strong>Theorem (Maron et al.&nbsp;2019).</strong> The <span class="math inline">\(k\)</span>-IGN is as powerful as the <span class="math inline">\(k\)</span>-WL test.</p>
+<hr>
+</section>
+<section id="practical-expressiveness-beyond-1-wl-structural-features" class="level3">
+<h3 class="anchored" data-anchor-id="practical-expressiveness-beyond-1-wl-structural-features">Practical Expressiveness Beyond 1-WL: Structural Features</h3>
+<p><strong>Definition (Structural node features).</strong> Since 1-WL cannot detect certain graph properties, these properties can be precomputed and injected as additional node features:</p>
+<p><strong>Cycle membership:</strong> <span class="math inline">\(\mathbf{1}[v \text{ is on a cycle of length } \ell]\)</span> for <span class="math inline">\(\ell = 3, 4, 5, \ldots\)</span></p>
+<p><strong>Subgraph counts:</strong> Number of triangles, four-cycles, or other subgraphs containing <span class="math inline">\(v\)</span>.</p>
+<p><strong>Random Walk features:</strong> <span class="math inline">\([\mathbf{P}^k]_{vv}\)</span> for <span class="math inline">\(k = 1,\ldots,K\)</span> where <span class="math inline">\(\mathbf{P} = D^{-1}A\)</span> is the random walk transition matrix. The diagonal entry <span class="math inline">\([\mathbf{P}^k]_{vv}\)</span> is the probability of returning to <span class="math inline">\(v\)</span> after <span class="math inline">\(k\)</span> steps — this encodes local cycle structure invisible to standard WL.</p>
+<p><strong>Distance encoding:</strong> <span class="math inline">\(\text{dist}(v, u)\)</span> for all pairs — position-aware GNNs inject pairwise distances as edge features, breaking the locality barrier.</p>
+<p><strong>Theorem (Random walk features detect cycles).</strong> The random walk return probability <span class="math inline">\([\mathbf{P}^3]_{vv} = \sum_{u,w\in\mathcal{N}(v)} A_{uw}/(d_v^2 d_u)\)</span> is proportional to the number of triangles containing <span class="math inline">\(v\)</span> — it detects triangle structure invisible to 1-WL by encoding global cycle information as a local node feature.</p>
+<hr>
+</section>
+<section id="why-this-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-matters">WHY THIS MATTERS</h3>
+<p>In <strong>MCSC 201 (Discrete Structures)</strong>, the <strong>multiset</strong> is a foundational combinatorial object — a generalization of a set allowing repeated elements, with equality defined by both element identity and multiplicity. The injectivity lemma’s core claim — that sum aggregation is the unique injective function on multisets from a countable space — is a theorem in combinatorics: the generating function <span class="math inline">\(\sum_{x\in X}\phi(x)\)</span> encodes a multiset <span class="math inline">\(X\)</span> as a polynomial with coefficients counting multiplicities, and two distinct multisets produce distinct polynomials when <span class="math inline">\(\phi\)</span> maps elements to linearly independent values. The pigeonhole principle from Discrete Structures underlies the WL convergence guarantee: there are at most <span class="math inline">\(n\)</span> distinct colors possible in an <span class="math inline">\(n\)</span>-node graph (since colors are derived from <span class="math inline">\(n\)</span> initial node features), so the color partition can refine at most <span class="math inline">\(n\)</span> times before stabilizing — giving the <span class="math inline">\(O(n)\)</span> iteration bound.</p>
+<p>In <strong>COMP 323 (Graph Theory)</strong>, the <strong>graph isomorphism problem</strong> is the canonical example of a problem in the mysterious complexity class GI — believed harder than P but no harder than NP, with no known polynomial algorithm and no known NP-hardness proof. The WL test is the most practically successful polynomial-time heuristic for graph isomorphism, correct on almost all graphs but failing on specific structured families including strongly regular graphs, Cayley graphs of abelian groups, and other highly symmetric objects. The <strong>Cai-Fürer-Immerman theorem (1992)</strong> proves that for every <span class="math inline">\(k\)</span>, the <span class="math inline">\(k\)</span>-WL test fails to distinguish certain pairs of non-isomorphic graphs — the WL hierarchy is infinite and never reaches a complete graph isomorphism algorithm. This is the graph-theoretic counterpart of the impossibility results in computational complexity that your COMP 314 (Algorithm and Complexity) course develops.</p>
+<p>In <strong>COMP 472 (Artificial Intelligence)</strong>, the <strong>expressive power of neural networks</strong> is usually discussed in terms of the universal approximation theorem — an MLP of sufficient width can approximate any continuous function on a compact set. The WL expressiveness theorem is the graph-structured analogue: GIN with sufficient width MLPs can approximate any function on graphs that is computable by the 1-WL test, but no wider or deeper GIN can compute functions that 1-WL cannot distinguish. The boundary is not about approximation capacity — it is about the information available to the computation. A GNN cannot approximate a function it cannot even in principle distinguish the inputs of: two WL-equivalent graphs will always receive the same GNN output, regardless of the network’s width, depth, or training.</p>
+<hr>
+</section>
+</section>
+<section id="layer-3-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="layer-3-bridge">Layer 3 (Bridge)</h2>
+<p>Every element of the Government of Nepal census story has a precise mathematical address. We walk through them completely — the bureau chief’s isomorphism question, the fieldworker’s color refinement procedure, the four-cycle example, the <span class="math inline">\(K_{3,3}\)</span> versus prism failure, the rooted subtree argument, the connection to message passing, and the hierarchy beyond WL — until the story and the formalism are a single object seen from two angles.</p>
+<hr>
+<p><strong>The bureau chief’s question — did the two census teams survey the same network, or are these genuinely different networks — is the graph isomorphism problem: does there exist a bijection <span class="math inline">\(\phi: V_G \to V_H\)</span> preserving both edge structure and node features?</strong> The bijection <span class="math inline">\(\phi\)</span> is the relabeling that maps one team’s village numbering to the other’s. The condition <span class="math inline">\((u,v)\in E_G \Leftrightarrow (\phi(u),\phi(v))\in E_H\)</span> is the requirement that roads are preserved — if villages <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span> are connected in Graph A, then their images <span class="math inline">\(\phi(u)\)</span> and <span class="math inline">\(\phi(v)\)</span> must be connected in Graph B. The condition <span class="math inline">\(X_G[u] = X_H[\phi(u)]\)</span> is the requirement that village types are preserved — agricultural villages map to agricultural villages, trading posts to trading posts. Graph isomorphism is in NP because verifying a proposed bijection takes polynomial time, but finding one — or proving none exists — has no known polynomial algorithm. This is the precise complexity statement behind the bureau chief’s frustration: the exhaustive search over <span class="math inline">\(n!\)</span> bijections is the only guaranteed method, and it is computationally dead for any non-trivial graph size.</p>
+<p><strong>The bureau chief’s three preliminary checks — node count, edge count, degree sequence — are three necessary but not sufficient conditions for graph isomorphism, each ruling out non-isomorphism without confirming it.</strong> Isomorphic graphs must have the same number of nodes (<span class="math inline">\(|V_G| = |V_H|\)</span>), the same number of edges (<span class="math inline">\(|E_G| = |E_H|\)</span>), and the same degree sequence (the multiset <span class="math inline">\(\{\!\{d_v : v \in V_G\}\!\} = \{\!\{d_v : v \in V_H\}\!\}\)</span>). Each check is a graph invariant — a function of the graph that is the same for isomorphic graphs. The WL test is a stronger graph invariant: a function of the graph that the isomorphism-preserving bijection cannot change, capturing more structural information than degree sequences alone. But no known polynomial-time computable graph invariant is complete — the WL hierarchy approaches but never reaches a complete invariant, by the Cai-Fürer-Immerman theorem.</p>
+<hr>
+<p><strong>The fieldworker’s color refinement procedure — assign initial colors by village type, then repeatedly update each village’s color by hashing its current color with the multiset of its neighbors’ current colors — is the 1-WL algorithm with initialization <span class="math inline">\(c_v^{(0)} = \text{hash}(X[v])\)</span> and refinement <span class="math inline">\(c_v^{(t)} = \text{hash}(c_v^{(t-1)}, \{\!\{c_u^{(t-1)}: u\in\mathcal{N}(v)\}\!\})\)</span>.</strong> The hash function in the story — the procedure that assigns a new color to each (current color, neighborhood multiset) pair — is the injective hash function in the formal definition. Injectivity is essential: if two villages have different (current color, neighborhood multiset) pairs, they must receive different new colors. Without injectivity, the color refinement loses information — it fails to distinguish villages whose neighborhoods are genuinely different, making the test weaker than it should be. The multiset <span class="math inline">\(\{\!\{c_u^{(t-1)}: u\in\mathcal{N}(v)\}\!\}\)</span> rather than the set <span class="math inline">\(\{c_u^{(t-1)}: u\in\mathcal{N}(v)\}\)</span> is essential: a village with two trading-post neighbors must be distinguished from a village with one trading-post neighbor, and the multiset records multiplicities while the set does not. The termination condition — stabilization of the color histogram — occurs within at most <span class="math inline">\(n\)</span> iterations by the pigeonhole principle from MCSC 201: there are at most <span class="math inline">\(n\)</span> distinct colors derivable from <span class="math inline">\(n\)</span> initial node features, so the color partition can refine at most <span class="math inline">\(n\)</span> times before no further splitting is possible.</p>
+<p><strong>The four-cycle example — Graph A with alternating T-A-A-T coloring and Graph B with T-T-A-A coloring, distinguished after Round One — is an execution of the 1-WL test where the neighborhood multisets <span class="math inline">\(\{A,T\}\)</span> in Graph A and <span class="math inline">\(\{A,A\}\)</span> or <span class="math inline">\(\{T,T\}\)</span> in Graph B produce distinct new colors, giving non-equal color histograms.</strong> The computation <span class="math inline">\(c_v^{(1)} = \text{hash}(c_v^{(0)}, \{\!\{c_u^{(0)}: u\in\mathcal{N}(v)\}\!\})\)</span> for node 1 in Graph A gives <span class="math inline">\(\text{hash}(T, \{\!\{A,T\}\!\})\)</span>, while for node 1 in Graph B gives <span class="math inline">\(\text{hash}(T, \{\!\{A,A\}\!\})\)</span>. Since <span class="math inline">\(\{\!\{A,T\}\!\} \neq \{\!\{A,A\}\!\}\)</span> and the hash is injective, these are different colors. Graph A’s histogram after Round One is <span class="math inline">\(\{c_T, c_A, c_A, c_T\}\)</span> with <span class="math inline">\(c_T = \text{hash}(T,\{\!\{A,T\}\!\})\)</span> and <span class="math inline">\(c_A = \text{hash}(A,\{\!\{A,T\}\!\})\)</span>; Graph B’s histogram is <span class="math inline">\(\{\text{hash}(T,\{\!\{A,A\}\!\}), \text{hash}(T,\{\!\{A,A\}\!\}), \text{hash}(A,\{\!\{T,T\}\!\}), \text{hash}(A,\{\!\{T,T\}\!\})\}\)</span>. The histograms differ, so the WL test correctly declares these graphs non-isomorphic. The story’s Round One is the formal algorithm’s <span class="math inline">\(t=1\)</span> iteration, and the histogram comparison is the multiset equality check <span class="math inline">\(\{\!\{c_v^{(1)}: v\in V_G\}\!\} \neq \{\!\{c_v^{(1)}: v\in V_H\}\!\}\)</span>.</p>
+<hr>
+<p><strong>The <span class="math inline">\(K_{3,3}\)</span> versus prism graph failure — both 3-regular graphs on six nodes where the WL test stabilizes after one round with identical color histograms — is the formal instance of WL-equivalence <span class="math inline">\(K_{3,3} \stackrel{\text{WL}}{\sim} \text{prism}\)</span> despite <span class="math inline">\(K_{3,3} \not\cong \text{prism}\)</span>.</strong> The regularity theorem makes this precise: in any <span class="math inline">\(r\)</span>-regular graph with uniform initial features, Round Zero assigns all nodes the same color, Round One assigns all nodes the same color (every node has <span class="math inline">\(r\)</span> neighbors all of the same color, giving neighborhood multiset <span class="math inline">\(\{\!\{c^{(0)},\ldots,c^{(0)}\}\!\}\)</span> with <span class="math inline">\(r\)</span> copies, identical for every node), and the coloring has stabilized. Both graphs produce the color histogram <span class="math inline">\(\{n \text{ nodes of color } c^{(1)}\}\)</span> — identical for any two <span class="math inline">\(r\)</span>-regular graphs on <span class="math inline">\(n\)</span> nodes with uniform initial features. The WL test declares them indistinguishable, but <span class="math inline">\(K_{3,3}\)</span> is bipartite (contains no odd cycles, girth 4) while the prism graph is not bipartite (contains triangles, girth 3). Bipartiteness is a global topological property requiring the detection of odd cycles — structural information that rooted subtree unfoldings cannot encode because short cycles in the graph become long paths in the unrolled tree, indistinguishable from trees with no cycles at the same local depth.</p>
+<p><strong>The rooted subtree unfolding argument — that <span class="math inline">\(v \stackrel{\text{WL}}{\sim} u\)</span> after <span class="math inline">\(t\)</span> iterations if and only if their rooted subtrees of depth <span class="math inline">\(t\)</span> are isomorphic as rooted labeled trees — is the precise theorem that explains why global structure is invisible to the WL test.</strong> The BFS tree unrolling from node <span class="math inline">\(v\)</span> to depth <span class="math inline">\(t\)</span> produces a tree <span class="math inline">\(T_v^{(t)}\)</span> by expanding each node’s neighbors as children, breaking cycles by treating previously visited nodes as leaves. In <span class="math inline">\(K_{3,3}\)</span>: root any node <span class="math inline">\(v\)</span>, it has three neighbors (depth-1 children), each of those has two neighbors back in the other partition (depth-2 grandchildren, but these are the same nodes as the root and its siblings — however in the tree unrolling, cycles are broken, so they appear as new leaf nodes). In the prism graph: root any node <span class="math inline">\(v\)</span>, it has three neighbors, each of those has two further neighbors. At each depth, the rooted tree structure is identical between the two graphs — the same branching pattern, the same label distribution — because the difference between the two graphs (global cycle structure, bipartiteness) only becomes apparent when you follow long paths that return to previously visited nodes, which the tree unrolling eliminates by treating revisits as leaves. The inductive proof of the rooted subtree characterization formalizes this: <span class="math inline">\(c_v^{(t)} = c_u^{(t)}\)</span> iff <span class="math inline">\(T_v^{(t)} \cong T_u^{(t)}\)</span> as rooted labeled trees, by induction on <span class="math inline">\(t\)</span> using the injectivity of the hash function at each step.</p>
+<hr>
+<p><strong>The fieldworker’s recognition that the WL color refinement and the message passing GNN are structurally identical — both propagate information one hop per round, combine self-information with an aggregated neighborhood summary — is the content of the upper bound theorem: <span class="math inline">\(G \stackrel{\text{WL}}{\sim} H\)</span> implies <span class="math inline">\(h_G^{\mathcal{A}} = h_H^{\mathcal{A}}\)</span> for any MPNN <span class="math inline">\(\mathcal{A}\)</span>.</strong> The proof proceeds by the same induction that establishes the rooted subtree characterization. At layer <span class="math inline">\(k=0\)</span>: <span class="math inline">\(v \stackrel{\text{WL}}{\sim} u\)</span> after 0 iterations means <span class="math inline">\(X[v] = X[u]\)</span>, so <span class="math inline">\(h_v^{(0)} = X[v] = X[u] = h_u^{(0)}\)</span> — identical initial features give identical initial representations. At layer <span class="math inline">\(k\)</span>: if <span class="math inline">\(v \stackrel{\text{WL}}{\sim} u\)</span> after <span class="math inline">\(k+1\)</span> iterations, then (1) <span class="math inline">\(h_v^{(k)} = h_u^{(k)}\)</span> by inductive hypothesis, and (2) <span class="math inline">\(\{\!\{h_w^{(k)}: w\in\mathcal{N}(v)\}\!\} = \{\!\{h_w^{(k)}: w\in\mathcal{N}(u)\}\!\}\)</span> because WL-equivalent neighbors produce identical features. Therefore the aggregation <span class="math inline">\(f^{(k+1)}\)</span> receives identical multiset inputs and produces identical outputs, and the update <span class="math inline">\(\phi^{(k+1)}\)</span> receives identical inputs <span class="math inline">\((h_v^{(k)}, \bar{m}_v) = (h_u^{(k)}, \bar{m}_u)\)</span> and produces identical outputs. The MPNN cannot see any difference the WL test cannot see — it is structurally incapable of doing so, regardless of the specific choice of <span class="math inline">\(\phi^{(k)}\)</span> and <span class="math inline">\(f^{(k)}\)</span>, because it uses exactly the same neighborhood multiset information that the WL test uses, processed through functions that cannot manufacture distinctions from identical inputs.</p>
+<p><strong>The break moment — that sum aggregation is strictly more expressive than mean or max aggregation — is now the injectivity lemma: a function on multisets is injective if and only if it can be written as <span class="math inline">\(f(X) = \sum_{x\in X}\phi(x)\)</span> for some function <span class="math inline">\(\phi\)</span>.</strong> The village counting example in the story — Village A with two neighbors at food stock level 3 versus Village B with four neighbors at food stock level 3, indistinguishable under mean aggregation but distinguishable under sum — is the formal counterexample to injectivity of mean aggregation: <span class="math inline">\(f_{\text{mean}}(\{\!\{3,3\}\!\}) = 3 = f_{\text{mean}}(\{\!\{3,3,3,3\}\!\})\)</span>, so <span class="math inline">\(f_{\text{mean}}\)</span> is not injective on multisets. The formal proof identifies mean aggregation’s failure mode precisely: it maps all multisets with the same element-wise average to the same output, destroying information about neighborhood size. Max aggregation’s failure mode is different but equally precise: <span class="math inline">\(f_{\text{max}}(\{\!\{1,2\}\!\}) = 2 = f_{\text{max}}(\{\!\{2\}\!\})\)</span>, destroying information about all elements below the maximum. Sum aggregation through a universal function approximator <span class="math inline">\(\phi\)</span> (an MLP of sufficient width, by the universal approximation theorem from COMP 472) is injective on multisets from a countable feature space: distinct multisets produce distinct sums because the MLP embeds elements into a space where linear independence of the embedded values ensures that different multiplicity patterns produce different total sums. This is the precise reason why GIN uses sum aggregation — not as an engineering choice but as the mathematically necessary condition for achieving WL-level expressiveness.</p>
+<hr>
+<p><strong>The GIN layer <span class="math inline">\((1+\epsilon)h_v^{(k-1)} + \sum_{u\in\mathcal{N}(v)}h_u^{(k-1)}\)</span> passed through an MLP — the architecture that achieves exactly WL expressiveness — is the construction that simultaneously satisfies injectivity on the combined (self, neighborhood) pair and universal approximation of any WL-computable function.</strong> The scalar <span class="math inline">\((1+\epsilon)\)</span> with <span class="math inline">\(\epsilon \neq -1\)</span> ensures the self-feature <span class="math inline">\(h_v^{(k-1)}\)</span> contributes with a different coefficient than the neighborhood features (which each have coefficient 1 in the sum): without this distinction, a node with one neighbor whose feature equals the node’s own feature could be confused with a node with two neighbors whose features sum to the same value. The separation of self-coefficient <span class="math inline">\((1+\epsilon)\)</span> from neighbor-coefficient <span class="math inline">\(1\)</span> makes the combined aggregation injective on the full pair <span class="math inline">\((h_v^{(k-1)}, \{\!\{h_u^{(k-1)}: u\in\mathcal{N}(v)\}\!\})\)</span>, not just on the neighborhood multiset alone. The MLP of sufficient width is the universal function approximator that maps any injectively-encoded input to any target output — its role is not to provide injectivity (which the sum already achieves) but to provide expressiveness: any function of the WL coloring that is continuous and bounded can be approximated arbitrarily well by the MLP applied to the sum-aggregated representation. The lower bound proof’s inductive structure mirrors the upper bound proof exactly, but in the opposite direction: where the upper bound shows that WL-indistinguishable nodes produce identical GNN features, the lower bound shows that WL-distinguishable nodes produce different GIN features, using the injectivity of sum aggregation at each step to propagate distinctions forward through the layers.</p>
+<p><strong>The GIN graph-level readout <span class="math inline">\(h_G^{\text{GIN}} = \text{CONCAT}(\sum_{v\in V}h_v^{(k)}: k=0,1,\ldots,K)\)</span> — concatenating sum readouts from every layer — is the multi-scale WL histogram that captures structural information at every hop depth simultaneously.</strong> The sum readout <span class="math inline">\(\sum_{v\in V}h_v^{(k)}\)</span> at layer <span class="math inline">\(k\)</span> is the GNN analogue of the WL color histogram at iteration <span class="math inline">\(k\)</span>: it aggregates all node representations at depth <span class="math inline">\(k\)</span> into a single graph-level vector, encoding the multiset of depth-<span class="math inline">\(k\)</span> rooted subtree types present in the graph. Concatenating across all <span class="math inline">\(k = 0,\ldots,K\)</span> preserves the structural information at every resolution — the depth-0 histogram encodes node feature distributions, the depth-1 histogram encodes one-hop neighborhood distributions, and so on. Two graphs that are WL-indistinguishable at every depth will produce identical readouts at every layer and therefore identical concatenated representations. Two graphs that WL distinguishes at some depth <span class="math inline">\(k^*\)</span> will produce different readouts at layer <span class="math inline">\(k^*\)</span> and therefore different concatenated representations. The readout is the complete encoding of the WL certificate — the sequence of color histograms that the WL test produces — in the continuous feature space of the GNN.</p>
+<hr>
+<p><strong>The census hierarchy beyond individual villages — pairs, triples, <span class="math inline">\(k\)</span>-tuples — is the <span class="math inline">\(k\)</span>-WL hierarchy, with the <span class="math inline">\(k\)</span>-IGN achieving <span class="math inline">\(k\)</span>-WL expressiveness at <span class="math inline">\(O(n^k)\)</span> computational cost and <span class="math inline">\(B_{2k}\)</span> equivariant layer parameters.</strong> The 2-WL test colors ordered pairs <span class="math inline">\((v,u)\)</span> of villages, updating each pair’s color based on the multisets of colors of pairs sharing a village. This allows the test to detect edge-level structure invisible to node-level coloring: a pair <span class="math inline">\((v,u)\)</span> with an edge between <span class="math inline">\(v\)</span> and <span class="math inline">\(u\)</span> receives a different initial color than a pair without an edge, and the pair-level refinement propagates this edge information through the graph. The 3-WL test colors triples, encoding triangle-level structure. At the architectural level, the <span class="math inline">\(k\)</span>-IGN uses tensor features <span class="math inline">\(T \in (\mathbb{R}^n)^{\otimes k}\)</span> indexed by <span class="math inline">\(k\)</span>-tuples of nodes, with equivariant linear layers classified by Schur’s lemma as having <span class="math inline">\(B_{2k}\)</span> independent parameters — the Bell number counting set partitions of <span class="math inline">\(\{1,\ldots,2k\}\)</span>, each partition corresponding to an independent way of contracting and broadcasting <span class="math inline">\(k\)</span>-th order tensors consistently with simultaneous <span class="math inline">\(S_n\)</span>-permutation of all indices. For <span class="math inline">\(k=1\)</span>: <span class="math inline">\(B_2 = 2\)</span> parameters giving <span class="math inline">\(L = \alpha I + \beta\mathbf{1}\mathbf{1}^\top\)</span>, the GNN aggregation. For <span class="math inline">\(k=2\)</span>: <span class="math inline">\(B_4 = 15\)</span> parameters giving the full space of equivariant operations on pairwise node features. The Bell number grows super-exponentially in <span class="math inline">\(k\)</span>, reflecting the combinatorial explosion of independent equivariant operations at higher tensor orders.</p>
+<p><strong>The Cai-Fürer-Immerman theorem — that for every <span class="math inline">\(k\)</span>, there exist non-isomorphic graphs indistinguishable by <span class="math inline">\(k\)</span>-WL — means the WL hierarchy is infinite and no finite level achieves complete graph isomorphism.</strong> The CFI construction produces for every <span class="math inline">\(k\)</span> a pair of graphs that are locally identical up to depth <span class="math inline">\(k\)</span> but globally different. This is the graph-theoretic counterpart of the computational complexity results from COMP 314: just as there is no known polynomial-time algorithm for graph isomorphism, there is no finite-level WL test that solves it. The practical consequence for GNN design: no matter how high an order <span class="math inline">\(k\)</span>-IGN you use, there will always be graphs it cannot distinguish, and the computational cost <span class="math inline">\(O(n^k)\)</span> grows rapidly with <span class="math inline">\(k\)</span>. The frontier of GNN expressiveness research — subgraph GNNs, random feature GNNs, distance-encoding GNNs — explores ways to break the WL ceiling without incurring the full <span class="math inline">\(O(n^k)\)</span> cost of higher-order IGNs, injecting global structural information (triangle counts, cycle lengths, random walk return probabilities) as additional node features that the standard 1-WL aggregation can then process.</p>
+<hr>
+<p><strong>The invisible graph properties enumerated in the story — triangle counts, cycle lengths, bipartiteness, planarity, graph diameter — are now formally characterized as properties not expressible as functions of rooted subtree multisets, and therefore not computable by any message-passing GNN.</strong> Triangle counts require detecting three-cycles: a triangle <span class="math inline">\(v\)</span>-<span class="math inline">\(u\)</span>-<span class="math inline">\(w\)</span>-<span class="math inline">\(v\)</span> is a cycle of length 3, which in the BFS tree unrolling from <span class="math inline">\(v\)</span> appears as two depth-1 children <span class="math inline">\(u\)</span> and <span class="math inline">\(w\)</span> that are connected to each other in the original graph — but the tree unrolling breaks this back-edge, treating <span class="math inline">\(w\)</span> as a leaf at depth 2 from <span class="math inline">\(u\)</span> rather than the same node as <span class="math inline">\(w\)</span> at depth 1 from <span class="math inline">\(v\)</span>. The triangle’s closing edge is invisible. The random walk return probability <span class="math inline">\([\mathbf{P}^3]_{vv} = \sum_{u,w\in\mathcal{N}(v)}A_{uw}/(d_v^2 d_u)\)</span> detects triangles precisely because it counts three-step walks returning to <span class="math inline">\(v\)</span>, which requires traversing the closing edge of a triangle — a piece of global information precomputed and injected as a node feature, making it available to the subsequent message passing layers. This is the principled resolution: properties invisible to 1-WL can be precomputed and injected as additional structural features, moving the computational burden from the GNN architecture to the feature engineering step, and allowing the 1-WL-level message passing to then operate on structurally enriched node representations.</p>
+<hr>
+<p><strong>The connection to MCSC 201 is fully explicit.</strong> The multiset <span class="math inline">\(\{\!\{c_u^{(t-1)}: u\in\mathcal{N}(v)\}\!\}\)</span> — the fundamental object of WL refinement — is the Discrete Structures concept of a multiset: an unordered collection allowing repeated elements, with equality defined by both element identity and multiplicity. The injectivity lemma’s proof that <span class="math inline">\(f(X) = \sum_{x\in X}\phi(x)\)</span> is the unique injective multiset function uses the generating function argument from combinatorics: mapping each element <span class="math inline">\(x\)</span> to <span class="math inline">\(\phi(x)\)</span> and summing over the multiset produces a vector that encodes both the elements and their multiplicities as a polynomial with coefficient vector, and distinct multisets produce distinct polynomials under linearly independent <span class="math inline">\(\phi\)</span>-values. The convergence bound <span class="math inline">\(T^* \leq n\)</span> is the pigeonhole principle: with <span class="math inline">\(n\)</span> nodes and a color space growing monotonically through refinement, the partition can refine at most <span class="math inline">\(n-1\)</span> times before every node has a unique color or no further splitting occurs. <strong>The connection to COMP 323 is equally direct.</strong> Graph isomorphism from Graph Theory is the decision problem that the WL test approximates. The <span class="math inline">\(K_{3,3}\)</span> and prism graph are classical examples from Graph Theory — <span class="math inline">\(K_{3,3}\)</span> is the complete bipartite graph on six nodes, one of the two Kuratowski graphs certifying non-planarity, while the prism graph is the Cartesian product <span class="math inline">\(K_3 \square K_2\)</span>. Their WL-indistinguishability despite structural differences (bipartiteness, triangle count, planarity) is a concrete instance of the WL test’s limitations, rooted in the combinatorial properties of 3-regular graphs. <strong>The connection to COMP 472 is the universal approximation theorem:</strong> the MLP in GIN achieves injectivity on WL-computable functions not by architecture but by width — a sufficiently wide MLP can approximate any continuous function on a compact set, so any injectively encoded input can be mapped to any target output, giving GIN the full function approximation capacity within the WL complexity class.</p>
+<hr>
+<p>The Government of Nepal census — its bureau chief, fieldworker, color refinement rounds, four-cycle example, <span class="math inline">\(K_{3,3}\)</span> versus prism failure, rooted subtree blindness, message passing parallel, and <span class="math inline">\(k\)</span>-tuple hierarchy — is now completely dissolved into its mathematical form. The isomorphism question is <span class="math inline">\(G \cong H\)</span>. The color refinement is <span class="math inline">\(c_v^{(t)} = \text{hash}(c_v^{(t-1)}, \{\!\{c_u^{(t-1)}: u\in\mathcal{N}(v)\}\!\})\)</span>. WL-equivalence is <span class="math inline">\(G \stackrel{\text{WL}}{\sim} H\)</span>. The rooted subtree is <span class="math inline">\(T_v^{(t)}\)</span>. The upper bound is <span class="math inline">\(G\stackrel{\text{WL}}{\sim}H \Rightarrow h_G^{\mathcal{A}} = h_H^{\mathcal{A}}\)</span>. The injectivity lemma is <span class="math inline">\(f\)</span> injective on multisets iff <span class="math inline">\(f(X) = \sum_{x\in X}\phi(x)\)</span>. GIN achieves the lower bound. The <span class="math inline">\(k\)</span>-WL hierarchy climbs through <span class="math inline">\(O(n^k)\)</span> complexity and <span class="math inline">\(B_{2k}\)</span> parameters. The CFI theorem ensures the hierarchy never terminates.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

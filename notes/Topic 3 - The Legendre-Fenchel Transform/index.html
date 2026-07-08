@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2026-06-14">
+
+<title>Topic 3 - The Legendre-Fenchel Transform – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Topic 3 - The Legendre-Fenchel Transform</li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#topic-3---the-legendre-fenchel-transform" id="toc-topic-3---the-legendre-fenchel-transform" class="nav-link active" data-scroll-target="#topic-3---the-legendre-fenchel-transform">Topic 3 - The Legendre-Fenchel Transform</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#layer-1-story" id="toc-layer-1-story" class="nav-link" data-scroll-target="#layer-1-story">Layer 1 (Story)</a></li>
+  <li><a href="#layer-2-mathematics" id="toc-layer-2-mathematics" class="nav-link" data-scroll-target="#layer-2-mathematics">Layer 2 (Mathematics)</a></li>
+  <li><a href="#layer-3-bridge" id="toc-layer-3-bridge" class="nav-link" data-scroll-target="#layer-3-bridge">Layer 3 (Bridge)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Topic 3 - The Legendre-Fenchel Transform</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">June 14, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="topic-3---the-legendre-fenchel-transform" class="level1">
+<h1>Topic 3 - The Legendre-Fenchel Transform</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>You now have three tools from Chapter 2. Norms gave you geometry — three different shapes of unit ball, three different notions of size, three different characters of optimal solution. Convex sets gave you feasibility — the condition under which optimization problems have no hidden traps and no disconnected pockets. Convex functions gave you tractability — the condition under which local minima are global, gradients point reliably toward optima, and Jensen’s inequality controls every expectation bound.</p>
+<p>What you do not yet have is duality.</p>
+<p>Duality is the idea that every optimization problem has a shadow — a mirror image problem, defined on a different space, whose solution illuminates the original problem from a completely different angle. The shadow is not an approximation. It is an exact reformulation. Solving the shadow solves the original. And in many cases, the shadow is dramatically easier to solve than the original, or reveals structural properties of the solution that the original formulation hides entirely.</p>
+<p>The mathematical engine that produces this shadow — that takes any convex function and constructs its dual — is the Legendre-Fenchel transform, also called the convex conjugate. The roadmap names it explicitly as the heart of duality in Optimal Transport, and this description is precise: every step of the Kantorovich duality theorem in Phase 1, which converts the primal transport problem into the dual potential problem, is a Legendre-Fenchel computation. Without the Legendre-Fenchel transform, Kantorovich duality is a miracle. With it, it is a theorem.</p>
+<p>But the Legendre-Fenchel transform is more than a tool for Optimal Transport. It is the unifying structure behind every duality in the roadmap. The relationship between the primal and dual formulations of a support vector machine is a Legendre-Fenchel computation. The relationship between entropy and free energy in statistical mechanics — which underlies the entropic regularization of the Sinkhorn algorithm — is a Legendre-Fenchel computation. The relationship between the log-partition function of an exponential family and the negative entropy of its mean parameters — which underlies the information geometry of diffusion models — is a Legendre-Fenchel computation. The transform is not a specialized tool for one problem. It is the universal machine that produces duals.</p>
+<p>The core idea is simpler than it first appears. Every convex function can be described in two equivalent ways: by its values — the function itself, telling you the height of the graph at each point — or by its slopes — the collection of all supporting hyperplanes, telling you every tangent line that touches the graph from below. The first description is the primal. The second description is the dual. The Legendre-Fenchel transform converts between them. Given the primal description — the function values — it produces the dual description — the supporting hyperplane slopes — in the form of a new function called the convex conjugate. Given the convex conjugate, it recovers the original function exactly, by a second application of the same transform. The transform is its own inverse on the class of closed convex functions.</p>
+<p>This topic has three tightly connected subtopics that unfold the transform in logical order.</p>
+<p>The first subtopic is the <strong>definition of the convex conjugate</strong> <span class="math inline">\(f^*(y) = \sup_{x \in \mathbb{R}^n} \{\langle y, x\rangle - f(x)\}\)</span> — the formal construction of the dual function, its geometric interpretation as the intercept of the supporting hyperplane with slope <span class="math inline">\(y\)</span>, and its basic properties.</p>
+<p>The second subtopic is the <strong>Fenchel-Moreau theorem</strong> — the biconjugate theorem stating that for any closed convex function, <span class="math inline">\(f^{**} = f\)</span>. The transform is an involution on the space of closed convex functions, and this involution is the precise statement of the duality between the primal and dual descriptions.</p>
+<p>The third subtopic is the <strong>Fenchel duality theorem</strong> — the result that converts a primal optimization problem into its dual, shows when the duality gap is zero, and produces the KKT conditions as a corollary. This is the theorem that the Kantorovich duality of Phase 1 is built on, and by the end of this subtopic, the connection between the Legendre-Fenchel transform and the structure of Optimal Transport will be completely explicit.</p>
+<p>By the end of this topic, when you see the Kantorovich dual problem written as <span class="math inline">\(\sup_{\phi, \psi} \int \phi \, d\mu + \int \psi \, d\nu\)</span> subject to <span class="math inline">\(\phi(x) + \psi(y) \leq c(x,y)\)</span>, you will not see a separate theorem requiring separate proof. You will see the Legendre-Fenchel transform of the transport cost <span class="math inline">\(c\)</span>, applied to the marginal distributions <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span>, producing the dual potential functions <span class="math inline">\(\phi\)</span> and <span class="math inline">\(\psi\)</span> as the slopes of the supporting hyperplanes to the cost function. The Kantorovich dual is the Legendre-Fenchel transform of the primal transport problem, and the duality gap is zero because the cost function is convex.</p>
+<p><strong>ALL THREE SUBTOPICS ARE TREATED AS A SINGLE TOPIC FOR EASY COMPREHENSION.</strong></p>
+<hr>
+</section>
+<section id="layer-1-story" class="level2">
+<h2 class="anchored" data-anchor-id="layer-1-story">Layer 1 (Story)</h2>
+<p>You are the owner of a small textile factory on the outskirts of Patan, and you manufacture a single product: hand-woven fabric sold by the metre. Your factory has a production cost function — the total cost of producing <span class="math inline">\(x\)</span> metres of fabric per day depends on <span class="math inline">\(x\)</span> in a nonlinear way. Raw materials are cheap at low volumes but expensive when you rush to scale up. Labour costs rise nonlinearly when you need overtime. Equipment maintenance grows with output. The result is a convex cost function <span class="math inline">\(f(x)\)</span> — a bowl-shaped curve that rises steeply at both low and high volumes, with a sweet spot somewhere in the middle.</p>
+<p>Every morning, a fabric merchant arrives at your factory gate and offers you a price <span class="math inline">\(y\)</span> rupees per metre for your entire day’s production. You do not get to negotiate. He names a price, you decide how much to produce, and you pocket the profit. Your profit at price <span class="math inline">\(y\)</span> when you produce <span class="math inline">\(x\)</span> metres is the revenue <span class="math inline">\(yx\)</span> minus the production cost <span class="math inline">\(f(x)\)</span>:</p>
+<p><span class="math display">\[\text{profit}(x, y) = yx - f(x)\]</span></p>
+<p>Since you are a rational producer, you choose the production volume <span class="math inline">\(x\)</span> that maximizes your profit at the offered price <span class="math inline">\(y\)</span>. Your maximum achievable profit at price <span class="math inline">\(y\)</span> is:</p>
+<p><span class="math display">\[f^*(y) = \sup_x \{yx - f(x)\}\]</span></p>
+<p>This function <span class="math inline">\(f^*\)</span> — your maximum profit as a function of the merchant’s price — is the <strong>Legendre-Fenchel transform</strong> of your cost function <span class="math inline">\(f\)</span>. It is also called the <strong>convex conjugate</strong> of <span class="math inline">\(f\)</span>.</p>
+<hr>
+<p>Let us sit with this definition long enough to see what it is actually doing.</p>
+<p>Your cost function <span class="math inline">\(f(x)\)</span> describes your factory from the inside — it tells you, for each production level <span class="math inline">\(x\)</span>, how much it costs you to produce that amount. It is the primal description of your production economics, told from the perspective of quantity.</p>
+<p>Your conjugate function <span class="math inline">\(f^*(y)\)</span> describes your factory from the outside — it tells you, for each price <span class="math inline">\(y\)</span> the merchant could offer, the maximum profit you could extract. It is the dual description of your production economics, told from the perspective of price. The same factory, the same production process, the same cost structure — but described in the language of prices rather than quantities.</p>
+<p>The Legendre-Fenchel transform is the machine that converts between these two descriptions. It takes your cost function — the inside view — and produces your profit function — the outside view. And as you will see, under the right conditions, applying the transform a second time — taking the conjugate of the conjugate — brings you all the way back to the original cost function. The two descriptions are equivalent. Neither is more fundamental than the other. They are two windows onto the same factory.</p>
+<hr>
+<p>Now let us trace through the geometry carefully, because the geometry is everything.</p>
+<p>Suppose your cost function is the simple quadratic <span class="math inline">\(f(x) = \frac{1}{2}x^2\)</span> — a perfectly symmetric bowl, with costs rising proportionally to the square of production volume. At price <span class="math inline">\(y\)</span>, your profit function is <span class="math inline">\(yx - \frac{1}{2}x^2\)</span>. To find the optimal production volume, you take the derivative with respect to <span class="math inline">\(x\)</span> and set it to zero: <span class="math inline">\(y - x = 0\)</span>, so <span class="math inline">\(x^* = y\)</span>. The optimal production volume equals the price. You substitute back: <span class="math inline">\(f^*(y) = y \cdot y - \frac{1}{2}y^2 = \frac{1}{2}y^2\)</span>.</p>
+<p>The conjugate of the quadratic <span class="math inline">\(\frac{1}{2}x^2\)</span> is the quadratic <span class="math inline">\(\frac{1}{2}y^2\)</span>. The two functions are identical — the quadratic is self-dual. The inside view and the outside view give the same mathematical object. This is the simplest possible case, and it already reveals something important: the conjugate of a cost function is a function of price, defined on the price space rather than the quantity space. The domains of <span class="math inline">\(f\)</span> and <span class="math inline">\(f^*\)</span> are dual to each other — one is quantity space, the other is price space — and the Legendre-Fenchel transform is the precise machine that converts between them.</p>
+<hr>
+<p>Now let us develop the geometric interpretation that makes the transform feel inevitable rather than arbitrary.</p>
+<p>Consider any production level <span class="math inline">\(x_0\)</span> and the tangent line to your cost function at that point. The tangent line has slope <span class="math inline">\(f'(x_0)\)</span> — the marginal cost at production level <span class="math inline">\(x_0\)</span> — and passes through the point <span class="math inline">\((x_0, f(x_0))\)</span>. Its equation is:</p>
+<p><span class="math display">\[\ell_{x_0}(x) = f(x_0) + f'(x_0)(x - x_0)\]</span></p>
+<p>Now ask: what is the vertical intercept of this tangent line at <span class="math inline">\(x = 0\)</span>? It is:</p>
+<p><span class="math display">\[\ell_{x_0}(0) = f(x_0) - f'(x_0) x_0\]</span></p>
+<p>This intercept has a name: it is <span class="math inline">\(-f^*(f'(x_0))\)</span>, the negative of the conjugate evaluated at the slope <span class="math inline">\(y = f'(x_0)\)</span>. To see why: <span class="math inline">\(f^*(y) = \sup_x \{yx - f(x)\}\)</span>. At the optimal <span class="math inline">\(x^* = x_0\)</span> where the supremum is achieved, <span class="math inline">\(y = f'(x_0)\)</span> and <span class="math inline">\(f^*(f'(x_0)) = f'(x_0)x_0 - f(x_0)\)</span>. So <span class="math inline">\(-f^*(f'(x_0)) = f(x_0) - f'(x_0)x_0 = \ell_{x_0}(0)\)</span> — exactly the tangent line’s intercept.</p>
+<p>The Legendre-Fenchel transform is encoding every tangent line to the cost function — every supporting hyperplane — in a single function. Given a slope <span class="math inline">\(y\)</span>, it tells you the intercept of the supporting hyperplane with that slope: <span class="math inline">\(-f^*(y)\)</span> is the vertical intercept of the supporting line to <span class="math inline">\(f\)</span> with slope <span class="math inline">\(y\)</span>. The conjugate function <span class="math inline">\(f^*\)</span> is the complete catalogue of all supporting lines to <span class="math inline">\(f\)</span>, indexed by their slopes.</p>
+<hr>
+<p>This geometric picture reveals why the transform is so powerful for duality.</p>
+<p>A convex function is completely determined by its supporting lines — you can reconstruct the function from the envelope of all its tangent lines. The function’s graph is the upper envelope of all supporting lines, and no supporting line lies above the graph. This means the convex function <span class="math inline">\(f\)</span> and the collection of its supporting lines carry exactly the same information. The conjugate <span class="math inline">\(f^*\)</span> is the function that encodes the supporting lines indexed by slope. The original function <span class="math inline">\(f\)</span> can be recovered from <span class="math inline">\(f^*\)</span> by another application of the same construction — the supporting lines to <span class="math inline">\(f^*\)</span>, indexed by their own slopes, reconstruct <span class="math inline">\(f\)</span>. This is the biconjugate theorem: <span class="math inline">\(f^{**} = f\)</span> for closed convex functions.</p>
+<p>The factory story makes this concrete. The cost function <span class="math inline">\(f\)</span> tells you the production cost at each quantity — the inside view. The conjugate <span class="math inline">\(f^*\)</span> tells you the maximum profit at each price — the outside view. To go from outside view back to inside view, you apply the transform again: the cost function is the supremum over all prices of the quantity-revenue minus the maximum profit at that price: <span class="math inline">\(f(x) = \sup_y\{yx - f^*(y)\}\)</span>. The factory can be described entirely from the merchant’s perspective — from the outside — and the inside description can be recovered perfectly from the outside description. No information is lost in the transformation.</p>
+<hr>
+<p>Now here is the break moment. The naive assumption is that every function has a well-defined conjugate that is also a nice, smooth, finite-valued function — that the transform is a clean, symmetric operation on the space of all functions. After all, the quadratic case worked perfectly: the conjugate was just another quadratic, finite everywhere, smooth everywhere.</p>
+<p>This breaks in multiple directions.</p>
+<p>First, the conjugate can be infinite. If your cost function grows very slowly — say <span class="math inline">\(f(x) = \log(1+x)\)</span> for <span class="math inline">\(x \geq 0\)</span> — then at high prices <span class="math inline">\(y\)</span>, the profit <span class="math inline">\(yx - \log(1+x)\)</span> grows without bound as <span class="math inline">\(x \to \infty\)</span>, because the revenue <span class="math inline">\(yx\)</span> grows linearly while the cost grows only logarithmically. The supremum is infinite: <span class="math inline">\(f^*(y) = +\infty\)</span> for all <span class="math inline">\(y &gt; 1\)</span>. The conjugate of a slowly growing function is infinite outside a bounded domain. This is not a failure of the transform — it is the correct encoding of the fact that a cost function that grows too slowly makes the profit unbounded at high prices, which is economically meaningful.</p>
+<p>Second, the conjugate can be defined on a different domain than the original. The cost function <span class="math inline">\(f\)</span> lives on the quantity space — positive reals, in the factory context. The conjugate <span class="math inline">\(f^*\)</span> lives on the price space — which can have a completely different structure. The transform maps functions on one space to functions on the dual space, and the dual space can be genuinely different.</p>
+<p>Third, and most importantly: the conjugate of a non-convex function is always convex, even if the original function is not. The supremum of linear functions <span class="math inline">\(\{yx - f(x)\}\)</span> over <span class="math inline">\(x\)</span> is always a convex function of <span class="math inline">\(y\)</span> — because it is the pointwise supremum of linear (hence convex) functions of <span class="math inline">\(y\)</span>, and pointwise suprema of convex functions are convex. This means the conjugate operation throws away the non-convex parts of a function and returns only the convex hull of the epigraph. The biconjugate <span class="math inline">\(f^{**}\)</span> is therefore the largest convex function lying below <span class="math inline">\(f\)</span> — the convex envelope of <span class="math inline">\(f\)</span>. For non-convex <span class="math inline">\(f\)</span>, <span class="math inline">\(f^{**} \neq f\)</span>: the round-trip from <span class="math inline">\(f\)</span> to <span class="math inline">\(f^*\)</span> to <span class="math inline">\(f^{**}\)</span> does not return you to <span class="math inline">\(f\)</span>, but to its convex envelope. The biconjugate theorem <span class="math inline">\(f^{**} = f\)</span> holds only for closed convex functions — and this is not a technical restriction, it is the precise statement of when the inside and outside descriptions carry the same information.</p>
+<hr>
+<p>Let us now see how this story connects to the Kantorovich duality that opens Phase 1.</p>
+<p>In the Kantorovich problem, you want to transport mass from distribution <span class="math inline">\(\mu\)</span> to distribution <span class="math inline">\(\nu\)</span> at minimum cost, where the cost of moving a unit of mass from location <span class="math inline">\(x\)</span> to location <span class="math inline">\(y\)</span> is <span class="math inline">\(c(x,y)\)</span>. The primal problem minimizes the total transport cost over all couplings. The dual problem maximizes an integral over potential functions <span class="math inline">\(\phi\)</span> and <span class="math inline">\(\psi\)</span> subject to <span class="math inline">\(\phi(x) + \psi(y) \leq c(x,y)\)</span>.</p>
+<p>The dual potential <span class="math inline">\(\psi\)</span> is the <span class="math inline">\(c\)</span>-transform of <span class="math inline">\(\phi\)</span> — the Legendre-Fenchel transform of the cost function, adapted to the transport setting: <span class="math inline">\(\psi(y) = \inf_x \{c(x,y) - \phi(x)\}\)</span>. The constraint <span class="math inline">\(\phi(x) + \psi(y) \leq c(x,y)\)</span> is exactly the condition that <span class="math inline">\(\psi\)</span> is a supporting function to the cost in the transport sense — the analogue of the tangent line condition from the factory story. The Kantorovich dual is the factory’s outside view applied to the transport problem: instead of describing the optimal transport plan from the inside (which couplings minimize cost?), you describe it from the outside (which potential functions certify that the cost is at least this large?). The two descriptions — primal coupling and dual potentials — carry the same information when the cost is convex, exactly as the factory’s inside and outside descriptions carry the same information when the production cost is convex.</p>
+<hr>
+<p>Hold two pictures simultaneously. The Patan textile factory: a convex cost function as the inside view, the maximum profit function as the outside view, the Legendre-Fenchel transform as the machine converting between them, and the geometric fact that both views encode the same family of supporting tangent lines. And the Kantorovich optimal transport problem, dimly visible on the horizon: a convex transport cost as the primal, the dual potential functions as the conjugate, and the zero duality gap as the statement that the primal and dual descriptions of the optimal transport plan carry the same information. The factory and the transport problem are the same mathematical object, told in two different economic languages.</p>
+<hr>
+</section>
+<section id="layer-2-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="layer-2-mathematics">Layer 2 (Mathematics)</h2>
+<p>We build the formalism in six stages: the precise definition of the convex conjugate, its fundamental properties, canonical examples, the Fenchel-Moreau biconjugate theorem, the Fenchel duality theorem and its connection to KKT conditions, and finally the <span class="math inline">\(c\)</span>-transform that bridges this theory directly to Kantorovich duality in Phase 1.</p>
+<section id="the-definition" class="level3">
+<h3 class="anchored" data-anchor-id="the-definition">The Definition</h3>
+<p>Let <span class="math inline">\(f: \mathbb{R}^n \to \mathbb{R} \cup \{+\infty\}\)</span> be any function, not necessarily convex. The <strong>convex conjugate</strong> (or <strong>Legendre-Fenchel transform</strong>) of <span class="math inline">\(f\)</span> is the function <span class="math inline">\(f^*: \mathbb{R}^n \to \mathbb{R} \cup \{+\infty\}\)</span> defined by:</p>
+<p><span class="math display">\[f^*(y) = \sup_{x \in \mathbb{R}^n} \{\langle y, x\rangle - f(x)\}\]</span></p>
+<p>The domain of <span class="math inline">\(f^*\)</span> is the set of <span class="math inline">\(y\)</span> for which this supremum is finite:</p>
+<p><span class="math display">\[\text{dom}(f^*) = \{y \in \mathbb{R}^n : f^*(y) &lt; +\infty\}\]</span></p>
+<p>Several immediate observations follow from the definition.</p>
+<p><strong><span class="math inline">\(f^*\)</span> is always convex</strong>, regardless of whether <span class="math inline">\(f\)</span> is convex. For any <span class="math inline">\(y_1, y_2\)</span> and <span class="math inline">\(\lambda \in [0,1]\)</span>:</p>
+<p><span class="math display">\[f^*(\lambda y_1 + (1-\lambda)y_2) = \sup_x \{\langle \lambda y_1 + (1-\lambda)y_2, x\rangle - f(x)\}\]</span> <span class="math display">\[\leq \lambda \sup_x\{\langle y_1, x\rangle - f(x)\} + (1-\lambda)\sup_x\{\langle y_2, x\rangle - f(x)\} = \lambda f^*(y_1) + (1-\lambda)f^*(y_2)\]</span></p>
+<p>The inequality holds because <span class="math inline">\(\sup(A + B) \leq \sup A + \sup B\)</span>. The conjugate is a pointwise supremum of affine (hence convex) functions <span class="math inline">\(y \mapsto \langle y, x\rangle - f(x)\)</span>, and pointwise suprema of convex functions are convex.</p>
+<p><strong>Fenchel-Young Inequality.</strong> For all <span class="math inline">\(x \in \mathbb{R}^n\)</span> and <span class="math inline">\(y \in \mathbb{R}^n\)</span>:</p>
+<p><span class="math display">\[f(x) + f^*(y) \geq \langle x, y\rangle\]</span></p>
+<p>This follows directly from the definition: <span class="math inline">\(f^*(y) \geq \langle y, x\rangle - f(x)\)</span> for every fixed <span class="math inline">\(x\)</span>, which rearranges to <span class="math inline">\(f(x) + f^*(y) \geq \langle x, y\rangle\)</span>. Equality holds if and only if <span class="math inline">\(x\)</span> achieves the supremum in the definition of <span class="math inline">\(f^*(y)\)</span> — that is, if and only if <span class="math inline">\(y \in \partial f(x)\)</span>, the subdifferential of <span class="math inline">\(f\)</span> at <span class="math inline">\(x\)</span>.</p>
+<hr>
+</section>
+<section id="canonical-examples" class="level3">
+<h3 class="anchored" data-anchor-id="canonical-examples">Canonical Examples</h3>
+<p>Working through explicit examples builds the geometric intuition.</p>
+<p><strong>Example 1: Quadratic.</strong> <span class="math inline">\(f(x) = \frac{1}{2}\|x\|_2^2\)</span> on <span class="math inline">\(\mathbb{R}^n\)</span>.</p>
+<p><span class="math display">\[f^*(y) = \sup_x \left\{\langle y, x\rangle - \frac{1}{2}\|x\|_2^2\right\}\]</span></p>
+<p>Setting the gradient to zero: <span class="math inline">\(y - x = 0 \implies x^* = y\)</span>. Substituting: <span class="math inline">\(f^*(y) = \langle y, y\rangle - \frac{1}{2}\|y\|_2^2 = \frac{1}{2}\|y\|_2^2\)</span>. The quadratic is self-conjugate: <span class="math inline">\(f^* = f\)</span>.</p>
+<p><strong>Example 2: Affine.</strong> <span class="math inline">\(f(x) = \langle a, x\rangle + b\)</span>.</p>
+<p><span class="math display">\[f^*(y) = \sup_x\{\langle y - a, x\rangle - b\}\]</span></p>
+<p>This supremum is <span class="math inline">\(+\infty\)</span> if <span class="math inline">\(y \neq a\)</span> (take <span class="math inline">\(x\)</span> in the direction <span class="math inline">\(y-a\)</span>) and <span class="math inline">\(-b\)</span> if <span class="math inline">\(y = a\)</span>. Therefore:</p>
+<p><span class="math display">\[f^*(y) = \begin{cases} -b &amp; y = a \\ +\infty &amp; y \neq a \end{cases}\]</span></p>
+<p>The conjugate of an affine function is an indicator function — infinite everywhere except at one point.</p>
+<p><strong>Example 3: Indicator function.</strong> Let <span class="math inline">\(C \subseteq \mathbb{R}^n\)</span> be a convex set and <span class="math inline">\(f = \delta_C\)</span> the indicator function: <span class="math inline">\(\delta_C(x) = 0\)</span> if <span class="math inline">\(x \in C\)</span>, <span class="math inline">\(+\infty\)</span> otherwise.</p>
+<p><span class="math display">\[\delta_C^*(y) = \sup_{x \in \mathbb{R}^n}\{\langle y, x\rangle - \delta_C(x)\} = \sup_{x \in C}\langle y, x\rangle\]</span></p>
+<p>This is the <strong>support function</strong> of <span class="math inline">\(C\)</span>, written <span class="math inline">\(\sigma_C(y)\)</span>. It measures the maximum inner product between <span class="math inline">\(y\)</span> and any point in <span class="math inline">\(C\)</span> — geometrically, it is the signed distance from the origin to the supporting hyperplane of <span class="math inline">\(C\)</span> in direction <span class="math inline">\(y\)</span>. The conjugate of the indicator of a convex set is the support function of that set. This duality — between sets (described by membership) and their support functions (described by their projections onto directions) — is the geometric heart of convex duality.</p>
+<p><strong>Example 4: <span class="math inline">\(L^p\)</span> norm.</strong> For <span class="math inline">\(f(x) = \frac{1}{p}\|x\|_p^p\)</span> with <span class="math inline">\(1 &lt; p &lt; \infty\)</span>:</p>
+<p><span class="math display">\[f^*(y) = \frac{1}{q}\|y\|_q^q \quad \text{where} \quad \frac{1}{p} + \frac{1}{q} = 1\]</span></p>
+<p>The conjugate of a scaled <span class="math inline">\(L^p\)</span> norm is a scaled <span class="math inline">\(L^q\)</span> norm, where <span class="math inline">\(p\)</span> and <span class="math inline">\(q\)</span> are conjugate exponents — exactly the duality between norms established in the previous topic. The Fenchel-Young inequality for this pair becomes <span class="math inline">\(\frac{1}{p}\|x\|_p^p + \frac{1}{q}\|y\|_q^q \geq \langle x, y\rangle\)</span>, which is Young’s inequality — the cornerstone of Hölder’s inequality.</p>
+<p><strong>Example 5: Negative entropy.</strong> <span class="math inline">\(f(p) = \sum_i p_i \log p_i\)</span> on the probability simplex.</p>
+<p><span class="math display">\[f^*(y) = \sup_p \left\{\sum_i y_i p_i - \sum_i p_i \log p_i\right\} = \log \sum_i e^{y_i}\]</span></p>
+<p>The conjugate of the negative entropy is the <strong>log-sum-exp</strong> function — the soft maximum. Setting the gradient to zero: <span class="math inline">\(y_i - \log p_i - 1 = 0 \implies p_i = e^{y_i - 1}\)</span>, normalized to the simplex gives <span class="math inline">\(p_i = e^{y_i}/\sum_j e^{y_j}\)</span> — the softmax. The Fenchel-Young inequality becomes <span class="math inline">\(\sum_i p_i \log p_i + \log \sum_i e^{y_i} \geq \sum_i p_i y_i\)</span>, which is equivalent to the non-negativity of KL divergence from the softmax distribution to <span class="math inline">\(p\)</span>. Entropy and log-sum-exp are conjugates — a fundamental duality in information theory and statistical mechanics.</p>
+<p><strong>Example 6: <span class="math inline">\(L^1\)</span> norm.</strong> <span class="math inline">\(f(x) = \|x\|_1\)</span>.</p>
+<p><span class="math display">\[f^*(y) = \sup_x\{\langle y, x\rangle - \|x\|_1\} = \delta_{B_\infty}(y) = \begin{cases} 0 &amp; \|y\|_\infty \leq 1 \\ +\infty &amp; \|y\|_\infty &gt; 1 \end{cases}\]</span></p>
+<p>The conjugate of the <span class="math inline">\(L^1\)</span> norm is the indicator of the <span class="math inline">\(L^\infty\)</span> unit ball. This is the dual norm relationship in conjugate form: the Legendre-Fenchel transform converts the <span class="math inline">\(L^1\)</span> norm into the indicator of its dual ball. The Fenchel-Young inequality becomes <span class="math inline">\(\|x\|_1 + \delta_{B_\infty}(y) \geq \langle x, y\rangle\)</span>, which for <span class="math inline">\(\|y\|_\infty \leq 1\)</span> gives <span class="math inline">\(\|x\|_1 \geq \langle x, y\rangle\)</span> — the dual norm definition.</p>
+<hr>
+</section>
+<section id="subdifferential-characterization-of-the-conjugate" class="level3">
+<h3 class="anchored" data-anchor-id="subdifferential-characterization-of-the-conjugate">Subdifferential Characterization of the Conjugate</h3>
+<p>The conjugate and the subdifferential are linked by a fundamental equivalence. For a closed convex function <span class="math inline">\(f\)</span>:</p>
+<p><span class="math display">\[y \in \partial f(x) \iff x \in \partial f^*(y) \iff f(x) + f^*(y) = \langle x, y\rangle\]</span></p>
+<p>All three conditions are equivalent. This is the <strong>Fenchel equality condition</strong> — the equality case of the Fenchel-Young inequality. It says: <span class="math inline">\(y\)</span> is a subgradient of <span class="math inline">\(f\)</span> at <span class="math inline">\(x\)</span> if and only if <span class="math inline">\(x\)</span> is a subgradient of <span class="math inline">\(f^*\)</span> at <span class="math inline">\(y\)</span>, if and only if the Fenchel-Young inequality is tight.</p>
+<p>For differentiable <span class="math inline">\(f\)</span>, this becomes: <span class="math inline">\(y = \nabla f(x) \iff x = \nabla f^*(y)\)</span>. The gradient maps of <span class="math inline">\(f\)</span> and <span class="math inline">\(f^*\)</span> are inverses of each other. This is the content of the classical Legendre transform — the gradient map of the cost function inverts the gradient map of the profit function. In the factory story: the optimal production volume <span class="math inline">\(x^*\)</span> at price <span class="math inline">\(y\)</span> satisfies <span class="math inline">\(y = f'(x^*)\)</span>, and the inverse relationship <span class="math inline">\(x^* = (f^*)'(y)\)</span> gives the supply curve — production as a function of price — directly from the conjugate.</p>
+<hr>
+</section>
+<section id="the-fenchel-moreau-biconjugate-theorem" class="level3">
+<h3 class="anchored" data-anchor-id="the-fenchel-moreau-biconjugate-theorem">The Fenchel-Moreau Biconjugate Theorem</h3>
+<p>The biconjugate of <span class="math inline">\(f\)</span> is the conjugate of the conjugate:</p>
+<p><span class="math display">\[f^{**}(x) = (f^*)^*(x) = \sup_{y \in \mathbb{R}^n}\{\langle x, y\rangle - f^*(y)\}\]</span></p>
+<p><strong>Theorem (Fenchel-Moreau).</strong> For any function <span class="math inline">\(f: \mathbb{R}^n \to \mathbb{R} \cup \{+\infty\}\)</span>:</p>
+<p><span class="math display">\[f^{**} = \overline{\text{conv}}(f)\]</span></p>
+<p>where <span class="math inline">\(\overline{\text{conv}}(f)\)</span> is the <strong>closed convex envelope</strong> of <span class="math inline">\(f\)</span> — the largest closed convex function lying pointwise below <span class="math inline">\(f\)</span>.</p>
+<p><strong>Corollary.</strong> If <span class="math inline">\(f\)</span> is closed and convex, then <span class="math inline">\(f^{**} = f\)</span>.</p>
+<p><strong>Proof sketch.</strong> Since <span class="math inline">\(f^*\)</span> is always convex and <span class="math inline">\(f^{**}\)</span> is the conjugate of <span class="math inline">\(f^*\)</span>, <span class="math inline">\(f^{**}\)</span> is always convex. The Fenchel-Young inequality gives <span class="math inline">\(f^{**}(x) \leq f(x)\)</span> for all <span class="math inline">\(x\)</span> — the biconjugate is always a lower bound. For closed convex <span class="math inline">\(f\)</span>, the supporting hyperplane theorem guarantees that for any <span class="math inline">\(x_0 \notin \text{epi}(f)\)</span>, there exists a separating hyperplane, which translates into the existence of <span class="math inline">\(y\)</span> such that <span class="math inline">\(\langle y, x_0\rangle - f^*(y) = f(x_0)\)</span>, giving <span class="math inline">\(f^{**}(x_0) = f(x_0)\)</span>. <span class="math inline">\(\square\)</span></p>
+<p>The Fenchel-Moreau theorem is the precise statement that the Legendre-Fenchel transform is an involution on the space of closed convex functions. The round trip <span class="math inline">\(f \to f^* \to f^{**}\)</span> returns exactly <span class="math inline">\(f\)</span> when <span class="math inline">\(f\)</span> is closed and convex. For non-convex <span class="math inline">\(f\)</span>, it returns the convex envelope — the “convexification” of <span class="math inline">\(f\)</span>. This theorem is the formal statement that the inside view (function values) and the outside view (supporting hyperplanes) carry exactly the same information for closed convex functions.</p>
+<hr>
+</section>
+<section id="properties-of-the-conjugate" class="level3">
+<h3 class="anchored" data-anchor-id="properties-of-the-conjugate">Properties of the Conjugate</h3>
+<p>Several algebraic properties make the conjugate computationally tractable.</p>
+<p><strong>Scaling.</strong> For <span class="math inline">\(\alpha &gt; 0\)</span>: <span class="math inline">\((\alpha f)^*(y) = \alpha f^*(y/\alpha)\)</span>.</p>
+<p><strong>Translation.</strong> <span class="math inline">\((f(\cdot - a))^*(y) = f^*(y) + \langle y, a\rangle\)</span>. <span class="math inline">\((f + b)^*(y) = f^*(y) - b\)</span>.</p>
+<p><strong>Infimal convolution.</strong> The infimal convolution of <span class="math inline">\(f\)</span> and <span class="math inline">\(g\)</span> is <span class="math inline">\((f \square g)(x) = \inf_z\{f(z) + g(x-z)\}\)</span>. Under conjugation:</p>
+<p><span class="math display">\[(f \square g)^* = f^* + g^*\]</span></p>
+<p>The conjugate of the infimal convolution is the sum of the conjugates. Dually:</p>
+<p><span class="math display">\[(f + g)^* = f^* \square g^*\]</span></p>
+<p>The conjugate of the sum is the infimal convolution of the conjugates. These two identities are the Legendre-Fenchel analogues of the convolution theorem for Fourier transforms — addition and infimal convolution are dual operations under the Legendre-Fenchel transform.</p>
+<p><strong>Composition with linear map.</strong> For a linear map <span class="math inline">\(A: \mathbb{R}^m \to \mathbb{R}^n\)</span>: <span class="math inline">\((f \circ A)^*(y) = f^*(A^{-T}y)\)</span> when <span class="math inline">\(A\)</span> is invertible, and more generally <span class="math inline">\((f \circ A)^* = \inf_{z: A^Tz = y} f^*(z)\)</span> in the non-invertible case.</p>
+<hr>
+</section>
+<section id="the-fenchel-duality-theorem" class="level3">
+<h3 class="anchored" data-anchor-id="the-fenchel-duality-theorem">The Fenchel Duality Theorem</h3>
+<p>The Fenchel duality theorem is the bridge between the Legendre-Fenchel transform and the primal-dual structure of convex optimization.</p>
+<p><strong>Theorem (Fenchel Duality).</strong> Let <span class="math inline">\(f: \mathbb{R}^n \to \mathbb{R} \cup \{+\infty\}\)</span> and <span class="math inline">\(g: \mathbb{R}^m \to \mathbb{R} \cup \{+\infty\}\)</span> be convex functions and let <span class="math inline">\(A: \mathbb{R}^n \to \mathbb{R}^m\)</span> be a linear map. Consider the primal problem:</p>
+<p><span class="math display">\[p^* = \inf_{x \in \mathbb{R}^n} \{f(x) + g(Ax)\}\]</span></p>
+<p>and the dual problem:</p>
+<p><span class="math display">\[d^* = \sup_{y \in \mathbb{R}^m} \{-f^*(A^T y) - g^*(-y)\}\]</span></p>
+<p>Then <span class="math inline">\(p^* \geq d^*\)</span> (weak duality) always holds. Under a constraint qualification — for instance, if there exists <span class="math inline">\(x_0 \in \text{dom}(f)\)</span> with <span class="math inline">\(Ax_0 \in \text{int}(\text{dom}(g))\)</span> — then:</p>
+<p><span class="math display">\[p^* = d^* \quad \text{(strong duality)}\]</span></p>
+<p>and the dual supremum is attained at some <span class="math inline">\(y^*\)</span>.</p>
+<p>The primal-dual optimality conditions are:</p>
+<p><span class="math display">\[A^T y^* \in \partial f(x^*) \quad \text{and} \quad -y^* \in \partial g(Ax^*)\]</span></p>
+<p>equivalently, using the Fenchel equality:</p>
+<p><span class="math display">\[x^* \in \partial f^*(A^T y^*) \quad \text{and} \quad Ax^* \in \partial g^*(-y^*)\]</span></p>
+<p>These are the KKT conditions in subdifferential form. They reduce to the standard KKT conditions <span class="math inline">\(\nabla f(x^*) + A^T \nabla g(Ax^*) = 0\)</span> when <span class="math inline">\(f\)</span> and <span class="math inline">\(g\)</span> are smooth.</p>
+<hr>
+</section>
+<section id="the-c-transform-and-kantorovich-duality" class="level3">
+<h3 class="anchored" data-anchor-id="the-c-transform-and-kantorovich-duality">The <span class="math inline">\(c\)</span>-Transform and Kantorovich Duality</h3>
+<p>The <span class="math inline">\(c\)</span>-transform is the version of the Legendre-Fenchel transform adapted to the Optimal Transport setting. For a cost function <span class="math inline">\(c: \mathbb{R}^n \times \mathbb{R}^n \to \mathbb{R}\)</span> and a function <span class="math inline">\(\phi: \mathbb{R}^n \to \mathbb{R}\)</span>, the <strong><span class="math inline">\(c\)</span>-transform</strong> of <span class="math inline">\(\phi\)</span> is:</p>
+<p><span class="math display">\[\phi^c(y) = \inf_{x \in \mathbb{R}^n} \{c(x,y) - \phi(x)\}\]</span></p>
+<p>Compare this with the Legendre-Fenchel transform <span class="math inline">\(f^*(y) = \sup_x\{\langle y, x\rangle - f(x)\}\)</span>. The <span class="math inline">\(c\)</span>-transform replaces the inner product <span class="math inline">\(\langle y, x\rangle\)</span> with the cost function <span class="math inline">\(c(x,y)\)</span>, and replaces supremum with infimum (corresponding to a sign convention difference). For the quadratic cost <span class="math inline">\(c(x,y) = \frac{1}{2}\|x-y\|_2^2\)</span>, the <span class="math inline">\(c\)</span>-transform reduces to the standard Legendre-Fenchel transform up to a change of variables.</p>
+<p>The <strong>Kantorovich dual problem</strong> is:</p>
+<p><span class="math display">\[\sup_{\phi, \psi} \left\{\int \phi \, d\mu + \int \psi \, d\nu : \phi(x) + \psi(y) \leq c(x,y) \; \forall x, y\right\}\]</span></p>
+<p>The constraint <span class="math inline">\(\phi(x) + \psi(y) \leq c(x,y)\)</span> for all <span class="math inline">\(y\)</span> is equivalent to <span class="math inline">\(\psi(y) \leq \inf_x\{c(x,y) - \phi(x)\} = \phi^c(y)\)</span>. The optimal <span class="math inline">\(\psi\)</span> is therefore <span class="math inline">\(\psi = \phi^c\)</span> — the <span class="math inline">\(c\)</span>-transform of <span class="math inline">\(\phi\)</span>. The dual problem reduces to:</p>
+<p><span class="math display">\[\sup_\phi \left\{\int \phi \, d\mu + \int \phi^c \, d\nu\right\}\]</span></p>
+<p>A function <span class="math inline">\(\phi\)</span> satisfying <span class="math inline">\(\phi^{cc} = \phi\)</span> — whose double <span class="math inline">\(c\)</span>-transform returns itself — is called <strong><span class="math inline">\(c\)</span>-concave</strong>. The Fenchel-Moreau theorem in the <span class="math inline">\(c\)</span>-transform setting says: the optimal potential <span class="math inline">\(\phi\)</span> in the Kantorovich dual is always <span class="math inline">\(c\)</span>-concave. For the quadratic cost <span class="math inline">\(c(x,y) = \frac{1}{2}\|x-y\|_2^2\)</span>, <span class="math inline">\(c\)</span>-concavity reduces to ordinary concavity of <span class="math inline">\(\phi + \frac{1}{2}\|\cdot\|^2\)</span>, and the optimal potential is the gradient of a convex function — a classical result in Optimal Transport theory.</p>
+<p><strong>Theorem (Kantorovich Duality).</strong> For probability measures <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> on <span class="math inline">\(\mathbb{R}^n\)</span> and a lower semicontinuous cost <span class="math inline">\(c \geq 0\)</span>:</p>
+<p><span class="math display">\[\inf_{\pi \in \Pi(\mu,\nu)} \int c(x,y) \, d\pi = \sup_{\phi \oplus \psi \leq c} \left\{\int \phi \, d\mu + \int \psi \, d\nu\right\}\]</span></p>
+<p>where <span class="math inline">\(\Pi(\mu,\nu)\)</span> is the set of couplings with marginals <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span>, and the supremum is over pairs <span class="math inline">\((\phi, \psi)\)</span> satisfying <span class="math inline">\(\phi(x) + \psi(y) \leq c(x,y)\)</span> for all <span class="math inline">\(x,y\)</span>. Both sides equal the Wasserstein distance <span class="math inline">\(W_c(\mu,\nu)\)</span> (for the appropriate Wasserstein metric). The proof uses the Fenchel duality theorem applied to the linear programming structure of the Kantorovich problem, with strong duality following from the constraint qualification that the feasible set of couplings is non-empty and compact.</p>
+<hr>
+</section>
+<section id="moreau-envelope-and-proximal-operator" class="level3">
+<h3 class="anchored" data-anchor-id="moreau-envelope-and-proximal-operator">Moreau Envelope and Proximal Operator</h3>
+<p>Two constructions derived from the Legendre-Fenchel transform are essential for computational optimization.</p>
+<p>The <strong>Moreau envelope</strong> of <span class="math inline">\(f\)</span> with parameter <span class="math inline">\(\lambda &gt; 0\)</span> is:</p>
+<p><span class="math display">\[f^\lambda(x) = \inf_z \left\{f(z) + \frac{1}{2\lambda}\|x-z\|_2^2\right\} = (f \square \frac{1}{2\lambda}\|\cdot\|_2^2)(x)\]</span></p>
+<p>It is the infimal convolution of <span class="math inline">\(f\)</span> with a scaled quadratic — a smoothed version of <span class="math inline">\(f\)</span> that approximates <span class="math inline">\(f\)</span> as <span class="math inline">\(\lambda \to 0\)</span>. The Moreau envelope is always differentiable, even when <span class="math inline">\(f\)</span> is not, with gradient:</p>
+<p><span class="math display">\[\nabla f^\lambda(x) = \frac{1}{\lambda}(x - \text{prox}_{\lambda f}(x))\]</span></p>
+<p>where the <strong>proximal operator</strong> is:</p>
+<p><span class="math display">\[\text{prox}_{\lambda f}(x) = \argmin_z \left\{f(z) + \frac{1}{2\lambda}\|x-z\|_2^2\right\}\]</span></p>
+<p>The proximal operator is the generalization of the projection operator: <span class="math inline">\(\text{prox}_{\lambda \delta_C} = \text{proj}_C\)</span>. It is the building block of proximal gradient methods — the algorithms used to minimize non-smooth convex objectives like the LASSO. The conjugate of the Moreau envelope is: <span class="math inline">\((f^\lambda)^*(y) = f^*(y) + \frac{\lambda}{2}\|y\|_2^2\)</span> — adding a quadratic to <span class="math inline">\(f^*\)</span> corresponds to infimal convolution with a quadratic in the primal. This duality between smoothing and strong convexification is used extensively in the analysis of the Sinkhorn algorithm.</p>
+<hr>
+</section>
+<section id="why-this-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-matters">WHY THIS MATTERS</h3>
+<p>In MATH 304 (Computational Operations Research), the duality of linear programs — the primal maximization problem and the dual minimization problem — is a special case of the Fenchel duality theorem with <span class="math inline">\(f = \delta_{\{Ax = b, x \geq 0\}}\)</span> and <span class="math inline">\(g\)</span> linear. The dual variables (shadow prices) in linear programming are exactly the <span class="math inline">\(y^*\)</span> that achieve the dual supremum in the Fenchel dual — they are the slopes of the supporting hyperplanes to the primal feasible set, encoded by the Legendre-Fenchel transform. The complementary slackness conditions of linear programming — <span class="math inline">\(y_i^*(a_i^T x^* - b_i) = 0\)</span> for all <span class="math inline">\(i\)</span> — are the Fenchel equality conditions <span class="math inline">\(f(x^*) + f^*(y^*) = \langle x^*, y^*\rangle\)</span> applied to the indicator function of the feasible set. In MATH 208, the connection between entropy and the log-partition function — the fact that the expected sufficient statistics under an exponential family are the gradient of the log-partition function — is the subdifferential characterization <span class="math inline">\(\mathbb{E}[T(X)] \in \partial A(\theta)\)</span> where <span class="math inline">\(A(\theta) = \log Z(\theta)\)</span> is the log-partition function and <span class="math inline">\((-H)^* = A\)</span> — the conjugate of negative entropy is the log-partition function.</p>
+<hr>
+</section>
+</section>
+<section id="layer-3-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="layer-3-bridge">Layer 3 (Bridge)</h2>
+<p>Every element of the Patan textile factory story has a precise mathematical address. Let us walk through them one by one, until the factory, the merchant, the profit function, and the full formal apparatus are completely fused into a single picture.</p>
+<hr>
+<p><strong>The textile factory itself — the production process with its nonlinear cost structure — is the function <span class="math inline">\(f: \mathbb{R}^n \to \mathbb{R} \cup \{+\infty\}\)</span>.</strong> The factory is not the building or the machines — it is the cost function. Every economic property of the factory is encoded in <span class="math inline">\(f\)</span>: the convexity encodes the disproportionate cost of scaling up, the domain encodes the feasible production range, the growth rate encodes the marginal cost at each output level. When the cost function is convex — when the factory’s cost structure bows upward — the entire duality theory applies. When it is not convex, the biconjugate theorem says only the convex envelope <span class="math inline">\(f^{**}\)</span> can be fully recovered from the outside view. Non-convex factories are partially invisible to the merchant.</p>
+<p><strong>The merchant’s offered price <span class="math inline">\(y\)</span> rupees per metre is the dual variable <span class="math inline">\(y \in \mathbb{R}^n\)</span>.</strong> In the scalar factory story, <span class="math inline">\(y\)</span> is a single price — the price per metre of fabric. In the general Legendre-Fenchel setting, <span class="math inline">\(y\)</span> lives in the dual space <span class="math inline">\(\mathbb{R}^n\)</span>, which for the scalar case is the same as the primal space <span class="math inline">\(\mathbb{R}\)</span> but for general vector-valued production is the space of price vectors. The dual variable is not a quantity — it is a price, a slope, a linear functional on the primal space. The primal space is quantity space. The dual space is price space. The Legendre-Fenchel transform is the machine that converts between them.</p>
+<p><strong>The trader’s profit at price <span class="math inline">\(y\)</span> when producing <span class="math inline">\(x\)</span> metres is the expression <span class="math inline">\(\langle y, x\rangle - f(x)\)</span> inside the supremum.</strong> The revenue <span class="math inline">\(\langle y, x\rangle\)</span> is the inner product of the price vector <span class="math inline">\(y\)</span> and the production vector <span class="math inline">\(x\)</span> — total revenue at the offered price. The cost <span class="math inline">\(f(x)\)</span> is subtracted. The difference is profit. This expression is linear in <span class="math inline">\(y\)</span> for fixed <span class="math inline">\(x\)</span> — it is an affine function of the price, with slope <span class="math inline">\(x\)</span> and intercept <span class="math inline">\(-f(x)\)</span>. The family of all such affine functions, one for each production level <span class="math inline">\(x\)</span>, is the collection of all linear functions that the supremum ranges over when computing <span class="math inline">\(f^*(y)\)</span>.</p>
+<p><strong>The trader’s optimal production decision — maximizing profit over all production levels — is the supremum <span class="math inline">\(f^*(y) = \sup_x \{\langle y, x\rangle - f(x)\}\)</span>.</strong> The supremum selects the production level <span class="math inline">\(x^*\)</span> that maximizes profit at the offered price <span class="math inline">\(y\)</span>. When <span class="math inline">\(f\)</span> is strictly convex and differentiable, the optimal <span class="math inline">\(x^*\)</span> is unique and satisfies the first-order condition <span class="math inline">\(y = \nabla f(x^*)\)</span> — price equals marginal cost, the fundamental economic optimality condition. The maximum profit <span class="math inline">\(f^*(y)\)</span> is the value of the factory to the merchant at price <span class="math inline">\(y\)</span> — the outside view of the production process.</p>
+<hr>
+<p><strong>The quadratic cost <span class="math inline">\(f(x) = \frac{1}{2}x^2\)</span> and its self-conjugate <span class="math inline">\(f^*(y) = \frac{1}{2}y^2\)</span> is the symmetric factory story.</strong> The first-order condition <span class="math inline">\(y = f'(x^*) = x^*\)</span> says optimal production equals price — a perfectly symmetric relationship between the inside and outside views. The factory’s marginal cost at production level <span class="math inline">\(x\)</span> equals <span class="math inline">\(x\)</span>, and the optimal production at price <span class="math inline">\(y\)</span> equals <span class="math inline">\(y\)</span>. The supply curve <span class="math inline">\(x^*(y) = y\)</span> is linear, and the profit function is a perfect mirror of the cost function. Self-conjugate functions are the factories whose inside and outside views are indistinguishable in shape — only the interpretation changes, from cost to profit, from quantity to price.</p>
+<p><strong>The affine cost <span class="math inline">\(f(x) = \langle a, x\rangle + b\)</span> and its indicator conjugate <span class="math inline">\(f^*(y) = -b\)</span> if <span class="math inline">\(y = a\)</span>, <span class="math inline">\(+\infty\)</span> otherwise, is the factory with fixed marginal cost.</strong> A factory with constant marginal cost <span class="math inline">\(a\)</span> has no flexibility — it always produces at the same marginal cost regardless of volume. The merchant can only profitably offer the exact price <span class="math inline">\(y = a\)</span> — any higher price generates infinite profit (the factory would produce infinite quantities at constant marginal cost), any lower price makes production unprofitable. The conjugate being infinite outside <span class="math inline">\(\{a\}\)</span> is the formal statement that the factory is only economically viable at one specific price. The inside view — constant marginal cost — produces the outside view — infinite supply elasticity except at exactly one price.</p>
+<p><strong>The indicator function <span class="math inline">\(\delta_C\)</span> and its support function conjugate <span class="math inline">\(\sigma_C(y) = \sup_{x \in C} \langle y, x\rangle\)</span> is the constrained factory.</strong> A factory constrained to produce in the set <span class="math inline">\(C\)</span> — say, bounded between minimum and maximum production levels — has zero cost within <span class="math inline">\(C\)</span> and infinite cost outside <span class="math inline">\(C\)</span>. The merchant’s maximum revenue from such a factory at price <span class="math inline">\(y\)</span> is the support function <span class="math inline">\(\sigma_C(y)\)</span> — the maximum inner product between the price direction <span class="math inline">\(y\)</span> and any feasible production vector in <span class="math inline">\(C\)</span>. The support function is the factory’s revenue potential as a function of price, and it is the geometric dual of the constraint set — it describes <span class="math inline">\(C\)</span> from the outside, via its projections onto every direction, rather than from the inside via membership conditions.</p>
+<hr>
+<p><strong>The tangent line to the cost function at production level <span class="math inline">\(x_0\)</span> — the line with slope <span class="math inline">\(f'(x_0)\)</span> and intercept <span class="math inline">\(f(x_0) - f'(x_0)x_0\)</span> — is a supporting hyperplane to the epigraph of <span class="math inline">\(f\)</span> at the point <span class="math inline">\((x_0, f(x_0))\)</span>.</strong> The intercept <span class="math inline">\(f(x_0) - f'(x_0)x_0 = -f^*(f'(x_0))\)</span> is the negative of the conjugate evaluated at the marginal cost <span class="math inline">\(f'(x_0)\)</span>. Every tangent line to the cost function is therefore encoded in the conjugate: knowing <span class="math inline">\(f^*\)</span> at every price <span class="math inline">\(y\)</span> is equivalent to knowing the intercept of every tangent line to <span class="math inline">\(f\)</span> at every slope <span class="math inline">\(y\)</span>. The conjugate is the complete catalogue of all tangent lines — the outside view is the collection of all supporting hyperplanes, and <span class="math inline">\(f^*\)</span> is the function that encodes them indexed by slope.</p>
+<p><strong>The Fenchel-Young inequality <span class="math inline">\(f(x) + f^*(y) \geq \langle x, y\rangle\)</span> is the profit bound.</strong> In the factory story: the production cost <span class="math inline">\(f(x)\)</span> plus the maximum achievable profit <span class="math inline">\(f^*(y)\)</span> is always at least the revenue <span class="math inline">\(\langle y, x\rangle\)</span> at price <span class="math inline">\(y\)</span> when producing <span class="math inline">\(x\)</span>. Rearranging: <span class="math inline">\(f^*(y) \geq \langle y, x\rangle - f(x)\)</span> — the maximum profit is always at least the profit at any specific production level. This is trivially true — the supremum is always at least any particular value. The content of the inequality is the equality condition: <span class="math inline">\(f(x) + f^*(y) = \langle x, y\rangle\)</span> if and only if <span class="math inline">\(y = \nabla f(x)\)</span> — the merchant’s price equals the factory’s marginal cost at the chosen production level. Equality is achieved exactly when the production decision is optimal — when price equals marginal cost. The Fenchel equality condition is the economic optimality condition, dressed in mathematical clothing.</p>
+<hr>
+<p><strong>The biconjugate theorem <span class="math inline">\(f^{**} = f\)</span> for closed convex <span class="math inline">\(f\)</span> is the statement that a well-behaved factory is completely determined by its outside view.</strong> The round trip — from cost function <span class="math inline">\(f\)</span> to profit function <span class="math inline">\(f^*\)</span> to the conjugate of the profit function <span class="math inline">\(f^{**}\)</span> — returns exactly the original cost function <span class="math inline">\(f\)</span> when <span class="math inline">\(f\)</span> is closed and convex. The factory is fully recoverable from the merchant’s perspective alone. If you know the maximum profit at every possible price, you can reconstruct the production cost at every possible quantity. The two descriptions carry identical information. For a non-convex factory — one whose cost function has local dips or non-convex regions — the round trip returns only the convex envelope <span class="math inline">\(f^{**} \leq f\)</span>: the outside view cannot see the non-convexities, which are averaged away when you take the convex hull. The merchant cannot distinguish a non-convex factory from its convex envelope. Non-convexity is invisible from outside.</p>
+<p><strong>The infimal convolution duality <span class="math inline">\((f \square g)^* = f^* + g^*\)</span> is the merger of two factories.</strong> The infimal convolution <span class="math inline">\((f \square g)(x) = \inf_z\{f(z) + g(x-z)\}\)</span> is the cost of producing <span class="math inline">\(x\)</span> total units by splitting production optimally between two factories — one with cost <span class="math inline">\(f\)</span> and one with cost <span class="math inline">\(g\)</span>. The conjugate of this merged operation is the sum of the individual profit functions: the maximum profit of the merged factory at price <span class="math inline">\(y\)</span> equals the maximum profit of factory 1 at price <span class="math inline">\(y\)</span> plus the maximum profit of factory 2 at price <span class="math inline">\(y\)</span>. Both factories face the same market price and maximize their profits independently. The inside view — split production optimally — corresponds to the outside view — maximize profits independently. This duality is used in the Sinkhorn algorithm: adding the entropic regularization term to the transport cost corresponds, under conjugation, to smoothing the dual potentials — and the smoothness of the Moreau envelope corresponds exactly to the strong convexity of the regularized problem.</p>
+<hr>
+<p><strong>The <span class="math inline">\(c\)</span>-transform <span class="math inline">\(\phi^c(y) = \inf_x\{c(x,y) - \phi(x)\}\)</span> is the Legendre-Fenchel transform with the inner product replaced by the transport cost <span class="math inline">\(c(x,y)\)</span>.</strong> In the factory story: instead of revenue being the inner product <span class="math inline">\(\langle y, x\rangle\)</span>, the gain from moving a unit of mass from <span class="math inline">\(x\)</span> to <span class="math inline">\(y\)</span> is governed by the cost <span class="math inline">\(c(x,y)\)</span>. The <span class="math inline">\(c\)</span>-transform of <span class="math inline">\(\phi\)</span> at <span class="math inline">\(y\)</span> asks: what is the best gain you can extract by choosing the source location <span class="math inline">\(x\)</span> optimally, given that the payoff at source <span class="math inline">\(x\)</span> and destination <span class="math inline">\(y\)</span> is <span class="math inline">\(c(x,y)\)</span> minus the potential <span class="math inline">\(\phi(x)\)</span> already extracted at the source? The constraint <span class="math inline">\(\phi(x) + \psi(y) \leq c(x,y)\)</span> in the Kantorovich dual is exactly the Fenchel-Young inequality for the <span class="math inline">\(c\)</span>-transform: the sum of the potentials at source and destination must not exceed the transport cost, just as the sum of production cost and maximum profit must not exceed revenue.</p>
+<p><strong>The Kantorovich duality theorem <span class="math inline">\(\inf_\pi \int c \, d\pi = \sup_{\phi + \psi \leq c} \{\int \phi \, d\mu + \int \psi \, d\nu\}\)</span> is the Fenchel duality theorem applied to the transport problem.</strong> The primal problem minimizes the linear functional <span class="math inline">\(\pi \mapsto \int c \, d\pi\)</span> over the convex set of couplings <span class="math inline">\(\Pi(\mu,\nu)\)</span> — a linear program over an infinite-dimensional space. The dual problem maximizes the sum of potential integrals subject to the <span class="math inline">\(c\)</span>-transform constraint. Strong duality — the equality of primal and dual values — is the statement that the cost function <span class="math inline">\(c\)</span> and the coupling set <span class="math inline">\(\Pi(\mu,\nu)\)</span> together satisfy the constraint qualification of the Fenchel duality theorem. The optimal dual potentials <span class="math inline">\(\phi^*\)</span> and <span class="math inline">\(\psi^* = (\phi^*)^c\)</span> are the supporting hyperplanes to the optimal transport cost, exactly as the tangent lines to the factory’s cost function are the supporting hyperplanes encoded by <span class="math inline">\(f^*\)</span>. The Kantorovich dual is the factory’s outside view, applied to the space of probability distributions.</p>
+<hr>
+<p><strong>The Moreau envelope <span class="math inline">\(f^\lambda(x) = \inf_z\{f(z) + \frac{1}{2\lambda}\|x-z\|_2^2\}\)</span> is the smoothed factory.</strong> The factory produces at the optimal mix between its natural production level <span class="math inline">\(z\)</span> and the target level <span class="math inline">\(x\)</span>, with a quadratic penalty for deviating from <span class="math inline">\(x\)</span>. As <span class="math inline">\(\lambda \to 0\)</span>, the penalty dominates and <span class="math inline">\(f^\lambda \to f\)</span> — the smoothing disappears. As <span class="math inline">\(\lambda \to \infty\)</span>, the penalty vanishes and <span class="math inline">\(f^\lambda \to \inf_z f(z)\)</span> — the factory always produces at its cheapest level regardless of <span class="math inline">\(x\)</span>. The Moreau envelope is always differentiable with gradient <span class="math inline">\(\nabla f^\lambda(x) = \frac{1}{\lambda}(x - \text{prox}_{\lambda f}(x))\)</span> — the smoothed factory has a well-defined marginal cost at every production level, even when the original factory’s cost function has corners or kinks. This is the mathematical reason the Sinkhorn algorithm uses entropic regularization: adding <span class="math inline">\(\varepsilon H(\pi)\)</span> to the transport cost is the Moreau envelope of the indicator function of <span class="math inline">\(\Pi(\mu,\nu)\)</span> in the dual space, producing a smooth, strictly convex problem from a non-smooth one.</p>
+<p><strong>The proximal operator <span class="math inline">\(\text{prox}_{\lambda f}(x) = \argmin_z\{f(z) + \frac{1}{2\lambda}\|x-z\|_2^2\}\)</span> is the factory’s optimal production level given a target <span class="math inline">\(x\)</span> and a quadratic deviation penalty.</strong> It generalizes projection — <span class="math inline">\(\text{prox}_{\lambda\delta_C}(x) = \text{proj}_C(x)\)</span> — to non-indicator convex functions. The LASSO regularizer’s proximal operator is the soft-thresholding function: <span class="math inline">\(\text{prox}_{\lambda\|\cdot\|_1}(x)_i = \text{sign}(x_i)\max(|x_i| - \lambda, 0)\)</span>. The soft-thresholding operator sets small components to zero — exactly the sparsity-promoting geometry of the <span class="math inline">\(L_1\)</span> ball — and shrinks large components toward zero by <span class="math inline">\(\lambda\)</span>. The Legendre-Fenchel transform, through the proximal operator, is the engine behind every sparse optimization algorithm in machine learning.</p>
+<hr>
+<p><strong>The connection to MATH 304 (Computational Operations Research) is now complete.</strong> The dual variables in linear programming are the <span class="math inline">\(y^*\)</span> that achieve the Fenchel dual supremum. The complementary slackness conditions <span class="math inline">\(y_i^*(a_i^Tx^* - b_i) = 0\)</span> are the Fenchel equality conditions <span class="math inline">\(f(x^*) + f^*(y^*) = \langle x^*, y^*\rangle\)</span> applied to the indicator function of the feasible polytope. The shadow price interpretation of dual variables — the rate at which the optimal objective value changes with respect to tightening a constraint — is the subdifferential of the value function with respect to the right-hand side, which by the envelope theorem equals the optimal dual variable. Every concept in LP duality that you used in MATH 304 was a special case of the Legendre-Fenchel transform applied to piecewise linear functions on polyhedral sets.</p>
+<p><strong>The connection to MATH 208 (Statistics and Probability) runs through the exponential family duality.</strong> The log-partition function <span class="math inline">\(A(\theta) = \log \int e^{\langle \theta, T(x)\rangle} p_0(x) \, dx\)</span> of an exponential family is the conjugate of the negative entropy <span class="math inline">\(H(p) = -\int p \log p \, d\lambda\)</span> restricted to the exponential family manifold. The moment map <span class="math inline">\(\mathbb{E}_\theta[T(X)] = \nabla A(\theta)\)</span> is the gradient of the log-partition function — the subdifferential characterization of the conjugate, giving the mean parameters as the gradient of the dual function. The natural parameters <span class="math inline">\(\theta\)</span> and the mean parameters <span class="math inline">\(\mu = \mathbb{E}_\theta[T(X)]\)</span> are related by the Legendre-Fenchel transform: <span class="math inline">\(\theta \in \partial(-H)(\mu)\)</span> and <span class="math inline">\(\mu \in \partial A(\theta)\)</span>. Every exponential family distribution you worked with in MATH 208 — Gaussian, Poisson, Bernoulli, exponential — lives on a Legendre-Fenchel dual pair of parameterizations.</p>
+<hr>
+<p><strong>Looking forward across the roadmap</strong>, the Legendre-Fenchel transform is the duality engine of every phase. In Phase 1, the Kantorovich duality converts the primal coupling problem into the dual potential problem via the <span class="math inline">\(c\)</span>-transform, and the entropic regularization of the Sinkhorn algorithm adds a KL divergence term whose conjugate is the log-sum-exp — the entropy-log-partition duality from Example 5. The Sinkhorn iterations are coordinate ascent on the dual Kantorovich problem, and their convergence is the convergence of the Legendre-Fenchel duality gap to zero. In Phase 2, the graph Laplacian eigenmaps minimize a Dirichlet energy functional whose dual — via the Legendre-Fenchel transform of the energy — is the spectral decomposition problem, connecting the primal geometric embedding to the dual spectral problem. In Phase 3, the score matching objective is the dual of the Fisher divergence, connected via the Legendre-Fenchel transform of the log-density. The JKO scheme’s variational formulation at each time step is a proximal operator in Wasserstein space — the Moreau envelope of the energy functional with respect to the Wasserstein metric. Every duality in Phase 3 — between noise and data, between forward and reverse diffusion, between the score function and the denoising function — is a Legendre-Fenchel duality in the appropriate function space.</p>
+<p>The Patan factory’s two descriptions — inside cost and outside profit — are not two different objects. They are two windows onto the same economic reality, related by the Legendre-Fenchel transform. Every duality in the roadmap is a factory with two windows. The transform is the machine that opens both simultaneously.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

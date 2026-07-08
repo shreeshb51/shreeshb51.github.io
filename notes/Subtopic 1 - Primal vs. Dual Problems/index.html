@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2026-06-15">
+
+<title>Subtopic 1 - Primal vs.&nbsp;Dual Problems – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Subtopic 1 - Primal vs.&nbsp;Dual Problems</li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#subtopic-1---primal-vs-dual-problems" id="toc-subtopic-1---primal-vs-dual-problems" class="nav-link active" data-scroll-target="#subtopic-1---primal-vs-dual-problems">Subtopic 1 - Primal vs Dual Problems</a>
+  <ul class="collapse">
+  <li><a href="#layer-1-story" id="toc-layer-1-story" class="nav-link" data-scroll-target="#layer-1-story">Layer 1 (Story)</a></li>
+  <li><a href="#layer-2-mathematics" id="toc-layer-2-mathematics" class="nav-link" data-scroll-target="#layer-2-mathematics">Layer 2 (Mathematics)</a></li>
+  <li><a href="#layer-3-bridge" id="toc-layer-3-bridge" class="nav-link" data-scroll-target="#layer-3-bridge">Layer 3 (Bridge)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Subtopic 1 - Primal vs.&nbsp;Dual Problems</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">June 15, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="subtopic-1---primal-vs-dual-problems" class="level1">
+<h1>Subtopic 1 - Primal vs Dual Problems</h1>
+<section id="layer-1-story" class="level2">
+<h2 class="anchored" data-anchor-id="layer-1-story">Layer 1 (Story)</h2>
+<p>You are the chief procurement officer for a large construction project in Kathmandu — a new hospital being built in Bansbari. The project requires three types of materials: cement, steel, and timber. You need to procure specific minimum quantities of each: at least 100 tonnes of cement, at least 50 tonnes of steel, and at least 200 cubic metres of timber. These are your constraints — the minimum requirements that the project cannot proceed without.</p>
+<p>You have three suppliers to choose from. Each supplier sells bundles — pre-packaged combinations of all three materials — and each bundle has a fixed price. Supplier A sells a bundle containing 2 tonnes of cement, 1 tonne of steel, and 4 cubic metres of timber for 80,000 rupees. Supplier B sells a bundle containing 1 tonne of cement, 2 tonnes of steel, and 2 cubic metres of timber for 60,000 rupees. Supplier C sells a bundle containing 3 tonnes of cement, 1 tonne of steel, and 5 cubic metres of timber for 100,000 rupees. You can buy any non-negative number of bundles from each supplier — including fractional amounts, since suppliers accept partial orders.</p>
+<p>Your goal is to meet all three minimum requirements at minimum total cost. This is the <strong>primal problem</strong> — minimize the total procurement cost subject to the constraint that all material requirements are satisfied.</p>
+<p>You sit down with your procurement team, formulate the constraints, and begin solving. But before you can finish, your finance director — a sharp woman who trained as a mathematician before moving into construction — walks in and reframes the entire problem from a completely different angle.</p>
+<hr>
+<p>She says: forget the bundles for a moment. Forget the suppliers. Imagine instead that you are not the buyer — you are a consultant hired by a rival company that wants to undercut you. The rival company does not sell bundles. It sells the raw materials directly: cement by the tonne, steel by the tonne, timber by the cubic metre. It wants to set prices — call them <span class="math inline">\(\lambda_1\)</span> rupees per tonne of cement, <span class="math inline">\(\lambda_2\)</span> rupees per tonne of steel, and <span class="math inline">\(\lambda_3\)</span> rupees per cubic metre of timber — such that buying from the rival is at least as attractive as buying any bundle from your three suppliers.</p>
+<p>The rival’s pricing must satisfy a competitive constraint: for each supplier bundle, the total value of the materials in that bundle at the rival’s prices must be at most the bundle’s purchase price. Otherwise, a rational buyer would buy the bundle from the supplier and immediately resell the materials to the rival at a profit — a pure arbitrage opportunity that the rival cannot allow. So:</p>
+<p>For Supplier A’s bundle: <span class="math inline">\(2\lambda_1 + 1\lambda_2 + 4\lambda_3 \leq 80,000\)</span> For Supplier B’s bundle: <span class="math inline">\(1\lambda_1 + 2\lambda_2 + 2\lambda_3 \leq 60,000\)</span> For Supplier C’s bundle: <span class="math inline">\(3\lambda_1 + 1\lambda_2 + 5\lambda_3 \leq 100,000\)</span></p>
+<p>These are the rival’s pricing constraints — the no-arbitrage conditions. And the prices must be non-negative: <span class="math inline">\(\lambda_1, \lambda_2, \lambda_3 \geq 0\)</span>. The rival cannot offer negative prices.</p>
+<p>Now the rival’s total revenue from selling you exactly the quantities you need — 100 tonnes of cement, 50 tonnes of steel, 200 cubic metres of timber — at its prices is:</p>
+<p><span class="math display">\[100\lambda_1 + 50\lambda_2 + 200\lambda_3\]</span></p>
+<p>The rival wants to maximize this revenue, subject to the no-arbitrage pricing constraints. This is the <strong>dual problem</strong> — maximize the rival’s revenue from satisfying your requirements, subject to the constraint that no bundle can be profitably arbitraged.</p>
+<hr>
+<p>Your finance director pauses and makes a remarkable observation. The dual problem — the rival’s revenue maximization — is not merely an alternative problem. It is the shadow of your primal problem. And the two problems are related by a theorem so elegant that it seems almost too good to be true:</p>
+<p>The rival’s maximum revenue is always at most your minimum procurement cost.</p>
+<p>Think about why. If the rival sets prices <span class="math inline">\(\lambda_1, \lambda_2, \lambda_3\)</span> satisfying the no-arbitrage constraints, then for any procurement plan you choose — buying <span class="math inline">\(x_A\)</span> bundles from A, <span class="math inline">\(x_B\)</span> from B, <span class="math inline">\(x_C\)</span> from C — the rival’s revenue from the materials in your plan is:</p>
+<p><span class="math display">\[\lambda_1(\text{cement in plan}) + \lambda_2(\text{steel in plan}) + \lambda_3(\text{timber in plan})\]</span></p>
+<p><span class="math display">\[\leq 80,000 x_A + 60,000 x_B + 100,000 x_C = \text{your total cost}\]</span></p>
+<p>The inequality holds because the no-arbitrage constraint says the rival’s value of each bundle is at most the bundle’s price. The rival’s total revenue from the materials in your plan is at most your total procurement cost, for any feasible plan. In particular, if your plan is optimal and the rival’s prices are optimal: the rival’s maximum revenue is at most your minimum cost.</p>
+<p>This is <strong>weak duality</strong>: the dual objective value never exceeds the primal objective value.</p>
+<hr>
+<p>But the finance director’s deeper insight is about when equality holds — when the rival’s maximum revenue exactly equals your minimum procurement cost. This is <strong>strong duality</strong>, and it holds here. Here is the intuition for why.</p>
+<p>Suppose you have found the optimal procurement plan — the cheapest combination of bundles that meets all requirements. Some suppliers may be used heavily, others lightly, others not at all. Now ask: which constraints are binding at the optimal plan? If you need exactly 100 tonnes of cement and your optimal plan provides exactly 100 tonnes, the cement constraint is binding — the requirement is met with no excess. If your plan provides 120 tonnes of cement when only 100 is needed, the cement constraint is slack — you have excess cement.</p>
+<p>Strong duality requires that the rival’s prices align perfectly with the binding constraints. The rival should assign a positive price to materials whose constraints are binding at the optimum — these materials are genuinely scarce and valuable. The rival should assign zero price to materials whose constraints are slack at the optimum — these materials are in excess supply and have no marginal value. The condition that matches prices to binding constraints is called <strong>complementary slackness</strong>, and it is the mechanism by which the primal and dual problems lock together at optimality.</p>
+<hr>
+<p>Here is the break moment. The naive assumption is that strong duality — the equality of primal and dual values — always holds whenever both the primal and dual problems are well-posed. After all, the story above made it sound inevitable: the rival’s prices align with your binding constraints, and the gap closes. Surely this happens for any reasonable optimization problem?</p>
+<p>This breaks in a specific and illuminating way. Consider a slight modification of the procurement problem: you still want to minimize cost, but now one of your constraints is non-convex — say, the cement requirement must be met but the cement quantity must be either zero or at least 150 tonnes, with no fractional amounts allowed. The feasible set is no longer convex. The primal problem is now a mixed-integer program, and the gap between the primal minimum and the dual maximum — called the <strong>duality gap</strong> — is in general strictly positive. The rival’s maximum revenue is strictly less than your minimum cost, and no pricing scheme can close the gap entirely.</p>
+<p>Strong duality requires the problem to be convex — or more precisely, it requires a constraint qualification: a condition ensuring that the feasible set is well-behaved enough that the separating hyperplane argument can be applied at the boundary of the feasible region. The most common constraint qualification is <strong>Slater’s condition</strong>: there must exist a strictly feasible point — a point that satisfies all constraints strictly, not just at equality. In the procurement story, Slater’s condition requires that you can buy bundles in quantities that strictly exceed all three material requirements simultaneously, before minimizing cost. If such a point exists, strong duality holds and the gap closes to zero.</p>
+<p>The duality gap is the price you pay for non-convexity or infeasibility. It is the amount by which the rival’s best pricing scheme underestimates your true minimum cost. In convex problems with Slater’s condition, the gap is exactly zero — the primal and dual problems are two windows onto the same optimal solution.</p>
+<hr>
+<p>Now the finance director completes her insight by showing that the dual problem is always easier in one crucial respect: it is always convex, even when the primal is not. The dual function — the rival’s revenue as a function of the prices <span class="math inline">\(\lambda\)</span> — is a concave function of <span class="math inline">\(\lambda\)</span>, because it is the infimum of affine functions. The maximum of a concave function is a convex optimization problem. So the dual is always convex, regardless of the primal’s structure.</p>
+<p>This asymmetry is what makes the dual so useful. When you face a non-convex primal, you can solve the convex dual as a lower bound. When you face a convex primal with Slater’s condition, you can solve the dual instead of the primal, and the solution is identical — you get the primal optimal solution for free from the dual, through the KKT conditions of the next subtopic. The dual is not a second-class citizen of optimization — it is an equal partner that sometimes reveals the structure of the primal solution more clearly than the primal itself.</p>
+<hr>
+<p>Hold two pictures simultaneously.</p>
+<p>The procurement officer’s picture: you are buying bundles to meet material requirements at minimum cost. Every feasible plan — every combination of bundle quantities that meets all requirements — corresponds to a point in the feasible region of the primal. The minimum cost point is the primal optimal solution.</p>
+<p>The rival’s picture: you are setting material prices to maximize revenue from the buyer’s requirements, subject to no-arbitrage constraints. Every feasible pricing scheme — every set of non-negative prices that does not create arbitrage — corresponds to a point in the feasible region of the dual. The maximum revenue point is the dual optimal solution.</p>
+<p>The two pictures are looking at the same economic reality from opposite sides of the market — buyer and seller, quantity and price, primal and dual. When the problem is convex and Slater’s condition holds, the two pictures agree at optimality: the buyer’s minimum cost equals the seller’s maximum revenue, the primal and dual solutions are connected by complementary slackness, and the duality gap is exactly zero.</p>
+<hr>
+</section>
+<section id="layer-2-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="layer-2-mathematics">Layer 2 (Mathematics)</h2>
+<p>We build the formalism in six stages: the standard form primal problem and its Lagrangian, the dual function and dual problem, weak duality, strong duality and constraint qualifications, the value function and sensitivity analysis, and the connection to the Fenchel duality theorem of the previous topic.</p>
+<section id="the-primal-problem" class="level3">
+<h3 class="anchored" data-anchor-id="the-primal-problem">The Primal Problem</h3>
+<p>The <strong>standard form primal problem</strong> is:</p>
+<p><span class="math display">\[p^* = \inf_{x \in \mathbb{R}^n} f_0(x)\]</span> <span class="math display">\[\text{subject to } f_i(x) \leq 0, \quad i = 1, \ldots, m\]</span> <span class="math display">\[h_j(x) = 0, \quad j = 1, \ldots, p\]</span></p>
+<p>where <span class="math inline">\(f_0: \mathbb{R}^n \to \mathbb{R}\)</span> is the objective function, <span class="math inline">\(f_i: \mathbb{R}^n \to \mathbb{R}\)</span> are the inequality constraint functions, and <span class="math inline">\(h_j: \mathbb{R}^n \to \mathbb{R}\)</span> are the equality constraint functions. The <strong>feasible set</strong> is:</p>
+<p><span class="math display">\[\mathcal{D} = \{x \in \mathbb{R}^n : f_i(x) \leq 0 \; \forall i, \; h_j(x) = 0 \; \forall j\}\]</span></p>
+<p>The problem is <strong>convex</strong> if <span class="math inline">\(f_0, f_1, \ldots, f_m\)</span> are all convex functions and <span class="math inline">\(h_j(x) = a_j^T x - b_j\)</span> are affine — linear equality constraints are always convex, being simultaneously convex and concave. For a convex problem, the feasible set <span class="math inline">\(\mathcal{D}\)</span> is convex — an intersection of convex sublevel sets and affine hyperplanes.</p>
+<p>The primal optimal value is <span class="math inline">\(p^* \in \mathbb{R} \cup \{\pm\infty\}\)</span>. The problem is <strong>infeasible</strong> if <span class="math inline">\(\mathcal{D} = \emptyset\)</span>, in which case <span class="math inline">\(p^* = +\infty\)</span>. The problem is <strong>unbounded below</strong> if <span class="math inline">\(\inf_{x \in \mathcal{D}} f_0(x) = -\infty\)</span>.</p>
+<hr>
+</section>
+<section id="the-lagrangian" class="level3">
+<h3 class="anchored" data-anchor-id="the-lagrangian">The Lagrangian</h3>
+<p>The <strong>Lagrangian</strong> <span class="math inline">\(L: \mathbb{R}^n \times \mathbb{R}^m \times \mathbb{R}^p \to \mathbb{R}\)</span> is defined by:</p>
+<p><span class="math display">\[L(x, \lambda, \nu) = f_0(x) + \sum_{i=1}^m \lambda_i f_i(x) + \sum_{j=1}^p \nu_j h_j(x)\]</span></p>
+<p>The vectors <span class="math inline">\(\lambda = (\lambda_1, \ldots, \lambda_m) \in \mathbb{R}^m\)</span> are the <strong>dual variables</strong> or <strong>Lagrange multipliers</strong> for the inequality constraints, and <span class="math inline">\(\nu = (\nu_1, \ldots, \nu_p) \in \mathbb{R}^p\)</span> are the dual variables for the equality constraints. The Lagrangian is a weighted sum of the objective and all constraint functions, where the weights are the dual variables.</p>
+<p>The key insight is that the Lagrangian is an affine function of <span class="math inline">\((\lambda, \nu)\)</span> for fixed <span class="math inline">\(x\)</span>. This linearity is what makes the dual function concave and the dual problem convex, regardless of the primal’s structure.</p>
+<p><strong>Connection to penalization.</strong> The Lagrangian can be interpreted as a penalized objective: if a constraint <span class="math inline">\(f_i(x) \leq 0\)</span> is violated — if <span class="math inline">\(f_i(x) &gt; 0\)</span> — then the term <span class="math inline">\(\lambda_i f_i(x)\)</span> adds a positive penalty to the objective, provided <span class="math inline">\(\lambda_i \geq 0\)</span>. The multiplier <span class="math inline">\(\lambda_i\)</span> is the penalty rate — how much each unit of constraint violation costs. At the optimum, the penalty rates are calibrated so that the penalized unconstrained problem and the constrained problem have the same solution.</p>
+<hr>
+</section>
+<section id="the-dual-function-and-dual-problem" class="level3">
+<h3 class="anchored" data-anchor-id="the-dual-function-and-dual-problem">The Dual Function and Dual Problem</h3>
+<p>The <strong>Lagrange dual function</strong> (or simply <strong>dual function</strong>) <span class="math inline">\(g: \mathbb{R}^m \times \mathbb{R}^p \to \mathbb{R} \cup \{-\infty\}\)</span> is defined as the infimum of the Lagrangian over the primal variable <span class="math inline">\(x\)</span>:</p>
+<p><span class="math display">\[g(\lambda, \nu) = \inf_{x \in \mathbb{R}^n} L(x, \lambda, \nu) = \inf_{x \in \mathbb{R}^n} \left\{f_0(x) + \sum_{i=1}^m \lambda_i f_i(x) + \sum_{j=1}^p \nu_j h_j(x)\right\}\]</span></p>
+<p>The dual function <span class="math inline">\(g\)</span> is always <strong>concave</strong> in <span class="math inline">\((\lambda, \nu)\)</span>, regardless of the convexity of the primal problem. This follows because <span class="math inline">\(g\)</span> is the pointwise infimum of affine functions of <span class="math inline">\((\lambda, \nu)\)</span> — for each fixed <span class="math inline">\(x\)</span>, the function <span class="math inline">\((\lambda, \nu) \mapsto L(x, \lambda, \nu)\)</span> is affine, and the infimum of a family of affine (hence concave) functions is concave.</p>
+<p>The <strong>Lagrange dual problem</strong> is:</p>
+<p><span class="math display">\[d^* = \sup_{\lambda \geq 0, \nu} g(\lambda, \nu)\]</span></p>
+<p>The constraint <span class="math inline">\(\lambda \geq 0\)</span> — that all inequality constraint multipliers are non-negative — is the <strong>dual feasibility</strong> condition. There is no sign constraint on <span class="math inline">\(\nu\)</span> because equality constraints can be violated in either direction, and the multipliers must be able to penalize both directions.</p>
+<p>The dual problem is always a <strong>convex optimization problem</strong> — maximizing a concave function over a convex domain <span class="math inline">\(\{\lambda \geq 0\} \times \mathbb{R}^p\)</span> — regardless of whether the primal is convex. This is the fundamental asymmetry: the dual is always convex, providing a tractable lower bound on the primal even when the primal is intractable.</p>
+<hr>
+</section>
+<section id="weak-duality" class="level3">
+<h3 class="anchored" data-anchor-id="weak-duality">Weak Duality</h3>
+<p><strong>Theorem (Weak Duality).</strong> For any primal feasible <span class="math inline">\(x\)</span> and any dual feasible <span class="math inline">\((\lambda, \nu)\)</span> with <span class="math inline">\(\lambda \geq 0\)</span>:</p>
+<p><span class="math display">\[g(\lambda, \nu) \leq p^*\]</span></p>
+<p>equivalently <span class="math inline">\(d^* \leq p^*\)</span>.</p>
+<p><strong>Proof.</strong> For any primal feasible <span class="math inline">\(x\)</span> — satisfying <span class="math inline">\(f_i(x) \leq 0\)</span> and <span class="math inline">\(h_j(x) = 0\)</span> — and any <span class="math inline">\(\lambda \geq 0\)</span>:</p>
+<p><span class="math display">\[g(\lambda, \nu) \leq L(x, \lambda, \nu) = f_0(x) + \sum_i \lambda_i \underbrace{f_i(x)}_{\leq 0} + \sum_j \nu_j \underbrace{h_j(x)}_{= 0} \leq f_0(x)\]</span></p>
+<p>The first inequality holds because <span class="math inline">\(g\)</span> is the infimum of <span class="math inline">\(L\)</span> over all <span class="math inline">\(x\)</span>, so it is at most <span class="math inline">\(L\)</span> at any particular <span class="math inline">\(x\)</span>. The second inequality holds because <span class="math inline">\(\lambda_i \geq 0\)</span> and <span class="math inline">\(f_i(x) \leq 0\)</span>, so <span class="math inline">\(\lambda_i f_i(x) \leq 0\)</span>. Taking the infimum over all feasible <span class="math inline">\(x\)</span> on the right gives <span class="math inline">\(g(\lambda, \nu) \leq p^*\)</span>. Taking the supremum over all dual feasible <span class="math inline">\((\lambda, \nu)\)</span> on the left gives <span class="math inline">\(d^* \leq p^*\)</span>. <span class="math inline">\(\square\)</span></p>
+<p>The <strong>duality gap</strong> is <span class="math inline">\(p^* - d^* \geq 0\)</span>. Weak duality says the gap is always non-negative. Strong duality says it is zero under appropriate conditions.</p>
+<hr>
+</section>
+<section id="strong-duality-and-constraint-qualifications" class="level3">
+<h3 class="anchored" data-anchor-id="strong-duality-and-constraint-qualifications">Strong Duality and Constraint Qualifications</h3>
+<p><strong>Theorem (Strong Duality for Convex Problems).</strong> If the primal problem is convex and satisfies <strong>Slater’s condition</strong> — there exists a strictly feasible point <span class="math inline">\(\tilde{x}\)</span> with <span class="math inline">\(f_i(\tilde{x}) &lt; 0\)</span> for all <span class="math inline">\(i = 1, \ldots, m\)</span> and <span class="math inline">\(h_j(\tilde{x}) = 0\)</span> for all <span class="math inline">\(j\)</span> — then:</p>
+<p><span class="math display">\[d^* = p^*\]</span></p>
+<p>and the dual supremum is attained at some <span class="math inline">\((\lambda^*, \nu^*)\)</span>.</p>
+<p><strong>Slater’s condition</strong> is a <strong>constraint qualification</strong> — a regularity condition on the feasible set that prevents the boundary of the feasible region from having degenerate geometry. It requires that the feasible set has a non-empty interior relative to the equality constraint manifold. Geometrically, Slater’s condition ensures that the feasible set is not a lower-dimensional manifold — that there is genuine interior volume to the feasible region.</p>
+<p>The proof of strong duality proceeds via the separating hyperplane theorem applied to two convex sets derived from the primal problem. Define the set:</p>
+<p><span class="math display">\[\mathcal{G} = \{(u, v, t) \in \mathbb{R}^m \times \mathbb{R}^p \times \mathbb{R} : \exists x \text{ with } f_i(x) \leq u_i, h_j(x) = v_j, f_0(x) \leq t\}\]</span></p>
+<p>This is the set of achievable constraint residuals and objective values. Under Slater’s condition, <span class="math inline">\(\mathcal{G}\)</span> is a convex set with non-empty interior, and the point <span class="math inline">\((0, 0, p^*)\)</span> lies on its boundary. The separating hyperplane theorem produces a hyperplane separating <span class="math inline">\((0, 0, p^* - \epsilon)\)</span> from <span class="math inline">\(\mathcal{G}\)</span> for any <span class="math inline">\(\epsilon &gt; 0\)</span>, and the normal to this hyperplane is the optimal dual variable <span class="math inline">\((\lambda^*, \nu^*, 1)\)</span> — the dual solution. Letting <span class="math inline">\(\epsilon \to 0\)</span> establishes <span class="math inline">\(d^* = p^*\)</span>.</p>
+<p><strong>Refined Slater’s condition.</strong> For problems where some constraints are affine, Slater’s condition only requires strict feasibility for the non-affine constraints. Affine constraints are automatically qualified — they cannot cause degeneracy — so only the nonlinear convex constraints need to be strictly satisfied.</p>
+<hr>
+</section>
+<section id="the-value-function-and-sensitivity-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="the-value-function-and-sensitivity-analysis">The Value Function and Sensitivity Analysis</h3>
+<p>The <strong>value function</strong> or <strong>perturbation function</strong> <span class="math inline">\(V: \mathbb{R}^m \times \mathbb{R}^p \to \mathbb{R} \cup \{+\infty\}\)</span> is defined by:</p>
+<p><span class="math display">\[V(u, v) = \inf_{x} \{f_0(x) : f_i(x) \leq u_i \; \forall i, \; h_j(x) = v_j \; \forall j\}\]</span></p>
+<p>It gives the optimal primal value when the constraints are perturbed by <span class="math inline">\((u,v)\)</span> — the right-hand sides of the constraints are shifted. The original primal value is <span class="math inline">\(V(0,0) = p^*\)</span>.</p>
+<p>The dual function is the Legendre-Fenchel conjugate of the value function (up to a sign):</p>
+<p><span class="math display">\[g(\lambda, \nu) = -V^*(-\lambda, -\nu)\]</span></p>
+<p>This connection reveals the deepest relationship between Lagrangian duality and the Legendre-Fenchel transform: the Lagrangian dual is the Fenchel dual of the value function. The duality gap <span class="math inline">\(p^* - d^*\)</span> is the gap between <span class="math inline">\(V(0,0)\)</span> and its biconjugate <span class="math inline">\(V^{**}(0,0)\)</span> — it is zero if and only if <span class="math inline">\(V\)</span> is convex and closed at the origin, which is exactly what Slater’s condition guarantees.</p>
+<p><strong>Sensitivity interpretation of dual variables.</strong> When strong duality holds and <span class="math inline">\(V\)</span> is differentiable at the origin:</p>
+<p><span class="math display">\[\lambda_i^* = -\frac{\partial V}{\partial u_i}(0,0), \qquad \nu_j^* = -\frac{\partial V}{\partial v_j}(0,0)\]</span></p>
+<p>The optimal dual variable <span class="math inline">\(\lambda_i^*\)</span> measures the rate at which the optimal objective value decreases when the <span class="math inline">\(i\)</span>-th inequality constraint is relaxed — when <span class="math inline">\(u_i\)</span> increases from 0. This is the <strong>shadow price</strong> interpretation: <span class="math inline">\(\lambda_i^*\)</span> is the marginal value of relaxing the <span class="math inline">\(i\)</span>-th constraint. In the procurement story, <span class="math inline">\(\lambda_i^*\)</span> is the marginal cost of one additional unit of material <span class="math inline">\(i\)</span> — the price the rival assigns to material <span class="math inline">\(i\)</span> at the dual optimum.</p>
+<hr>
+</section>
+<section id="minimax-and-the-saddle-point-characterization" class="level3">
+<h3 class="anchored" data-anchor-id="minimax-and-the-saddle-point-characterization">Minimax and the Saddle Point Characterization</h3>
+<p>The primal and dual problems can be written as a minimax problem. Observe that for <span class="math inline">\(\lambda \geq 0\)</span>:</p>
+<p><span class="math display">\[\sup_{\lambda \geq 0, \nu} L(x, \lambda, \nu) = \begin{cases} f_0(x) &amp; \text{if } x \text{ is primal feasible} \\ +\infty &amp; \text{otherwise} \end{cases}\]</span></p>
+<p>Therefore:</p>
+<p><span class="math display">\[p^* = \inf_x \sup_{\lambda \geq 0, \nu} L(x, \lambda, \nu)\]</span></p>
+<p>And the dual problem is:</p>
+<p><span class="math display">\[d^* = \sup_{\lambda \geq 0, \nu} \inf_x L(x, \lambda, \nu)\]</span></p>
+<p>Weak duality is the minimax inequality <span class="math inline">\(\sup \inf \leq \inf \sup\)</span> — always true for any function. Strong duality is the minimax equality <span class="math inline">\(\sup \inf = \inf \sup\)</span> — a deeper result requiring convexity and constraint qualifications.</p>
+<p>A pair <span class="math inline">\((x^*, \lambda^*, \nu^*)\)</span> is a <strong>saddle point</strong> of the Lagrangian if:</p>
+<p><span class="math display">\[L(x^*, \lambda, \nu) \leq L(x^*, \lambda^*, \nu^*) \leq L(x, \lambda^*, \nu^*) \quad \forall x, \; \forall \lambda \geq 0, \; \forall \nu\]</span></p>
+<p><strong>Theorem.</strong> <span class="math inline">\((x^*, \lambda^*, \nu^*)\)</span> is a saddle point of <span class="math inline">\(L\)</span> if and only if <span class="math inline">\(x^*\)</span> is primal optimal, <span class="math inline">\((\lambda^*, \nu^*)\)</span> is dual optimal, and strong duality holds: <span class="math inline">\(f_0(x^*) = g(\lambda^*, \nu^*)\)</span>.</p>
+<p>The saddle point condition is the simultaneous solution of the primal minimization and dual maximization — the point where the two problems lock together at the same value.</p>
+<hr>
+</section>
+<section id="connecting-to-the-fenchel-duality-theorem" class="level3">
+<h3 class="anchored" data-anchor-id="connecting-to-the-fenchel-duality-theorem">Connecting to the Fenchel Duality Theorem</h3>
+<p>The Fenchel duality theorem from the previous topic is a special case of Lagrangian duality. The Fenchel primal <span class="math inline">\(\inf_x\{f(x) + g(Ax)\}\)</span> can be written in standard form by introducing a splitting variable <span class="math inline">\(z = Ax\)</span>:</p>
+<p><span class="math display">\[\inf_{x, z} \{f(x) + g(z)\} \quad \text{subject to} \quad Ax - z = 0\]</span></p>
+<p>The Lagrangian is:</p>
+<p><span class="math display">\[L(x, z, \nu) = f(x) + g(z) + \langle \nu, Ax - z\rangle = f(x) + \langle A^T\nu, x\rangle + g(z) - \langle \nu, z\rangle\]</span></p>
+<p>The dual function is:</p>
+<p><span class="math display">\[g(\nu) = \inf_x \{f(x) + \langle A^T\nu, x\rangle\} + \inf_z\{g(z) - \langle \nu, z\rangle\} = -f^*(-A^T\nu) - g^*(\nu)\]</span></p>
+<p>The dual problem <span class="math inline">\(\sup_\nu\{-f^*(-A^T\nu) - g^*(\nu)\}\)</span> is exactly the Fenchel dual from the previous topic. The Fenchel duality theorem is Lagrangian duality applied to the equality-constrained splitting formulation. Every result from the Legendre-Fenchel topic is a special case of Lagrangian duality, and Lagrangian duality is the general framework that subsumes it.</p>
+<hr>
+</section>
+<section id="canonical-examples" class="level3">
+<h3 class="anchored" data-anchor-id="canonical-examples">Canonical Examples</h3>
+<p><strong>Linear programming.</strong> Primal: <span class="math inline">\(\min c^Tx\)</span> subject to <span class="math inline">\(Ax = b\)</span>, <span class="math inline">\(x \geq 0\)</span>. The Lagrangian is <span class="math inline">\(L(x, \lambda, \nu) = c^Tx - \lambda^Tx + \nu^T(Ax-b) = (c - \lambda + A^T\nu)^Tx - \nu^Tb\)</span>. The dual function is <span class="math inline">\(g(\lambda, \nu) = -\nu^Tb\)</span> if <span class="math inline">\(c - \lambda + A^T\nu = 0\)</span>, and <span class="math inline">\(-\infty\)</span> otherwise. The dual problem is: <span class="math inline">\(\max -\nu^Tb\)</span> subject to <span class="math inline">\(A^T\nu \leq c\)</span>, <span class="math inline">\(\lambda \geq 0\)</span>, which simplifies to <span class="math inline">\(\max -b^T\nu\)</span> subject to <span class="math inline">\(A^T\nu \leq c\)</span> — the standard LP dual. Strong duality holds whenever both primal and dual are feasible — the LP strong duality theorem, which requires no Slater condition because all constraints are affine.</p>
+<p><strong>Quadratic programming.</strong> Primal: <span class="math inline">\(\min \frac{1}{2}x^TQx + c^Tx\)</span> subject to <span class="math inline">\(Ax \leq b\)</span>, with <span class="math inline">\(Q \succ 0\)</span>. The Lagrangian is <span class="math inline">\(L(x,\lambda) = \frac{1}{2}x^TQx + c^Tx + \lambda^T(Ax-b)\)</span>. Minimizing over <span class="math inline">\(x\)</span>: <span class="math inline">\(Qx + c + A^T\lambda = 0 \implies x^*(\lambda) = -Q^{-1}(c + A^T\lambda)\)</span>. Substituting: <span class="math inline">\(g(\lambda) = -\frac{1}{2}(c + A^T\lambda)^TQ^{-1}(c+A^T\lambda) - b^T\lambda\)</span>. The dual is <span class="math inline">\(\max_{\lambda \geq 0} g(\lambda)\)</span> — a concave quadratic program. Strong duality holds under Slater’s condition, which requires <span class="math inline">\(\exists \tilde{x}: A\tilde{x} &lt; b\)</span>.</p>
+<p><strong>Support vector machines.</strong> Primal: <span class="math inline">\(\min \frac{1}{2}\|w\|_2^2\)</span> subject to <span class="math inline">\(y_i(w^Tx_i + b) \geq 1\)</span> for all <span class="math inline">\(i\)</span>. Rewriting as <span class="math inline">\(\min \frac{1}{2}\|w\|_2^2\)</span> subject to <span class="math inline">\(1 - y_i(w^Tx_i+b) \leq 0\)</span>. The Lagrangian is <span class="math inline">\(L(w,b,\lambda) = \frac{1}{2}\|w\|_2^2 + \sum_i\lambda_i(1-y_i(w^Tx_i+b))\)</span>. Minimizing over <span class="math inline">\(w\)</span> and <span class="math inline">\(b\)</span>: <span class="math inline">\(w^* = \sum_i\lambda_iy_ix_i\)</span> and <span class="math inline">\(\sum_i\lambda_iy_i = 0\)</span>. Substituting: <span class="math inline">\(g(\lambda) = \sum_i\lambda_i - \frac{1}{2}\sum_{i,j}\lambda_i\lambda_jy_iy_j\langle x_i,x_j\rangle\)</span>. The dual SVM is <span class="math inline">\(\max_{\lambda \geq 0}\{g(\lambda) : \sum_i\lambda_iy_i = 0\}\)</span> — a quadratic program involving only inner products <span class="math inline">\(\langle x_i, x_j\rangle\)</span>, enabling the kernel trick.</p>
+<hr>
+</section>
+<section id="why-this-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-matters">WHY THIS MATTERS</h3>
+<p>In MATH 304 (Computational Operations Research), LP duality is the canonical example of Lagrangian duality — the dual of a maximization LP is a minimization LP, and strong duality holds by the LP strong duality theorem without requiring Slater’s condition because all constraints are affine. The dual variables you computed as shadow prices are exactly the optimal Lagrange multipliers <span class="math inline">\((\lambda^*, \nu^*)\)</span> of the Lagrangian dual. In MATH 201 (Advanced Calculus), the method of Lagrange multipliers for equality-constrained optimization is a special case of the KKT conditions — with only equality constraints and no inequality constraints, the stationarity condition <span class="math inline">\(\nabla f_0(x^*) + \sum_j \nu_j^* \nabla h_j(x^*) = 0\)</span> is exactly the Lagrange multiplier condition you derived by the method of undetermined coefficients. The multipliers <span class="math inline">\(\nu_j^*\)</span> are the Lagrange multipliers, now understood as the optimal dual variables measuring the sensitivity of the optimal value to the equality constraint right-hand sides.</p>
+<hr>
+</section>
+</section>
+<section id="layer-3-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="layer-3-bridge">Layer 3 (Bridge)</h2>
+<p>Every element of the Bansbari hospital construction story has a precise mathematical address. Let us walk through them one by one, until the procurement officer, the rival supplier, the bundle prices, and the full formal apparatus are completely fused into a single picture.</p>
+<hr>
+<p><strong>The hospital construction project — the full procurement problem with its material requirements and supplier options — is the standard form primal optimization problem.</strong> The primal problem packages everything the procurement officer faces: an objective to minimize, a feasible set defined by constraints, and a domain of decision variables. Every element of the story maps onto every element of the primal — the decision variables are bundle quantities, the objective is total cost, the constraints are material requirements, and the feasible set is the collection of all procurement plans that satisfy all requirements simultaneously.</p>
+<p><strong>The procurement officer’s decision variables — how many bundles to buy from each supplier — are the primal variables <span class="math inline">\(x = (x_A, x_B, x_C) \in \mathbb{R}^3_+\)</span>.</strong> Each component <span class="math inline">\(x_i \geq 0\)</span> is the number of bundles purchased from supplier <span class="math inline">\(i\)</span>. The non-negativity constraints <span class="math inline">\(x_i \geq 0\)</span> are the feasibility conditions that prevent the officer from selling bundles back to suppliers — you cannot buy negative quantities. These are the implicit domain constraints, and they can be handled either as explicit inequality constraints <span class="math inline">\(-x_i \leq 0\)</span> or as part of the domain definition.</p>
+<p><strong>The total procurement cost — 80,000<span class="math inline">\(x_A\)</span> + 60,000<span class="math inline">\(x_B\)</span> + 100,000<span class="math inline">\(x_C\)</span> — is the objective function <span class="math inline">\(f_0(x)\)</span>.</strong> It is a linear function of the decision variables — a special case of a convex function, being simultaneously convex and concave. The primal problem minimizes this objective over all feasible procurement plans. The optimal value <span class="math inline">\(p^*\)</span> is the minimum cost achievable while meeting all material requirements.</p>
+<p><strong>The minimum material requirements — at least 100 tonnes of cement, 50 tonnes of steel, 200 cubic metres of timber — are the inequality constraints <span class="math inline">\(f_i(x) \leq 0\)</span>.</strong> Written in standard form: the cement constraint is <span class="math inline">\(100 - (2x_A + x_B + 3x_C) \leq 0\)</span>, the steel constraint is <span class="math inline">\(50 - (x_A + 2x_B + x_C) \leq 0\)</span>, and the timber constraint is <span class="math inline">\(200 - (4x_A + 2x_B + 5x_C) \leq 0\)</span>. Each constraint says the requirement is met — the procured quantity is at least the required amount. Written as <span class="math inline">\(f_i(x) \leq 0\)</span>, each <span class="math inline">\(f_i\)</span> is the shortfall — how much the plan falls short of the requirement — and feasibility requires the shortfall to be non-positive. The feasible set <span class="math inline">\(\mathcal{D}\)</span> is the intersection of these three halfspaces with the non-negative orthant — a convex polyhedron, being a finite intersection of halfspaces.</p>
+<hr>
+<p><strong>The rival supplier’s material prices — <span class="math inline">\(\lambda_1\)</span> rupees per tonne of cement, <span class="math inline">\(\lambda_2\)</span> per tonne of steel, <span class="math inline">\(\lambda_3\)</span> per cubic metre of timber — are the dual variables <span class="math inline">\(\lambda = (\lambda_1, \lambda_2, \lambda_3) \in \mathbb{R}^3_+\)</span>.</strong> The dual variables are prices — not quantities, not costs, but the rates at which the objective value responds to constraint perturbation. The non-negativity requirement <span class="math inline">\(\lambda \geq 0\)</span> is the dual feasibility condition: the rival cannot set negative prices, because negative prices would mean the rival pays buyers to take materials, which is economically absurd and mathematically corresponds to the dual variable signing requirement for inequality constraints.</p>
+<p><strong>The Lagrangian <span class="math inline">\(L(x, \lambda) = f_0(x) + \sum_i \lambda_i f_i(x)\)</span> is the procurement officer’s penalized cost — total bundle cost plus penalty for unmet requirements.</strong> Expanding: <span class="math inline">\(L(x, \lambda) = (80,000 x_A + 60,000 x_B + 100,000 x_C) + \lambda_1(100 - 2x_A - x_B - 3x_C) + \lambda_2(50 - x_A - 2x_B - x_C) + \lambda_3(200 - 4x_A - 2x_B - 5x_C)\)</span>. Each term <span class="math inline">\(\lambda_i f_i(x)\)</span> is the penalty for shortfall in material <span class="math inline">\(i\)</span> — if the plan falls short by <span class="math inline">\(f_i(x)\)</span> units and the rival charges <span class="math inline">\(\lambda_i\)</span> per unit, the penalty is <span class="math inline">\(\lambda_i f_i(x)\)</span>. The Lagrangian is the total cost including these penalties. For a feasible plan where <span class="math inline">\(f_i(x) \leq 0\)</span>, the penalties are non-positive — the plan meets requirements and faces no penalty, so <span class="math inline">\(L(x,\lambda) \leq f_0(x)\)</span> for all <span class="math inline">\(\lambda \geq 0\)</span> and all feasible <span class="math inline">\(x\)</span>. This is the mechanism of weak duality.</p>
+<p><strong>The no-arbitrage constraints on the rival’s prices — the conditions that no bundle can be profitably resold — are the dual feasibility conditions hidden inside the dual function’s domain.</strong> For Supplier A’s bundle: <span class="math inline">\(2\lambda_1 + \lambda_2 + 4\lambda_3 \leq 80,000\)</span>. For Supplier B: <span class="math inline">\(\lambda_1 + 2\lambda_2 + 2\lambda_3 \leq 60,000\)</span>. For Supplier C: <span class="math inline">\(3\lambda_1 + \lambda_2 + 5\lambda_3 \leq 100,000\)</span>. These constraints emerge from minimizing the Lagrangian over <span class="math inline">\(x \geq 0\)</span>: <span class="math inline">\(g(\lambda) = \inf_{x \geq 0} L(x,\lambda)\)</span>. Collecting terms in <span class="math inline">\(x_A\)</span>: the coefficient of <span class="math inline">\(x_A\)</span> in <span class="math inline">\(L\)</span> is <span class="math inline">\(80,000 - 2\lambda_1 - \lambda_2 - 4\lambda_3\)</span>. For the infimum over <span class="math inline">\(x_A \geq 0\)</span> to be finite, this coefficient must be non-negative — otherwise taking <span class="math inline">\(x_A \to \infty\)</span> drives <span class="math inline">\(L \to -\infty\)</span>. The no-arbitrage constraint for Supplier A is exactly the condition that this coefficient is non-negative: <span class="math inline">\(2\lambda_1 + \lambda_2 + 4\lambda_3 \leq 80,000\)</span>. The rival’s pricing constraints are not imposed externally — they emerge automatically from the requirement that the dual function is finite.</p>
+<hr>
+<p><strong>The dual function <span class="math inline">\(g(\lambda) = \inf_{x \geq 0} L(x,\lambda)\)</span> — the rival’s revenue from the optimal response of the procurement officer at prices <span class="math inline">\(\lambda\)</span> — is always concave in <span class="math inline">\(\lambda\)</span>.</strong> For fixed <span class="math inline">\(x\)</span>, the Lagrangian <span class="math inline">\(L(x,\lambda)\)</span> is affine in <span class="math inline">\(\lambda\)</span> — linear with intercept <span class="math inline">\(f_0(x)\)</span> and slope vector <span class="math inline">\((f_1(x), f_2(x), f_3(x))\)</span>. The dual function is the infimum of this family of affine functions indexed by <span class="math inline">\(x\)</span>, and the infimum of a family of affine functions is concave. Geometrically: the dual function is the lower envelope of a family of hyperplanes in <span class="math inline">\(\lambda\)</span>-space, and lower envelopes are always concave. The rival’s revenue function is always concave — regardless of whether the procurement problem is convex — because it is defined by an infimum over linear functions.</p>
+<p><strong>The dual problem <span class="math inline">\(d^* = \sup_{\lambda \geq 0} g(\lambda)\)</span> — the rival’s optimal pricing scheme — is always a convex optimization problem.</strong> Maximizing a concave function over the convex domain <span class="math inline">\(\{\lambda \geq 0\}\)</span> is a convex problem. This is the fundamental asymmetry: even if the primal procurement problem were non-convex — if the bundle quantities had to be integers, for example — the dual pricing problem is still convex. The dual always offers a tractable lower bound on the intractable primal.</p>
+<p><strong>The rival’s total revenue from satisfying the procurement requirements <span class="math inline">\(100\lambda_1 + 50\lambda_2 + 200\lambda_3\)</span> is the dual objective, which equals <span class="math inline">\(-g(\lambda)\)</span> plus a constant when the no-arbitrage constraints are satisfied.</strong> More precisely, when the no-arbitrage constraints hold — when the dual function is finite — the dual objective equals the Lagrangian evaluated at the optimal bundle quantities for those prices, which reduces to the rival’s revenue from the required quantities minus the penalty for the constraint shortfalls. The dual problem maximizes this revenue over all feasible prices.</p>
+<hr>
+<p><strong>Weak duality — the rival’s maximum revenue is at most the procurement officer’s minimum cost — is the inequality <span class="math inline">\(d^* \leq p^*\)</span>.</strong> The proof in the story was: for any feasible procurement plan <span class="math inline">\(x\)</span> and any feasible prices <span class="math inline">\(\lambda \geq 0\)</span>, the rival’s revenue from the required quantities is at most the bundle cost of the plan, because the no-arbitrage constraints say the rival’s value of each bundle is at most the bundle’s price. In the formal proof: <span class="math inline">\(g(\lambda) \leq L(x,\lambda) \leq f_0(x)\)</span> for any feasible <span class="math inline">\(x\)</span> and <span class="math inline">\(\lambda \geq 0\)</span>. The first inequality holds because <span class="math inline">\(g\)</span> is the infimum of <span class="math inline">\(L\)</span> over <span class="math inline">\(x\)</span>, so it is at most <span class="math inline">\(L\)</span> at any particular <span class="math inline">\(x\)</span>. The second holds because <span class="math inline">\(\lambda_i \geq 0\)</span> and <span class="math inline">\(f_i(x) \leq 0\)</span> make the penalty terms non-positive. Taking the supremum over <span class="math inline">\(\lambda\)</span> and infimum over <span class="math inline">\(x\)</span> preserves the inequality: <span class="math inline">\(d^* \leq p^*\)</span>.</p>
+<p><strong>The duality gap <span class="math inline">\(p^* - d^* \geq 0\)</span> is the gap between what the procurement officer must pay and what the rival can extract.</strong> It is always non-negative by weak duality. When the problem is convex and Slater’s condition holds, the gap closes to zero: the rival’s maximum revenue exactly equals the officer’s minimum cost. The gap is the price of non-convexity — if the officer must buy integer quantities of bundles, the feasible set is non-convex, and the rival’s linear pricing scheme cannot perfectly replicate the integer structure. The rival systematically underprices the materials relative to what the officer must pay.</p>
+<p><strong>Slater’s condition — there exists a strictly feasible procurement plan — is the condition that the officer can meet all material requirements with strict excess before optimizing.</strong> Formally: there exists <span class="math inline">\(\tilde{x} \geq 0\)</span> with <span class="math inline">\(2\tilde{x}_A + \tilde{x}_B + 3\tilde{x}_C &gt; 100\)</span>, <span class="math inline">\(\tilde{x}_A + 2\tilde{x}_B + \tilde{x}_C &gt; 50\)</span>, and <span class="math inline">\(4\tilde{x}_A + 2\tilde{x}_B + 5\tilde{x}_C &gt; 200\)</span> simultaneously. This is obviously satisfied — buy 100 bundles from each supplier, and all requirements are vastly exceeded. When Slater’s condition holds, strong duality holds: the rival’s maximum revenue equals the officer’s minimum cost, and the duality gap is exactly zero.</p>
+<hr>
+<p><strong>The shadow price interpretation of dual variables — <span class="math inline">\(\lambda_i^* = -\partial V/\partial u_i(0,0)\)</span> — is the marginal value of relaxing constraint <span class="math inline">\(i\)</span>.</strong> In the procurement story: <span class="math inline">\(\lambda_1^*\)</span> is the rate at which the minimum procurement cost decreases when the cement requirement is relaxed by one tonne. If the cement requirement drops from 100 to 99 tonnes, the minimum cost decreases by approximately <span class="math inline">\(\lambda_1^*\)</span> rupees. The rival’s optimal price for cement is exactly the shadow price of the cement constraint — the marginal economic value of one additional tonne of cement to the construction project. The dual variables are not arbitrary multipliers. They are the precise economic valuations of the constraints — the shadow prices that the market would assign to each scarce resource at the optimum.</p>
+<p><strong>The value function <span class="math inline">\(V(u,v)\)</span> — the minimum procurement cost when requirements are shifted by <span class="math inline">\((u,v)\)</span> — is the bridge between the Lagrangian dual and the Legendre-Fenchel transform.</strong> The dual function <span class="math inline">\(g(\lambda,\nu) = -V^*(-\lambda,-\nu)\)</span> says: the dual function is the negative Fenchel conjugate of the value function. The duality gap <span class="math inline">\(p^* - d^*\)</span> is <span class="math inline">\(V(0,0) - V^{**}(0,0)\)</span> — the gap between the value function and its biconjugate at the origin. Strong duality is the condition that this gap closes — that <span class="math inline">\(V\)</span> is convex and closed at the origin, which Slater’s condition guarantees. The entire Lagrangian duality theory is the Legendre-Fenchel transform applied to the value function. The procurement officer’s minimum cost and the rival’s maximum revenue are the primal and dual descriptions of the same value function, exactly as the factory’s cost function and profit function were the primal and dual descriptions of the same production process.</p>
+<hr>
+<p><strong>The minimax characterization <span class="math inline">\(p^* = \inf_x \sup_{\lambda \geq 0} L(x,\lambda) \geq \sup_{\lambda \geq 0} \inf_x L(x,\lambda) = d^*\)</span> is the game between the officer and the rival.</strong> The officer moves first: she chooses a procurement plan <span class="math inline">\(x\)</span> that is feasible — if she violates a constraint, the rival can set <span class="math inline">\(\lambda_i \to \infty\)</span> and push the Lagrangian to <span class="math inline">\(+\infty\)</span>, so the officer is forced to be feasible. The rival moves second: given the officer’s plan, the rival sets prices <span class="math inline">\(\lambda\)</span> to maximize the Lagrangian. The officer wants to minimize the maximum the rival can extract. The rival wants to maximize the minimum the officer must pay. The minimax inequality says the rival’s maximum of minimums is always at most the officer’s minimum of maximums. Strong duality — the minimax equality — is the condition that the order of play does not matter: the outcome is the same whether the officer or the rival moves first.</p>
+<p><strong>The LP duality from MATH 304 is Lagrangian duality for the linear procurement problem.</strong> The standard LP dual that you computed in MATH 304 — taking the transpose of the constraint matrix, swapping minimization and maximization, reversing constraint directions — is exactly the dual problem produced by the Lagrangian construction with linear <span class="math inline">\(f_0\)</span> and affine <span class="math inline">\(f_i\)</span>. The shadow prices you computed for LP constraints are the optimal dual variables <span class="math inline">\(\lambda^*\)</span>. The complementary slackness conditions you applied — “if a constraint is not binding, its dual variable is zero; if a dual variable is positive, its constraint is binding” — are the KKT conditions of the next subtopic, which we will derive precisely in Layer 1 of Subtopic 2.</p>
+<p><strong>The Lagrange multiplier method from MATH 201 is Lagrangian duality for equality-constrained optimization.</strong> When you minimized <span class="math inline">\(f(x,y)\)</span> subject to <span class="math inline">\(g(x,y) = 0\)</span> using the method of Lagrange multipliers — writing <span class="math inline">\(\nabla f = \lambda \nabla g\)</span> and solving — you were finding the stationarity condition of the Lagrangian <span class="math inline">\(L(x,y,\lambda) = f(x,y) + \lambda g(x,y)\)</span> with respect to <span class="math inline">\((x,y)\)</span>. The multiplier <span class="math inline">\(\lambda\)</span> is the dual variable for the equality constraint — the sensitivity of the optimal value to the constraint right-hand side. The condition <span class="math inline">\(\nabla f = \lambda \nabla g\)</span> is the stationarity KKT condition, and the condition <span class="math inline">\(g(x,y) = 0\)</span> is the primal feasibility KKT condition. The method of Lagrange multipliers is the KKT system for equality-constrained optimization, and every Lagrange multiplier problem you solved in MATH 201 was a two-variable Lagrangian dual computation.</p>
+<hr>
+<p><strong>Looking forward to the roadmap</strong>, the Lagrangian duality framework is the operational machinery of every constrained optimization in every phase. In Phase 1, the Kantorovich problem is a linear program over the infinite-dimensional space of coupling measures, with equality constraints enforcing the marginal conditions. The dual variables are the potential functions <span class="math inline">\(\phi\)</span> and <span class="math inline">\(\psi\)</span> — the Lagrange multipliers for the marginal constraints — and the Kantorovich duality theorem is strong duality for this infinite-dimensional LP. The complementary slackness conditions say: a pair <span class="math inline">\((x,y)\)</span> is in the support of the optimal coupling if and only if <span class="math inline">\(\phi(x) + \psi(y) = c(x,y)\)</span> — the constraint is active at every point that is actually used for transport. In Phase 2, the equivariance constraints of geometric deep learning — requiring network outputs to transform correctly under symmetry operations — are linear equality constraints on the weight matrices, and their Lagrange multipliers measure the marginal cost of enforcing each equivariance condition. In Phase 3, the JKO scheme minimizes a sum of an energy functional and a Wasserstein distance at each time step, subject to the constraint that the output is a probability measure — a constraint whose Lagrange multiplier is the time step size, appearing as the temperature parameter governing the trade-off between energy minimization and distribution spreading.</p>
+<p>The rival supplier sitting across the market from the procurement officer is not a competitor — it is the dual problem, looking at the same optimization from the other side of the market. The primal minimizes over quantities. The dual maximizes over prices. At optimality, under convexity and Slater’s condition, they see exactly the same solution from exactly opposite directions. The duality gap between them is zero.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

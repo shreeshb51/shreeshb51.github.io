@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>laplacian_eigenmaps – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#topic-2---laplacian-eigenmaps-geometry-through-the-spectrum" id="toc-topic-2---laplacian-eigenmaps-geometry-through-the-spectrum" class="nav-link active" data-scroll-target="#topic-2---laplacian-eigenmaps-geometry-through-the-spectrum">Topic 2 - Laplacian Eigenmaps: Geometry Through the Spectrum</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#layer-1-story" id="toc-layer-1-story" class="nav-link" data-scroll-target="#layer-1-story">Layer 1 (Story)</a></li>
+  <li><a href="#layer-2-mathematics" id="toc-layer-2-mathematics" class="nav-link" data-scroll-target="#layer-2-mathematics">Layer 2 (Mathematics)</a></li>
+  <li><a href="#layer-3-bridge" id="toc-layer-3-bridge" class="nav-link" data-scroll-target="#layer-3-bridge">Layer 3 (Bridge)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<section id="topic-2---laplacian-eigenmaps-geometry-through-the-spectrum" class="level1">
+<h1>Topic 2 - Laplacian Eigenmaps: Geometry Through the Spectrum</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>Topic 1 built the machinery for processing signals defined on a known manifold — you had a terrain surface, you knew its geometry, and you designed filters that respected that geometry through geodesic neighbourhoods, local polar coordinates, and gauge-equivariant kernels. The manifold was given. The problem was computation on it.</p>
+<p>Topic 2 reverses the problem entirely. The manifold is not given. You have a cloud of high-dimensional data points — a set of observations in <span class="math inline">\(\mathbb{R}^D\)</span> where <span class="math inline">\(D\)</span> is large, perhaps hundreds or thousands of dimensions — and you suspect, guided by the manifold hypothesis, that these points lie near a low-dimensional smooth manifold <span class="math inline">\(\mathcal{M}\)</span> embedded in <span class="math inline">\(\mathbb{R}^D\)</span>. You do not know <span class="math inline">\(\mathcal{M}\)</span>. You cannot write down its metric tensor or compute its geodesics. All you have is the point cloud itself, and the question is: can you discover the manifold’s intrinsic geometry from the data alone, and use that geometry to produce a low-dimensional representation of the data that is faithful to the manifold’s true structure?</p>
+<p>Laplacian Eigenmaps answer this question. They do so by constructing the graph Laplacian of a neighbourhood graph built from the data points, computing its eigenvectors, and using those eigenvectors as coordinates for the embedding. The correctness of this procedure — that it recovers the manifold’s intrinsic geometry rather than the extrinsic geometry of the ambient space — rests on the Belkin-Niyogi convergence theorem that you already met in Topic 2 of Chapter 2: the graph Laplacian eigenvectors converge to the Laplace-Beltrami eigenfunctions as the data density increases. The embedding is the manifold’s own harmonic coordinate system, made computable from finite data through the spectral approximation of its Laplace-Beltrami operator.</p>
+<p>Topic 2 is, in a precise sense, the culmination of the spectral thread that has run through the entire Phase 2. The spectral thread began in Chapter 1, where the spherical harmonics <span class="math inline">\(Y_\ell^m\)</span> appeared as the eigenfunctions of <span class="math inline">\(\Delta_{S^2}\)</span> and the natural basis for <span class="math inline">\(SO(3)\)</span>-equivariant features. It continued in Chapter 2’s Topic 2, where the graph Laplacian <span class="math inline">\(L = D - A\)</span> appeared as the discrete approximation of the Laplace-Beltrami operator and its eigenvectors gave the graph Fourier basis. It deepened in Chapter 3’s Topic 1, where the Laplace-Beltrami operator <span class="math inline">\(\Delta_\mathcal{M}\)</span> appeared as the intrinsic differential operator governing geodesic convolution and manifold harmonic analysis, with DiffusionNet using its eigenfunctions as the basis for intrinsic feature propagation. Laplacian Eigenmaps complete this thread: they take the spectral theory of <span class="math inline">\(\Delta_\mathcal{M}\)</span>, made computable from data through the graph Laplacian approximation, and use it not to define a filter or a convolution but to define the embedding itself — to discover the manifold’s coordinate system from the data.</p>
+<p>The problem that Laplacian Eigenmaps solve is dimensionality reduction with geometric fidelity. Dimensionality reduction — finding a low-dimensional representation of high-dimensional data — is one of the central problems of machine learning and data analysis. The classical approaches are Principal Component Analysis, which finds the directions of maximum variance in the data and projects onto a low-dimensional linear subspace, and Multidimensional Scaling, which finds an embedding that preserves pairwise Euclidean distances between all data points. Both are linear methods: they represent the data as points in a Euclidean subspace, with the embedding coordinates being linear functions of the original features. Linear methods work well when the data lies near a linear subspace of the ambient space — when the manifold is flat. When the manifold is curved — when the data lies near a sphere, a Swiss roll, a torus, or any other nonlinearly curved surface — linear methods fail: they find the best linear approximation to a nonlinear structure, producing embeddings that distort the manifold’s intrinsic geometry in ways that make the low-dimensional representation misleading.</p>
+<p>Laplacian Eigenmaps are a nonlinear dimensionality reduction method: they find an embedding that preserves the manifold’s intrinsic geometric structure — the geodesic distances between nearby points — rather than the Euclidean distances in the ambient space. Two data points that are close on the manifold surface will be close in the Laplacian Eigenmap embedding, even if they are far apart in the ambient Euclidean space because the manifold curves between them. Two data points that are far apart on the manifold will be far apart in the embedding, even if the manifold happens to fold them close together in the ambient space. The embedding is faithful to the manifold’s intrinsic geometry, not to the extrinsic geometry of its ambient embedding.</p>
+<p>This topic develops Laplacian Eigenmaps across three components that correspond to the three stages of the algorithm and its theoretical justification.</p>
+<p>The first component is <strong>the neighbourhood graph construction and its geometric justification</strong>. The starting point is a finite set of data points <span class="math inline">\(\{x_1,\ldots,x_n\} \subset \mathbb{R}^D\)</span>. The algorithm constructs a neighbourhood graph <span class="math inline">\(G\)</span> by connecting each point to its <span class="math inline">\(k\)</span> nearest neighbours (or all points within a fixed Euclidean radius <span class="math inline">\(\epsilon\)</span>) and assigning edge weights using a Gaussian kernel <span class="math inline">\(W_{ij} = \exp(-\|x_i-x_j\|^2/\sigma^2)\)</span>. The geometric justification for this construction is the manifold hypothesis: if the data lies near a smooth <span class="math inline">\(d\)</span>-dimensional manifold <span class="math inline">\(\mathcal{M}\)</span> embedded in <span class="math inline">\(\mathbb{R}^D\)</span>, then for nearby points on the manifold (within a geodesic ball of radius much smaller than the manifold’s curvature scale), the Euclidean distance in <span class="math inline">\(\mathbb{R}^D\)</span> is a good approximation to the geodesic distance on <span class="math inline">\(\mathcal{M}\)</span>. The neighbourhood graph therefore approximates the manifold’s local metric structure, and the graph Laplacian computed from this neighbourhood graph approximates the Laplace-Beltrami operator of the manifold. The Gaussian kernel weights encode the strength of the local geometric connection: nearby points receive high weights (the Gaussian is nearly 1), distant points receive low weights (the Gaussian decays to 0), and the bandwidth parameter <span class="math inline">\(\sigma\)</span> controls the scale of the local approximation — small <span class="math inline">\(\sigma\)</span> gives a tight neighbourhood, large <span class="math inline">\(\sigma\)</span> gives a broader one.</p>
+<p>The second component is <strong>the eigenvalue problem and its variational interpretation</strong>. Having constructed the graph Laplacian <span class="math inline">\(L = D - W\)</span> (where <span class="math inline">\(W\)</span> is the weight matrix and <span class="math inline">\(D\)</span> is the weighted degree matrix <span class="math inline">\(D_{ii} = \sum_j W_{ij}\)</span>), the Laplacian Eigenmap embedding into <span class="math inline">\(\mathbb{R}^d\)</span> is computed by solving the generalized eigenvalue problem <span class="math inline">\(Lu = \lambda Du\)</span> and using the eigenvectors corresponding to the <span class="math inline">\(d\)</span> smallest nonzero eigenvalues as embedding coordinates. The variational interpretation makes the geometric meaning of this embedding transparent: the eigenvalue problem minimizes <span class="math inline">\(\sum_{ij}W_{ij}\|y_i-y_j\|^2 = \text{tr}(Y^\top LY)\)</span> subject to the orthonormality constraint <span class="math inline">\(Y^\top DY = I\)</span>. The objective is a weighted sum of squared distances in the embedding space, with the weights <span class="math inline">\(W_{ij}\)</span> being large for nearby manifold points and small for distant ones. Minimizing this objective places nearby manifold points close together in the embedding, preserving the local geometric structure that the neighbourhood graph encodes. The constraint <span class="math inline">\(Y^\top DY = I\)</span> prevents the trivial collapsed solution and removes the degrees of freedom corresponding to translation, rotation, and scaling of the embedding.</p>
+<p>The third component is <strong>the connection to the continuous theory and the full spectral thread</strong>. The generalized eigenvalue problem <span class="math inline">\(Lu = \lambda Du\)</span> is the discrete analogue of the Laplace-Beltrami eigenvalue problem <span class="math inline">\(\Delta_\mathcal{M}\phi = -\lambda\phi\)</span>. The eigenvectors of <span class="math inline">\(Lu = \lambda Du\)</span> converge to the eigenfunctions of <span class="math inline">\(\Delta_\mathcal{M}\)</span> as the data density increases, by the Belkin-Niyogi theorem. The Laplacian Eigenmap embedding coordinates are therefore the manifold harmonic functions of lowest frequency — the functions that vary most slowly over the manifold surface, changing as little as possible between geodesically nearby points. This is the precise sense in which the embedding is geometrically faithful: the embedding coordinates are the manifold’s own natural coordinate functions, the functions most adapted to its intrinsic geometry. The connection closes the spectral thread: from the spherical harmonics as eigenfunctions of <span class="math inline">\(\Delta_{S^2}\)</span> in Chapter 1, through the graph Laplacian eigenvectors as discrete approximations of Laplace-Beltrami eigenfunctions in Chapter 2, through the DiffusionNet’s use of those eigenfunctions for intrinsic feature propagation in Topic 1 of Chapter 3, to the Laplacian Eigenmap’s use of those eigenfunctions as the embedding coordinates themselves — all are expressions of the same fundamental principle, that the Laplace-Beltrami operator encodes the intrinsic geometry of the manifold and its eigenfunctions are the natural coordinate system for that geometry.</p>
+<p>The connections to your curriculum are the most integrated they have been at any point in the roadmap, because Laplacian Eigenmaps sit at the intersection of four mathematical threads that your courses have independently developed.</p>
+<p>Your MATH 302 course on Matrix Theory is the primary computational scaffold. The generalized eigenvalue problem <span class="math inline">\(Lu = \lambda Du\)</span> is solved by converting to the standard eigenvalue problem <span class="math inline">\(D^{-1/2}LD^{-1/2}v = \lambda v\)</span> for <span class="math inline">\(v = D^{1/2}u\)</span> — a symmetric matrix eigenvalue problem, the central computation of MATH 302. The positive semidefiniteness of <span class="math inline">\(L\)</span>, established by the same Dirichlet energy argument as in Chapter 2’s Topic 2, guarantees non-negative eigenvalues. The Courant-Fischer minimax theorem gives the variational characterization of eigenvalues that makes the optimization interpretation of the embedding transparent.</p>
+<p>Your MATH 213 and MATH 325 courses on Analysis provide the functional analytic foundation: the <span class="math inline">\(L^2(\mathcal{M})\)</span> Hilbert space, the completeness of the Laplace-Beltrami eigenfunctions, and the convergence theory that connects the discrete graph computation to the continuous manifold geometry. The Belkin-Niyogi convergence theorem is a result in functional analysis — the convergence of finite-dimensional matrix operators to infinite-dimensional differential operators in the operator norm — and its proof uses the Analysis tools of uniform approximation, integration by parts, and the spectral theorem for compact self-adjoint operators.</p>
+<p>Your MATH 208 course on Statistics and Probability provides the probabilistic interpretation of the neighbourhood graph construction. The data points are samples from a distribution <span class="math inline">\(p\)</span> on the manifold. The Gaussian kernel weights <span class="math inline">\(W_{ij} = \exp(-\|x_i-x_j\|^2/\sigma^2)\)</span> are the values of the heat kernel at pairs of nearby data points. The degree <span class="math inline">\(d_i = \sum_j W_{ij}\)</span> estimates the local data density at point <span class="math inline">\(x_i\)</span>. Different normalizations of the graph Laplacian — the unnormalized <span class="math inline">\(L\)</span>, the symmetric normalized <span class="math inline">\(\mathcal{L} = D^{-1/2}LD^{-1/2}\)</span>, and the random walk normalized <span class="math inline">\(L_{\text{rw}} = D^{-1}L\)</span> — correspond to different operators on the manifold under different assumptions about the data density <span class="math inline">\(p\)</span>, with the Coifman-Lafon diffusion maps framework providing the full probabilistic theory of how the choice of normalization determines which geometric operator the graph Laplacian approximates.</p>
+<p>Your COMP 202 course on Data Structures and Algorithms provides the computational foundation: the <span class="math inline">\(k\)</span>-nearest-neighbour graph construction costs <span class="math inline">\(O(n^2 D)\)</span> by brute force (comparing all pairs) or <span class="math inline">\(O(n\log n\, D)\)</span> with approximate nearest-neighbour structures; the eigendecomposition of the sparse graph Laplacian costs <span class="math inline">\(O(nd^2 + nd\,\text{nnz}(L))\)</span> using the Lanczos algorithm for sparse matrices, where <span class="math inline">\(\text{nnz}(L)\)</span> is the number of nonzero entries determined by the graph’s sparsity.</p>
+<p>By the end of this topic, Laplacian Eigenmaps will feel not like a standalone dimensionality reduction algorithm but like the inevitable application of the Laplace-Beltrami spectral theory to the problem of discovering manifold geometry from data. The algorithm’s three steps — build a neighbourhood graph, compute graph Laplacian eigenvectors, use them as embedding coordinates — will feel not like engineering choices but like the natural discretization of the continuous problem: approximate <span class="math inline">\(\mathcal{M}\)</span> by a graph, approximate <span class="math inline">\(\Delta_\mathcal{M}\)</span> by <span class="math inline">\(L\)</span>, approximate the manifold harmonics by the graph Laplacian eigenvectors. The Laplacian Eigenmap is the manifold’s harmonic coordinate system, computed from finite data. Phase 2 is complete. The chassis is fully assembled.</p>
+<hr>
+</section>
+<section id="layer-1-story" class="level2">
+<h2 class="anchored" data-anchor-id="layer-1-story">Layer 1 (Story)</h2>
+<p>It is 2015. The Survey Department of Nepal has commissioned an unusual project. A team of researchers from Tribhuvan University has spent three years travelling to remote Himalayan villages — Dolpo, Mustang, Humla, Jumla, Taplejung — collecting detailed measurements of local culture: the vocabulary of each village’s dialect, the patterns of their woven textiles, the tuning of their folk instruments, the recipes of their fermented foods, the calendar systems they use for planting and harvest. Each village has been measured across four hundred cultural dimensions, producing a data point in <span class="math inline">\(\mathbb{R}^{400}\)</span> — a four-hundred-dimensional vector describing that village’s cultural profile.</p>
+<p>The research team returns to Kathmandu with measurements from two hundred villages. They sit down to make sense of the data. Four hundred dimensions is incomprehensible. No human can visualize a point cloud in <span class="math inline">\(\mathbb{R}^{400}\)</span>. No map can be drawn in four hundred dimensions. The team needs to reduce the data to two or three dimensions — to find a map of the cultural landscape of the Himalayas — without destroying the geometric structure that makes the data meaningful.</p>
+<p>The team’s lead mathematician poses the question precisely: the two hundred villages are points in <span class="math inline">\(\mathbb{R}^{400}\)</span>, but they do not fill <span class="math inline">\(\mathbb{R}^{400}\)</span> uniformly. They cluster near a low-dimensional surface — a cultural manifold embedded in the four-hundred-dimensional measurement space. The manifold hypothesis says that the true degrees of freedom of Himalayan culture are far fewer than four hundred: perhaps three or four fundamental axes of cultural variation, corresponding to altitude gradient, east-west trade route influence, proximity to the Tibetan plateau, and distance from the Terai lowlands. The four hundred measured dimensions are highly correlated projections of these few underlying axes. The goal is to find those axes — to discover the manifold and embed it in two or three dimensions — using only the two hundred data points, without any prior knowledge of what the manifold looks like.</p>
+<hr>
+<p><strong>The first attempt: Principal Component Analysis.</strong></p>
+<p>The team’s statistician tries the obvious approach. Compute the covariance matrix of the four-hundred-dimensional data, find its largest eigenvectors, and project the data onto the two-dimensional subspace spanned by those eigenvectors. This is Principal Component Analysis — the workhorse of linear dimensionality reduction, introduced in your MATH 208 Statistics course.</p>
+<p>The PCA embedding arrives. It looks reasonable at first: the villages spread out in a two-dimensional plane, with some visible clustering. But the mathematician notices something wrong. Two villages from Dolpo — Upper Dolpo at 4200 metres altitude and Lower Dolpo at 2800 metres — appear very close together in the PCA embedding, as if they are culturally similar. But the researcher who visited both knows they are culturally quite different: Upper Dolpo has maintained strong Tibetan Buddhist influence for centuries, largely isolated by high passes; Lower Dolpo has absorbed significant influence from trade routes connecting Nepal and Tibet, producing a distinct hybrid culture. They are close in Euclidean distance in <span class="math inline">\(\mathbb{R}^{400}\)</span> — many of their four hundred measurements are similar — but culturally distant, separated by a long path along the cultural manifold that winds through intermediate village types.</p>
+<p>PCA measures Euclidean distance in the ambient space <span class="math inline">\(\mathbb{R}^{400}\)</span>. The cultural manifold is curved. The two Dolpo villages are on the same manifold but on opposite sides of a fold — the manifold curves between them so that their straight-line Euclidean distance in <span class="math inline">\(\mathbb{R}^{400}\)</span> is short, but their manifold distance, measured along the surface of the cultural manifold through the sequence of culturally intermediate villages, is long. PCA cannot see this difference. It projects both villages onto the same region of the two-dimensional plane because it only measures straight-line distances. The map it produces is geometrically dishonest: it collapses the fold and places culturally distant villages near each other.</p>
+<hr>
+<p><strong>The manifold’s true geometry: intrinsic versus extrinsic distance.</strong></p>
+<p>The mathematician draws an analogy on the whiteboard. She sketches a Swiss roll — a rectangular strip of paper rolled into a spiral. Two points on the surface of the Swiss roll might be very close in Euclidean three-dimensional space (just across the gap between adjacent layers of the spiral) but very far apart along the surface of the roll (requiring you to unwind the entire spiral to travel from one to the other along the paper surface). PCA would place these two points close together in the embedding, because it measures Euclidean distance. But they are genuinely far apart on the manifold — they are separated by the entire length of the unrolled strip.</p>
+<p>The cultural manifold of Himalayan villages is the same idea in four hundred dimensions. Upper and Lower Dolpo are like two points on adjacent layers of the Swiss roll: close in ambient Euclidean space, far apart on the manifold surface. The correct embedding must measure distances along the manifold surface — intrinsic distances — not through the ambient space. Two villages are close in the correct embedding if and only if they are connected by a short path along the cultural manifold — a path through culturally intermediate villages — not if their four-hundred-dimensional vectors happen to be numerically close.</p>
+<p>The question is: how do you measure distances along a manifold you do not know? The manifold is hidden inside <span class="math inline">\(\mathbb{R}^{400}\)</span>. You cannot see it. You cannot parameterize it. You have only the two hundred data points and their pairwise Euclidean distances in <span class="math inline">\(\mathbb{R}^{400}\)</span>. How do you reconstruct the manifold’s intrinsic geometry from these observations alone?</p>
+<hr>
+<p><strong>The key insight: local Euclidean distances approximate intrinsic distances.</strong></p>
+<p>The mathematician makes a crucial observation. For nearby points on the manifold — points so close that the manifold is approximately flat between them — the Euclidean distance in <span class="math inline">\(\mathbb{R}^{400}\)</span> is a good approximation to the intrinsic geodesic distance along the manifold. The manifold looks flat when you zoom in close enough. The curvature that creates the fold between Upper and Lower Dolpo only becomes significant at larger scales. At the local scale of immediately neighbouring villages — villages within a day’s walk of each other — the cultural manifold is nearly flat, and the Euclidean distance between their cultural measurement vectors is an honest reflection of their cultural distance.</p>
+<p>This is the same observation as the exponential map from Topic 1: the manifold is locally flat to first order, so local Euclidean distances are locally honest. The strategy is to use local Euclidean distances to build a graph that captures the manifold’s local geometry, and then to use the global structure of this graph — the way the local connections chain together — to recover the manifold’s global intrinsic geometry.</p>
+<hr>
+<p><strong>Step One: Building the neighbourhood graph.</strong></p>
+<p>The team builds a graph with the two hundred villages as nodes. For each village, they connect it to its ten nearest neighbours in <span class="math inline">\(\mathbb{R}^{400}\)</span> — the ten villages with the most similar four-hundred-dimensional cultural profiles. Each connection receives a weight proportional to the cultural similarity of the two villages: very similar villages (close in <span class="math inline">\(\mathbb{R}^{400}\)</span>) receive high weights, moderately similar villages receive moderate weights.</p>
+<p>The specific weighting uses a Gaussian: if villages <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span> are connected, the weight of their connection is <span class="math inline">\(W_{ij} = \exp(-\|x_i - x_j\|^2/\sigma^2)\)</span>, where <span class="math inline">\(\|x_i - x_j\|^2\)</span> is the squared Euclidean distance between their four-hundred-dimensional cultural profiles and <span class="math inline">\(\sigma\)</span> is a bandwidth parameter controlling what counts as nearby. The Gaussian weight is close to one for very nearby villages, decays smoothly as distance increases, and is essentially zero for villages beyond the neighbourhood radius. It is the probabilistic equivalent of the MoNet Gaussian kernel from Topic 1, now used not as a filter weight but as a graph edge weight encoding local geometric proximity.</p>
+<p>After connecting every village to its ten nearest neighbours, the team examines the resulting graph. Upper Dolpo is connected to its ten nearest cultural neighbours — intermediate altitude Dolpo villages that share characteristics of both Upper and Lower Dolpo. Lower Dolpo is connected to its ten nearest neighbours, which are trade-route-influenced villages at lower altitude. Upper and Lower Dolpo are not directly connected in the graph — their Euclidean cultural distance is larger than the ten-nearest-neighbour threshold. But there is a path of graph edges connecting them through intermediate villages: Upper Dolpo connects to a mid-altitude Dolpo village, which connects to another, which eventually connects to Lower Dolpo through a chain of culturally intermediate steps. The graph has captured the manifold’s local geometry and encoded the long winding path between Upper and Lower Dolpo as a chain of short steps.</p>
+<p>The neighbourhood graph is the discrete approximation to the continuous manifold. Its nodes are the data points. Its edges encode local proximity. Its weighted adjacency matrix <span class="math inline">\(W\)</span> encodes the strength of local geometric connection. The geodesic distance along the manifold — which cannot be computed directly because the manifold is unknown — is approximated by the shortest weighted path distance in the graph, which can be computed from the data using Dijkstra’s algorithm from your COMP 202 course.</p>
+<hr>
+<p><strong>The break moment: why shortest-path distances are not enough.</strong></p>
+<p>The team’s engineer proposes a natural completion of this approach: compute the shortest-path distances between all pairs of villages in the neighbourhood graph, and then find a two-dimensional embedding that places villages at pairwise distances matching these shortest-path distances. This is the ISOMAP algorithm — and it seems like the complete solution.</p>
+<p>Here is why it breaks.</p>
+<p>You have two hundred villages and therefore <span class="math inline">\(200 \times 199 / 2 = 19{,}900\)</span> pairwise distances to match. You want a two-dimensional embedding of two hundred points whose pairwise Euclidean distances match these nineteen thousand nine hundred values. But you have only <span class="math inline">\(200 \times 2 = 400\)</span> free parameters — the two-dimensional coordinates of the two hundred points. You have vastly more constraints than degrees of freedom. An exact solution generally does not exist: no two-dimensional embedding can simultaneously match all nineteen thousand nine hundred pairwise distances, because the manifold might genuinely be three-dimensional or higher, and compression to two dimensions inevitably introduces distortion.</p>
+<p>More fundamentally, the ISOMAP approach treats all nineteen thousand nine hundred pairwise distances equally — it tries to match the distances between Upper and Lower Dolpo (geodesically distant) with the same fidelity as the distances between two adjacent Kathmandu Valley villages (geodesically nearby). But the long-range distances were estimated through a chain of short hops in the neighbourhood graph — each hop introduces approximation error (Euclidean distance approximating geodesic distance), and these errors compound along the chain. The estimated distance between Upper and Lower Dolpo, passed through ten intermediate hops, has ten times the approximation error of a single-hop distance. Treating all pairwise distances equally ignores this heterogeneous error structure and produces embeddings that are distorted by accumulated hop errors.</p>
+<p>The correct approach is not to match all pairwise distances, but to match only the local distances — the distances between nearby neighbours in the graph — and to let the global structure of the embedding emerge from the consistent satisfaction of these local constraints. This is exactly what the graph Laplacian and its eigenvectors accomplish.</p>
+<hr>
+<p><strong>Step Two: The graph Laplacian as the local distance operator.</strong></p>
+<p>The mathematician turns to the graph Laplacian. From your COMP 323 Graph Theory course and Chapter 2’s Topic 2, you know the Laplacian <span class="math inline">\(L = D - W\)</span> precisely: <span class="math inline">\(D\)</span> is the diagonal matrix of weighted degrees <span class="math inline">\(D_{ii} = \sum_j W_{ij}\)</span>, and <span class="math inline">\(W\)</span> is the weighted adjacency matrix. The Laplacian measures local variation of a signal across the graph: <span class="math inline">\((Lf)_i = \sum_{j\in\mathcal{N}(i)} W_{ij}(f_i - f_j)\)</span> is the weighted sum of differences between village <span class="math inline">\(i\)</span>’s value and each neighbour’s value, weighted by the neighbourhood strength.</p>
+<p>Now the mathematician writes the Dirichlet energy of the embedding. Suppose <span class="math inline">\(Y \in \mathbb{R}^{n\times d}\)</span> is the embedding matrix — row <span class="math inline">\(y_i \in \mathbb{R}^d\)</span> is the embedding coordinate of village <span class="math inline">\(i\)</span>. The total local distortion of the embedding is:</p>
+<p><span class="math display">\[\sum_{i,j} W_{ij} \|y_i - y_j\|^2\]</span></p>
+<p>This is the sum of squared embedding distances between all pairs of villages, weighted by their graph edge weights <span class="math inline">\(W_{ij}\)</span>. For nearby village pairs (large <span class="math inline">\(W_{ij}\)</span>), large embedding distances contribute heavily to this sum — nearby villages must be placed close in the embedding. For distant village pairs (small <span class="math inline">\(W_{ij} \approx 0\)</span>), large embedding distances contribute negligibly — the embedding is not required to place distant villages any particular distance apart. The objective function cares about local geometry, not global pairwise distances. It is the opposite of ISOMAP: instead of matching all nineteen thousand nine hundred pairwise distances, it matches only the local neighbourhood distances, with the matching strength proportional to the neighbourhood weight.</p>
+<p>The mathematician shows that this objective equals <span class="math inline">\(\text{tr}(Y^\top LY)\)</span> — the trace of the embedding matrix times the graph Laplacian times the embedding matrix. This is the Dirichlet energy of the embedding on the graph: it is minimized when the embedding varies as smoothly as possible across the graph’s edge structure, placing highly connected villages close together and weakly connected villages further apart. Minimizing <span class="math inline">\(\text{tr}(Y^\top LY)\)</span> subject to a normalization constraint gives the Laplacian Eigenmap embedding.</p>
+<hr>
+<p><strong>Step Three: The normalization constraint and what it prevents.</strong></p>
+<p>Before minimizing <span class="math inline">\(\text{tr}(Y^\top LY)\)</span>, the mathematician identifies a trivial solution: <span class="math inline">\(Y = 0\)</span> — place all villages at the origin. This collapses all two hundred villages to the same point, achieving zero local distortion trivially and uselessly. A normalization constraint must prevent this collapse.</p>
+<p>The correct normalization is <span class="math inline">\(Y^\top D Y = I_d\)</span> — the degree-weighted orthonormality of the embedding coordinates. The degree matrix <span class="math inline">\(D\)</span> appears in the constraint because the data points have heterogeneous densities in the ambient space: villages in a densely sampled cultural region have large weighted degree <span class="math inline">\(D_{ii} = \sum_j W_{ij}\)</span> (many strong neighbourhood connections), while villages in a sparsely sampled region have small weighted degree. The degree-weighted constraint <span class="math inline">\(Y^\top DY = I_d\)</span> normalizes the embedding by the local sampling density, preventing the embedding from being dominated by dense regions of the data at the expense of sparse regions.</p>
+<p>The constraint also eliminates the trivial zero-frequency mode: the constant embedding <span class="math inline">\(y_i = c\)</span> for all <span class="math inline">\(i\)</span> satisfies <span class="math inline">\(L(c) = 0\)</span> — the constant signal has zero Dirichlet energy — but is excluded by the orthogonality constraint <span class="math inline">\(Y^\top D\mathbf{1} = 0\)</span>, which forces the embedding coordinates to be orthogonal to the constant vector in the degree-weighted inner product. This is the graph analogue of requiring the manifold harmonic basis to be orthogonal to the constant function in <span class="math inline">\(L^2(\mathcal{M})\)</span>.</p>
+<hr>
+<p><strong>The solution: the Laplacian eigenvectors as natural coordinates.</strong></p>
+<p>The constrained optimization problem — minimize <span class="math inline">\(\text{tr}(Y^\top LY)\)</span> subject to <span class="math inline">\(Y^\top DY = I_d\)</span> — has a beautiful closed-form solution. The optimal embedding coordinates are the eigenvectors of the generalized eigenvalue problem <span class="math inline">\(Lu = \lambda Du\)</span>, corresponding to the <span class="math inline">\(d\)</span> smallest nonzero eigenvalues.</p>
+<p>The mathematician orders the eigenvalues: <span class="math inline">\(0 = \lambda_1 &lt; \lambda_2 \leq \lambda_3 \leq \cdots \leq \lambda_n\)</span>. The smallest eigenvalue is always zero, with eigenvector <span class="math inline">\(\mathbf{1}\)</span> (the constant signal — excluded by the normalization constraint). The second eigenvector <span class="math inline">\(u_2\)</span>, with eigenvalue <span class="math inline">\(\lambda_2\)</span>, is the smoothest non-constant signal on the cultural neighbourhood graph — the cultural axis along which neighbouring villages change most gradually. The third eigenvector <span class="math inline">\(u_3\)</span>, with eigenvalue <span class="math inline">\(\lambda_3\)</span>, is the second smoothest non-constant signal, orthogonal to <span class="math inline">\(u_2\)</span>. Using <span class="math inline">\(u_2\)</span> and <span class="math inline">\(u_3\)</span> as the two embedding coordinates gives a two-dimensional map of the cultural landscape in which nearby villages in the original four-hundred-dimensional space remain nearby in the embedding, and the embedding axes correspond to the two dominant smooth axes of cultural variation across the Himalayan network.</p>
+<p>This is the Laplacian Eigenmap: embed village <span class="math inline">\(i\)</span> at the point <span class="math inline">\((u_2(i), u_3(i)) \in \mathbb{R}^2\)</span>, where <span class="math inline">\(u_2(i)\)</span> and <span class="math inline">\(u_3(i)\)</span> are the <span class="math inline">\(i\)</span>-th components of the second and third eigenvectors of the graph Laplacian. The map is two-dimensional, but it has recovered the manifold’s true intrinsic structure: villages that are genuinely culturally similar — connected by short paths of intermediate cultural types on the manifold — appear close together in the map, while villages that are culturally distant — like Upper and Lower Dolpo — appear far apart, because the chain of edges connecting them in the neighbourhood graph has forced their eigenvector coordinates to differ.</p>
+<hr>
+<p><strong>Why the eigenvectors give the right coordinates: the harmonic interpretation.</strong></p>
+<p>The research team’s mathematician offers the deep explanation. Each eigenvector <span class="math inline">\(u_k\)</span> of the graph Laplacian is the discrete analogue of an eigenfunction of the Laplace-Beltrami operator on the cultural manifold. The eigenvalue <span class="math inline">\(\lambda_k\)</span> measures how much the function <span class="math inline">\(u_k\)</span> varies across the graph — its Dirichlet energy. Small <span class="math inline">\(\lambda_k\)</span> means <span class="math inline">\(u_k\)</span> varies slowly across the manifold — it is a smooth, low-frequency function that changes gradually as you move from village to village along the manifold. Large <span class="math inline">\(\lambda_k\)</span> means <span class="math inline">\(u_k\)</span> varies rapidly — it is a high-frequency function that oscillates quickly between neighbouring villages.</p>
+<p>The lowest-frequency non-constant eigenvector <span class="math inline">\(u_2\)</span> is the function that varies as slowly as possible while being non-constant and orthogonal to <span class="math inline">\(\mathbf{1}\)</span>. On the cultural manifold, this function is the longest, smoothest cultural gradient — the axis along which culture changes most gradually across the Himalayan landscape. In practice, after training, this axis often corresponds to altitude: culture changes gradually with altitude, from Terai lowlands through mid-hills to high Himalayan villages. The second eigenvector <span class="math inline">\(u_3\)</span> is the second smoothest cultural gradient, orthogonal to the first — perhaps the east-west axis of trade route influence.</p>
+<p>These are not axes that the researcher chose in advance. They are the axes that the data itself reveals — the intrinsic coordinate system of the cultural manifold, discovered from the data through the spectral theory of the graph Laplacian. The Laplacian Eigenmap does not impose a coordinate system on the data. It listens to the data and extracts the coordinate system that the manifold itself is whispering through the neighbourhood structure of the observations.</p>
+<hr>
+<p><strong>The connection to the spectral thread: closing the loop.</strong></p>
+<p>The young researcher who built the GNN postal network in Chapter 2 and the geodesic convolution filter in Topic 1 of Chapter 3 sits in the team meeting and suddenly sees the entire spectral thread come together.</p>
+<p>In Chapter 2’s Topic 2, the graph Laplacian eigenvectors were the graph Fourier basis — the frequency modes of signals defined on the graph. Low-frequency eigenvectors corresponded to smooth signals that varied slowly across the graph; high-frequency eigenvectors corresponded to rapidly varying signals. The spectral GNN filtered in this basis, retaining low frequencies and attenuating high ones.</p>
+<p>In Topic 1 of Chapter 3, the Laplace-Beltrami eigenfunctions were the manifold harmonics — the natural frequency basis for signals on the curved surface. The DiffusionNet used the lowest-frequency eigenfunctions as the basis for intrinsic feature propagation.</p>
+<p>Now, in Laplacian Eigenmaps, the lowest-frequency eigenvectors of the graph Laplacian — which approximate the lowest-frequency eigenfunctions of the Laplace-Beltrami operator by the Belkin-Niyogi theorem — are used as embedding coordinates. The same eigenvectors that were the graph Fourier basis for signal processing in Chapter 2 are now the intrinsic coordinates for manifold learning in Chapter 3. They are both things simultaneously: the natural frequency modes of the graph, and the natural coordinate functions of the manifold. The Laplace-Beltrami operator unifies these two interpretations: its eigenfunctions are simultaneously the optimal embedding coordinates and the natural frequency basis for processing signals defined on the manifold.</p>
+<hr>
+<p><strong>What the Laplacian Eigenmap reveals about the Himalayan cultural landscape.</strong></p>
+<p>The team runs the algorithm on the two-hundred-village dataset. The two-dimensional Laplacian Eigenmap embedding appears. The mathematician studies it carefully.</p>
+<p>The first embedding axis — the direction of smallest nonzero eigenvalue — runs from the bottom-left of the map to the top-right. Checking which villages fall where, she sees that the bottom-left corner contains the high-altitude Trans-Himalayan villages of Dolpo, Mustang, and Humla — strongly Tibetan Buddhist cultural influence, yak herding, barley agriculture, Tibetan script. The top-right corner contains the mid-hill villages of the middle mountains — mixed cultural influence, terraced rice and millet farming, Nepali as the primary language. This axis corresponds roughly to altitude and Tibetan cultural proximity. It is the first principal axis of Himalayan cultural variation — not because anyone chose it to be, but because it is the smoothest gradient of cultural change across the village network.</p>
+<p>The second embedding axis runs perpendicular to the first. The left side of this axis contains the western Himalayan villages — Humla, Jumla, Dolpo — with their distinct western Himalayan cultural traditions. The right side contains the eastern villages — Taplejung, Ilam — with their different eastern Himalayan traditions. This axis corresponds roughly to the east-west geographic gradient along the Himalayan range. Again, no one specified this: it emerged from the eigenvector computation.</p>
+<p>Upper and Lower Dolpo, which were incorrectly placed close together by PCA, now appear correctly far apart in the Laplacian Eigenmap: Upper Dolpo sits in the bottom-left corner of the altitude-Tibetan axis, while Lower Dolpo sits considerably higher along that axis, reflecting their genuine cultural distance despite Euclidean proximity in the ambient measurement space. The fold in the cultural manifold — the curvature that PCA collapsed — has been correctly unfolded by the Laplacian Eigenmap.</p>
+<hr>
+<p><strong>Three pictures to carry into the mathematics.</strong></p>
+<p>Before moving to the formalism, hold three geometric pictures simultaneously.</p>
+<p>The first picture: the Swiss roll in <span class="math inline">\(\mathbb{R}^3\)</span>, with two points on adjacent layers that are close in Euclidean space but far apart along the surface. PCA projects both to the same region of the flat plane. The Laplacian Eigenmap unrolls the spiral and places them far apart, correctly reflecting their manifold distance. The cultural manifold of Himalayan villages is the four-hundred-dimensional analogue: the same failure of PCA, the same success of the spectral embedding.</p>
+<p>The second picture: the neighbourhood graph as a discrete approximation to the manifold, with edges encoding local geometric proximity and weights encoding similarity strength. The graph Laplacian <span class="math inline">\(L = D - W\)</span> of this neighbourhood graph is the discrete approximation to the Laplace-Beltrami operator <span class="math inline">\(\Delta_\mathcal{M}\)</span> of the underlying manifold. The eigenvectors of <span class="math inline">\(L\)</span> approximate the eigenfunctions of <span class="math inline">\(\Delta_\mathcal{M}\)</span> by Belkin-Niyogi. The embedding uses those eigenvectors as coordinates — the manifold’s own harmonic coordinate system, computed from finite data.</p>
+<p>The third picture: the optimization problem — minimize the weighted sum of squared embedding distances <span class="math inline">\(\sum_{ij}W_{ij}\|y_i-y_j\|^2\)</span>, subject to degree-weighted orthonormality — as the discrete analogue of minimizing the Dirichlet energy <span class="math inline">\(\int_\mathcal{M}\|\nabla\phi\|^2_g\,d\text{vol}\)</span> among orthonormal functions on the manifold. Both are solved by the eigenfunctions of the respective Laplacian. The embedding is the solution to the variational problem of placing points as smoothly as possible on the manifold while maintaining orthogonality — the discrete manifestation of the manifold harmonic analysis that has threaded through the entire Phase 2.</p>
+<hr>
+</section>
+<section id="layer-2-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="layer-2-mathematics">Layer 2 (Mathematics)</h2>
+<p>We build the formalism in six stages: the neighbourhood graph construction and its geometric justification, the graph Laplacian and its weighted variants, the Laplacian Eigenmap optimization problem and its solution, the convergence theory connecting the discrete embedding to the continuous manifold, the relationship to classical dimensionality reduction methods, and the diffusion maps generalization.</p>
+<section id="neighbourhood-graph-construction" class="level3">
+<h3 class="anchored" data-anchor-id="neighbourhood-graph-construction">Neighbourhood Graph Construction</h3>
+<p><strong>Setting.</strong> Let <span class="math inline">\(\{x_1,\ldots,x_n\} \subset \mathbb{R}^D\)</span> be <span class="math inline">\(n\)</span> data points assumed to lie near a compact <span class="math inline">\(d\)</span>-dimensional Riemannian manifold <span class="math inline">\(\mathcal{M} \hookrightarrow \mathbb{R}^D\)</span> with <span class="math inline">\(d \ll D\)</span>.</p>
+<p><strong>Definition (<span class="math inline">\(\epsilon\)</span>-neighbourhood graph).</strong> Connect <span class="math inline">\(x_i\)</span> and <span class="math inline">\(x_j\)</span> with an edge if <span class="math inline">\(\|x_i - x_j\|_{\mathbb{R}^D} &lt; \epsilon\)</span>:</p>
+<p><span class="math display">\[E_\epsilon = \{(i,j) : \|x_i - x_j\| &lt; \epsilon\}\]</span></p>
+<p><strong>Definition (<span class="math inline">\(k\)</span>-nearest neighbour graph).</strong> Connect <span class="math inline">\(x_i\)</span> to its <span class="math inline">\(k\)</span> nearest neighbours in Euclidean distance (symmetrized: connect <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span> if <span class="math inline">\(j\)</span> is among the <span class="math inline">\(k\)</span>-NN of <span class="math inline">\(i\)</span> or <span class="math inline">\(i\)</span> is among the <span class="math inline">\(k\)</span>-NN of <span class="math inline">\(j\)</span>).</p>
+<p><strong>Edge weights — Gaussian kernel:</strong></p>
+<p><span class="math display">\[W_{ij} = \begin{cases} \exp\!\left(-\dfrac{\|x_i - x_j\|^2}{\sigma^2}\right) &amp; \text{if } (i,j) \in E \\ 0 &amp; \text{otherwise} \end{cases}\]</span></p>
+<p>where <span class="math inline">\(\sigma &gt; 0\)</span> is the bandwidth parameter. The weight matrix <span class="math inline">\(W \in \mathbb{R}^{n\times n}\)</span> is symmetric, non-negative, and sparse (most entries zero).</p>
+<p><strong>Binary weights (alternative):</strong></p>
+<p><span class="math display">\[W_{ij} = \begin{cases} 1 &amp; \text{if } (i,j) \in E \\ 0 &amp; \text{otherwise} \end{cases}\]</span></p>
+<p><strong>Geometric justification.</strong> For points <span class="math inline">\(x_i, x_j\)</span> on <span class="math inline">\(\mathcal{M}\)</span> with small Euclidean distance <span class="math inline">\(\|x_i - x_j\| \ll 1/\kappa\)</span> (where <span class="math inline">\(\kappa\)</span> is the maximum principal curvature of <span class="math inline">\(\mathcal{M}\)</span>):</p>
+<p><span class="math display">\[d_\mathcal{M}(x_i, x_j) = \|x_i - x_j\| + O(\|x_i-x_j\|^3)\]</span></p>
+<p>Local Euclidean distances approximate geodesic distances to second order. Therefore for small <span class="math inline">\(\epsilon\)</span> or small <span class="math inline">\(k\)</span> (tight neighbourhoods), <span class="math inline">\(W_{ij}\)</span> encodes local manifold proximity honestly.</p>
+<p><strong>Weighted degree matrix:</strong></p>
+<p><span class="math display">\[D_{ii} = \sum_{j=1}^n W_{ij} = \sum_{j \in \mathcal{N}(i)} W_{ij}\]</span></p>
+<p>the total connection strength of node <span class="math inline">\(i\)</span>. <span class="math inline">\(D = \text{diag}(D_{11},\ldots,D_{nn})\)</span>.</p>
+<hr>
+</section>
+<section id="the-graph-laplacian-and-its-variants" class="level3">
+<h3 class="anchored" data-anchor-id="the-graph-laplacian-and-its-variants">The Graph Laplacian and Its Variants</h3>
+<p><strong>Definition (Unnormalized graph Laplacian):</strong></p>
+<p><span class="math display">\[L = D - W \in \mathbb{R}^{n\times n}\]</span></p>
+<p>with entries <span class="math inline">\(L_{ii} = D_{ii}\)</span>, <span class="math inline">\(L_{ij} = -W_{ij}\)</span> for <span class="math inline">\(i\neq j\)</span>.</p>
+<p><strong>Positive semidefiniteness:</strong></p>
+<p><span class="math display">\[f^\top L f = \frac{1}{2}\sum_{i,j} W_{ij}(f_i - f_j)^2 \geq 0 \quad \forall f \in \mathbb{R}^n\]</span></p>
+<p>Eigenvalues <span class="math inline">\(0 = \lambda_1 \leq \lambda_2 \leq \cdots \leq \lambda_n\)</span>, with <span class="math inline">\(\lambda_1 = 0\)</span> having eigenvector <span class="math inline">\(\mathbf{1}\)</span> for a connected graph.</p>
+<p><strong>Definition (Symmetric normalized Laplacian):</strong></p>
+<p><span class="math display">\[\mathcal{L} = D^{-1/2}LD^{-1/2} = I - D^{-1/2}WD^{-1/2}\]</span></p>
+<p>Eigenvalues in <span class="math inline">\([0,2]\)</span>. Related to <span class="math inline">\(L\)</span> by the similarity transform: if <span class="math inline">\(Lu = \lambda Du\)</span> then <span class="math inline">\(\mathcal{L}(D^{1/2}u) = \lambda(D^{1/2}u)\)</span>.</p>
+<p><strong>Definition (Random walk Laplacian):</strong></p>
+<p><span class="math display">\[L_{\text{rw}} = D^{-1}L = I - D^{-1}W\]</span></p>
+<p><span class="math inline">\(D^{-1}W\)</span> is the random walk transition matrix with <span class="math inline">\((D^{-1}W)_{ij} = W_{ij}/D_{ii}\)</span> — the probability of transitioning from node <span class="math inline">\(i\)</span> to node <span class="math inline">\(j\)</span> in one step of a random walk. Eigenvalues in <span class="math inline">\([0,2]\)</span>.</p>
+<p><strong>Relationship between variants:</strong></p>
+<p><span class="math display">\[L_{\text{rw}} = D^{-1/2}\mathcal{L}D^{1/2}\]</span></p>
+<p>They share the same eigenvalues; eigenvectors of <span class="math inline">\(L_{\text{rw}}\)</span> are <span class="math inline">\(D^{-1/2}\)</span> times eigenvectors of <span class="math inline">\(\mathcal{L}\)</span>.</p>
+<hr>
+</section>
+<section id="the-laplacian-eigenmap-optimization-problem" class="level3">
+<h3 class="anchored" data-anchor-id="the-laplacian-eigenmap-optimization-problem">The Laplacian Eigenmap Optimization Problem</h3>
+<p><strong>Objective.</strong> Find embedding coordinates <span class="math inline">\(Y = [y_1|\cdots|y_n]^\top \in \mathbb{R}^{n\times d}\)</span> (one row <span class="math inline">\(y_i \in \mathbb{R}^d\)</span> per data point) minimizing the local distortion:</p>
+<p><span class="math display">\[\min_{Y \in \mathbb{R}^{n\times d}} \sum_{i,j=1}^n W_{ij}\|y_i - y_j\|^2\]</span></p>
+<p><strong>Reformulation as trace minimization.</strong></p>
+<p><span class="math display">\[\sum_{i,j} W_{ij}\|y_i - y_j\|^2 = \sum_{i,j}W_{ij}\sum_{k=1}^d (y_{ik} - y_{jk})^2 = 2\sum_{k=1}^d \mathbf{y}_k^\top L\, \mathbf{y}_k = 2\,\text{tr}(Y^\top L Y)\]</span></p>
+<p>where <span class="math inline">\(\mathbf{y}_k \in \mathbb{R}^n\)</span> is the <span class="math inline">\(k\)</span>-th column of <span class="math inline">\(Y\)</span>.</p>
+<p><strong>Constraint.</strong> The degree-weighted orthonormality constraint:</p>
+<p><span class="math display">\[Y^\top D Y = I_d\]</span></p>
+<p>prevents: (1) the trivial solution <span class="math inline">\(Y = 0\)</span>; (2) translation (all <span class="math inline">\(y_i = c\)</span> gives <span class="math inline">\(Y^\top DY = c^2 D_{++}I \neq I_d\)</span>); (3) the zero-frequency mode <span class="math inline">\(y_i = \mathbf{1}\)</span> (excluded by <span class="math inline">\(\mathbf{1}^\top D y_k = 0\)</span> implicit in the constraint via the Lagrangian); (4) arbitrary scaling and rotation.</p>
+<p><strong>The constrained optimization problem:</strong></p>
+<p><span class="math display">\[\min_{Y \in \mathbb{R}^{n\times d},\; Y^\top DY = I_d} \text{tr}(Y^\top LY)\]</span></p>
+<p><strong>Solution via generalized eigenvalue problem.</strong></p>
+<p><strong>Theorem (Belkin-Niyogi 2003).</strong> The solution to the Laplacian Eigenmap optimization is:</p>
+<p><span class="math display">\[Y^* = [u_2 | u_3 | \cdots | u_{d+1}]\]</span></p>
+<p>where <span class="math inline">\(u_2, u_3,\ldots,u_{d+1}\)</span> are the eigenvectors corresponding to the <span class="math inline">\(d\)</span> smallest nonzero eigenvalues of the <strong>generalized eigenvalue problem</strong>:</p>
+<p><span class="math display">\[Lu = \lambda Du, \quad 0 = \lambda_1 \leq \lambda_2 \leq \cdots \leq \lambda_n\]</span></p>
+<p><strong>Proof.</strong> Using the substitution <span class="math inline">\(v = D^{1/2}u\)</span> (so <span class="math inline">\(u = D^{-1/2}v\)</span>), the constraint <span class="math inline">\(u^\top Du = 1\)</span> becomes <span class="math inline">\(v^\top v = 1\)</span>, and the objective <span class="math inline">\(u^\top Lu\)</span> becomes <span class="math inline">\(v^\top D^{-1/2}LD^{-1/2}v = v^\top\mathcal{L}v\)</span>. The problem reduces to:</p>
+<p><span class="math display">\[\min_{V \in \mathbb{R}^{n\times d},\; V^\top V = I_d} \text{tr}(V^\top \mathcal{L} V)\]</span></p>
+<p>By the Courant-Fischer minimax theorem, the solution is <span class="math inline">\(V^* = [\tilde{u}_2|\cdots|\tilde{u}_{d+1}]\)</span>, the <span class="math inline">\(d\)</span> eigenvectors of <span class="math inline">\(\mathcal{L}\)</span> with smallest nonzero eigenvalues. Converting back: <span class="math inline">\(u_k = D^{-1/2}\tilde{u}_k\)</span>. These are the eigenvectors of <span class="math inline">\(L u = \lambda D u\)</span> with smallest nonzero eigenvalues. <span class="math inline">\(\square\)</span></p>
+<p><strong>Embedding map:</strong></p>
+<p><span class="math display">\[\Phi: x_i \mapsto (u_2(i), u_3(i), \ldots, u_{d+1}(i)) \in \mathbb{R}^d\]</span></p>
+<p><strong>Eigenvalue interpretation.</strong> The eigenvalue <span class="math inline">\(\lambda_k\)</span> of <span class="math inline">\(Lu_k = \lambda_k Du_k\)</span> equals:</p>
+<p><span class="math display">\[\lambda_k = \frac{u_k^\top Lu_k}{u_k^\top Du_k} = \frac{\sum_{ij}W_{ij}(u_k(i)-u_k(j))^2}{\sum_i D_{ii}u_k(i)^2}\]</span></p>
+<p>the Rayleigh quotient — the ratio of local variation to degree-weighted energy. The smallest nonzero <span class="math inline">\(\lambda_2\)</span> corresponds to the smoothest non-constant embedding direction; the largest <span class="math inline">\(\lambda_n\)</span> corresponds to the most rapidly varying direction.</p>
+<hr>
+</section>
+<section id="convergence-theory-discrete-to-continuous" class="level3">
+<h3 class="anchored" data-anchor-id="convergence-theory-discrete-to-continuous">Convergence Theory: Discrete to Continuous</h3>
+<p><strong>Setup.</strong> Let <span class="math inline">\(\{x_1,\ldots,x_n\}\)</span> be i.i.d. samples from density <span class="math inline">\(p\)</span> on compact <span class="math inline">\(d\)</span>-dimensional manifold <span class="math inline">\(\mathcal{M} \subset \mathbb{R}^D\)</span>. Construct the neighbourhood graph with Gaussian weights:</p>
+<p><span class="math display">\[W_{ij}^{(n,\sigma)} = \exp\!\left(-\frac{\|x_i-x_j\|^2}{\sigma^2}\right)\]</span></p>
+<p>Let <span class="math inline">\(L^{(n,\sigma)}\)</span> be the resulting unnormalized graph Laplacian and <span class="math inline">\(\mathcal{L}^{(n,\sigma)} = D^{-1/2}L^{(n,\sigma)}D^{-1/2}\)</span> its normalized version.</p>
+<p><strong>Theorem (Belkin-Niyogi 2003 — pointwise convergence).</strong> Under the scaling <span class="math inline">\(\sigma = \sigma(n)\)</span> with <span class="math inline">\(\sigma \to 0\)</span> and <span class="math inline">\(n\sigma^{d+2}/\log n \to \infty\)</span>:</p>
+<p><span class="math display">\[\frac{1}{n\sigma^{d+2}} \sum_j W_{ij}^{(n,\sigma)} (f(x_j) - f(x_i)) \xrightarrow{n\to\infty} c_d \cdot (\Delta_\mathcal{M}f + \nabla\log p \cdot \nabla f)(x_i)\]</span></p>
+<p>where <span class="math inline">\(c_d = \int_{\mathbb{R}^d} \|v\|^2 e^{-\|v\|^2} dv / (2d)\)</span> is a dimension-dependent constant and <span class="math inline">\(\Delta_\mathcal{M}\)</span> is the Laplace-Beltrami operator.</p>
+<p><strong>Corollary (Uniform density).</strong> When <span class="math inline">\(p\)</span> is uniform on <span class="math inline">\(\mathcal{M}\)</span> (or after density normalization):</p>
+<p><span class="math display">\[\frac{1}{n\sigma^{d+2}} (L^{(n,\sigma)}f)_i \xrightarrow{n\to\infty} c_d \cdot \Delta_\mathcal{M}f(x_i)\]</span></p>
+<p>The graph Laplacian, properly normalized, converges to the Laplace-Beltrami operator.</p>
+<p><strong>Theorem (Coifman-Lafon 2006 — spectral convergence).</strong> The eigenvalues <span class="math inline">\(\lambda_k^{(n)}/(n\sigma^{d+2})\)</span> and eigenvectors <span class="math inline">\(u_k^{(n)}\)</span> of the normalized graph Laplacian converge to the eigenvalues <span class="math inline">\(\lambda_k\)</span> and eigenfunctions <span class="math inline">\(\phi_k\)</span> of <span class="math inline">\(\Delta_\mathcal{M}\)</span>:</p>
+<p><span class="math display">\[\lambda_k^{(n)}/(n\sigma^{d+2}) \to \lambda_k, \quad u_k^{(n)}(x_i) \to \phi_k(x_i)\]</span></p>
+<p>as <span class="math inline">\(n\to\infty\)</span>, uniformly over <span class="math inline">\(x_i \in \mathcal{M}\)</span>.</p>
+<p><strong>Consequence for Laplacian Eigenmaps.</strong> The embedding coordinates <span class="math inline">\((u_2^{(n)}(x_i),\ldots,u_{d+1}^{(n)}(x_i))\)</span> converge to the manifold harmonic coordinates <span class="math inline">\((\phi_2(x_i),\ldots,\phi_{d+1}(x_i))\)</span> — the eigenfunctions of the Laplace-Beltrami operator evaluated at the data points. The Laplacian Eigenmap recovers the true manifold harmonic coordinate system in the limit of dense sampling.</p>
+<hr>
+</section>
+<section id="density-correction-and-diffusion-maps" class="level3">
+<h3 class="anchored" data-anchor-id="density-correction-and-diffusion-maps">Density Correction and Diffusion Maps</h3>
+<p><strong>Problem with uniform Laplacian.</strong> When data density <span class="math inline">\(p\)</span> is non-uniform on <span class="math inline">\(\mathcal{M}\)</span>, the graph Laplacian converges to <span class="math inline">\(\Delta_\mathcal{M} + \nabla\log p \cdot \nabla\)</span> — not the pure Laplace-Beltrami operator <span class="math inline">\(\Delta_\mathcal{M}\)</span>. The density gradient term <span class="math inline">\(\nabla\log p \cdot \nabla\)</span> biases the eigenvectors toward high-density regions, distorting the embedding.</p>
+<p><strong>Definition (Diffusion Maps — Coifman-Lafon 2006).</strong> The <span class="math inline">\(\alpha\)</span>-normalized kernel removes the density bias:</p>
+<p><span class="math display">\[\tilde{W}_{ij}^{(\alpha)} = \frac{W_{ij}}{d_i^\alpha d_j^\alpha}, \quad d_i = \sum_j W_{ij}\]</span></p>
+<p>with parameter <span class="math inline">\(\alpha \in [0,1]\)</span> controlling density normalization:</p>
+<ul>
+<li><span class="math inline">\(\alpha = 0\)</span>: no normalization — graph Laplacian (biased by density)</li>
+<li><span class="math inline">\(\alpha = 1/2\)</span>: Fokker-Planck operator</li>
+<li><span class="math inline">\(\alpha = 1\)</span>: Laplace-Beltrami operator (density-unbiased)</li>
+</ul>
+<p><strong>Diffusion map embedding.</strong> Compute the random walk matrix <span class="math inline">\(P = \tilde{D}^{-1}\tilde{W}^{(\alpha)}\)</span> where <span class="math inline">\(\tilde{D}_{ii} = \sum_j\tilde{W}_{ij}^{(\alpha)}\)</span>. The <strong>diffusion distance</strong> at time <span class="math inline">\(t\)</span> between <span class="math inline">\(x_i\)</span> and <span class="math inline">\(x_j\)</span> is:</p>
+<p><span class="math display">\[D_t(x_i,x_j)^2 = \sum_{k\geq 2} \left(\mu_k^t(\psi_k(x_i) - \psi_k(x_j))\right)^2\]</span></p>
+<p>where <span class="math inline">\(\mu_k\)</span> are eigenvalues of <span class="math inline">\(P\)</span> (with <span class="math inline">\(\mu_1=1\)</span> excluded) and <span class="math inline">\(\psi_k\)</span> are corresponding right eigenvectors. The <strong>diffusion map</strong> embeds <span class="math inline">\(x_i\)</span> as:</p>
+<p><span class="math display">\[\Psi_t(x_i) = (\mu_2^t\psi_2(x_i), \mu_3^t\psi_3(x_i), \ldots, \mu_{d+1}^t\psi_{d+1}(x_i)) \in \mathbb{R}^d\]</span></p>
+<p><strong>Theorem (Coifman-Lafon 2006).</strong> The Euclidean distance in the diffusion map equals the diffusion distance:</p>
+<p><span class="math display">\[\|\Psi_t(x_i) - \Psi_t(x_j)\|^2 = D_t(x_i,x_j)^2\]</span></p>
+<p>The diffusion distance is robust to noise (it integrates over all paths of length <span class="math inline">\(t\)</span>, averaging out noise) and geometrically meaningful (it equals the geodesic distance for small <span class="math inline">\(t\)</span> on a flat manifold).</p>
+<hr>
+</section>
+<section id="relationship-to-classical-dimensionality-reduction" class="level3">
+<h3 class="anchored" data-anchor-id="relationship-to-classical-dimensionality-reduction">Relationship to Classical Dimensionality Reduction</h3>
+<p><strong>Principal Component Analysis (PCA).</strong> Find <span class="math inline">\(Y \in \mathbb{R}^{n\times d}\)</span> minimizing reconstruction error:</p>
+<p><span class="math display">\[\min_{Y = XQ,\; Q^\top Q = I_d} \|X - YQ^\top\|_F^2\]</span></p>
+<p>Solution: $Q^* = $ top <span class="math inline">\(d\)</span> eigenvectors of <span class="math inline">\(X^\top X\)</span> (or equivalently <span class="math inline">\(XX^\top\)</span>). PCA minimizes global Euclidean reconstruction error — it is the optimal linear embedding. It does not preserve manifold structure when the manifold is nonlinear.</p>
+<p><strong>Classical Multidimensional Scaling (cMDS).</strong> Find <span class="math inline">\(Y \in \mathbb{R}^{n\times d}\)</span> minimizing:</p>
+<p><span class="math display">\[\min_{Y} \sum_{i,j} \left(\|y_i - y_j\|^2 - \|x_i-x_j\|^2\right)^2\]</span></p>
+<p>Solution: double-centering of the pairwise distance matrix and taking the top <span class="math inline">\(d\)</span> eigenvectors. Equivalent to PCA on the centered Gram matrix. Preserves pairwise Euclidean distances — also linear, same failure mode as PCA for nonlinear manifolds.</p>
+<p><strong>ISOMAP (Tenenbaum et al.&nbsp;2000).</strong> Replace Euclidean pairwise distances with graph shortest-path distances <span class="math inline">\(d_G(i,j)\)</span> in cMDS:</p>
+<p><span class="math display">\[\min_{Y} \sum_{i,j}\left(\|y_i-y_j\|^2 - d_G(i,j)^2\right)^2\]</span></p>
+<p>Preserves geodesic distances — handles Swiss roll correctly. Failures: (1) <span class="math inline">\(O(n^2)\)</span> memory for pairwise distances; (2) sensitive to noise (one wrong edge corrupts all shortest paths through it); (3) requires the manifold to be convex (no holes); (4) over-constrains long-range distances estimated through error-accumulating hop chains.</p>
+<p><strong>Laplacian Eigenmaps vs.&nbsp;ISOMAP.</strong> LE optimizes only local distances (weighted by <span class="math inline">\(W_{ij}\)</span>, zero for non-neighbours). ISOMAP optimizes all pairwise distances. LE is: - More robust to noise (local edges independent, errors do not propagate) - Faster (<span class="math inline">\(O(nd)\)</span> after eigenvector computation vs.&nbsp;<span class="math inline">\(O(n^2\log n)\)</span> for all-pairs shortest paths) - Applicable to non-convex manifolds (no requirement of convexity) - Theoretically grounded in the spectral theory of <span class="math inline">\(\Delta_\mathcal{M}\)</span></p>
+<p><strong>Summary table:</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Distances preserved</th>
+<th>Manifold type</th>
+<th>Complexity</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>PCA</td>
+<td>Euclidean (global, linear)</td>
+<td>Flat only</td>
+<td><span class="math inline">\(O(nD^2)\)</span></td>
+</tr>
+<tr class="even">
+<td>cMDS</td>
+<td>Euclidean (global)</td>
+<td>Flat only</td>
+<td><span class="math inline">\(O(n^2D)\)</span></td>
+</tr>
+<tr class="odd">
+<td>ISOMAP</td>
+<td>Geodesic (global)</td>
+<td>Convex manifolds</td>
+<td><span class="math inline">\(O(n^2\log n)\)</span></td>
+</tr>
+<tr class="even">
+<td>Laplacian Eigenmaps</td>
+<td>Local weighted</td>
+<td>General manifolds</td>
+<td><span class="math inline">\(O(nd + \text{nnz}(L))\)</span></td>
+</tr>
+<tr class="odd">
+<td>Diffusion Maps</td>
+<td>Diffusion distance</td>
+<td>General manifolds</td>
+<td><span class="math inline">\(O(nd + \text{nnz}(\tilde W))\)</span></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="the-laplacian-eigenmap-as-a-graph-neural-network" class="level3">
+<h3 class="anchored" data-anchor-id="the-laplacian-eigenmap-as-a-graph-neural-network">The Laplacian Eigenmap as a Graph Neural Network</h3>
+<p><strong>Connection to GNNs.</strong> The Laplacian Eigenmap embedding <span class="math inline">\(\Phi(x_i) = (u_2(i),\ldots,u_{d+1}(i))\)</span> can be computed iteratively using the power method: starting from a random matrix <span class="math inline">\(Y^{(0)}\)</span>, iterate <span class="math inline">\(Y^{(k+1)} = D^{-1}WY^{(k)}\)</span> (random walk diffusion), followed by Gram-Schmidt orthonormalization. Each iteration is one step of a graph diffusion — equivalent to one layer of a GCN with <span class="math inline">\(\hat{A} = D^{-1}W\)</span> and no learned weights.</p>
+<p><strong>Theorem.</strong> The power iteration <span class="math inline">\(Y^{(k)} = (D^{-1}W)^k Y^{(0)}\)</span> converges to the top eigenvectors of the random walk matrix <span class="math inline">\(D^{-1}W\)</span> (equivalently, bottom eigenvectors of <span class="math inline">\(L_{\text{rw}}\)</span>). For <span class="math inline">\(k\to\infty\)</span>: the non-constant columns converge to <span class="math inline">\(u_2,\ldots,u_{d+1}\)</span>.</p>
+<p><strong>Consequence.</strong> An infinitely deep GCN with no learned weights and shared propagation matrix <span class="math inline">\(\hat{A} = D^{-1}W\)</span> computes the Laplacian Eigenmap embedding — it converges to the manifold’s harmonic coordinate system. This is over-smoothing from Chapter 2 reinterpreted constructively: what looked like a failure (convergence to a fixed point) is precisely the Laplacian Eigenmap algorithm, computing the manifold’s intrinsic coordinates through iterated local averaging.</p>
+<hr>
+</section>
+<section id="computational-implementation" class="level3">
+<h3 class="anchored" data-anchor-id="computational-implementation">Computational Implementation</h3>
+<p><strong>Algorithm (Laplacian Eigenmaps).</strong></p>
+<ol type="1">
+<li><p><strong>Build neighbourhood graph:</strong> Compute <span class="math inline">\(k\)</span>-NN graph from <span class="math inline">\(\{x_1,\ldots,x_n\}\)</span> using approximate nearest-neighbour search. Cost: <span class="math inline">\(O(n\log n\cdot D)\)</span>.</p></li>
+<li><p><strong>Assign weights:</strong> <span class="math inline">\(W_{ij} = \exp(-\|x_i-x_j\|^2/\sigma^2)\)</span> for connected pairs. Cost: <span class="math inline">\(O(nk)\)</span>.</p></li>
+<li><p><strong>Compute Laplacian:</strong> <span class="math inline">\(L = D - W\)</span>. Cost: <span class="math inline">\(O(nk)\)</span>.</p></li>
+<li><p><strong>Solve generalized eigenvalue problem:</strong> Find <span class="math inline">\(d+1\)</span> smallest eigenpairs of <span class="math inline">\(Lu = \lambda Du\)</span>. Equivalently, find <span class="math inline">\(d+1\)</span> smallest eigenpairs of <span class="math inline">\(\mathcal{L} = D^{-1/2}LD^{-1/2}\)</span> (standard symmetric eigenvalue problem). Use the <strong>Lanczos algorithm</strong> for sparse matrices. Cost: <span class="math inline">\(O(nk\cdot d + nd^2)\)</span>.</p></li>
+<li><p><strong>Embed:</strong> <span class="math inline">\(\Phi(x_i) = (u_2(i),\ldots,u_{d+1}(i))\)</span>.</p></li>
+</ol>
+<p><strong>Bandwidth selection.</strong> The bandwidth <span class="math inline">\(\sigma\)</span> is a critical hyperparameter: - Too small (<span class="math inline">\(\sigma \to 0\)</span>): graph becomes disconnected; many isolated nodes. - Too large (<span class="math inline">\(\sigma \to \infty\)</span>): all weights approach 1; graph loses local structure; Laplacian approximates global average. - Optimal: <span class="math inline">\(\sigma\)</span> proportional to the local neighbourhood scale — empirically chosen by inspecting the connectivity of the resulting graph or by cross-validation.</p>
+<p><strong>Intrinsic dimension estimation.</strong> The eigenvalue gap — the jump between <span class="math inline">\(\lambda_{d+1}\)</span> and <span class="math inline">\(\lambda_{d+2}\)</span> — provides an estimate of the manifold’s intrinsic dimension <span class="math inline">\(d\)</span>: a large gap suggests the first <span class="math inline">\(d\)</span> nontrivial eigenvectors capture most of the manifold’s geometry, with higher eigenvectors capturing noise or fine-grained detail.</p>
+<hr>
+</section>
+<section id="why-this-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-matters">WHY THIS MATTERS</h3>
+<p>In <strong>MATH 302 (Matrix Theory)</strong>, the generalized eigenvalue problem <span class="math inline">\(Lu = \lambda Du\)</span> is transformed to the standard symmetric eigenvalue problem <span class="math inline">\(\mathcal{L}v = \lambda v\)</span> for <span class="math inline">\(v = D^{1/2}u\)</span> via the congruence transformation <span class="math inline">\(D^{-1/2}(\cdot)D^{-1/2}\)</span>. The Courant-Fischer minimax theorem — <span class="math inline">\(\lambda_k = \min_{\dim S = k}\max_{u\in S, u^\top Du=1}u^\top Lu\)</span> — gives the variational characterization of the <span class="math inline">\(k\)</span>-th embedding direction as the <span class="math inline">\(k\)</span>-th smoothest non-constant function on the graph, measured by the Rayleigh quotient <span class="math inline">\(u^\top Lu / u^\top Du\)</span>. The Lanczos algorithm for computing the smallest eigenpairs of a sparse symmetric matrix uses the Gram-Schmidt process from MATH 302 to build a Krylov subspace orthonormal basis and reduces the <span class="math inline">\(n\times n\)</span> eigenvalue problem to a small <span class="math inline">\(m\times m\)</span> tridiagonal eigenvalue problem — the reduction of a large sparse symmetric matrix to tridiagonal form being a key application of orthogonal similarity transformations from MATH 302.</p>
+<p>In <strong>MATH 208 (Statistics and Probability)</strong>, the Gaussian kernel <span class="math inline">\(W_{ij} = \exp(-\|x_i-x_j\|^2/\sigma^2)\)</span> is proportional to the value of a multivariate Gaussian density <span class="math inline">\(\mathcal{N}(x_i, \sigma^2/2\, I_D)\)</span> evaluated at <span class="math inline">\(x_j\)</span> — it encodes the probability that <span class="math inline">\(x_j\)</span> was generated from a Gaussian centred at <span class="math inline">\(x_i\)</span>. The degree <span class="math inline">\(D_{ii} = \sum_j W_{ij}\)</span> estimates the local data density at <span class="math inline">\(x_i\)</span>: in a densely sampled region, many <span class="math inline">\(x_j\)</span> are nearby and the sum is large; in a sparse region, few <span class="math inline">\(x_j\)</span> are nearby and the sum is small. The <span class="math inline">\(\alpha\)</span>-normalization of Diffusion Maps <span class="math inline">\(\tilde W_{ij}^{(\alpha)} = W_{ij}/(d_i^\alpha d_j^\alpha)\)</span> is a density correction: dividing by <span class="math inline">\(d_i^\alpha\)</span> (proportional to <span class="math inline">\(p(x_i)^\alpha\)</span>) removes the density bias from the graph Laplacian, making it converge to the pure Laplace-Beltrami operator rather than the density-modified operator <span class="math inline">\(\Delta_\mathcal{M} + \nabla\log p\cdot\nabla\)</span>. This is a bias-correction procedure from statistics — removing the sampling density’s influence on the geometric operator — applied in the operator theory setting.</p>
+<p>In <strong>COMP 202 (Data Structures and Algorithms)</strong>, the <span class="math inline">\(k\)</span>-nearest-neighbour graph construction uses the <span class="math inline">\(k\)</span>-d tree data structure (from COMP 202’s tree chapter) to reduce the naive <span class="math inline">\(O(n^2D)\)</span> all-pairs distance computation to <span class="math inline">\(O(n\log n\cdot D)\)</span> for low-to-moderate <span class="math inline">\(D\)</span>. For high <span class="math inline">\(D\)</span> (the curse of dimensionality makes <span class="math inline">\(k\)</span>-d trees degrade), approximate nearest-neighbour algorithms (locality-sensitive hashing, HNSW graphs) from COMP 202’s hashing chapter achieve <span class="math inline">\(O(n\log n\cdot D)\)</span> with bounded approximation error. The Dijkstra’s algorithm for computing shortest-path distances in ISOMAP — compared to the Laplacian Eigenmap’s avoidance of all-pairs shortest paths — illustrates the computational advantage of the local-distance-only approach: Dijkstra costs <span class="math inline">\(O((n + m)\log n)\)</span> per source node and <span class="math inline">\(O(n(n+m)\log n)\)</span> for all-pairs, while the Laplacian Eigenmap requires only the sparse Lanczos eigensolver at <span class="math inline">\(O(nk\cdot d)\)</span> — a significant computational saving that makes Laplacian Eigenmaps scalable to large datasets where ISOMAP is intractable.</p>
+<hr>
+</section>
+</section>
+<section id="layer-3-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="layer-3-bridge">Layer 3 (Bridge)</h2>
+<p>Every element of the Tribhuvan University cultural survey story has a precise mathematical address. We walk through them completely — the four-hundred-dimensional cultural profile vectors, the PCA failure on the folded manifold, the Swiss roll as the precise geometric analogy, the neighbourhood graph as discrete manifold approximation, the break moment exposing ISOMAP’s failure, the graph Laplacian as local distance operator, the eigenvectors as natural coordinates, the Belkin-Niyogi convergence, and the closing of the spectral thread — until the story and the formalism are a single object seen from two angles.</p>
+<hr>
+<p><strong>The two hundred villages measured across four hundred cultural dimensions — each village a point <span class="math inline">\(x_i \in \mathbb{R}^{400}\)</span> — are the data points <span class="math inline">\(\{x_1,\ldots,x_n\} \subset \mathbb{R}^D\)</span> with <span class="math inline">\(n = 200\)</span> and <span class="math inline">\(D = 400\)</span>, assumed to lie near a compact <span class="math inline">\(d\)</span>-dimensional Riemannian manifold <span class="math inline">\(\mathcal{M} \hookrightarrow \mathbb{R}^{400}\)</span> with <span class="math inline">\(d \ll 400\)</span>.</strong> The four hundred measured cultural dimensions — vocabulary, textile patterns, instrument tuning, recipe profiles, calendar systems — are the ambient coordinates of <span class="math inline">\(\mathbb{R}^D\)</span>, highly correlated projections of the few underlying degrees of freedom that actually parameterize Himalayan cultural variation. The manifold hypothesis asserts that these four hundred numbers, despite their apparent independence, trace out a <span class="math inline">\(d\)</span>-dimensional surface in <span class="math inline">\(\mathbb{R}^{400}\)</span> — a surface parameterized by three or four fundamental cultural axes corresponding to altitude gradient, trade route influence, Tibetan proximity, and lowland contact. The manifold <span class="math inline">\(\mathcal{M}\)</span> is not known explicitly: you cannot write down its metric tensor <span class="math inline">\(g_{ij}\)</span> or its geodesic equations. It is a hidden geometric structure inferred from the data points, which are noisy samples lying near its surface. The entire Laplacian Eigenmap algorithm is the procedure for discovering this hidden structure and making it explicit as a low-dimensional coordinate system.</p>
+<p><strong>The PCA failure — Upper and Lower Dolpo placed near each other despite being culturally distant — is the failure of the linear projection <span class="math inline">\(Y = XQ\)</span> with <span class="math inline">\(Q^\top Q = I_d\)</span> to preserve the manifold’s intrinsic geometry when the manifold is nonlinear.</strong> PCA minimizes <span class="math inline">\(\|X - XQQ^\top\|_F^2\)</span> — the global Frobenius reconstruction error in the ambient space <span class="math inline">\(\mathbb{R}^{400}\)</span> — by projecting onto the subspace spanned by the top <span class="math inline">\(d\)</span> eigenvectors of <span class="math inline">\(X^\top X\)</span>. The projection distance <span class="math inline">\(\|y_i - y_j\| = \|QQ^\top(x_i-x_j)\|\)</span> is a lower bound on the Euclidean ambient distance <span class="math inline">\(\|x_i-x_j\|\)</span>, which is itself a lower bound on the geodesic distance <span class="math inline">\(d_\mathcal{M}(x_i,x_j)\)</span>. When the manifold folds — when two points are geodesically distant but Euclidean-close because the manifold curves back on itself — PCA collapses the fold: it places the two points close in the embedding because their ambient Euclidean distance is small, even though their geodesic distance is large. Upper and Lower Dolpo have small <span class="math inline">\(\|x_{\text{Upper}} - x_{\text{Lower}}\|_{\mathbb{R}^{400}}\)</span> (many cultural measurements numerically similar) but large <span class="math inline">\(d_\mathcal{M}(x_{\text{Upper}}, x_{\text{Lower}})\)</span> (long path of intermediate cultural types along the manifold surface). PCA measures the former; the correct embedding must measure the latter.</p>
+<p><strong>The Swiss roll in <span class="math inline">\(\mathbb{R}^3\)</span> — two points on adjacent spiral layers that are Euclidean-close but geodesically far — is the canonical low-dimensional instance of the fold failure, and the cultural manifold of Himalayan villages is its four-hundred-dimensional analogue.</strong> The Swiss roll is a rectangular strip <span class="math inline">\([0,L]\times[0,W]\)</span> rolled into a spiral <span class="math inline">\(\gamma(s,t) = ((a+bs)\cos s, t, (a+bs)\sin s) \in \mathbb{R}^3\)</span> for <span class="math inline">\(s\in[0,2\pi]\)</span>. Two points on adjacent layers at the same angle <span class="math inline">\(s\)</span> have Euclidean distance <span class="math inline">\(\approx 2\pi b\)</span> (the layer spacing) but geodesic distance <span class="math inline">\(\approx L\)</span> (the full length of the strip). PCA projects the spiral onto a two-dimensional plane, folding the strip back into a compact region and placing the two points close. The Laplacian Eigenmap unrolls the spiral: its eigenvectors recover the <span class="math inline">\((s,t)\)</span> parameterization of the unrolled strip, placing the two points at Euclidean distance <span class="math inline">\(\approx L\)</span> in the embedding. The cultural manifold is the same geometry in <span class="math inline">\(\mathbb{R}^{400}\)</span>: the fold that PCA collapses is the curvature of the manifold between Upper and Lower Dolpo, and the Laplacian Eigenmap unrolls this fold by measuring intrinsic rather than extrinsic distances.</p>
+<hr>
+<p><strong>The key insight that local Euclidean distances approximate geodesic distances — that nearby villages in <span class="math inline">\(\mathbb{R}^{400}\)</span> are genuinely culturally nearby on the manifold, while the failure of Euclidean distance only appears at large scales where the manifold folds — is the geometric fact <span class="math inline">\(d_\mathcal{M}(x_i,x_j) = \|x_i-x_j\| + O(\|x_i-x_j\|^3)\)</span> for points with <span class="math inline">\(\|x_i-x_j\| \ll 1/\kappa\)</span> where <span class="math inline">\(\kappa\)</span> is the manifold’s maximum principal curvature.</strong> This is the third-order agreement between Euclidean and geodesic distance, the discrete analogue of the exponential map’s property <span class="math inline">\(d(\exp_x)_0 = \text{Id}\)</span> from Topic 1: locally, the manifold is flat to first order, so local Euclidean distances are honest proxies for geodesic distances. The approximation error is <span class="math inline">\(O(\|x_i-x_j\|^3)\)</span> — cubic in the pairwise distance, negligible for tight neighbourhoods. The bandwidth parameter <span class="math inline">\(\sigma\)</span> in the Gaussian weight <span class="math inline">\(W_{ij} = \exp(-\|x_i-x_j\|^2/\sigma^2)\)</span> controls what counts as local: small <span class="math inline">\(\sigma\)</span> restricts the neighbourhood to points within the regime where the cubic approximation error is negligible, ensuring the weights encode honest local manifold proximity. The regime breakdown — where Euclidean distance no longer approximates geodesic distance — is precisely where the manifold curvature <span class="math inline">\(\kappa\)</span> becomes significant at the scale <span class="math inline">\(\sigma\)</span>, which is the discrete analogue of the injectivity radius condition from Topic 1 that limits geodesic polar coordinates to radii smaller than <span class="math inline">\(\text{inj}(x)\)</span>.</p>
+<p><strong>The neighbourhood graph connecting each village to its ten nearest neighbours with Gaussian weights <span class="math inline">\(W_{ij} = \exp(-\|x_i-x_j\|^2/\sigma^2)\)</span> — and the weighted degree matrix <span class="math inline">\(D_{ii} = \sum_j W_{ij}\)</span> recording total connection strength — is the discrete approximation to the Riemannian manifold <span class="math inline">\((\mathcal{M}, g)\)</span>, with the weight matrix <span class="math inline">\(W\)</span> encoding the local metric structure.</strong> The <span class="math inline">\(k\)</span>-nearest-neighbour graph is the discrete instance of the <span class="math inline">\(\epsilon\)</span>-neighbourhood definition <span class="math inline">\(E_\epsilon = \{(i,j): \|x_i-x_j\| &lt; \epsilon\}\)</span>, with the neighbourhood radius determined adaptively by the <span class="math inline">\(k\)</span>-th nearest neighbour distance rather than a fixed global <span class="math inline">\(\epsilon\)</span>. The Gaussian weight <span class="math inline">\(W_{ij}\)</span> is the discrete analogue of the heat kernel <span class="math inline">\(k_t(x,y) = (4\pi t)^{-d/2}\exp(-d_\mathcal{M}(x,y)^2/4t)\)</span> on the manifold, with <span class="math inline">\(\sigma^2 \approx 4t\)</span> being the diffusion time. The degree <span class="math inline">\(D_{ii} = \sum_j W_{ij}\)</span> estimates the local sampling density <span class="math inline">\(p(x_i)\)</span> at village <span class="math inline">\(i\)</span>: a culturally popular village type (many measurements in its neighbourhood) has large <span class="math inline">\(D_{ii}\)</span>; a culturally isolated village type has small <span class="math inline">\(D_{ii}\)</span>. The weight matrix <span class="math inline">\(W\)</span> and degree matrix <span class="math inline">\(D\)</span> are the computational objects from which the graph Laplacian is built, and their geometric meaning — local metric proximity, local sampling density — is what makes the resulting Laplacian a valid approximation to <span class="math inline">\(\Delta_\mathcal{M}\)</span>.</p>
+<hr>
+<p><strong>The break moment — ISOMAP’s failure to correctly handle long-range distance estimation through error-accumulating hop chains — is the formal consequence of the over-constraint in cMDS applied to graph shortest-path distances: <span class="math inline">\(19{,}900\)</span> distance constraints for <span class="math inline">\(400\)</span> free parameters, with heterogeneous error structure that ISOMAP treats uniformly.</strong> The ISOMAP objective <span class="math inline">\(\min_Y\sum_{i,j}(\|y_i-y_j\|^2 - d_G(i,j)^2)^2\)</span> weights all <span class="math inline">\(\binom{200}{2} = 19{,}900\)</span> pairwise distances equally. But the graph shortest-path distance <span class="math inline">\(d_G(\text{Upper Dolpo}, \text{Lower Dolpo})\)</span> — estimated through ten intermediate hops — accumulates ten independent approximation errors of size <span class="math inline">\(O(\|x_i-x_j\|^3)\)</span> each, while the direct single-hop distance <span class="math inline">\(d_G(x_i, x_j)\)</span> for neighbouring villages has only one error of the same size. ISOMAP treats both with the same squared loss coefficient, giving equal weight to a reliable local estimate and a noisy long-range estimate. The Laplacian Eigenmap resolves this by using <span class="math inline">\(W_{ij} \approx 0\)</span> for non-neighbouring villages — the Gaussian weight makes the contribution of long-range distances to the objective <span class="math inline">\(\sum_{ij}W_{ij}\|y_i-y_j\|^2\)</span> negligible, because <span class="math inline">\(W_{ij}\)</span> decays exponentially with distance. Only local distances — where the cubic approximation error is negligible and the weights are large — contribute meaningfully to the objective. The algorithm is automatically robust to error accumulation because its objective function applies weights that are proportional to the inverse of the approximation error.</p>
+<hr>
+<p><strong>The graph Laplacian <span class="math inline">\(L = D - W\)</span> — with <span class="math inline">\((Lf)_i = \sum_{j\in\mathcal{N}(i)}W_{ij}(f_i - f_j)\)</span> measuring the weighted departure of signal <span class="math inline">\(f\)</span> at village <span class="math inline">\(i\)</span> from its neighbourhood average — is the discrete approximation to the Laplace-Beltrami operator <span class="math inline">\(\Delta_\mathcal{M}\)</span>, with the Dirichlet energy <span class="math inline">\(f^\top Lf = \frac{1}{2}\sum_{ij}W_{ij}(f_i-f_j)^2\)</span> measuring the total local variation of signal <span class="math inline">\(f\)</span> across the cultural neighbourhood graph.</strong> The positive semidefiniteness proof <span class="math inline">\(f^\top Lf = \frac{1}{2}\sum_{ij}W_{ij}(f_i-f_j)^2\geq 0\)</span> — the same proof as for the unweighted combinatorial Laplacian in Chapter 2, now with the weights <span class="math inline">\(W_{ij}\)</span> playing the role of edge indicators — establishes that all eigenvalues are non-negative. The zero eigenvalue with eigenvector <span class="math inline">\(\mathbf{1}\)</span> follows from <span class="math inline">\((L\mathbf{1})_i = \sum_j W_{ij}(1-1) = 0\)</span>: the constant cultural signal, assigning the same value to every village, has zero variation across all edges. For a connected graph — all villages reachable from any other through neighbourhood hops — the zero eigenvalue has multiplicity one: the only zero-variation signal is the constant. The Belkin-Niyogi convergence theorem makes the approximation precise: under the scaling <span class="math inline">\(\sigma\to 0\)</span> and <span class="math inline">\(n\sigma^{d+2}/\log n\to\infty\)</span>, the normalized graph Laplacian operator <span class="math inline">\((n\sigma^{d+2})^{-1}L^{(n,\sigma)}\)</span> converges pointwise to <span class="math inline">\(c_d\Delta_\mathcal{M}\)</span> for uniform data density. The graph Laplacian is not merely analogous to the Laplace-Beltrami operator — it converges to it in the limit of dense sampling, making every spectral computation on <span class="math inline">\(L\)</span> a finite-sample approximation to the corresponding spectral computation on <span class="math inline">\(\Delta_\mathcal{M}\)</span>.</p>
+<p><strong>The Dirichlet energy minimization <span class="math inline">\(\min_{Y^\top DY=I_d}\text{tr}(Y^\top LY) = \min_{Y^\top DY=I_d}\sum_{ij}W_{ij}\|y_i-y_j\|^2\)</span> — the variational problem whose solution gives the Laplacian Eigenmap embedding — is the discrete analogue of the continuous variational problem <span class="math inline">\(\min_{\phi\in L^2(\mathcal{M}), \|\phi\|_{L^2}=1}\int_\mathcal{M}\|\nabla\phi\|_g^2\,d\text{vol} = \min_\phi\langle\phi,-\Delta_\mathcal{M}\phi\rangle_{L^2}\)</span>, whose solutions are the eigenfunctions <span class="math inline">\(\phi_k\)</span> of <span class="math inline">\(\Delta_\mathcal{M}\)</span>.</strong> The equivalence <span class="math inline">\(\sum_{ij}W_{ij}\|y_i-y_j\|^2 = 2\,\text{tr}(Y^\top LY)\)</span> follows by expanding <span class="math inline">\(\|y_i-y_j\|^2 = \sum_k(y_{ik}-y_{jk})^2\)</span> and recognizing each column’s contribution <span class="math inline">\(\sum_{ij}W_{ij}(y_{ik}-y_{jk})^2 = 2\mathbf{y}_k^\top L\mathbf{y}_k\)</span> as the Dirichlet energy of the <span class="math inline">\(k\)</span>-th embedding coordinate. The constraint <span class="math inline">\(Y^\top DY = I_d\)</span> is the discrete analogue of the <span class="math inline">\(L^2(\mathcal{M})\)</span> orthonormality <span class="math inline">\(\langle\phi_j,\phi_k\rangle_{L^2} = \int_\mathcal{M}\phi_j\phi_k\,d\text{vol} = \delta_{jk}\)</span>, with the degree matrix <span class="math inline">\(D\)</span> approximating the volume measure <span class="math inline">\(d\text{vol}\)</span> — the degree <span class="math inline">\(D_{ii}\)</span> is proportional to the Voronoi cell area of sample point <span class="math inline">\(x_i\)</span> on the manifold, which converges to <span class="math inline">\(d\text{vol}(x_i)\)</span> under uniform sampling. The Courant-Fischer theorem applied to the constrained problem gives the solution: the <span class="math inline">\(k\)</span>-th embedding coordinate is the <span class="math inline">\(k\)</span>-th eigenvector of <span class="math inline">\(Lu = \lambda Du\)</span>, corresponding to the <span class="math inline">\(k\)</span>-th smallest nonzero eigenvalue <span class="math inline">\(\lambda_k\)</span> — the <span class="math inline">\(k\)</span>-th smoothest non-constant signal on the cultural neighbourhood graph, the discrete approximation to the <span class="math inline">\(k\)</span>-th manifold harmonic <span class="math inline">\(\phi_k\)</span>.</p>
+<hr>
+<p><strong>The substitution <span class="math inline">\(v = D^{1/2}u\)</span> converting the generalized eigenvalue problem <span class="math inline">\(Lu = \lambda Du\)</span> to the standard symmetric eigenvalue problem <span class="math inline">\(\mathcal{L}v = \lambda v\)</span> for the normalized Laplacian <span class="math inline">\(\mathcal{L} = D^{-1/2}LD^{-1/2}\)</span> — is the congruence transformation from MATH 302 that reduces a generalized eigenproblem to a standard one when the right-hand matrix is positive definite.</strong> The positive definiteness of <span class="math inline">\(D\)</span> (all diagonal entries <span class="math inline">\(D_{ii} &gt; 0\)</span> for a connected graph with positive weights) guarantees the well-definedness of <span class="math inline">\(D^{1/2}\)</span> and <span class="math inline">\(D^{-1/2}\)</span> as diagonal matrices with positive square-root entries. The congruence <span class="math inline">\(\mathcal{L} = D^{-1/2}LD^{-1/2}\)</span> is a similarity transformation that preserves eigenvalues (the spectrum of <span class="math inline">\(\mathcal{L}\)</span> equals the spectrum of <span class="math inline">\(L\)</span> in the <span class="math inline">\(D\)</span>-weighted inner product) while converting the non-standard inner product <span class="math inline">\(\langle u,v\rangle_D = u^\top Dv\)</span> to the standard Euclidean inner product <span class="math inline">\(\langle\tilde{u},\tilde{v}\rangle = \tilde{u}^\top\tilde{v}\)</span> for <span class="math inline">\(\tilde{u} = D^{1/2}u\)</span>. The Lanczos algorithm then applies to <span class="math inline">\(\mathcal{L}\)</span> — a sparse symmetric positive semidefinite matrix — computing the smallest <span class="math inline">\(d+1\)</span> eigenpairs through a Krylov subspace iteration that builds an orthonormal basis <span class="math inline">\(\{q_1,\ldots,q_m\}\)</span> via Gram-Schmidt and reduces the <span class="math inline">\(n\times n\)</span> problem to an <span class="math inline">\(m\times m\)</span> tridiagonal problem, with <span class="math inline">\(m\ll n\)</span> sufficient for convergence of the smallest eigenpairs. The total cost <span class="math inline">\(O(nk\cdot d + nd^2)\)</span> — where <span class="math inline">\(nk\)</span> is the number of nonzero entries of <span class="math inline">\(\mathcal{L}\)</span> (each village has <span class="math inline">\(k\)</span> neighbours) and <span class="math inline">\(d\)</span> is the embedding dimension — is the computational expression of the algorithm’s scalability advantage over ISOMAP’s <span class="math inline">\(O(n^2\log n)\)</span> all-pairs shortest-path computation.</p>
+<p><strong>The embedding <span class="math inline">\(\Phi(x_i) = (u_2(i), u_3(i), \ldots, u_{d+1}(i)) \in \mathbb{R}^d\)</span> — placing village <span class="math inline">\(i\)</span> at the coordinates given by its values in the second through <span class="math inline">\((d+1)\)</span>-th eigenvectors of <span class="math inline">\(Lu = \lambda Du\)</span> — is the discrete manifestation of the manifold harmonic coordinate map <span class="math inline">\(\Phi_\mathcal{M}(x) = (\phi_2(x), \phi_3(x),\ldots,\phi_{d+1}(x))\)</span> evaluated at the sample points.</strong> The first eigenvector <span class="math inline">\(u_1 = \mathbf{1}/\sqrt{n}\)</span> (constant, eigenvalue zero) is excluded because it maps all villages to the same constant coordinate — the constant function carries no structural information about the manifold. The second eigenvector <span class="math inline">\(u_2\)</span> — the Fiedler vector of the weighted graph, which you encountered in Chapter 2’s Topic 2 as the smoothest non-constant graph signal — is the first non-trivial embedding coordinate: it assigns to each village a real number that varies as smoothly as possible across the cultural neighbourhood graph. In the story, this eigenvector separates high-altitude Tibetan-Buddhist villages (negative <span class="math inline">\(u_2\)</span> values) from mid-hill mixed-influence villages (positive <span class="math inline">\(u_2\)</span> values), corresponding to the altitude-Tibetan cultural gradient. The third eigenvector <span class="math inline">\(u_3\)</span>, orthogonal to <span class="math inline">\(u_2\)</span> in the <span class="math inline">\(D\)</span>-weighted inner product, captures the second smoothest independent cultural gradient — the east-west axis. The pair <span class="math inline">\((u_2(i), u_3(i))\)</span> is the village’s natural coordinate in the two-dimensional manifold harmonic system, the same coordinate system that the Laplace-Beltrami operator’s eigenfunctions would provide on the continuous cultural manifold.</p>
+<hr>
+<p><strong>Upper and Lower Dolpo — incorrectly collapsed by PCA, correctly separated by Laplacian Eigenmaps — is the validation of the convergence theorem: their eigenvector coordinates <span class="math inline">\((u_2(\text{Upper}), u_3(\text{Upper}))\)</span> and <span class="math inline">\((u_2(\text{Lower}), u_3(\text{Lower}))\)</span> differ because the chain of neighbourhood edges separating them in the cultural graph forces their eigenvector values to differ, just as the manifold harmonic functions <span class="math inline">\(\phi_2\)</span> and <span class="math inline">\(\phi_3\)</span> take different values at geodesically distant points on <span class="math inline">\(\mathcal{M}\)</span>.</strong> The mechanism is the Dirichlet energy minimization: the eigenvector <span class="math inline">\(u_2\)</span> minimizes <span class="math inline">\(\sum_{ij}W_{ij}(u_2(i)-u_2(j))^2\)</span> subject to normalization. Nearby villages (large <span class="math inline">\(W_{ij}\)</span>) must have nearly equal <span class="math inline">\(u_2\)</span> values; if Upper and Lower Dolpo are connected by a chain of ten intermediate villages, the eigenvector must vary smoothly along this chain, distributing the total variation <span class="math inline">\(u_2(\text{Upper}) - u_2(\text{Lower})\)</span> across ten steps rather than concentrating it in one discontinuous jump. The result is that Upper Dolpo, at the beginning of the chain, has a significantly different <span class="math inline">\(u_2\)</span> value from Lower Dolpo at the end — the embedding correctly reflects their geodesic separation through the smooth variation of the harmonic function along the intermediate chain. PCA placed them close because <span class="math inline">\(\|x_{\text{Upper}} - x_{\text{Lower}}\|_{\mathbb{R}^{400}}\)</span> is small — the ambient Euclidean distance is small because the manifold folds them near each other in <span class="math inline">\(\mathbb{R}^{400}\)</span>. The Laplacian Eigenmap places them far because <span class="math inline">\(d_\mathcal{M}(x_{\text{Upper}}, x_{\text{Lower}})\)</span> is large — the geodesic distance is large because the manifold path between them winds through many intermediate cultural types.</p>
+<hr>
+<p><strong>The power iteration <span class="math inline">\(Y^{(k+1)} = D^{-1}WY^{(k)}\)</span> — iterated random walk diffusion on the neighbourhood graph, converging to the Laplacian Eigenmap embedding — is the constructive link between Laplacian Eigenmaps and the over-smoothing of deep GCNs from Chapter 2, now reinterpreted as the convergence of iterative local averaging to the manifold’s harmonic coordinate system.</strong> The random walk matrix <span class="math inline">\(P = D^{-1}W\)</span> has <span class="math inline">\((P)_{ij} = W_{ij}/D_{ii}\)</span> — the probability of moving from village <span class="math inline">\(i\)</span> to village <span class="math inline">\(j\)</span> in one step of a random walk on the cultural neighbourhood graph. Multiplying the feature matrix <span class="math inline">\(Y\)</span> by <span class="math inline">\(P\)</span> is one step of a random walk diffusion: each village’s coordinate is replaced by the weighted average of its neighbours’ coordinates. This is exactly the GCN propagation step <span class="math inline">\(H^{(k+1)} = D^{-1}WH^{(k)}\)</span> with no learned weight matrix (<span class="math inline">\(W^{(k)} = I\)</span>) and no nonlinearity (<span class="math inline">\(\sigma = \text{Id}\)</span>). After <span class="math inline">\(K\)</span> iterations, <span class="math inline">\(Y^{(K)} = P^K Y^{(0)}\)</span>; as <span class="math inline">\(K\to\infty\)</span>, <span class="math inline">\(P^K\)</span> projects onto the eigenspace of <span class="math inline">\(P\)</span>’s largest eigenvalues — equivalently, <span class="math inline">\(L_{\text{rw}} = I - P\)</span>’s smallest eigenvalues — which are the Laplacian Eigenmap coordinates. Over-smoothing, which in Chapter 2 was the failure of deep GCNs to preserve high-frequency information, is now constructively the convergence of the power method to the manifold’s lowest-frequency harmonic coordinates. The distinction is one of purpose: for a classification GNN, convergence to the constant eigenvector is a failure (all nodes receive the same representation). For the Laplacian Eigenmap computation, convergence to the low-frequency eigenvectors is the goal (the manifold’s natural coordinate system is precisely the lowest-frequency harmonic functions).</p>
+<hr>
+<p><strong>The Belkin-Niyogi convergence theorem — <span class="math inline">\((n\sigma^{d+2})^{-1}(L^{(n,\sigma)}f)_i \to c_d\Delta_\mathcal{M}f(x_i)\)</span> as <span class="math inline">\(n\to\infty\)</span>, <span class="math inline">\(\sigma\to 0\)</span>, <span class="math inline">\(n\sigma^{d+2}/\log n\to\infty\)</span> — is the mathematical statement that the cultural neighbourhood graph’s Laplacian is a consistent estimator of the Laplace-Beltrami operator of the cultural manifold, with the eigenvalues <span class="math inline">\(\lambda_k^{(n)}/(n\sigma^{d+2})\to\lambda_k\)</span> and eigenvectors <span class="math inline">\(u_k^{(n)}(x_i)\to\phi_k(x_i)\)</span> converging to the manifold harmonics.</strong> The three conditions on <span class="math inline">\(\sigma\)</span> and <span class="math inline">\(n\)</span> balance three competing requirements: <span class="math inline">\(\sigma\to 0\)</span> ensures that only genuinely local — geometrically honest — edges are included, so the Euclidean weight approximates the geodesic weight accurately; <span class="math inline">\(n\sigma^d\to\infty\)</span> ensures that each village has enough neighbours within radius <span class="math inline">\(\sigma\)</span> for the law of large numbers to make the empirical average <span class="math inline">\(\sum_j W_{ij}f(x_j)\)</span> converge to the integral <span class="math inline">\(\int k_\sigma(x,y)f(y)p(y)d\text{vol}(y)\)</span>; and the logarithmic correction <span class="math inline">\(n\sigma^{d+2}/\log n\to\infty\)</span> (rather than just <span class="math inline">\(n\sigma^{d+2}\to\infty\)</span>) ensures uniform convergence over all data points simultaneously, the standard log factor from concentration inequalities in your MATH 208 Statistics course. The scaling <span class="math inline">\(n\sigma^{d+2}\)</span> in the normalization of <span class="math inline">\(L^{(n,\sigma)}\)</span> accounts for both the diffusion kernel’s mass (<span class="math inline">\(\sigma^d\)</span>) and the second-derivative scaling (<span class="math inline">\(\sigma^2\)</span>) that converts the kernel-weighted difference operator into a second-order differential operator — the discrete analogue of the Taylor expansion <span class="math inline">\((f(x+\sigma v) - f(x))/\sigma^2 \to v\cdot\nabla f(x) + \sigma(v\cdot\nabla)^2f(x)/2\)</span> that converts finite differences to derivatives.</p>
+<p><strong>The density correction <span class="math inline">\(\tilde W_{ij}^{(\alpha)} = W_{ij}/(d_i^\alpha d_j^\alpha)\)</span> of Diffusion Maps — removing the sampling density’s influence on the graph Laplacian so that it converges to the pure Laplace-Beltrami operator rather than the density-modified operator <span class="math inline">\(\Delta_\mathcal{M} + \nabla\log p\cdot\nabla\)</span> — is the bias correction from MATH 208 applied to the operator estimation setting.</strong> Without correction (<span class="math inline">\(\alpha = 0\)</span>), the graph Laplacian converges to <span class="math inline">\(\Delta_\mathcal{M} + \nabla\log p\cdot\nabla\)</span> — the Laplace-Beltrami operator plus a drift term <span class="math inline">\(\nabla\log p\cdot\nabla\)</span> that pushes the eigenfunctions toward high-density regions of the manifold, distorting the embedding. In the cultural survey: if Kathmandu Valley villages are over-represented in the dataset (more samples from accessible areas), the unweighted Laplacian’s eigenvectors would cluster the embedding near Kathmandu Valley cultural types, compressing the representation of under-sampled remote village types. With <span class="math inline">\(\alpha = 1\)</span> correction, dividing by <span class="math inline">\(d_i d_j\)</span> (proportional to <span class="math inline">\(p(x_i)p(x_j)\)</span>) removes this density bias: the corrected Laplacian converges to pure <span class="math inline">\(\Delta_\mathcal{M}\)</span>, whose eigenfunctions depend only on the manifold’s intrinsic geometry and not on the sampling density. The eigenvalue gap <span class="math inline">\(\lambda_{d+1} \ll \lambda_{d+2}\)</span> — the jump between the <span class="math inline">\(d\)</span>-th and <span class="math inline">\((d+1)\)</span>-th nonzero eigenvalues — is the spectral signature of the manifold’s intrinsic dimension <span class="math inline">\(d\)</span>: the first <span class="math inline">\(d\)</span> harmonics capture the manifold’s global geometry, while higher harmonics capture fine-grained local details or noise, with the gap marking the transition.</p>
+<hr>
+<p><strong>The closing of the spectral thread — spherical harmonics as <span class="math inline">\(\Delta_{S^2}\)</span> eigenfunctions in Chapter 1, graph Laplacian eigenvectors as GNN frequency basis in Chapter 2, Laplace-Beltrami eigenfunctions as DiffusionNet propagation basis in Topic 1, and Laplacian Eigenmap coordinates as manifold harmonic coordinate functions in Topic 2 — is the realization that all four are the same mathematical object: the spectral decomposition of the Laplacian operator on the relevant geometric domain, appearing in four different computational roles across Phase 2.</strong> The spherical harmonics <span class="math inline">\(Y_\ell^m\)</span> satisfy <span class="math inline">\(\Delta_{S^2}Y_\ell^m = -\ell(\ell+1)Y_\ell^m\)</span> — they are the manifold harmonics of the sphere <span class="math inline">\(S^2\)</span> with its round metric, and in Chapter 1 they appeared as the natural basis for <span class="math inline">\(SO(3)\)</span>-equivariant features because <span class="math inline">\(SO(3)\)</span> is the isometry group of <span class="math inline">\(S^2\)</span>. The graph Laplacian eigenvectors <span class="math inline">\(u_k\)</span> of Chapter 2 are the discrete approximations to the manifold harmonics of whatever manifold the graph approximates, and they appeared as the graph Fourier basis for signal processing — the frequency modes in which spectral GNN filters operate. The Laplace-Beltrami eigenfunctions <span class="math inline">\(\phi_k\)</span> of Chapter 3 Topic 1 appeared as the propagation basis for DiffusionNet’s intrinsic feature diffusion — the heat operator <span class="math inline">\(e^{-t\Delta_\mathcal{M}}\)</span> acting on features through its spectral decomposition <span class="math inline">\(\sum_k e^{-\lambda_k t}\phi_k\phi_k^\top\)</span>. And now in Topic 2, the same eigenfunctions <span class="math inline">\(\phi_k\)</span> — approximated by <span class="math inline">\(u_k\)</span> through the Belkin-Niyogi convergence — appear as the embedding coordinates themselves. Four roles: equivariant feature basis, frequency filter basis, diffusion propagation basis, embedding coordinate basis. One mathematical object: the spectral decomposition of the Laplacian on the geometric domain.</p>
+<hr>
+<p><strong>The connection to MATH 302 is the generalized eigenvalue problem, the congruence transformation, and the Courant-Fischer theorem.</strong> The generalized eigenproblem <span class="math inline">\(Lu = \lambda Du\)</span> is converted to the standard symmetric eigenproblem <span class="math inline">\(\mathcal{L}v = \lambda v\)</span> by the MATH 302 congruence <span class="math inline">\(\mathcal{L} = D^{-1/2}LD^{-1/2}\)</span> with <span class="math inline">\(v = D^{1/2}u\)</span>. The Courant-Fischer characterization <span class="math inline">\(\lambda_k = \min_{\dim S=k}\max_{u\in S, u^\top Du=1}u^\top Lu\)</span> gives the variational interpretation of each embedding axis as the <span class="math inline">\(k\)</span>-th smoothest cultural gradient — the most slowly varying non-constant function on the neighbourhood graph, orthogonal to all smoother ones. <strong>The connection to MATH 208 is the Gaussian kernel as a density estimator, the degree as a local density proxy, and the density correction as bias removal.</strong> The Gaussian weight <span class="math inline">\(W_{ij} = \exp(-\|x_i-x_j\|^2/\sigma^2)\)</span> is a Parzen window density estimator kernel; the degree <span class="math inline">\(D_{ii} = \sum_j W_{ij}\)</span> is proportional to the kernel density estimate <span class="math inline">\(\hat p(x_i)\)</span> at village <span class="math inline">\(i\)</span>; the <span class="math inline">\(\alpha\)</span>-normalization is the bias correction that removes <span class="math inline">\(\hat p\)</span>’s influence from the Laplacian operator, exactly as standardization removes mean and variance from features in MATH 208’s regression analysis. <strong>The connection to COMP 202 is the <span class="math inline">\(k\)</span>-NN graph construction using <span class="math inline">\(k\)</span>-d trees, the Dijkstra comparison exposing ISOMAP’s computational disadvantage, and the Lanczos eigensolver as a Krylov subspace method.</strong> The <span class="math inline">\(k\)</span>-nearest-neighbour graph costs <span class="math inline">\(O(n\log n\cdot D)\)</span> with a <span class="math inline">\(k\)</span>-d tree from COMP 202; ISOMAP’s all-pairs Dijkstra costs <span class="math inline">\(O(n^2\log n)\)</span>; the Lanczos algorithm costs <span class="math inline">\(O(nk\cdot d)\)</span> — all three complexity comparisons involving data structures and algorithms from COMP 202.</p>
+<hr>
+<p>The Tribhuvan University cultural survey — its four-hundred-dimensional village profiles, PCA failure on the cultural fold, Swiss roll analogy, neighbourhood graph construction, ISOMAP break moment, graph Laplacian as local distance operator, eigenvector coordinates as natural axes, altitude and east-west gradients as discovered eigenvectors, Upper and Lower Dolpo correctly separated, power iteration as constructive over-smoothing, Belkin-Niyogi convergence, density correction, and spectral thread closure — is now completely dissolved into its mathematical form. The cultural profiles are <span class="math inline">\(x_i\in\mathbb{R}^{400}\)</span>. The manifold is <span class="math inline">\(\mathcal{M}\hookrightarrow\mathbb{R}^{400}\)</span>. The neighbourhood graph is <span class="math inline">\((V,E,W)\)</span>. The Gaussian weight is <span class="math inline">\(W_{ij} = \exp(-\|x_i-x_j\|^2/\sigma^2)\)</span>. The graph Laplacian is <span class="math inline">\(L = D-W\)</span>. The Dirichlet energy is <span class="math inline">\(f^\top Lf = \frac{1}{2}\sum_{ij}W_{ij}(f_i-f_j)^2\)</span>. The optimization is <span class="math inline">\(\min_{Y^\top DY=I_d}\text{tr}(Y^\top LY)\)</span>. The solution is <span class="math inline">\(Y^* = [u_2|\cdots|u_{d+1}]\)</span> from <span class="math inline">\(Lu = \lambda Du\)</span>. The convergence is <span class="math inline">\(u_k^{(n)}\to\phi_k\)</span> by Belkin-Niyogi. The embedding is <span class="math inline">\(\Phi(x_i) = (u_2(i),\ldots,u_{d+1}(i))\)</span>. The spectral thread is closed.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

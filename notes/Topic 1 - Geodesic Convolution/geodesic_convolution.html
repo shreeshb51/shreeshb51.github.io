@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>geodesic_convolution – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#topic-1---geodesic-convolution-sliding-filters-along-curved-surfaces" id="toc-topic-1---geodesic-convolution-sliding-filters-along-curved-surfaces" class="nav-link active" data-scroll-target="#topic-1---geodesic-convolution-sliding-filters-along-curved-surfaces">Topic 1 - Geodesic Convolution: Sliding Filters Along Curved Surfaces</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#layer-1-story" id="toc-layer-1-story" class="nav-link" data-scroll-target="#layer-1-story">Layer 1 (Story)</a></li>
+  <li><a href="#layer-2-mathematics" id="toc-layer-2-mathematics" class="nav-link" data-scroll-target="#layer-2-mathematics">Layer 2 (Mathematics)</a></li>
+  <li><a href="#layer-3-bridge" id="toc-layer-3-bridge" class="nav-link" data-scroll-target="#layer-3-bridge">Layer 3 (Bridge)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<section id="topic-1---geodesic-convolution-sliding-filters-along-curved-surfaces" class="level1">
+<h1>Topic 1 - Geodesic Convolution: Sliding Filters Along Curved Surfaces</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>Chapter 2 defined convolution on graphs in two complementary ways. The spatial view slid messages along edges, aggregating neighborhood information hop by hop. The spectral view filtered in the graph Fourier domain, multiplying Fourier coefficients by a learned transfer function. Both views produced the same computation — local weighted aggregation of node features — because spatial locality and spectral polynomial filtering are two descriptions of the same constraint. The graph was discrete: a finite collection of nodes and edges with no notion of distance between nodes other than the hop count, and no notion of angle or orientation at each node other than what the adjacency structure implied.</p>
+<p>Now the domain is continuous. Instead of a finite graph of villages connected by roads, you have a smooth curved surface — the cortex of a human brain, the shell of a protein, the hull of an aircraft, the surface of the Earth. Instead of a finite set of node features, you have a smooth signal defined at every point of the surface — a temperature field, a pressure distribution, a chemical potential. Instead of graph edges defining neighborhood structure, you have the Riemannian metric of the surface defining distances along curves. The question is the same as it was in Chapter 2: how do you define a convolutional operation on this domain that respects its geometry and symmetry? But the answer requires the full machinery of differential geometry that Phase 0 built and that the Chapter 3 introduction has now framed.</p>
+<p>The na"{i}ve approach is to ignore the curvature entirely. Flatten the surface into a plane — using any map projection you can construct — and apply standard 2D convolution on the flat image. This is exactly what cartographers do when they produce a flat map of the Earth’s spherical surface, and you already know from cartography that it always distorts. The Mercator projection preserves angles but distorts areas — Greenland appears as large as Africa. The equal-area projection preserves areas but distorts shapes — coastlines become unrecognizable near the poles. The azimuthal projection preserves distances from one chosen center point but distorts everything else. No flat map of a curved surface preserves all geometric properties simultaneously — this is the content of Gauss’s Theorema Egregium, which states that the Gaussian curvature of a surface is an intrinsic invariant that cannot be changed by any isometric embedding. Flattening a sphere into a plane necessarily distorts something, and applying a convolutional filter to the distorted flat image applies the filter in a geometrically dishonest coordinate system.</p>
+<p>The correct approach is to define convolution intrinsically — using only the manifold’s own geometry, without reference to any ambient flattening or coordinate system. This is geodesic convolution: convolution defined through the manifold’s own notion of distance, direction, and neighborhood, using the geodesic metric rather than any extrinsic Euclidean metric.</p>
+<p>This topic develops geodesic convolution across three components that build on each other in strict sequence.</p>
+<p>The first component is <strong>the geodesic neighborhood and local polar coordinates</strong>. On a flat plane, a convolutional filter is applied by centering it at each point <span class="math inline">\(x\)</span>, reading off the signal values in a square patch around <span class="math inline">\(x\)</span>, weighting them by the filter coefficients, and summing. The patch is defined by Euclidean distance: all points within a fixed radius <span class="math inline">\(r\)</span> in the flat metric. On a curved surface, the patch is defined by geodesic distance: the geodesic ball <span class="math inline">\(B_r(x) = \{y \in \mathcal{M} : d_\mathcal{M}(x,y) &lt; r\}\)</span>, the set of all surface points reachable from <span class="math inline">\(x\)</span> along a surface curve of length less than <span class="math inline">\(r\)</span>. The geodesic ball is the intrinsically correct notion of a neighborhood on a manifold — it measures how far you must travel along the surface to reach a neighboring point, not how far you must travel through the ambient space. Having defined the neighborhood, you need a local coordinate system to parameterize it: the geodesic polar coordinates <span class="math inline">\((r, \theta)\)</span> centered at <span class="math inline">\(x\)</span>, where <span class="math inline">\(r\)</span> is the geodesic distance from <span class="math inline">\(x\)</span> and <span class="math inline">\(\theta \in [0, 2\pi)\)</span> is the angle in the local tangent plane <span class="math inline">\(T_x\mathcal{M}\)</span>. The exponential map <span class="math inline">\(\exp_x: T_x\mathcal{M} \to \mathcal{M}\)</span> converts tangent vectors to points on the surface, mapping the flat geodesic polar coordinates in <span class="math inline">\(T_x\mathcal{M}\)</span> to the curved geodesic neighborhood on <span class="math inline">\(\mathcal{M}\)</span>. This is the local flattening that avoids Gauss’s Theorema Egregium’s obstruction: it is not a global flattening (which would inevitably distort), but a local one centered at each point, valid within the injectivity radius of the exponential map.</p>
+<p>The second component is <strong>the gauge ambiguity and its resolution</strong>. The geodesic polar coordinate system at each point <span class="math inline">\(x\)</span> requires choosing an angular reference direction in the tangent plane <span class="math inline">\(T_x\mathcal{M}\)</span> — the direction that corresponds to angle <span class="math inline">\(\theta = 0\)</span>. On a flat grid, this choice is canonical: the horizontal direction, defined globally across the entire grid. On a curved surface, there is no canonical global angular reference. The reference direction at each point is a choice of local frame, called a gauge, and different gauge choices at different points are related by local rotations of the tangent plane. The set of all gauge transformations — all possible local rotations, one per point — is the gauge group of the tangent bundle, the infinite-dimensional symmetry group that Chapter 1’s Topic 2 identified as the symmetry group of manifold-valued data. A convolutional filter defined in local polar coordinates produces outputs that depend on the gauge choice: rotating the local reference frame at a point rotates the filter and produces a different output. For the convolution to be geometrically meaningful — independent of arbitrary gauge choices — the network must be gauge-equivariant: rotating the local frame at every point must rotate the output features at every point in a corresponding way. The gauge-equivariant convolution resolves this ambiguity by constructing filters that transform correctly under all gauge transformations, using the parallel transport along geodesics to consistently move local frames from point to point across the surface.</p>
+<p>The third component is <strong>the MoNet framework and its connection to spatial graph convolution</strong>. The Mixture Model Networks (MoNet) architecture of Monti et al.&nbsp;(2017) provides a unified framework for geodesic convolution that handles both continuous manifolds and discrete graphs as special cases. MoNet parameterizes the convolutional filter as a Gaussian mixture model in the local pseudo-coordinates <span class="math inline">\(\mathbf{u}(x,y)\)</span> — a vector of geometric quantities describing the relative position of point <span class="math inline">\(y\)</span> in the local coordinate system centered at point <span class="math inline">\(x\)</span>. For a manifold, <span class="math inline">\(\mathbf{u}(x,y) = (r, \theta)\)</span> are the geodesic polar coordinates. For a graph, <span class="math inline">\(\mathbf{u}(i,j)\)</span> can be degree-normalized relative coordinates or other local structural features. The filter at point <span class="math inline">\(x\)</span> applied to signal <span class="math inline">\(f\)</span> is:</p>
+<p><span class="math display">\[(\mathcal{F} \star f)(x) = \sum_{k=1}^{K} w_k \sum_{y \in \mathcal{N}(x)} f(y) \cdot g_k(\mathbf{u}(x,y))\]</span></p>
+<p>where <span class="math inline">\(g_k(\mathbf{u}) = \exp(-\frac{1}{2}(\mathbf{u} - \mu_k)^\top \Sigma_k^{-1}(\mathbf{u} - \mu_k))\)</span> is the <span class="math inline">\(k\)</span>-th Gaussian kernel with learnable mean <span class="math inline">\(\mu_k\)</span> and covariance <span class="math inline">\(\Sigma_k\)</span>, and <span class="math inline">\(w_k\)</span> are learnable mixture weights. The Gaussian kernels learn to place weight on specific regions of the local coordinate patch — near the geodesic direction <span class="math inline">\(\theta = 0\)</span>, or at a specific geodesic radius <span class="math inline">\(r\)</span>, or across a broad angular range. This is the manifold analogue of the attention mechanism from Chapter 2’s GAT: both learn data-dependent weights over the neighborhood, but the MoNet weights are defined in a geometric local coordinate system rather than a feature-space attention score.</p>
+<p>The connection to your curriculum runs through three courses simultaneously.</p>
+<p>Phase 0’s differential geometry is the primary scaffold, and Chapter 3 is where it becomes unavoidable. The geodesic ball <span class="math inline">\(B_r(x)\)</span> requires the notion of geodesic distance, which requires the Riemannian metric <span class="math inline">\(g\)</span> and the geodesic equation from Phase 0. The exponential map <span class="math inline">\(\exp_x: T_x\mathcal{M} \to \mathcal{M}\)</span> requires the tangent bundle <span class="math inline">\(T\mathcal{M}\)</span> from Phase 0. The gauge ambiguity requires the understanding of tangent frames and their transformation under local rotations — the tangent bundle structure from Phase 0. Every operation in geodesic convolution has a Phase 0 prerequisite, and Chapter 3 is the moment when that investment pays off in architectural decisions.</p>
+<p>Your MATH 217 course on ODEs and PDEs provides the geodesic equation itself: geodesics on a Riemannian manifold satisfy the second-order ODE <span class="math inline">\(\ddot{\gamma}^k + \Gamma^k_{ij}\dot{\gamma}^i\dot{\gamma}^j = 0\)</span>, where <span class="math inline">\(\Gamma^k_{ij}\)</span> are the Christoffel symbols of the Riemannian metric and <span class="math inline">\(\dot{\gamma}\)</span> is the velocity vector along the geodesic curve <span class="math inline">\(\gamma\)</span>. This is a system of ODEs in the coordinates of the manifold, with initial conditions given by the starting point <span class="math inline">\(x = \gamma(0)\)</span> and starting direction <span class="math inline">\(v = \dot{\gamma}(0) \in T_x\mathcal{M}\)</span>. The exponential map <span class="math inline">\(\exp_x(v) = \gamma(1)\)</span> is the value at time 1 of the geodesic starting at <span class="math inline">\(x\)</span> with initial velocity <span class="math inline">\(v\)</span> — the solution of this ODE system. The parallel transport equation — used to consistently move local frames along geodesics for gauge-equivariant convolution — is similarly a first-order ODE along the geodesic curve, and its solution defines the connection on the tangent bundle that makes gauge-equivariant convolution well-defined.</p>
+<p>Your MATH 204 course on Analytical Geometry provides the Euclidean intuitions that geodesic convolution generalizes. The distance formula in Euclidean space, the angle between vectors, the polar coordinate system — all of these are the flat-space special cases of geodesic distance, the angle in the tangent plane, and geodesic polar coordinates. Geodesic convolution is analytical geometry done correctly on a curved surface rather than on a flat plane.</p>
+<p>By the end of this topic, geodesic convolution will feel not like an exotic generalization of standard convolution to an unfamiliar setting, but like the only geometrically honest way to define convolution on a curved surface — the inevitable consequence of demanding that the convolutional operation respect the surface’s intrinsic geometry rather than any extrinsic coordinate system imposed on it. The flat 2D convolution of a standard CNN will appear as the special case where the manifold is flat — where Gaussian curvature is zero everywhere, the exponential map is the identity, geodesic distances equal Euclidean distances, and the gauge ambiguity disappears because the global coordinate system provides a canonical angular reference everywhere. Geodesic convolution is the correct generalization; flat convolution is the degenerate special case.</p>
+<hr>
+</section>
+<section id="layer-1-story" class="level2">
+<h2 class="anchored" data-anchor-id="layer-1-story">Layer 1 (Story)</h2>
+<p>It is 2010. The International Centre for Integrated Mountain Development, headquartered in Kathmandu, has commissioned a geological survey of the Himalayan range. The goal is ambitious: build a neural network that can analyze surface signals defined on the mountain terrain — snow depth, rock temperature, seismic activity, atmospheric pressure — and predict avalanche risk at every point on the surface. The data is not tabular. It is not a grid. It is a signal defined on a curved surface — the terrain of the Himalayas itself, an enormously complex three-dimensional shape with ridges, valleys, cliff faces, and gentle slopes, none of which can be honestly represented as a flat image without destroying the geometry that makes the prediction meaningful.</p>
+<p>You are the lead mathematician on the project. Your first meeting with the engineering team reveals the instinct that almost every engineer reaches for: flatten the terrain into a 2D map, convert the surface signals to pixel values on that map, and apply a standard convolutional neural network. It is the obvious approach. It is also, as you are about to demonstrate, geometrically dishonest in a precise and consequential way.</p>
+<hr>
+<p><strong>The cartographer’s problem: why flattening always lies.</strong></p>
+<p>You unroll a large paper map of the Himalayas on the conference table. The map was produced by the Survey of India using the Mercator projection — the same projection used in most world atlases. You point to Mount Everest and to Kangchenjunga, two peaks separated by roughly 120 kilometres along the terrain surface.</p>
+<p>On the map, the distance between them appears to be about 8 centimetres. You point to two peaks at similar latitude in Greenland, also separated by about 120 kilometres along the terrain. On the map, the distance between them appears to be about 14 centimetres — nearly twice as large. The same physical distance on the Earth’s surface appears as different distances on the flat map, depending on latitude.</p>
+<p>Now you draw a small square patch around Everest on the map and a small square patch of the same pixel size around the Greenlandic peak. A convolutional filter applied to these two patches looks at exactly the same number of pixels in a square of the same size. But the Everest patch corresponds to a geodesic neighbourhood of roughly 8 kilometres radius on the actual terrain, while the Greenlandic patch corresponds to a geodesic neighbourhood of roughly 14 kilometres radius. The filter is not doing the same computation at both locations — it is aggregating information from physically different-sized patches of terrain, even though the filter sees the same square of pixels. The convolution is a lie: it claims to be translation-equivariant and spatially consistent, but the underlying geometry of the surface has made it neither.</p>
+<p>This is Gauss’s Theorema Egregium made practical. A sphere cannot be flattened into a plane without distortion. Any map projection distorts either distances, or areas, or angles, or some combination. A convolutional filter applied to a flat map of a curved surface aggregates information from geometrically inconsistent neighbourhoods — larger near the poles, smaller near the equator, twisted in unpredictable ways depending on the projection. The neural network trained on such a map must learn to compensate for the projection distortion before it can learn the actual physical relationship between the surface signal and the avalanche risk. The projection forces the network to waste capacity on an artifact of your coordinate choice rather than on the underlying geometry.</p>
+<p>The correct approach does not choose a global projection at all. It works directly on the curved surface, using the surface’s own notion of distance and direction.</p>
+<hr>
+<p><strong>Geodesic distance: measuring along the surface, not through the air.</strong></p>
+<p>You drive from Kathmandu to Nagarkot, a hilltop village east of the city. The straight-line Euclidean distance — through the hill, as a bird might fly or a tunnel might go — is about 25 kilometres. The road distance, following the terrain surface around and over the hills, is about 32 kilometres. If you were an ant living on the surface of the Earth, you would experience only the road distance. The Euclidean distance through the interior of the Earth is simply not accessible to a creature confined to the surface.</p>
+<p>This is the fundamental distinction between extrinsic and intrinsic distance. The Euclidean distance between two points on a surface — the straight-line distance through the ambient space — is extrinsic: it depends on how the surface is embedded in three-dimensional space. The geodesic distance between two points — the length of the shortest path along the surface connecting them — is intrinsic: it depends only on the geometry of the surface itself, not on how it sits in ambient space. For a creature living on the surface — for data defined on the surface — the intrinsic geodesic distance is the correct notion of proximity. Two points that are close in geodesic distance are genuinely nearby on the surface; two points that are close in Euclidean distance might be on opposite sides of a cliff face, accessible to each other only through a long journey along the terrain.</p>
+<p>The geodesic ball <span class="math inline">\(B_r(x)\)</span> centred at a terrain point <span class="math inline">\(x\)</span> with radius <span class="math inline">\(r\)</span> is the set of all surface points reachable from <span class="math inline">\(x\)</span> by a surface path of length less than <span class="math inline">\(r\)</span>. This is the intrinsically correct neighbourhood for a convolutional filter centred at <span class="math inline">\(x\)</span>: it aggregates information from all terrain points genuinely close to <span class="math inline">\(x\)</span> along the surface, regardless of how the surface curves through ambient three-dimensional space. A snow depth measurement at a point 500 metres from <span class="math inline">\(x\)</span> along the ridgeline is in <span class="math inline">\(B_{500}(x)\)</span>; a snow depth measurement at a point that appears 300 metres away in Euclidean distance but is separated from <span class="math inline">\(x\)</span> by a 2-kilometre detour around a cliff face is not. The geodesic neighbourhood respects the terrain’s geometry. The Euclidean neighbourhood does not.</p>
+<hr>
+<p><strong>The exponential map: flattening locally without lying globally.</strong></p>
+<p>You cannot flatten the entire Himalayan surface into a plane without distortion. But you can flatten a small patch around each individual point — locally — without any distortion at all, to first order. This is the exponential map.</p>
+<p>Stand at base camp on the southern face of Everest. Look out across the terrain. In every direction from your feet, you can measure an angle <span class="math inline">\(\theta \in [0, 2\pi)\)</span> — north, northeast, east, and so on around the compass. In every direction, you can walk a certain distance <span class="math inline">\(r\)</span> along the terrain surface. The pair <span class="math inline">\((r, \theta)\)</span> gives you a local coordinate system centred at your position — geodesic polar coordinates. The map that converts a direction-and-distance pair <span class="math inline">\((r, \theta)\)</span> in your local tangent plane into the actual terrain point you reach by walking distance <span class="math inline">\(r\)</span> in direction <span class="math inline">\(\theta\)</span> is the exponential map. It is the function that converts the flat coordinate system of your local tangent plane into actual positions on the curved terrain surface.</p>
+<p>Near your feet — for small <span class="math inline">\(r\)</span> — the exponential map is nearly perfect: the curved terrain looks flat when you zoom in close enough, just as the Earth looks flat from street level even though it is spherical. The flat patch in your tangent plane and the curved terrain patch around you agree to first order. This is why the exponential map provides the correct local coordinate system for geodesic convolution: it allows you to define a filter in the flat tangent plane and apply it to the curved terrain surface, with the distortion being only second-order in the neighbourhood radius. Small neighbourhoods are nearly flat. Large neighbourhoods are curved. Geodesic convolution uses small local neighbourhoods — the same inductive bias of locality that made the spatial GNN from Chapter 2 work — so the local flattening via the exponential map is geometrically honest within the neighbourhood scale.</p>
+<p>The injectivity radius at a point <span class="math inline">\(x\)</span> is the maximum radius within which the exponential map is a bijection between the flat tangent disk and the curved terrain patch. At a smooth interior point of the terrain — a gentle slope — the injectivity radius is large: you can use a fairly large geodesic neighbourhood and still have a bijective local coordinate system. At a sharp ridge or cliff edge — a point of high curvature — the injectivity radius is small: two geodesics from the same point can converge and cross each other nearby, making the local coordinate system non-injective beyond a small radius. Geodesic convolution must use neighbourhood radii smaller than the injectivity radius to remain geometrically valid.</p>
+<hr>
+<p><strong>The gauge ambiguity: which way is north at the top of Everest?</strong></p>
+<p>You are now designing the actual convolution. At each terrain point <span class="math inline">\(x\)</span>, you have a local coordinate system <span class="math inline">\((r, \theta)\)</span> given by the exponential map. You design a filter: a function of <span class="math inline">\((r, \theta)\)</span> that specifies how to weight the snow depth signal at each relative position in the local neighbourhood. The filter is a function <span class="math inline">\(F(r, \theta)\)</span> — heavy weight near <span class="math inline">\(r = 0\)</span> (close to the centre), light weight at large <span class="math inline">\(r\)</span>, perhaps asymmetric in <span class="math inline">\(\theta\)</span> to capture directional patterns like prevailing wind direction.</p>
+<p>Here is the problem. The local coordinate system requires you to choose an angular reference: the direction in the local tangent plane that corresponds to <span class="math inline">\(\theta = 0\)</span>. On a flat grid, this choice is global and canonical: north is north everywhere, and <span class="math inline">\(\theta = 0\)</span> means north at every pixel. On the curved terrain surface, there is no canonical global notion of north in the tangent plane. At base camp, you can define north as the direction of the compass. But at the top of Everest, the tangent plane is tilted relative to the tangent plane at base camp — the surface has curved between the two points — and the compass direction at the summit, when transported to the summit’s tangent plane along the geodesic from base camp, does not necessarily align with the compass direction at base camp in any canonical way. The choice of angular reference at each point — the gauge — is a local choice that cannot be made globally consistent on a curved surface.</p>
+<p>This means: apply the filter <span class="math inline">\(F(r, \theta)\)</span> at base camp with <span class="math inline">\(\theta = 0\)</span> pointing north; now slide the filter to a neighbouring point 500 metres away; at the new point, <span class="math inline">\(\theta = 0\)</span> might point slightly east of north because the surface has curved between the two points. The filter is being applied in a different orientation at the new point than at the original point, even though you intended to apply the same filter. The output of the convolution depends on your arbitrary gauge choice — your arbitrary choice of which direction to call <span class="math inline">\(\theta = 0\)</span> at each point.</p>
+<p>A gauge-equivariant network handles this ambiguity correctly: if you rotate your angular reference at every point — change the gauge — the output features at every point rotate correspondingly, rather than producing unpredictable and geometry-dependent artifacts. The network’s predictions of avalanche risk must not depend on the arbitrary choice of which direction the surveyor calls north in the local coordinate system at each terrain point. Gauge equivariance is the manifold analogue of translation equivariance for CNNs: just as translation equivariance says the network’s output should not depend on the arbitrary choice of origin in the image coordinate system, gauge equivariance says the network’s output should not depend on the arbitrary choice of angular reference in the local tangent frame at each surface point.</p>
+<hr>
+<p><strong>Parallel transport: carrying a frame along a path without twisting.</strong></p>
+<p>How do you move a local frame — a choice of angular reference — consistently from one terrain point to another? The answer is parallel transport: carry the frame along a geodesic path connecting the two points, rotating the frame only as much as the surface itself forces you to, and no more.</p>
+<p>Imagine carrying a compass across the terrain from base camp to the summit of Everest. As you walk, you keep the compass as steady as possible — you do not rotate it in your hands, you simply carry it along the path. But because the terrain surface curves, the compass direction rotates relative to the surface even though you are not actively turning it. At the summit, the compass points in a direction that has been rotated by the curvature of the terrain between the two points. The rotation accumulated by a frame carried by parallel transport along a closed loop — a path that starts and returns to the same point — is called the holonomy, and it measures the total curvature enclosed by the loop. On a flat surface, holonomy is always zero: parallel transporting a frame around any closed loop returns it unchanged. On a curved surface, holonomy is generally nonzero — the frame rotates by an angle proportional to the integral of the Gaussian curvature enclosed by the loop.</p>
+<p>Parallel transport is the correct way to move local frames between points for the purpose of geodesic convolution: it transports the filter’s orientation from the source point to the target point along the geodesic connecting them, with exactly the rotation that the surface geometry forces and nothing more. The gauge-equivariant convolution uses parallel transport to define how the filter’s local frame at the centre point <span class="math inline">\(x\)</span> relates to the local frames at the neighbouring points <span class="math inline">\(y \in B_r(x)\)</span>: the frame at <span class="math inline">\(y\)</span> used to evaluate the filter is obtained by parallel transporting the frame at <span class="math inline">\(x\)</span> along the geodesic from <span class="math inline">\(x\)</span> to <span class="math inline">\(y\)</span>.</p>
+<hr>
+<p><strong>The MoNet filter: a learnable Gaussian mixture in local coordinates.</strong></p>
+<p>You have the local coordinate system <span class="math inline">\((r, \theta)\)</span> at each terrain point. You have parallel transport to consistently orient the filter across the surface. Now you need to choose what the filter looks like.</p>
+<p>The naive approach: define the filter as a lookup table — one weight per discretized <span class="math inline">\((r, \theta)\)</span> bin. For a neighbourhood of radius 500 metres discretized into 10 radial bins and 8 angular bins, this is 80 weights per filter. This is manageable, but the filter is not smooth (it is piecewise constant in the bins) and it is not transferable across different surface discretizations.</p>
+<p>The MoNet approach: parameterize the filter as a mixture of Gaussian kernels in the local coordinate space. Each kernel <span class="math inline">\(g_k(r, \theta) = \exp(-\frac{1}{2}((r,\theta) - \mu_k)^\top \Sigma_k^{-1}((r,\theta)-\mu_k))\)</span> places a smooth bump of weight at a specific location <span class="math inline">\(\mu_k = (r_k, \theta_k)\)</span> in the local coordinate patch, with spread determined by the covariance matrix <span class="math inline">\(\Sigma_k\)</span>. The filter is a weighted sum of <span class="math inline">\(K\)</span> such Gaussian bumps: <span class="math inline">\(F(r,\theta) = \sum_{k=1}^K w_k g_k(r,\theta)\)</span>. The parameters <span class="math inline">\(\{\mu_k, \Sigma_k, w_k\}\)</span> are learned from data. The applied filter at terrain point <span class="math inline">\(x\)</span> to signal <span class="math inline">\(f\)</span> gives:</p>
+<p><span class="math display">\[(F \star f)(x) = \sum_{k=1}^{K} w_k \sum_{y \in B_r(x)} f(y) \cdot g_k(r_{xy}, \theta_{xy})\]</span></p>
+<p>where <span class="math inline">\((r_{xy}, \theta_{xy})\)</span> are the geodesic polar coordinates of terrain point <span class="math inline">\(y\)</span> relative to the centre <span class="math inline">\(x\)</span>.</p>
+<p>What does a learned Gaussian kernel represent physically? A kernel with mean <span class="math inline">\(\mu_k = (200\text{m}, \pi/4)\)</span> — geodesic distance 200 metres in the northeast direction — places high weight on snow depth measurements 200 metres to the northeast of the current terrain point. After training, this kernel might learn to capture the effect of prevailing wind from the southwest: snow accumulates on the northeast faces of ridges, and the snow depth 200 metres to the northeast is a strong predictor of avalanche risk at the current point. The kernel has learned a directional, distance-specific physical pattern. Ten such kernels, each with a different learned centre and covariance, collectively represent a rich filter capturing complex spatial patterns in the local terrain neighbourhood.</p>
+<hr>
+<p><strong>The break moment: the orientation problem that cannot be ignored.</strong></p>
+<p>You have designed the filter, implemented the local coordinate system, and are ready to train the network. Before training, you run a sanity check: you take the same terrain patch and survey it twice, once with your surveying drone flying north-to-south and once flying east-to-west. Both surveys produce the same terrain geometry and the same snow depth signal. But when you define the local angular reference — the <span class="math inline">\(\theta = 0\)</span> direction at each point — you use the drone’s flight direction as the reference. The north-to-south survey defines <span class="math inline">\(\theta = 0\)</span> as north; the east-to-west survey defines <span class="math inline">\(\theta = 0\)</span> as east. The two surveys of the same terrain produce different local coordinate representations — the same physical signal, but with all angles rotated by <span class="math inline">\(\pi/2\)</span> relative to each other.</p>
+<p>You feed both representations into your MoNet network. The filter with a Gaussian kernel centred at <span class="math inline">\((200\text{m}, \pi/4)\)</span> — northeast — in the first survey now sees the kernel centred at <span class="math inline">\((200\text{m}, \pi/4 - \pi/2) = (200\text{m}, -\pi/4)\)</span> — southeast — in the second survey, because you have rotated the local coordinate frame by <span class="math inline">\(\pi/2\)</span>. The network produces different avalanche risk predictions for the same terrain and the same snow depth signal, depending on which direction the drone happened to be flying. This is catastrophic: the prediction should not depend on the drone’s flight direction.</p>
+<p>The naive assumption is: just always define <span class="math inline">\(\theta = 0\)</span> as north in the GPS coordinate system, and the problem disappears. This breaks on a curved surface in two ways. First, the GPS north direction at each surface point is a direction in the ambient three-dimensional space, not in the local tangent plane — projecting it into the tangent plane gives a well-defined reference direction only if the surface normal is not parallel to the GPS north direction, which fails at the North and South Poles and nearly fails at high latitudes. Second, even if you project GPS north into the local tangent plane at every point, the resulting frame field is not smooth across the surface — it has singularities at the poles and near-singularities at high latitudes, producing numerical instabilities in the local coordinate representations. No global smooth gauge exists on a closed surface with nonzero Euler characteristic — this is the hairy ball theorem of algebraic topology — and the Himalayan terrain, topologically, is a surface with boundaries and nonzero topology.</p>
+<p>The correct resolution is gauge equivariance: design the network so that rotating the local frame at every point by an arbitrary smooth function of rotations <span class="math inline">\(g: \mathcal{M} \to SO(2)\)</span> — one rotation per surface point, the gauge transformation — produces outputs that rotate correspondingly. Then the avalanche risk prediction does not depend on which direction the drone was flying when it defined the local coordinate system. The gauge group <span class="math inline">\(\mathcal{G} = C^\infty(\mathcal{M}, SO(2))\)</span> — the group of all smooth gauge transformations — is the symmetry group of the network, and gauge equivariance is the manifold-surface analogue of the <span class="math inline">\(S_n\)</span>-equivariance of graph networks and the <span class="math inline">\(SO(3)\)</span>-equivariance of molecular networks.</p>
+<hr>
+<p><strong>The connection to Chapter 2: geodesic convolution as continuous message passing.</strong></p>
+<p>The senior engineer on your team, who implemented the postal network GNN from Chapter 2, looks at the MoNet formula and immediately recognizes the structure.</p>
+<p>In message passing, each node <span class="math inline">\(i\)</span> sends a message to each neighbor <span class="math inline">\(j \in \mathcal{N}(i)\)</span>, weighted by an attention coefficient <span class="math inline">\(\alpha_{ij}\)</span> that depends on the relative features of <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span>. In geodesic convolution, each terrain point <span class="math inline">\(x\)</span> aggregates signal values from all points <span class="math inline">\(y \in B_r(x)\)</span> in its geodesic neighborhood, weighted by <span class="math inline">\(g_k(r_{xy}, \theta_{xy})\)</span> — a kernel that depends on the relative geometric position of <span class="math inline">\(y\)</span> with respect to <span class="math inline">\(x\)</span> in the local coordinate system. Both are local weighted aggregation of neighborhood information. The difference is that graph message passing uses the graph’s adjacency structure to define neighborhoods and learns attention weights in the feature space, while geodesic convolution uses the manifold’s geodesic distance to define neighborhoods and learns Gaussian kernels in the geometric coordinate space.</p>
+<p>This parallel is not a coincidence. When the continuous manifold <span class="math inline">\(\mathcal{M}\)</span> is approximated by a discrete point cloud — a finite set of sample points with geodesic distances approximated by shortest-path distances on a neighborhood graph — the MoNet geodesic convolution becomes exactly a spatially-weighted graph convolution on the neighborhood graph, with the Gaussian kernels providing the edge weights. This is MoNet’s central claim: it unifies manifold convolution and graph convolution as special cases of the same pseudo-coordinate Gaussian mixture framework, with the choice of pseudo-coordinates <span class="math inline">\((r_{xy}, \theta_{xy})\)</span> determining whether you are operating on a continuous manifold or a discrete graph. Every major surface-learning architecture — GCNN (Masci et al.), ACNN (Boscaini et al.), PointNet++, DiffusionNet — is a special case of this framework with a specific choice of local pseudo-coordinates and filter parameterization.</p>
+<hr>
+<p><strong>What the network learns on the terrain.</strong></p>
+<p>After training, the avalanche risk prediction network has learned a collection of Gaussian kernels whose physical interpretation you can read directly from the learned parameters.</p>
+<p>One kernel has learned mean <span class="math inline">\((50\text{m}, \text{uphill})\)</span> and narrow covariance — it looks at the slope directly uphill from each terrain point at short range. This kernel captures the local slope gradient: a steep uphill neighbor means the current point is at the base of a steep slope, which is a primary avalanche risk factor.</p>
+<p>Another kernel has learned mean <span class="math inline">\((300\text{m}, \text{upwind})\)</span> — 300 metres in the direction of the prevailing wind. This kernel captures the snow loading effect: wind deposits snow on the leeward side of ridges, so heavy snow 300 metres upwind of a point predicts high snow loading at the current point.</p>
+<p>A third kernel has learned a large covariance in the angular direction and small covariance in the radial direction — it is nearly radially symmetric at a specific distance, capturing the average snow depth in a ring around the current point. This kernel captures the regional snow accumulation level independent of direction.</p>
+<p>These interpretable, physically meaningful filters have been learned entirely from terrain geometry and historical avalanche data, without any domain expertise encoded manually. The geodesic convolution framework provided the correct geometric structure — local polar coordinates, geodesic neighborhoods, parallel transport for consistent orientation — and the learning algorithm discovered the physically meaningful patterns within that structure.</p>
+<hr>
+<p><strong>The three pictures to carry into the mathematics.</strong></p>
+<p>Before moving to the formalism, hold three geometric pictures simultaneously.</p>
+<p>The first picture: the geodesic ball <span class="math inline">\(B_r(x)\)</span> — a disk-like patch of terrain surface centred at point <span class="math inline">\(x\)</span>, bounded by the set of points at geodesic distance exactly <span class="math inline">\(r\)</span> from <span class="math inline">\(x\)</span>. This is the neighborhood over which the filter aggregates. It is a curved patch, not a flat square. Its shape depends on the curvature of the terrain at <span class="math inline">\(x\)</span>: on a flat slope it is nearly circular; on a sharp ridge it is elongated along the ridge and truncated perpendicular to it; in a bowl-shaped valley it is compressed inward by the positive curvature.</p>
+<p>The second picture: the exponential map <span class="math inline">\(\exp_x: T_x\mathcal{M} \to \mathcal{M}\)</span> — the function that converts the flat tangent plane at <span class="math inline">\(x\)</span> into the curved surface, by following geodesics. The tangent plane is a flat 2D space; the exponential map wraps it onto the curved surface by shooting geodesics in every direction from <span class="math inline">\(x\)</span>. Within the injectivity radius, this wrapping is bijective: every flat coordinate <span class="math inline">\((r,\theta)\)</span> in the tangent plane corresponds to a unique terrain point <span class="math inline">\(\exp_x(r\cos\theta, r\sin\theta)\)</span>. The filter is defined on the flat tangent plane and applied to the curved surface via this bijection.</p>
+<p>The third picture: parallel transport along a geodesic — a local frame (a pair of orthonormal vectors in the tangent plane) being carried along a terrain path without twisting relative to the surface, accumulating rotation only from the surface’s intrinsic curvature. The frame does not rotate in the observer’s hands; it rotates only because the surface curves beneath it. The rotation accumulated around a closed loop is the holonomy, measuring the total curvature enclosed. Parallel transport is what makes the filter’s orientation consistent as it is slid across the surface, resolving the gauge ambiguity by defining a canonical way to relate frames at different surface points along geodesic paths.</p>
+<hr>
+</section>
+<section id="layer-2-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="layer-2-mathematics">Layer 2 (Mathematics)</h2>
+<p>We build the formalism in six stages: Riemannian manifolds and the geodesic distance, the exponential map and geodesic polar coordinates, the Laplace-Beltrami operator and its relationship to geodesic convolution, gauge transformations and the connection on the tangent bundle, the MoNet framework and its unification of manifold and graph convolution, and the discrete approximation connecting continuous geodesic convolution to graph neural networks.</p>
+<section id="riemannian-manifolds-and-geodesic-distance" class="level3">
+<h3 class="anchored" data-anchor-id="riemannian-manifolds-and-geodesic-distance">Riemannian Manifolds and Geodesic Distance</h3>
+<p><strong>Definition (Smooth manifold).</strong> A <strong>smooth manifold</strong> <span class="math inline">\(\mathcal{M}\)</span> of dimension <span class="math inline">\(d\)</span> is a topological space that is locally homeomorphic to <span class="math inline">\(\mathbb{R}^d\)</span>, with smooth transition maps between overlapping coordinate charts. Each point <span class="math inline">\(x \in \mathcal{M}\)</span> has a neighborhood <span class="math inline">\(U \ni x\)</span> and a smooth bijection <span class="math inline">\(\varphi: U \to \mathbb{R}^d\)</span> called a <strong>chart</strong>.</p>
+<p><strong>Definition (Tangent space).</strong> The <strong>tangent space</strong> <span class="math inline">\(T_x\mathcal{M}\)</span> at <span class="math inline">\(x \in \mathcal{M}\)</span> is the <span class="math inline">\(d\)</span>-dimensional real vector space of tangent vectors at <span class="math inline">\(x\)</span> — equivalence classes of smooth curves <span class="math inline">\(\gamma: (-\epsilon, \epsilon) \to \mathcal{M}\)</span> with <span class="math inline">\(\gamma(0) = x\)</span>, where <span class="math inline">\(\gamma_1 \sim \gamma_2\)</span> iff <span class="math inline">\(\dot{\gamma}_1(0) = \dot{\gamma}_2(0)\)</span> in any chart. The <strong>tangent bundle</strong> is <span class="math inline">\(T\mathcal{M} = \bigsqcup_{x\in\mathcal{M}} T_x\mathcal{M}\)</span>.</p>
+<p><strong>Definition (Riemannian metric).</strong> A <strong>Riemannian metric</strong> <span class="math inline">\(g\)</span> on <span class="math inline">\(\mathcal{M}\)</span> is a smooth assignment of an inner product <span class="math inline">\(g_x: T_x\mathcal{M} \times T_x\mathcal{M} \to \mathbb{R}\)</span> to each tangent space, varying smoothly with <span class="math inline">\(x\)</span>. In local coordinates <span class="math inline">\(\{x^i\}\)</span>, the metric is represented by the <strong>metric tensor</strong> <span class="math inline">\(g_{ij}(x) = g_x(\partial/\partial x^i, \partial/\partial x^j)\)</span>, a positive definite symmetric matrix at each point.</p>
+<p><strong>Length of a curve.</strong> The length of a smooth curve <span class="math inline">\(\gamma: [0,1] \to \mathcal{M}\)</span> is:</p>
+<p><span class="math display">\[\ell(\gamma) = \int_0^1 \sqrt{g_{\gamma(t)}(\dot{\gamma}(t), \dot{\gamma}(t))} \, dt = \int_0^1 \|\dot{\gamma}(t)\|_g \, dt\]</span></p>
+<p><strong>Definition (Geodesic distance).</strong> The <strong>geodesic distance</strong> between <span class="math inline">\(x, y \in \mathcal{M}\)</span> is:</p>
+<p><span class="math display">\[d_\mathcal{M}(x,y) = \inf_{\gamma: \gamma(0)=x,\, \gamma(1)=y} \ell(\gamma)\]</span></p>
+<p>the infimum of lengths over all smooth curves connecting <span class="math inline">\(x\)</span> to <span class="math inline">\(y\)</span>. This defines a metric on <span class="math inline">\(\mathcal{M}\)</span> (positive definite, symmetric, triangle inequality).</p>
+<p><strong>Definition (Geodesic).</strong> A <strong>geodesic</strong> is a curve <span class="math inline">\(\gamma: [a,b] \to \mathcal{M}\)</span> that locally minimizes length. In local coordinates, geodesics satisfy the <strong>geodesic equation</strong>:</p>
+<p><span class="math display">\[\ddot{\gamma}^k(t) + \Gamma^k_{ij}(\gamma(t))\,\dot{\gamma}^i(t)\,\dot{\gamma}^j(t) = 0, \quad k = 1,\ldots,d\]</span></p>
+<p>where <span class="math inline">\(\Gamma^k_{ij} = \frac{1}{2}g^{kl}\left(\partial_i g_{jl} + \partial_j g_{il} - \partial_l g_{ij}\right)\)</span> are the <strong>Christoffel symbols</strong> of the Levi-Civita connection. This is a system of <span class="math inline">\(d\)</span> second-order ODEs with initial conditions <span class="math inline">\(\gamma(0) = x\)</span> and <span class="math inline">\(\dot{\gamma}(0) = v \in T_x\mathcal{M}\)</span>.</p>
+<p><strong>Geodesic ball.</strong> The <strong>geodesic ball</strong> of radius <span class="math inline">\(r\)</span> centred at <span class="math inline">\(x\)</span> is:</p>
+<p><span class="math display">\[B_r(x) = \{y \in \mathcal{M} : d_\mathcal{M}(x,y) &lt; r\}\]</span></p>
+<hr>
+</section>
+<section id="the-exponential-map-and-geodesic-polar-coordinates" class="level3">
+<h3 class="anchored" data-anchor-id="the-exponential-map-and-geodesic-polar-coordinates">The Exponential Map and Geodesic Polar Coordinates</h3>
+<p><strong>Definition (Exponential map).</strong> For <span class="math inline">\(x \in \mathcal{M}\)</span> and <span class="math inline">\(v \in T_x\mathcal{M}\)</span>, let <span class="math inline">\(\gamma_v\)</span> be the unique geodesic with <span class="math inline">\(\gamma_v(0) = x\)</span> and <span class="math inline">\(\dot{\gamma}_v(0) = v\)</span>. The <strong>exponential map</strong> at <span class="math inline">\(x\)</span> is:</p>
+<p><span class="math display">\[\exp_x: T_x\mathcal{M} \to \mathcal{M}, \quad \exp_x(v) = \gamma_v(1)\]</span></p>
+<p><strong>Properties of the exponential map:</strong></p>
+<p><span class="math inline">\(\exp_x(0) = x\)</span> (the zero vector maps to the base point).</p>
+<p><span class="math inline">\(d(\exp_x)_0 = \text{Id}_{T_x\mathcal{M}}\)</span> (the differential at the origin is the identity — local isometry to first order).</p>
+<p><span class="math inline">\(\exp_x(tv) = \gamma_v(t)\)</span> for all <span class="math inline">\(t\)</span> in the domain of <span class="math inline">\(\gamma_v\)</span> (geodesics are straight lines in the tangent plane under <span class="math inline">\(\exp_x\)</span>).</p>
+<p><strong>Definition (Injectivity radius).</strong> The <strong>injectivity radius</strong> at <span class="math inline">\(x\)</span> is:</p>
+<p><span class="math display">\[\text{inj}(x) = \sup\{r &gt; 0 : \exp_x|_{B_r(0) \subset T_x\mathcal{M}} \text{ is a diffeomorphism onto } B_r(x) \subset \mathcal{M}\}\]</span></p>
+<p>For <span class="math inline">\(r &lt; \text{inj}(x)\)</span>, the exponential map is a diffeomorphism: every point <span class="math inline">\(y \in B_r(x)\)</span> has a unique preimage <span class="math inline">\(\exp_x^{-1}(y) \in T_x\mathcal{M}\)</span>, the <strong>logarithmic map</strong> <span class="math inline">\(\log_x(y)\)</span>.</p>
+<p><strong>Geodesic polar coordinates.</strong> Choose an orthonormal basis <span class="math inline">\(\{e_1, e_2\}\)</span> for <span class="math inline">\(T_x\mathcal{M}\)</span> (in dimension <span class="math inline">\(d=2\)</span>). The <strong>geodesic polar coordinates</strong> <span class="math inline">\((r, \theta)\)</span> at <span class="math inline">\(x\)</span> are defined by:</p>
+<p><span class="math display">\[y = \exp_x(r\cos\theta\, e_1 + r\sin\theta\, e_2), \quad r \in [0, \text{inj}(x)),\; \theta \in [0,2\pi)\]</span></p>
+<p>The metric in geodesic polar coordinates takes the form (Gauss’s lemma):</p>
+<p><span class="math display">\[g = dr^2 + f(r,\theta)^2\, d\theta^2\]</span></p>
+<p>where <span class="math inline">\(f(r,\theta)\)</span> satisfies <span class="math inline">\(f(0,\theta) = 0\)</span>, <span class="math inline">\(\partial_r f(0,\theta) = 1\)</span>, and deviates from <span class="math inline">\(r\)</span> (the flat-space value) according to the curvature:</p>
+<p><span class="math display">\[f(r,\theta) = r - \frac{K(x)}{6}r^3 + O(r^5)\]</span></p>
+<p>where <span class="math inline">\(K(x)\)</span> is the <strong>Gaussian curvature</strong> at <span class="math inline">\(x\)</span>. For <span class="math inline">\(K &gt; 0\)</span> (sphere): <span class="math inline">\(f &lt; r\)</span>, geodesic circles are smaller than Euclidean circles. For <span class="math inline">\(K &lt; 0\)</span> (hyperbolic): <span class="math inline">\(f &gt; r\)</span>, geodesic circles are larger.</p>
+<p><strong>Volume element.</strong> In geodesic polar coordinates:</p>
+<p><span class="math display">\[d\text{vol}_\mathcal{M} = f(r,\theta)\, dr\, d\theta\]</span></p>
+<p>The deviation of <span class="math inline">\(f\)</span> from <span class="math inline">\(r\)</span> measures the volumetric distortion due to curvature — the precise sense in which the surface is not flat.</p>
+<hr>
+</section>
+<section id="the-laplace-beltrami-operator" class="level3">
+<h3 class="anchored" data-anchor-id="the-laplace-beltrami-operator">The Laplace-Beltrami Operator</h3>
+<p><strong>Definition.</strong> The <strong>Laplace-Beltrami operator</strong> on <span class="math inline">\((\mathcal{M}, g)\)</span> is:</p>
+<p><span class="math display">\[\Delta_\mathcal{M} f = \text{div}(\text{grad}\, f) = \frac{1}{\sqrt{|g|}} \sum_{i,j} \frac{\partial}{\partial x^i}\!\left(\sqrt{|g|}\, g^{ij} \frac{\partial f}{\partial x^j}\right)\]</span></p>
+<p>where <span class="math inline">\(|g| = \det(g_{ij})\)</span> and <span class="math inline">\(g^{ij}\)</span> is the inverse metric tensor.</p>
+<p><strong>In geodesic polar coordinates:</strong></p>
+<p><span class="math display">\[\Delta_\mathcal{M} f = \frac{\partial^2 f}{\partial r^2} + \frac{\partial_r f(r,\theta)}{f(r,\theta)}\frac{\partial f}{\partial r} + \frac{1}{f(r,\theta)^2}\frac{\partial^2 f}{\partial \theta^2}\]</span></p>
+<p>For flat space (<span class="math inline">\(f = r\)</span>): <span class="math inline">\(\Delta f = \partial_r^2 f + \frac{1}{r}\partial_r f + \frac{1}{r^2}\partial_\theta^2 f\)</span> — the standard Laplacian in polar coordinates.</p>
+<p><strong>Self-adjointness.</strong> <span class="math inline">\(\Delta_\mathcal{M}\)</span> is self-adjoint on <span class="math inline">\(L^2(\mathcal{M}, d\text{vol})\)</span>:</p>
+<p><span class="math display">\[\langle \Delta_\mathcal{M} f, h\rangle_{L^2} = \langle f, \Delta_\mathcal{M} h\rangle_{L^2} = -\int_\mathcal{M} g(\nabla f, \nabla h)\, d\text{vol}\]</span></p>
+<p>(integration by parts / Green’s identity, assuming <span class="math inline">\(\partial\mathcal{M} = \emptyset\)</span> or Dirichlet/Neumann boundary conditions).</p>
+<p><strong>Eigenvalue problem.</strong> The <strong>manifold harmonics</strong> are solutions to:</p>
+<p><span class="math display">\[\Delta_\mathcal{M} \phi_k = -\lambda_k \phi_k, \quad 0 = \lambda_0 \leq \lambda_1 \leq \lambda_2 \leq \cdots \nearrow \infty\]</span></p>
+<p>For compact <span class="math inline">\(\mathcal{M}\)</span> without boundary, the spectrum is discrete and the eigenfunctions <span class="math inline">\(\{\phi_k\}_{k=0}^\infty\)</span> form a complete orthonormal basis for <span class="math inline">\(L^2(\mathcal{M})\)</span>:</p>
+<p><span class="math display">\[\langle \phi_j, \phi_k\rangle_{L^2} = \int_\mathcal{M} \phi_j(x)\phi_k(x)\, d\text{vol}(x) = \delta_{jk}\]</span></p>
+<p><strong>Special cases:</strong> - <span class="math inline">\(\mathcal{M} = S^1\)</span>: eigenfunctions <span class="math inline">\(e^{in\theta}/\sqrt{2\pi}\)</span>, eigenvalues <span class="math inline">\(n^2\)</span> — Fourier basis. - <span class="math inline">\(\mathcal{M} = S^2\)</span>: eigenfunctions <span class="math inline">\(Y_\ell^m\)</span>, eigenvalues <span class="math inline">\(\ell(\ell+1)\)</span> — spherical harmonics. - <span class="math inline">\(\mathcal{M} = \mathbb{T}^2\)</span> (flat torus): eigenfunctions <span class="math inline">\(e^{i(n_1 x^1 + n_2 x^2)}\)</span>, eigenvalues <span class="math inline">\(n_1^2 + n_2^2\)</span> — 2D Fourier basis.</p>
+<hr>
+</section>
+<section id="connections-parallel-transport-and-gauge-equivariance" class="level3">
+<h3 class="anchored" data-anchor-id="connections-parallel-transport-and-gauge-equivariance">Connections, Parallel Transport, and Gauge Equivariance</h3>
+<p><strong>Definition (Connection).</strong> A <strong>connection</strong> <span class="math inline">\(\nabla\)</span> on the tangent bundle <span class="math inline">\(T\mathcal{M}\)</span> is a map <span class="math inline">\(\nabla: \Gamma(T\mathcal{M}) \times \Gamma(T\mathcal{M}) \to \Gamma(T\mathcal{M})\)</span> (where <span class="math inline">\(\Gamma(T\mathcal{M})\)</span> is the space of smooth vector fields) satisfying:</p>
+<p><span class="math display">\[\nabla_{fX}Y = f\nabla_X Y, \quad \nabla_X(fY) = (Xf)Y + f\nabla_X Y\]</span></p>
+<p>for smooth functions <span class="math inline">\(f\)</span> and vector fields <span class="math inline">\(X, Y\)</span>. The <strong>Levi-Civita connection</strong> is the unique connection satisfying: - <strong>Metric compatibility:</strong> <span class="math inline">\(X\langle Y,Z\rangle_g = \langle \nabla_X Y, Z\rangle_g + \langle Y, \nabla_X Z\rangle_g\)</span> - <strong>Torsion-free:</strong> <span class="math inline">\(\nabla_X Y - \nabla_Y X = [X,Y]\)</span></p>
+<p><strong>Definition (Parallel transport).</strong> Given a curve <span class="math inline">\(\gamma: [0,1] \to \mathcal{M}\)</span>, <strong>parallel transport</strong> of <span class="math inline">\(v_0 \in T_{\gamma(0)}\mathcal{M}\)</span> along <span class="math inline">\(\gamma\)</span> produces a vector field <span class="math inline">\(V(t) \in T_{\gamma(t)}\mathcal{M}\)</span> satisfying:</p>
+<p><span class="math display">\[\nabla_{\dot\gamma} V = 0, \quad V(0) = v_0\]</span></p>
+<p>In local coordinates, this is the ODE:</p>
+<p><span class="math display">\[\dot{V}^k(t) + \Gamma^k_{ij}(\gamma(t))\dot\gamma^i(t)V^j(t) = 0\]</span></p>
+<p>Parallel transport <span class="math inline">\(P_\gamma: T_{\gamma(0)}\mathcal{M} \to T_{\gamma(1)}\mathcal{M}\)</span> is a linear isometry — it preserves inner products: <span class="math inline">\(g_{\gamma(1)}(P_\gamma u, P_\gamma v) = g_{\gamma(0)}(u,v)\)</span>.</p>
+<p><strong>Definition (Holonomy).</strong> For a closed curve <span class="math inline">\(\gamma: [0,1] \to \mathcal{M}\)</span> with <span class="math inline">\(\gamma(0) = \gamma(1) = x\)</span>, the parallel transport <span class="math inline">\(P_\gamma: T_x\mathcal{M} \to T_x\mathcal{M}\)</span> is an orthogonal transformation. For a simply connected region <span class="math inline">\(\Omega\)</span> bounded by <span class="math inline">\(\gamma\)</span>:</p>
+<p><span class="math display">\[P_\gamma = \exp\!\left(-\int_\Omega K\, d\text{vol}\right) R \in SO(2)\]</span></p>
+<p>where <span class="math inline">\(K\)</span> is the Gaussian curvature and <span class="math inline">\(R\)</span> is the rotation by the holonomy angle — the <strong>Gauss-Bonnet theorem</strong> in local form.</p>
+<p><strong>Definition (Gauge transformation).</strong> A <strong>gauge transformation</strong> is a smooth map <span class="math inline">\(g: \mathcal{M} \to SO(2)\)</span> assigning a local rotation <span class="math inline">\(g(x) \in SO(2)\)</span> to each point. The <strong>gauge group</strong> is:</p>
+<p><span class="math display">\[\mathcal{G} = C^\infty(\mathcal{M}, SO(2))\]</span></p>
+<p>A gauge transformation acts on a local frame field <span class="math inline">\(\{e_1(x), e_2(x)\}\)</span> at each point by rotating it: <span class="math inline">\(\{e_1(x), e_2(x)\} \mapsto \{g(x)e_1(x), g(x)e_2(x)\}\)</span>.</p>
+<p><strong>Gauge-equivariant feature maps.</strong> A feature map <span class="math inline">\(F: \mathcal{M} \to \mathbb{R}^c\)</span> (assigning a <span class="math inline">\(c\)</span>-dimensional feature vector to each surface point) is a <strong>gauge-equivariant section of a vector bundle</strong> if it transforms as:</p>
+<p><span class="math display">\[F(x) \mapsto \rho(g(x)) F(x)\]</span></p>
+<p>under gauge transformation <span class="math inline">\(g \in \mathcal{G}\)</span>, where <span class="math inline">\(\rho: SO(2) \to GL(\mathbb{R}^c)\)</span> is a representation of <span class="math inline">\(SO(2)\)</span> specifying how the feature vector transforms under local frame rotations. For scalar features (<span class="math inline">\(\rho = 1\)</span>): invariant under gauge. For vector features (<span class="math inline">\(\rho = D^{(1)}\)</span>): rotate with the frame. For higher-order features (<span class="math inline">\(\rho = D^{(\ell)}\)</span>): transform under the <span class="math inline">\(\ell\)</span>-th irreducible representation of <span class="math inline">\(SO(2)\)</span> — the 2D rotation matrix acting on <span class="math inline">\(\mathbb{R}^2\)</span> for <span class="math inline">\(\ell=1\)</span>, the higher-order harmonics for <span class="math inline">\(\ell \geq 2\)</span>.</p>
+<hr>
+</section>
+<section id="geodesic-convolution-the-formal-definition" class="level3">
+<h3 class="anchored" data-anchor-id="geodesic-convolution-the-formal-definition">Geodesic Convolution: The Formal Definition</h3>
+<p><strong>Definition (Geodesic convolution — continuous form).</strong> Let <span class="math inline">\(f: \mathcal{M} \to \mathbb{R}\)</span> be a signal on <span class="math inline">\(\mathcal{M}\)</span> and <span class="math inline">\(F: T_x\mathcal{M} \to \mathbb{R}\)</span> a filter defined on the tangent plane. The <strong>geodesic convolution</strong> of <span class="math inline">\(f\)</span> with <span class="math inline">\(F\)</span> at point <span class="math inline">\(x \in \mathcal{M}\)</span> is:</p>
+<p><span class="math display">\[(F \star f)(x) = \int_{T_x\mathcal{M}} F(v) \cdot (f \circ \exp_x)(v) \cdot \chi_r(v)\, d\text{vol}_{T_x}(v)\]</span></p>
+<p>where <span class="math inline">\(\chi_r(v) = \mathbf{1}[\|v\| &lt; r]\)</span> restricts integration to the geodesic ball of radius <span class="math inline">\(r\)</span>, and <span class="math inline">\(d\text{vol}_{T_x}(v) = f(\|v\|, \angle v)\, d\|v\|\, d\angle v\)</span> is the pullback volume element via <span class="math inline">\(\exp_x\)</span>.</p>
+<p><strong>In geodesic polar coordinates <span class="math inline">\((r,\theta)\)</span>:</strong></p>
+<p><span class="math display">\[(F \star f)(x) = \int_0^r \int_0^{2\pi} F(r', \theta') \cdot f(\exp_x(r'\cos\theta', r'\sin\theta')) \cdot f(r',\theta')\, d\theta'\, dr'\]</span></p>
+<p><strong>Gauge dependence.</strong> The geodesic polar coordinates <span class="math inline">\((r,\theta)\)</span> at <span class="math inline">\(x\)</span> depend on the choice of orthonormal basis <span class="math inline">\(\{e_1(x), e_2(x)\}\)</span> for <span class="math inline">\(T_x\mathcal{M}\)</span>. Under gauge transformation <span class="math inline">\(g(x) \in SO(2)\)</span> rotating the frame by angle <span class="math inline">\(\alpha\)</span>:</p>
+<p><span class="math display">\[(r, \theta) \mapsto (r, \theta - \alpha)\]</span></p>
+<p>The convolution output transforms as:</p>
+<p><span class="math display">\[(F_\alpha \star f)(x) = (F \star f)(x)\big|_{\theta \to \theta - \alpha}\]</span></p>
+<p>For the output to be gauge-invariant (a scalar), the filter <span class="math inline">\(F\)</span> must be radially symmetric: <span class="math inline">\(F(r,\theta) = F(r)\)</span>. For the output to be gauge-equivariant of order <span class="math inline">\(\ell\)</span> (transforming under <span class="math inline">\(e^{i\ell\alpha}\)</span>), the filter must have angular frequency <span class="math inline">\(\ell\)</span>: <span class="math inline">\(F(r,\theta) = F_\ell(r)e^{i\ell\theta}\)</span>.</p>
+<hr>
+</section>
+<section id="the-monet-framework" class="level3">
+<h3 class="anchored" data-anchor-id="the-monet-framework">The MoNet Framework</h3>
+<p><strong>Definition (Pseudo-coordinates).</strong> A <strong>pseudo-coordinate map</strong> <span class="math inline">\(\mathbf{u}: \mathcal{M} \times \mathcal{M} \to \mathbb{R}^m\)</span> assigns to each pair <span class="math inline">\((x,y)\)</span> an <span class="math inline">\(m\)</span>-dimensional vector <span class="math inline">\(\mathbf{u}(x,y)\)</span> describing the relative geometric relationship of <span class="math inline">\(y\)</span> with respect to <span class="math inline">\(x\)</span> in a local coordinate system at <span class="math inline">\(x\)</span>. For manifolds: <span class="math inline">\(\mathbf{u}(x,y) = (\log_x(y)_1, \log_x(y)_2) = (r_{xy}\cos\theta_{xy}, r_{xy}\sin\theta_{xy})\)</span>. For graphs: <span class="math inline">\(\mathbf{u}(i,j) = (\tilde{d}_i, \tilde{d}_j)\)</span> for degree-normalized coordinates <span class="math inline">\(\tilde{d}_i = 1/\sqrt{d_i}\)</span>.</p>
+<p><strong>Definition (MoNet layer — Monti et al.&nbsp;2017).</strong> The <strong>Gaussian mixture model network</strong> layer applies a learned filter parameterized as a <span class="math inline">\(K\)</span>-component Gaussian mixture in pseudo-coordinate space:</p>
+<p><span class="math display">\[g_k(\mathbf{u}) = \exp\!\left(-\frac{1}{2}(\mathbf{u} - \boldsymbol{\mu}_k)^\top \boldsymbol{\Sigma}_k^{-1}(\mathbf{u} - \boldsymbol{\mu}_k)\right)\]</span></p>
+<p>with learnable parameters <span class="math inline">\(\boldsymbol{\mu}_k \in \mathbb{R}^m\)</span> (kernel centre) and <span class="math inline">\(\boldsymbol{\Sigma}_k \in \mathbb{R}^{m\times m}\)</span> (positive definite covariance matrix). The MoNet convolution of feature <span class="math inline">\(f: \mathcal{M} \to \mathbb{R}^{d_{\text{in}}}\)</span> is:</p>
+<p><span class="math display">\[(f \star_{\text{MoNet}} w)(x) = \sum_{k=1}^K \sum_{y \in \mathcal{N}(x)} f(y) \cdot g_k(\mathbf{u}(x,y)) \cdot w_k\]</span></p>
+<p>where <span class="math inline">\(w_k \in \mathbb{R}^{d_{\text{in}} \times d_{\text{out}}}\)</span> are learnable weight matrices and <span class="math inline">\(\mathcal{N}(x)\)</span> is the neighborhood of <span class="math inline">\(x\)</span> (geodesic ball for manifolds, graph neighborhood for graphs).</p>
+<p><strong>Multi-channel MoNet layer:</strong></p>
+<p><span class="math display">\[H^{\text{out}}(x) = \sigma\!\left(\sum_{k=1}^K w_k \sum_{y\in\mathcal{N}(x)} H^{\text{in}}(y) \cdot g_k(\mathbf{u}(x,y))\right)\]</span></p>
+<p><strong>Parameter count:</strong> <span class="math inline">\(K \times (m + m^2 + d_{\text{in}} \times d_{\text{out}})\)</span> — independent of the number of surface points <span class="math inline">\(n\)</span>, enabling transfer across different surface discretizations.</p>
+<p><strong>Unification theorem (Monti et al.&nbsp;2017).</strong> The following architectures are special cases of MoNet with specific pseudo-coordinate choices:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Architecture</th>
+<th>Pseudo-coordinates <span class="math inline">\(\mathbf{u}(x,y)\)</span></th>
+<th>Filter</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>GCN</td>
+<td><span class="math inline">\(\mathbf{u}(i,j) = (1/\sqrt{d_i}, 1/\sqrt{d_j})\)</span></td>
+<td>Single Gaussian</td>
+</tr>
+<tr class="even">
+<td>ACNN</td>
+<td><span class="math inline">\(\mathbf{u}(x,y) = (r_{xy}, \theta_{xy})\)</span> in geodesic polar</td>
+<td>Gaussian mixture</td>
+</tr>
+<tr class="odd">
+<td>Geodesic CNN</td>
+<td><span class="math inline">\(\mathbf{u}(x,y) = (r_{xy}, \theta_{xy})\)</span> on mesh</td>
+<td>Learned filter</td>
+</tr>
+<tr class="even">
+<td>Spline CNN</td>
+<td>$(x,y) = $ B-spline coordinates</td>
+<td>B-spline mixture</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="gauge-equivariant-convolution" class="level3">
+<h3 class="anchored" data-anchor-id="gauge-equivariant-convolution">Gauge-Equivariant Convolution</h3>
+<p><strong>Definition (Gauge-equivariant convolution — Cohen et al.&nbsp;2019).</strong> A <strong>gauge-equivariant convolutional layer</strong> maps sections <span class="math inline">\(f \in \Gamma(V_{\rho_{\text{in}}})\)</span> (features transforming under representation <span class="math inline">\(\rho_{\text{in}}\)</span> of <span class="math inline">\(SO(2)\)</span>) to sections <span class="math inline">\(F \in \Gamma(V_{\rho_{\text{out}}})\)</span> (features transforming under <span class="math inline">\(\rho_{\text{out}}\)</span>) via:</p>
+<p><span class="math display">\[(Kf)(x) = \int_{B_r(x)} K_{P_\gamma}(\log_x(y)) f(y)\, d\text{vol}(y)\]</span></p>
+<p>where <span class="math inline">\(K_{P_\gamma}\)</span> is a <strong>kernel that incorporates parallel transport</strong> <span class="math inline">\(P_\gamma: T_y\mathcal{M} \to T_x\mathcal{M}\)</span> along the geodesic <span class="math inline">\(\gamma\)</span> from <span class="math inline">\(y\)</span> to <span class="math inline">\(x\)</span>:</p>
+<p><span class="math display">\[K_{P_\gamma}(\log_x(y)) = K(\log_x(y)) \circ P_\gamma\]</span></p>
+<p><strong>Equivariance condition on the kernel.</strong> The layer is gauge-equivariant iff the kernel <span class="math inline">\(K\)</span> satisfies:</p>
+<p><span class="math display">\[K(g \cdot v) = \rho_{\text{out}}(g) \circ K(v) \circ \rho_{\text{in}}(g)^{-1} \quad \forall g \in SO(2), v \in T_x\mathcal{M}\]</span></p>
+<p>By Schur’s lemma for <span class="math inline">\(SO(2)\)</span>: the space of equivariant kernels decomposes into blocks indexed by irreducible representations <span class="math inline">\(D^{(\ell)}\)</span> of <span class="math inline">\(SO(2)\)</span>. For <span class="math inline">\(\rho_{\text{in}} = D^{(\ell_1)}\)</span> and <span class="math inline">\(\rho_{\text{out}} = D^{(\ell_2)}\)</span>: equivariant kernels exist only for <span class="math inline">\(\ell_2 = \ell_1 \pm \ell\)</span> for integer <span class="math inline">\(\ell\)</span>, and have the form <span class="math inline">\(K_\ell(r) D^{(\ell)}(\theta)\)</span> where <span class="math inline">\(K_\ell(r)\)</span> is a learnable radial function and <span class="math inline">\(D^{(\ell)}(\theta) = \begin{pmatrix}\cos\ell\theta &amp; -\sin\ell\theta\\\sin\ell\theta &amp; \cos\ell\theta\end{pmatrix}\)</span> is the rotation matrix at angular frequency <span class="math inline">\(\ell\)</span>.</p>
+<p><strong>Architecture consequence.</strong> A gauge-equivariant network on <span class="math inline">\(\mathcal{M}\)</span> with <span class="math inline">\(SO(2)\)</span> gauge group has: - Scalar (<span class="math inline">\(\ell=0\)</span>) input features: invariant under gauge - Vector (<span class="math inline">\(\ell=1\)</span>) intermediate features: rotate with the local frame - Higher-order (<span class="math inline">\(\ell \geq 2\)</span>) features: transform under <span class="math inline">\(D^{(\ell)}\)</span> - Scalar (<span class="math inline">\(\ell=0\)</span>) output predictions: gauge-invariant, independent of local frame choice</p>
+<p>Equivariant nonlinearities act independently on the magnitude of each <span class="math inline">\(\ell\)</span>-type feature (norm-preserving gating), analogous to the Clebsch-Gordan nonlinearities of <span class="math inline">\(SO(3)\)</span>-equivariant networks from Chapter 1.</p>
+<hr>
+</section>
+<section id="discrete-approximation-from-continuous-manifolds-to-point-clouds" class="level3">
+<h3 class="anchored" data-anchor-id="discrete-approximation-from-continuous-manifolds-to-point-clouds">Discrete Approximation: From Continuous Manifolds to Point Clouds</h3>
+<p><strong>Discretization.</strong> Let <span class="math inline">\(\{x_1,\ldots,x_n\} \subset \mathcal{M}\)</span> be a discrete sampling of the manifold. The continuous geodesic convolution approximates to the discrete operation:</p>
+<p><span class="math display">\[(F \star f)(x_i) \approx \sum_{j: d_\mathcal{M}(x_i,x_j)&lt;r} f(x_j) \cdot F(\mathbf{u}(x_i,x_j)) \cdot A_j\]</span></p>
+<p>where <span class="math inline">\(A_j\)</span> is the area element (Voronoi cell area) associated with sample point <span class="math inline">\(x_j\)</span>, approximating <span class="math inline">\(d\text{vol}(y)\)</span>.</p>
+<p><strong>Geodesic distance approximation.</strong> For a neighborhood graph <span class="math inline">\(G_\epsilon\)</span> with edges <span class="math inline">\((i,j)\)</span> whenever <span class="math inline">\(\|x_i - x_j\|_{\mathbb{R}^D} &lt; \epsilon\)</span>, the graph shortest-path distance <span class="math inline">\(d_G(i,j)\)</span> approximates the geodesic distance <span class="math inline">\(d_\mathcal{M}(x_i,x_j)\)</span> as <span class="math inline">\(\epsilon \to 0\)</span>:</p>
+<p><span class="math display">\[d_G(i,j) \to d_\mathcal{M}(x_i,x_j) \quad \text{as } n\to\infty,\, \epsilon\to 0,\, n\epsilon^d \to \infty\]</span></p>
+<p><strong>DiffusionNet (Sharp et al.&nbsp;2022).</strong> Rather than approximating geodesic convolution directly, DiffusionNet uses the heat diffusion process <span class="math inline">\(e^{-t\Delta_\mathcal{M}}\)</span> as the spatial support for feature propagation — intrinsically defined, robust to surface discretization, and directly connected to the spectral theory of <span class="math inline">\(\Delta_\mathcal{M}\)</span>:</p>
+<p><span class="math display">\[h_i^{\text{out}} = \text{MLP}\!\left(h_i^{\text{in}},\, e^{-t_1 \Delta}h_i^{\text{in}},\, e^{-t_2\Delta}h_i^{\text{in}},\ldots,\, e^{-t_T\Delta}h_i^{\text{in}}\right)\]</span></p>
+<p>where <span class="math inline">\(t_1 &lt; t_2 &lt; \cdots &lt; t_T\)</span> are learned diffusion times and <span class="math inline">\(e^{-t\Delta}\)</span> is computed via the truncated eigendecomposition <span class="math inline">\(e^{-t\Delta} \approx \Phi\, e^{-t\Lambda}\Phi^\top\)</span> using the first <span class="math inline">\(K\)</span> Laplace-Beltrami eigenfunctions.</p>
+<hr>
+</section>
+<section id="why-this-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-matters">WHY THIS MATTERS</h3>
+<p>In <strong>MATH 217 (ODEs and PDEs)</strong>, the geodesic equation <span class="math inline">\(\ddot\gamma^k + \Gamma^k_{ij}\dot\gamma^i\dot\gamma^j = 0\)</span> is a second-order nonlinear ODE system — the Euler-Lagrange equation for the length functional <span class="math inline">\(\ell(\gamma) = \int\|\dot\gamma\|_g\,dt\)</span>. Existence and uniqueness of geodesics through any point with any initial velocity follows from the Picard-Lindelöf theorem applied to this ODE system, which is exactly the existence and uniqueness theorem for ODEs from MATH 217. The parallel transport equation <span class="math inline">\(\dot V^k + \Gamma^k_{ij}\dot\gamma^i V^j = 0\)</span> is a first-order linear ODE along <span class="math inline">\(\gamma\)</span> — it has a unique solution for any initial condition <span class="math inline">\(V(0) = v_0\)</span>, also by Picard-Lindelöf, and the solution is the parallel transport of <span class="math inline">\(v_0\)</span> along <span class="math inline">\(\gamma\)</span>. The Laplace-Beltrami eigenvalue problem <span class="math inline">\(\Delta_\mathcal{M}\phi = -\lambda\phi\)</span> is an elliptic PDE on <span class="math inline">\(\mathcal{M}\)</span> — the Riemannian analogue of the Sturm-Liouville eigenvalue problem <span class="math inline">\(-(p(x)u')' + q(x)u = \lambda w(x)u\)</span> from MATH 217, whose eigenfunctions form a complete orthonormal basis for the weighted <span class="math inline">\(L^2\)</span> space. The spectral theorem for the Laplace-Beltrami operator is the infinite-dimensional generalization of the Sturm-Liouville theorem, with the manifold playing the role of the interval <span class="math inline">\([a,b]\)</span> and the Riemannian volume measure playing the role of the weight function <span class="math inline">\(w(x)\)</span>.</p>
+<p>In <strong>MATH 302 (Matrix Theory)</strong>, the metric tensor <span class="math inline">\(g_{ij}(x)\)</span> is a positive definite symmetric matrix at each point — the same object studied in MATH 302 as a positive definite matrix, with the same spectral properties: positive eigenvalues, Cholesky factorization, and a well-defined square root <span class="math inline">\(g^{1/2}_{ij}\)</span> used in the definition of the volume element <span class="math inline">\(\sqrt{|g|}\)</span>. The covariance matrix <span class="math inline">\(\Sigma_k\)</span> of each MoNet Gaussian kernel is a positive definite symmetric matrix — its inverse <span class="math inline">\(\Sigma_k^{-1}\)</span> defines the Mahalanobis distance <span class="math inline">\((\mathbf{u}-\mu_k)^\top\Sigma_k^{-1}(\mathbf{u}-\mu_k)\)</span>, which is the elliptical distance in the pseudo-coordinate space, generalizing the Euclidean distance by stretching and rotating the coordinate axes. The condition number of <span class="math inline">\(\Sigma_k\)</span> determines the aspect ratio of the Gaussian ellipse — a nearly singular <span class="math inline">\(\Sigma_k\)</span> (large condition number) gives a highly elongated kernel that responds strongly to signals in one specific direction and weakly in all others. The parallel transport <span class="math inline">\(P_\gamma: T_{\gamma(0)}\mathcal{M} \to T_{\gamma(1)}\mathcal{M}\)</span> is an orthogonal linear map — an element of <span class="math inline">\(O(d)\)</span> — preserving inner products, exactly the orthogonal matrices studied in MATH 302.</p>
+<p>In <strong>MATH 213 and MATH 325 (Analysis I and II)</strong>, the <span class="math inline">\(L^2(\mathcal{M}, d\text{vol})\)</span> inner product <span class="math inline">\(\langle f,g\rangle = \int_\mathcal{M} f(x)g(x)\,d\text{vol}(x)\)</span> is the generalization of the <span class="math inline">\(L^2([a,b])\)</span> inner product from Analysis — both are Hilbert space inner products, and the completeness of the Laplace-Beltrami eigenfunctions in <span class="math inline">\(L^2(\mathcal{M})\)</span> is the analogue of the completeness of the Fourier basis in <span class="math inline">\(L^2([-\pi,\pi])\)</span> established in Analysis II. Green’s identity <span class="math inline">\(\langle\Delta_\mathcal{M}f,h\rangle = -\int_\mathcal{M}g(\nabla f,\nabla h)\,d\text{vol}\)</span> is the Riemannian analogue of the integration by parts formula from Analysis I: <span class="math inline">\(\int_a^b f''(x)h(x)dx = -\int_a^b f'(x)h'(x)dx + [f'h]_a^b\)</span>. The self-adjointness of <span class="math inline">\(\Delta_\mathcal{M}\)</span> follows from Green’s identity with boundary terms vanishing — the manifold analogue of a Sturm-Liouville operator being self-adjoint with appropriate boundary conditions, a result developed carefully in Analysis II.</p>
+<hr>
+</section>
+</section>
+<section id="layer-3-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="layer-3-bridge">Layer 3 (Bridge)</h2>
+<p>Every element of the ICIMOD Himalayan terrain survey story has a precise mathematical address. We walk through them completely — the cartographer’s distortion argument, the geodesic neighbourhood, the exponential map as local flattening, the gauge ambiguity of the compass direction, the parallel transport of the surveyor’s frame, the MoNet Gaussian kernels as learned physical patterns, and the break moment of the orientation problem — until the story and the formalism are a single object seen from two angles.</p>
+<hr>
+<p><strong>The flat map’s distortion of the Himalayan terrain — the Mercator projection making Greenland appear twice as large as its true size relative to equatorial regions — is the failure of any global diffeomorphism from <span class="math inline">\(\mathcal{M}\)</span> to <span class="math inline">\(\mathbb{R}^2\)</span> to preserve the Riemannian metric <span class="math inline">\(g\)</span>, expressed precisely by Gauss’s Theorema Egregium: the Gaussian curvature <span class="math inline">\(K(x)\)</span> is an intrinsic invariant unchanged by isometric deformations, and a sphere with <span class="math inline">\(K &gt; 0\)</span> cannot be isometrically embedded in the flat plane with <span class="math inline">\(K = 0\)</span>.</strong> The metric tensor <span class="math inline">\(g_{ij}(x)\)</span> at each terrain point <span class="math inline">\(x\)</span> encodes the true notion of length and angle on the surface — the inner product <span class="math inline">\(g_x(u,v)\)</span> between tangent vectors <span class="math inline">\(u,v \in T_x\mathcal{M}\)</span> gives the cosine of the angle between them and the products <span class="math inline">\(\sqrt{g_x(v,v)}\)</span> give their lengths. Any flat map projection is a smooth bijection <span class="math inline">\(\varphi: U \subset \mathcal{M} \to \mathbb{R}^2\)</span> that pulls back the flat Euclidean metric on <span class="math inline">\(\mathbb{R}^2\)</span> to a distorted metric <span class="math inline">\(\varphi^*g_{\text{Eucl}}\)</span> on <span class="math inline">\(\mathcal{M}\)</span> — a metric that differs from the true Riemannian metric <span class="math inline">\(g\)</span> by a position-dependent conformal factor (for angle-preserving projections like Mercator) or area-distorting deformation (for equal-area projections). A convolutional filter applied to the flat map reads distances in the distorted metric <span class="math inline">\(\varphi^*g_{\text{Eucl}}\)</span>, not in the true metric <span class="math inline">\(g\)</span>. The Everest versus Greenland example is the volume element distortion: <span class="math inline">\(d\text{vol}_\mathcal{M} = \sqrt{|g|}\,dx^1\,dx^2 \neq dx^1\,dx^2 = d\text{vol}_{\mathbb{R}^2}\)</span> in the projected coordinate chart, with <span class="math inline">\(\sqrt{|g|}\)</span> varying by a factor of two between equatorial and high-latitude regions in the Mercator projection. The network trained on the flat map must learn to compensate for the spatially varying <span class="math inline">\(\sqrt{|g|}\)</span> distortion factor before learning any terrain physics — wasting representational capacity on a coordinate artifact.</p>
+<p><strong>The road distance from Kathmandu to Nagarkot — 32 kilometres along the terrain surface versus 25 kilometres through the hill — is the geodesic distance <span class="math inline">\(d_\mathcal{M}(\text{Kathmandu},\text{Nagarkot}) = \inf_\gamma \ell(\gamma)\)</span>, the infimum of path lengths over all surface curves <span class="math inline">\(\gamma\)</span> connecting the two points, with length measured by the Riemannian metric <span class="math inline">\(\ell(\gamma) = \int_0^1\sqrt{g_{\gamma(t)}(\dot\gamma(t),\dot\gamma(t))}\,dt\)</span>.</strong> The Euclidean distance through the hill is the ambient-space distance <span class="math inline">\(\|\text{Kathmandu} - \text{Nagarkot}\|_{\mathbb{R}^3} = 25\text{km}\)</span> — the length of the straight line segment connecting the two points in the embedding space <span class="math inline">\(\mathbb{R}^3\)</span>, which passes through the interior of the Earth and is therefore inaccessible to any creature confined to the surface. The geodesic distance is intrinsic: it depends only on the Riemannian metric <span class="math inline">\(g\)</span> of the surface, not on how the surface sits in <span class="math inline">\(\mathbb{R}^3\)</span>. Two different embeddings of the same abstract Riemannian manifold — a rubber sheet stretched into different shapes in ambient space — have the same geodesic distances between all pairs of points if the stretching is isometric (preserving <span class="math inline">\(g\)</span>). The geodesic ball <span class="math inline">\(B_r(x) = \{y\in\mathcal{M}: d_\mathcal{M}(x,y) &lt; r\}\)</span> is the set of terrain points accessible from <span class="math inline">\(x\)</span> by a surface path of length less than <span class="math inline">\(r\)</span> — the intrinsically correct neighbourhood for aggregating local signal information. The snow depth measurement separated from <span class="math inline">\(x\)</span> by a 2-kilometre geodesic detour around a cliff face is correctly excluded from <span class="math inline">\(B_{500}(x)\)</span> even if its Euclidean distance is only 300 metres: the cliff face makes it geometrically distant in the intrinsic sense that matters for surface phenomena.</p>
+<hr>
+<p><strong>The surveyor standing at base camp and measuring angles and distances in every direction — defining a local coordinate system <span class="math inline">\((r,\theta)\)</span> with <span class="math inline">\(r\)</span> the distance walked along the terrain and <span class="math inline">\(\theta\)</span> the compass bearing — is the geodesic polar coordinate system, and the function mapping each direction-distance pair to the terrain point reached is the exponential map <span class="math inline">\(\exp_x: T_x\mathcal{M} \to \mathcal{M}\)</span>.</strong> The tangent plane <span class="math inline">\(T_x\mathcal{M}\)</span> at base camp <span class="math inline">\(x\)</span> is the flat 2D space of all tangent vectors at <span class="math inline">\(x\)</span> — the mathematical formalization of the surveyor’s local directional choices, which form a 2D plane regardless of how the terrain curves. A tangent vector <span class="math inline">\(v = r(\cos\theta\, e_1 + \sin\theta\, e_2) \in T_x\mathcal{M}\)</span> encodes direction <span class="math inline">\(\theta\)</span> and speed <span class="math inline">\(r\)</span> in the orthonormal frame <span class="math inline">\(\{e_1, e_2\}\)</span>. The exponential map <span class="math inline">\(\exp_x(v) = \gamma_v(1)\)</span> is the endpoint of the geodesic <span class="math inline">\(\gamma_v\)</span> starting at <span class="math inline">\(x\)</span> with initial velocity <span class="math inline">\(v\)</span> — the terrain point reached by walking in direction <span class="math inline">\(\theta\)</span> for distance <span class="math inline">\(r\)</span> along the surface. The identity <span class="math inline">\(d(\exp_x)_0 = \text{Id}\)</span> — the differential of <span class="math inline">\(\exp_x\)</span> at the origin is the identity — is the mathematical statement that the terrain looks flat near your feet: for small <span class="math inline">\(v\)</span>, <span class="math inline">\(d_\mathcal{M}(x, \exp_x(v)) = \|v\| + O(\|v\|^3)\)</span>, so geodesic distances agree with tangent-plane distances to second order. The Gauss lemma — <span class="math inline">\(g = dr^2 + f(r,\theta)^2\,d\theta^2\)</span> in geodesic polar coordinates with <span class="math inline">\(f(r,\theta) = r - \frac{K(x)}{6}r^3 + O(r^5)\)</span> — quantifies exactly how much the terrain deviates from flatness at each radius <span class="math inline">\(r\)</span>: the curvature term <span class="math inline">\(-K(x)r^3/6\)</span> is the leading-order distortion of geodesic circles relative to Euclidean circles. A convolutional filter applied in the tangent plane and mapped to the surface via <span class="math inline">\(\exp_x\)</span> experiences a distortion of order <span class="math inline">\(r^3\)</span> — negligible for small neighbourhoods (locality saves you) and growing for large neighbourhoods (curvature eventually matters).</p>
+<p><strong>The injectivity radius <span class="math inline">\(\text{inj}(x)\)</span> — the maximum radius within which the exponential map is a bijection — is large at smooth gentle slopes and small at sharp ridges and cliff edges, because at high-curvature points two geodesics from <span class="math inline">\(x\)</span> can intersect within a small radius, creating the conjugate points that destroy injectivity of <span class="math inline">\(\exp_x\)</span>.</strong> At a sharp mountain ridge, two geodesics from the ridge point — one going slightly left of the ridge direction and one slightly right — quickly converge on the two sides of the ridge and may intersect again a short distance away, meaning the exponential map sends two different tangent vectors to the same surface point. Beyond the first conjugate point, <span class="math inline">\(\exp_x\)</span> is no longer injective: the geodesic polar coordinate system is undefined, and the local flattening breaks down. The constraint that geodesic convolution must use neighbourhood radii <span class="math inline">\(r &lt; \text{inj}(x)\)</span> is therefore not just a mathematical technicality — it is the precise statement that the filter must be local enough that the terrain it covers does not wrap around on itself, which fails first at high-curvature terrain features like ridge lines and cliff edges. This is the formal quantification of the story’s intuition that the local flattening is honest for small patches but breaks down for large ones.</p>
+<hr>
+<p><strong>The problem of choosing which direction is north in the local tangent plane at the summit of Everest — the gauge ambiguity — is the non-existence of a globally smooth section of the frame bundle on a curved surface, formalized as the non-triviality of the tangent bundle <span class="math inline">\(T\mathcal{M}\)</span> for surfaces with nonzero Euler characteristic.</strong> A choice of local frame <span class="math inline">\(\{e_1(x), e_2(x)\}\)</span> at each point <span class="math inline">\(x \in \mathcal{M}\)</span> — an orthonormal basis for <span class="math inline">\(T_x\mathcal{M}\)</span> varying smoothly with <span class="math inline">\(x\)</span> — is a section of the orthonormal frame bundle <span class="math inline">\(\text{O}(\mathcal{M})\)</span>. On a flat torus <span class="math inline">\(\mathbb{T}^2\)</span> (Euler characteristic zero), such a global section exists: you can consistently define a smooth north direction at every point. On the sphere <span class="math inline">\(S^2\)</span> (Euler characteristic <span class="math inline">\(+2\)</span>), no smooth global section exists — the hairy ball theorem guarantees that any smooth tangent vector field on <span class="math inline">\(S^2\)</span> must vanish somewhere. The Himalayan terrain, as a surface with boundaries and potentially nontrivial topology, generally has no canonical global smooth frame field. The surveyor’s choice of which compass direction to call <span class="math inline">\(\theta = 0\)</span> at each terrain point is a gauge choice — an arbitrary local convention that varies from point to point. Different drones defining <span class="math inline">\(\theta = 0\)</span> as north versus east produce gauge-related representations of the same terrain signal, related by the gauge transformation <span class="math inline">\(g: \mathcal{M} \to SO(2)\)</span> that rotates the local frame by <span class="math inline">\(\pi/2\)</span> everywhere. The gauge group <span class="math inline">\(\mathcal{G} = C^\infty(\mathcal{M}, SO(2))\)</span> is infinite-dimensional — one independent <span class="math inline">\(SO(2)\)</span> rotation per surface point — making gauge equivariance a strictly stronger requirement than global <span class="math inline">\(SO(2)\)</span> equivariance, because gauge transformations can rotate frames by different angles at different points independently.</p>
+<p><strong>The drone’s flight direction determining the local angular reference — with north-to-south and east-to-west flights producing <span class="math inline">\(\pi/2\)</span>-rotated coordinate systems for the same terrain — is the gauge transformation <span class="math inline">\(g(x) = R_{\pi/2} \in SO(2)\)</span> (constant gauge transformation by <span class="math inline">\(\pi/2\)</span>), and the break moment showing that the Gaussian kernel centred at <span class="math inline">\((200\text{m}, \pi/4)\)</span> sees a different terrain region under the two gauges is the formal failure of gauge invariance for a filter with angular dependence.</strong> Under gauge transformation <span class="math inline">\(g(x) = R_\alpha\)</span> (rotation by <span class="math inline">\(\alpha\)</span> at every point), the geodesic polar coordinates transform as <span class="math inline">\((r,\theta) \mapsto (r, \theta - \alpha)\)</span>, so the kernel <span class="math inline">\(g_k(r,\theta) = \exp(-\frac{1}{2}((r,\theta)-\mu_k)^\top\Sigma_k^{-1}((r,\theta)-\mu_k))\)</span> with <span class="math inline">\(\mu_k = (200\text{m}, \pi/4)\)</span> becomes <span class="math inline">\(g_k(r,\theta-\alpha)\)</span> with effective centre <span class="math inline">\((200\text{m}, \pi/4 + \alpha)\)</span>. For <span class="math inline">\(\alpha = \pi/2\)</span>: the kernel now centres at <span class="math inline">\((200\text{m}, 3\pi/4)\)</span> — northwest rather than northeast. The output of the convolution changes because the kernel is responding to signal values in a different geometric direction. Gauge equivariance resolves this: a gauge-equivariant feature of angular type <span class="math inline">\(\ell\)</span> transforms as <span class="math inline">\(F(x) \mapsto e^{i\ell\alpha} F(x)\)</span> under constant gauge transformation by <span class="math inline">\(\alpha\)</span>. For a scalar output (<span class="math inline">\(\ell=0\)</span>): <span class="math inline">\(F(x) \mapsto F(x)\)</span> — the avalanche risk prediction is unchanged. For the intermediate vector features (<span class="math inline">\(\ell=1\)</span>): <span class="math inline">\(F(x) \mapsto e^{i\alpha}F(x)\)</span> — they rotate with the local frame. The equivariant kernel constraint <span class="math inline">\(K(g\cdot v) = \rho_{\text{out}}(g)\circ K(v)\circ\rho_{\text{in}}(g)^{-1}\)</span> — derived from Schur’s lemma for the gauge group <span class="math inline">\(SO(2)\)</span> exactly as Schur’s lemma for <span class="math inline">\(S_n\)</span> and <span class="math inline">\(SO(3)\)</span> classified equivariant layers in earlier chapters — forces the kernel to decompose into radial-angular products <span class="math inline">\(K_\ell(r)D^{(\ell)}(\theta)\)</span>, where the radial part <span class="math inline">\(K_\ell(r)\)</span> is a learnable function and the angular part <span class="math inline">\(D^{(\ell)}(\theta)\)</span> is fixed by the representation theory of <span class="math inline">\(SO(2)\)</span>.</p>
+<hr>
+<p><strong>The surveyor carrying a compass across the terrain from base camp to the summit, keeping it as steady as possible but watching it rotate relative to the surface because of the terrain’s curvature — is parallel transport: the unique lifting of a curve <span class="math inline">\(\gamma: [0,1]\to\mathcal{M}\)</span> to a curve in the frame bundle that satisfies <span class="math inline">\(\nabla_{\dot\gamma}V = 0\)</span>, the connection equation expressing that the frame is not actively rotated but only passively moved with the curvature of the surface.</strong> The parallel transport ODE <span class="math inline">\(\dot V^k(t) + \Gamma^k_{ij}(\gamma(t))\dot\gamma^i(t)V^j(t) = 0\)</span> is a first-order linear ODE along the geodesic <span class="math inline">\(\gamma\)</span> — it has a unique solution for any initial frame <span class="math inline">\(V(0) = v_0\)</span> by the Picard-Lindelöf theorem from MATH 217, and this solution <span class="math inline">\(V(t) = P_\gamma^t v_0\)</span> is the parallel transport of <span class="math inline">\(v_0\)</span> to time <span class="math inline">\(t\)</span> along <span class="math inline">\(\gamma\)</span>. The Christoffel symbols <span class="math inline">\(\Gamma^k_{ij}\)</span> — which appear in both the geodesic equation and the parallel transport equation — are the components of the Levi-Civita connection in local coordinates, encoding how the metric tensor <span class="math inline">\(g_{ij}\)</span> varies from point to point. They are the precise mathematical encoding of the terrain’s local curvature that forces the compass to rotate as the surveyor walks: in a flat region (<span class="math inline">\(\Gamma^k_{ij} = 0\)</span>), the compass does not rotate; near a sharp ridge (large <span class="math inline">\(\Gamma^k_{ij}\)</span>), the compass rotates rapidly. The gauge-equivariant convolution kernel <span class="math inline">\(K_{P_\gamma}(\log_x(y)) = K(\log_x(y))\circ P_\gamma\)</span> incorporates parallel transport <span class="math inline">\(P_\gamma: T_y\mathcal{M}\to T_x\mathcal{M}\)</span> along the geodesic from <span class="math inline">\(y\)</span> to <span class="math inline">\(x\)</span>: this transports the feature at <span class="math inline">\(y\)</span> to the reference frame at <span class="math inline">\(x\)</span> before applying the filter kernel <span class="math inline">\(K\)</span>, ensuring that features at different surface points are compared in a consistent frame — the filter sees the terrain signal in the same coordinate system at every neighborhood point, corrected for the curvature-induced rotation of the parallel-transported frame.</p>
+<p><strong>The holonomy — the rotation accumulated by a frame carried by parallel transport around a closed terrain loop — is the integral <span class="math inline">\(\oint_\gamma A = \int_\Omega K\,d\text{vol}\)</span> of the Gaussian curvature over the region <span class="math inline">\(\Omega\)</span> enclosed by the loop, the local Gauss-Bonnet theorem.</strong> At a summit point surrounded by a closed loop of terrain, the holonomy of a frame parallel-transported around the loop is the total Gaussian curvature enclosed — positive for a convex summit (the compass has rotated by a positive angle when it returns), negative for a saddle point. In the gauge-equivariant network, holonomy is not a problem to be solved but a geometric fact to be respected: the parallel transport <span class="math inline">\(P_\gamma\)</span> used in the kernel correctly accounts for the frame rotation accumulated along the geodesic from <span class="math inline">\(y\)</span> to <span class="math inline">\(x\)</span>, so features at neighboring points are compared in frames that have been consistently transported rather than arbitrarily oriented. The holonomy angle — the curvature-dependent rotation — is exactly the mismatch that a naive non-gauge-equivariant network tries to learn away from data, wasting capacity on a geometric artifact. A gauge-equivariant network handles it structurally, by including <span class="math inline">\(P_\gamma\)</span> in the kernel definition.</p>
+<hr>
+<p><strong>The MoNet Gaussian kernel <span class="math inline">\(g_k(r,\theta) = \exp(-\frac{1}{2}((r,\theta)-\mu_k)^\top\Sigma_k^{-1}((r,\theta)-\mu_k))\)</span> centred at <span class="math inline">\((200\text{m}, \pi/4)\)</span> — the northeast-sensing kernel that learns to detect snow loading from prevailing winds — is a Gaussian probability density in the pseudo-coordinate space <span class="math inline">\(\mathbb{R}^m\)</span>, with the Mahalanobis distance <span class="math inline">\((\mathbf{u}-\mu_k)^\top\Sigma_k^{-1}(\mathbf{u}-\mu_k)\)</span> measuring the elliptical distance from the kernel centre in the local coordinate system.</strong> The learnable mean <span class="math inline">\(\mu_k\in\mathbb{R}^m\)</span> is the centre of the kernel — the specific geometric relationship <span class="math inline">\((r_k, \theta_k)\)</span> between receiver <span class="math inline">\(x\)</span> and sender <span class="math inline">\(y\)</span> that this kernel responds to most strongly. The learnable covariance <span class="math inline">\(\Sigma_k\in\mathbb{R}^{m\times m}\)</span> (positive definite by construction from MATH 302) determines the kernel’s spatial extent and anisotropy: a diagonal <span class="math inline">\(\Sigma_k = \text{diag}(\sigma_r^2, \sigma_\theta^2)\)</span> produces an axis-aligned ellipse in <span class="math inline">\((r,\theta)\)</span> space, responding strongly to signals within <span class="math inline">\(\sigma_r\)</span> metres radially and <span class="math inline">\(\sigma_\theta\)</span> radians angularly of the centre; a full <span class="math inline">\(\Sigma_k\)</span> produces a rotated ellipse capturing correlations between radial and angular sensitivity. The physical interpretation of learned kernels — northeast-sensing, uphill-sensing, ring-averaging — is the direct readout of the learned <span class="math inline">\(\mu_k\)</span> and <span class="math inline">\(\Sigma_k\)</span> in geometric coordinates, making MoNet’s learned filters interpretable in physical terrain terms in a way that standard CNN filters on flat images are not.</p>
+<p><strong>The MoNet layer <span class="math inline">\((f\star_{\text{MoNet}}w)(x) = \sum_{k=1}^K\sum_{y\in\mathcal{N}(x)}f(y)\cdot g_k(\mathbf{u}(x,y))\cdot w_k\)</span> — weighted aggregation of neighbourhood signal values with Gaussian mixture weights in local coordinates — unifies manifold geodesic convolution and graph spatial convolution as special cases of the same pseudo-coordinate framework.</strong> For the Himalayan terrain: <span class="math inline">\(\mathcal{N}(x) = B_r(x)\)</span> is the geodesic ball, <span class="math inline">\(\mathbf{u}(x,y) = (r_{xy}, \theta_{xy})\)</span> are geodesic polar coordinates, and the kernel is a Gaussian in geodesic coordinate space — continuous geodesic convolution. For the Nepal Electricity Authority’s transmission network from Chapter 2: <span class="math inline">\(\mathcal{N}(x) = \mathcal{N}(i)\)</span> is the graph neighbourhood, <span class="math inline">\(\mathbf{u}(i,j) = (1/\sqrt{d_i}, 1/\sqrt{d_j})\)</span> are degree-normalized pseudo-coordinates, and the kernel is a Gaussian in degree space — the GCN as a single-kernel MoNet. The unification theorem makes precise what the Chapter 2 spectral analysis showed informally: graph convolution and manifold convolution are both instances of locally-weighted neighbourhood aggregation, differing only in how the neighbourhood is defined (hop-count versus geodesic distance) and how the local coordinates are assigned (graph-structural versus geometric). The parameter count <span class="math inline">\((K\times(m + m^2 + d_{\text{in}}\times d_{\text{out}}))\)</span> — independent of <span class="math inline">\(n\)</span>, the number of surface sample points — enables transfer across different discretizations of the same manifold: a MoNet trained on a coarse terrain mesh transfers to a fine terrain mesh without retraining, because the learned Gaussian kernels are parameterized in geometric coordinates (metres and radians) rather than in node indices.</p>
+<hr>
+<p><strong>The DiffusionNet architecture — using the heat operator <span class="math inline">\(e^{-t\Delta_\mathcal{M}}\)</span> as the spatial propagation mechanism — is the intrinsic alternative to geodesic convolution that bypasses the geodesic polar coordinate system entirely and operates directly in the spectral domain of the Laplace-Beltrami operator.</strong> The heat equation <span class="math inline">\(\partial_t u = \Delta_\mathcal{M}u\)</span> on the manifold with initial condition <span class="math inline">\(u(x,0) = f(x)\)</span> has solution <span class="math inline">\(u(x,t) = (e^{-t\Delta_\mathcal{M}}f)(x) = \sum_k e^{-\lambda_k t}\langle f,\phi_k\rangle\phi_k(x)\)</span> — the heat diffused from the initial signal <span class="math inline">\(f\)</span> for time <span class="math inline">\(t\)</span>, with each eigenmode <span class="math inline">\(\phi_k\)</span> decaying at rate <span class="math inline">\(e^{-\lambda_k t}\)</span>. Short diffusion time <span class="math inline">\(t\to 0\)</span>: only the signal at <span class="math inline">\(x\)</span> itself contributes (no diffusion has occurred). Long diffusion time <span class="math inline">\(t\to\infty\)</span>: the signal diffuses to the global mean (all modes except <span class="math inline">\(\phi_0\)</span> have decayed). Intermediate <span class="math inline">\(t\)</span>: the diffused signal at <span class="math inline">\(x\)</span> is a weighted average of the original signal over a geodesic neighbourhood of radius <span class="math inline">\(\sim\sqrt{t}\)</span>, with the geodesic ball-like locality emerging from the heat kernel’s Gaussian concentration. The DiffusionNet feature <span class="math inline">\(e^{-t\Delta}h_i^{\text{in}}\)</span> is computed via the truncated eigendecomposition <span class="math inline">\(\Phi e^{-t\Lambda}\Phi^\top h^{\text{in}}\)</span> using the first <span class="math inline">\(K\)</span> Laplace-Beltrami eigenvectors <span class="math inline">\(\Phi = [\phi_1|\ldots|\phi_K]\)</span> — making DiffusionNet’s spatial support intrinsically defined by the manifold’s own geometry, invariant to surface discretization (because <span class="math inline">\(\Delta_\mathcal{M}\)</span>’s eigenfunctions are intrinsic), and directly continuous with the spectral graph theory of Chapter 2 (because the graph Laplacian eigenvectors converge to <span class="math inline">\(\Delta_\mathcal{M}\)</span>’s eigenfunctions by the Belkin-Niyogi theorem).</p>
+<hr>
+<p><strong>The three physical interpretations of learned MoNet kernels — the uphill kernel at <span class="math inline">\((50\text{m}, \text{uphill})\)</span>, the wind-loading kernel at <span class="math inline">\((300\text{m}, \text{upwind})\)</span>, and the ring-averaging kernel with large angular covariance — are the data-driven discoveries of physical transfer functions in the local geodesic coordinate space that capture the causal structure of avalanche dynamics.</strong> Each Gaussian kernel <span class="math inline">\(g_k(r,\theta)\)</span> is a learned spatial filter in the intrinsic coordinate system of the terrain: its mean <span class="math inline">\(\mu_k = (r_k,\theta_k)\)</span> identifies the most relevant neighbour geometry, and its covariance <span class="math inline">\(\Sigma_k\)</span> identifies the spatial scale of the effect. The uphill kernel — small <span class="math inline">\(r\)</span>, direction <span class="math inline">\(\theta_{\text{uphill}}\)</span>, narrow covariance — is the discrete derivative operator in the slope direction: <span class="math inline">\(\nabla_{\text{slope}}f(x) \approx \frac{f(\exp_x(50\text{m}\cdot e_{\text{uphill}})) - f(x)}{50\text{m}}\)</span>, capturing the local slope gradient as a first-order difference quotient in the geodesic uphill direction. The wind-loading kernel — larger <span class="math inline">\(r\)</span>, direction <span class="math inline">\(\theta_{\text{upwind}}\)</span>, moderate covariance — captures the non-local transfer of snow mass from upwind to downwind terrain through a spatial cross-correlation at the characteristic wind-transport distance of 300 metres. The ring-averaging kernel — fixed <span class="math inline">\(r\)</span>, large <span class="math inline">\(\sigma_\theta\)</span> — is a radially symmetric mean filter at a specific distance, the geodesic-coordinate analogue of the isotropic GCN layer from Chapter 2: it aggregates signal values along a geodesic circle of radius <span class="math inline">\(r\)</span> around <span class="math inline">\(x\)</span>, capturing the regional snow accumulation level without directional bias. All three are instances of the same MoNet formula with different learned <span class="math inline">\((\mu_k, \Sigma_k)\)</span> — the geometric learning framework discovers directionally-sensitive, distance-specific physical patterns without any domain expertise encoded by hand.</p>
+<hr>
+<p><strong>The connection to MATH 217 is threefold and complete.</strong> The geodesic equation <span class="math inline">\(\ddot\gamma^k + \Gamma^k_{ij}\dot\gamma^i\dot\gamma^j = 0\)</span> is the Euler-Lagrange equation for the length functional — a second-order nonlinear ODE system whose unique solution for each initial condition <span class="math inline">\((x,v)\)</span> is guaranteed by Picard-Lindelöf, giving the exponential map <span class="math inline">\(\exp_x(v) = \gamma_v(1)\)</span> as the value of the unique geodesic at time 1. The parallel transport equation <span class="math inline">\(\dot V^k + \Gamma^k_{ij}\dot\gamma^i V^j = 0\)</span> is a first-order linear ODE along <span class="math inline">\(\gamma\)</span> — uniquely solvable by Picard-Lindelöf, giving parallel transport as the solution operator mapping initial frames to transported frames. The Laplace-Beltrami eigenvalue problem <span class="math inline">\(\Delta_\mathcal{M}\phi = -\lambda\phi\)</span> is an elliptic PDE on <span class="math inline">\(\mathcal{M}\)</span> — the Riemannian Sturm-Liouville problem whose eigenfunctions <span class="math inline">\(\{\phi_k\}\)</span> form a complete orthonormal basis for <span class="math inline">\(L^2(\mathcal{M})\)</span> by the spectral theorem for compact self-adjoint operators, completing the circle from the one-dimensional Sturm-Liouville theory of MATH 217 to its infinite-dimensional Riemannian generalization. <strong>The connection to MATH 302 is the positive definiteness of the metric tensor <span class="math inline">\(g_{ij}(x)\)</span> and MoNet covariance <span class="math inline">\(\Sigma_k\)</span> — both real symmetric positive definite matrices whose spectral properties (positive eigenvalues, Cholesky factorization, well-defined square root) enable the Riemannian volume element <span class="math inline">\(\sqrt{|g|}\)</span> and the Mahalanobis distance <span class="math inline">\((\mathbf{u}-\mu_k)^\top\Sigma_k^{-1}(\mathbf{u}-\mu_k)\)</span>.</strong> The parallel transport <span class="math inline">\(P_\gamma\in O(d)\)</span> is an orthogonal matrix — preserving inner products <span class="math inline">\(g(P_\gamma u, P_\gamma v) = g(u,v)\)</span> — exactly the orthogonal matrices of MATH 302, here appearing as the linear isometry implementing consistent frame comparison across curved terrain. <strong>The connection to MATH 213 and MATH 325 is the <span class="math inline">\(L^2(\mathcal{M},d\text{vol})\)</span> Hilbert space structure underlying the Laplace-Beltrami spectral theory</strong> — Green’s identity <span class="math inline">\(\langle\Delta_\mathcal{M}f,h\rangle_{L^2} = -\int_\mathcal{M}g(\nabla f,\nabla h)\,d\text{vol}\)</span> is the Riemannian integration by parts from Analysis I, and the completeness of the eigenfunction basis in <span class="math inline">\(L^2(\mathcal{M})\)</span> is the manifold generalization of the Fourier basis completeness in <span class="math inline">\(L^2([-\pi,\pi])\)</span> from Analysis II.</p>
+<hr>
+<p>The ICIMOD Himalayan terrain survey — its flat map distortion, geodesic neighbourhood, exponential map flattening, gauge ambiguity of the compass, parallel transport of the surveyor’s frame, MoNet Gaussian kernels, and avalanche risk prediction — is now completely dissolved into its mathematical form. The flat map distortion is the failure of any global isometric embedding of <span class="math inline">\((\mathcal{M},g)\)</span> into <span class="math inline">\((\mathbb{R}^2,g_{\text{Eucl}})\)</span> by Theorema Egregium. The geodesic distance is <span class="math inline">\(d_\mathcal{M}(x,y) = \inf_\gamma\ell(\gamma)\)</span>. The geodesic ball is <span class="math inline">\(B_r(x)\)</span>. The local flattening is <span class="math inline">\(\exp_x: T_x\mathcal{M}\to\mathcal{M}\)</span>. The geodesic polar coordinates are <span class="math inline">\((r,\theta)\)</span> in <span class="math inline">\(T_x\mathcal{M}\)</span>. The metric distortion is <span class="math inline">\(f(r,\theta) = r - \frac{K(x)}{6}r^3 + O(r^5)\)</span>. The gauge ambiguity is the non-existence of a global smooth section of <span class="math inline">\(\text{O}(\mathcal{M})\)</span>. The gauge group is <span class="math inline">\(\mathcal{G} = C^\infty(\mathcal{M},SO(2))\)</span>. Parallel transport is <span class="math inline">\(\nabla_{\dot\gamma}V = 0\)</span>. Holonomy is <span class="math inline">\(\int_\Omega K\,d\text{vol}\)</span>. The MoNet kernel is <span class="math inline">\(g_k(\mathbf{u}) = \exp(-\frac{1}{2}(\mathbf{u}-\mu_k)^\top\Sigma_k^{-1}(\mathbf{u}-\mu_k))\)</span>. The gauge-equivariant kernel constraint is <span class="math inline">\(K(g\cdot v) = \rho_{\text{out}}(g)\circ K(v)\circ\rho_{\text{in}}(g)^{-1}\)</span>.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

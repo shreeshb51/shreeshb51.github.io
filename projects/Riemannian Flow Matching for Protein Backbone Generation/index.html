@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2026-07-13">
+
+<title>Riemannian Flow Matching for Protein Backbone Generation – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Riemannian Flow Matching for Protein Backbone Generation</li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#riemannian-flow-matching-for-protein-backbone-generation" id="toc-riemannian-flow-matching-for-protein-backbone-generation" class="nav-link active" data-scroll-target="#riemannian-flow-matching-for-protein-backbone-generation">Riemannian Flow Matching for Protein Backbone Generation</a>
+  <ul class="collapse">
+  <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#intuitive-explanation" id="toc-intuitive-explanation" class="nav-link" data-scroll-target="#intuitive-explanation">Intuitive Explanation</a></li>
+  <li><a href="#mathematical-foundations" id="toc-mathematical-foundations" class="nav-link" data-scroll-target="#mathematical-foundations">Mathematical Foundations</a></li>
+  <li><a href="#riemannian-flow-matching-on-mathbbt2" id="toc-riemannian-flow-matching-on-mathbbt2" class="nav-link" data-scroll-target="#riemannian-flow-matching-on-mathbbt2">Riemannian Flow Matching on <span class="math inline">\(\mathbb{T}^2\)</span></a></li>
+  <li><a href="#geodesic-ode-integrator" id="toc-geodesic-ode-integrator" class="nav-link" data-scroll-target="#geodesic-ode-integrator">Geodesic ODE Integrator</a></li>
+  <li><a href="#the-full-arc-how-every-phase-led-here" id="toc-the-full-arc-how-every-phase-led-here" class="nav-link" data-scroll-target="#the-full-arc-how-every-phase-led-here">The Full Arc: How Every Phase Led Here</a></li>
+  <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">Results</a></li>
+  <li><a href="#key-insights" id="toc-key-insights" class="nav-link" data-scroll-target="#key-insights">Key Insights</a></li>
+  <li><a href="#implementation-notes" id="toc-implementation-notes" class="nav-link" data-scroll-target="#implementation-notes">Implementation Notes</a></li>
+  <li><a href="#dependencies" id="toc-dependencies" class="nav-link" data-scroll-target="#dependencies">Dependencies</a></li>
+  <li><a href="#note" id="toc-note" class="nav-link" data-scroll-target="#note">Note</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Riemannian Flow Matching for Protein Backbone Generation</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">GDL + COT</div>
+  </div>
+  </div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">July 13, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="riemannian-flow-matching-for-protein-backbone-generation" class="level1">
+<h1>Riemannian Flow Matching for Protein Backbone Generation</h1>
+<hr>
+<section id="overview" class="level2">
+<h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<p>This project implements Riemannian Flow Matching (RFM) on the torus <span class="math inline">\(\mathbb{T}^2\)</span> to generate protein backbone conformations parameterized by <span class="math inline">\((\phi, \psi)\)</span> torsion angle pairs. Rather than treating angle pairs as elements of <span class="math inline">\(\mathbb{R}^2\)</span>, the model enforces the hard geometric constraint that all intermediate and final states lie on the manifold <span class="math inline">\(\mathbb{T}^2 = S^1 \times S^1\)</span> at every step of the generative flow — replacing Euclidean interpolation and subtraction with geodesic interpolation via <span class="math inline">\(\text{exp}\)</span> and <span class="math inline">\(\log\)</span> maps. The project contributes a clean, from-scratch demonstration that two surgical substitutions in the Conditional Flow Matching (CFM) loss — one in the interpolation step and one in the regression target — yield a 43.2% reduction in Jensen-Shannon divergence against the ground-truth Ramachandran distribution compared to an identical Euclidean baseline, with zero manifold violations across all integration steps.</p>
+<p><strong>Core implementations covered:</strong></p>
+<ul>
+<li><span class="math inline">\(\text{exp\_map}(p, v)\)</span> and <span class="math inline">\(\text{log\_map}(p, q)\)</span> on <span class="math inline">\(\mathbb{T}^2 = S^1 \times S^1\)</span> from scratch</li>
+<li>Geodesic interpolation <span class="math inline">\(\gamma(t) = \text{exp}_{p_0}(t \cdot \text{log}_{p_0}(p_1))\)</span> replacing Euclidean linear interpolation</li>
+<li>Riemannian CFM loss with tangent vector regression target <span class="math inline">\(\frac{1}{1-t}\text{log}_{x_t}(x_1)\)</span></li>
+<li>Manifold-constrained Euler integrator: <span class="math inline">\(x_{t+\Delta t} = \text{exp}_{x_t}(\Delta t \cdot v_\theta(x_t, t))\)</span></li>
+<li>Periodic angle encoding via <span class="math inline">\((\sin\phi, \cos\phi, \sin\psi, \cos\psi)\)</span> to respect <span class="math inline">\(\mathbb{T}^2\)</span> topology</li>
+<li>Quantitative Ramachandran evaluation: structural region coverage and Jensen-Shannon divergence</li>
+<li>Euclidean CFM baseline trained under identical budget for controlled ablation</li>
+</ul>
+<hr>
+</section>
+<section id="intuitive-explanation" class="level2">
+<h2 class="anchored" data-anchor-id="intuitive-explanation">Intuitive Explanation</h2>
+<p><strong>1. Why <span class="math inline">\((\phi, \psi)\)</span> Angles Live on a Torus, Not a Plane</strong></p>
+<p>Imagine a clock face. The hands can rotate freely, and <span class="math inline">\(12{:}00\)</span> and <span class="math inline">\(12{:}00\)</span>-after-one-full-rotation are physically identical positions — the angle wraps around. Now imagine two independent clocks, one for <span class="math inline">\(\phi\)</span> and one for <span class="math inline">\(\psi\)</span>. Each angle lives on its own circle <span class="math inline">\(S^1\)</span>, and together they define a position on the surface of a donut — a torus <span class="math inline">\(\mathbb{T}^2\)</span>. If you try to flatten this donut into a square grid and do arithmetic on it as if it were a flat plane, you introduce a fake wall at <span class="math inline">\(\pm\pi\)</span> that does not exist in the real geometry. Protein backbone angles <span class="math inline">\(\phi\)</span> and <span class="math inline">\(\psi\)</span> are exactly this kind of periodic quantity: <span class="math inline">\(\phi = -\pi\)</span> and <span class="math inline">\(\phi = +\pi\)</span> describe the exact same physical bond orientation. The domain is therefore <span class="math inline">\(\mathbb{T}^2 = S^1 \times S^1\)</span>, a compact manifold without boundary, not a rectangle in <span class="math inline">\(\mathbb{R}^2\)</span>.</p>
+<hr>
+<p><strong>2. What the Ramachandran Plot Actually Is</strong></p>
+<p>Think of the Ramachandran plot as a map of allowed parking spots for a protein backbone. Most of the map is a no-parking zone — atoms physically collide if you try to park there (steric hindrance). The two main allowed clusters correspond to <span class="math inline">\(\alpha\)</span>-helices (a tight left cluster near <span class="math inline">\(\phi \approx -60°, \psi \approx -45°\)</span>) and <span class="math inline">\(\beta\)</span>-sheets (an upper-left cluster near <span class="math inline">\(\phi \approx -120°, \psi \approx 130°\)</span>). These clusters are not uniformly distributed — they are sharply concentrated by the physical constraints of peptide bond geometry. A generative model for protein backbones must learn to place probability mass in exactly these clusters, on the correct manifold <span class="math inline">\(\mathbb{T}^2\)</span>, without leaking density into the forbidden zones.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="ramachandran_groundtruth.png" class="img-fluid figure-img"></p>
+<figcaption>Ground-truth Ramachandran plot</figcaption>
+</figure>
+</div>
+<p><em>Ground-truth Ramachandran plot of 50,000 residues sampled from Lovell et al.&nbsp;(2003) population statistics. Red box: <span class="math inline">\(\alpha\)</span>-helix region (32.9% of residues). Blue box: <span class="math inline">\(\beta\)</span>-sheet region (22.1% of residues).</em></p>
+<hr>
+<p><strong>3. What the <span class="math inline">\(\text{exp}\)</span> and <span class="math inline">\(\log\)</span> Maps Do</strong></p>
+<p>On a flat plane, moving from point <span class="math inline">\(A\)</span> to point <span class="math inline">\(B\)</span> is just addition: take your position, add a velocity vector, arrive somewhere new. On a curved surface like a torus, naive addition sends you off the surface entirely. The exponential map <span class="math inline">\(\text{exp}_p(v)\)</span> is the operation that says: starting at point <span class="math inline">\(p\)</span> on the manifold, walk in the direction of tangent vector <span class="math inline">\(v\)</span> for exactly <span class="math inline">\(\|v\|\)</span> steps along the surface, and tell me where you land — always on the manifold, never off it. The logarithm map <span class="math inline">\(\text{log}_p(q)\)</span> is the inverse: given two points <span class="math inline">\(p\)</span> and <span class="math inline">\(q\)</span> on the manifold, find the shortest path between them and return the tangent vector at <span class="math inline">\(p\)</span> that points in that direction. On <span class="math inline">\(\mathbb{T}^2\)</span>, both operations reduce to modular arithmetic, but their geometric meaning is exact: they replace Euclidean addition and subtraction with their manifold-aware equivalents.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="logmap_field.png" class="img-fluid figure-img"></p>
+<figcaption>log_map displacement field</figcaption>
+</figure>
+</div>
+<p><em>Displacement field of <span class="math inline">\(\text{log\_map}(x, \text{target})\)</span> for a fixed target at <span class="math inline">\((2.8, 2.8)\)</span>. Arrows near the <span class="math inline">\(\pm\pi\)</span> corners correctly wrap across the boundary rather than pointing away from the target — confirming torus topology is respected.</em></p>
+<hr>
+<p><strong>4. Why Euclidean Flow Matching Fails on <span class="math inline">\(\mathbb{T}^2\)</span></strong></p>
+<p>Standard Conditional Flow Matching (CFM) learns a vector field that pushes a source distribution toward a target distribution by training a network to regress straight-line velocities <span class="math inline">\(x_1 - x_0\)</span> between paired samples. Near the <span class="math inline">\(\pm\pi\)</span> boundary of the torsion angle domain, this breaks in two compounding ways. First, the interpolation <span class="math inline">\(x_t = (1-t)x_0 + t x_1\)</span> draws a straight line through the interior of the square even when the shortest path on <span class="math inline">\(\mathbb{T}^2\)</span> crosses the boundary — pushing intermediate samples through sterically forbidden regions. Second, the regression target <span class="math inline">\(x_1 - x_0\)</span> points in the wrong direction entirely: for a source at <span class="math inline">\(\phi = -2.9\)</span> and a target at <span class="math inline">\(\phi = +2.9\)</span>, the Euclidean target vector has magnitude <span class="math inline">\(5.8\)</span> pointing rightward, while the correct geodesic displacement has magnitude <span class="math inline">\(0.48\)</span> pointing leftward across the boundary. The network is trained on the wrong signal from the first gradient step — no post-hoc wrapping at inference can undo this. The <span class="math inline">\(\beta\)</span>-sheet <span class="math inline">\(\psi\)</span> coordinate sits just <span class="math inline">\(0.17\)</span> radians (<span class="math inline">\(10°\)</span>) from the <span class="math inline">\(+\pi\)</span> boundary, making it the most structurally damaged region under the Euclidean assumption.</p>
+<hr>
+</section>
+<section id="mathematical-foundations" class="level2">
+<h2 class="anchored" data-anchor-id="mathematical-foundations">Mathematical Foundations</h2>
+<section id="the-torus-mathbbt2-as-a-riemannian-manifold" class="level3">
+<h3 class="anchored" data-anchor-id="the-torus-mathbbt2-as-a-riemannian-manifold">The Torus <span class="math inline">\(\mathbb{T}^2\)</span> as a Riemannian Manifold</h3>
+<p>The domain of protein backbone torsion angles is the flat torus <span class="math inline">\(\mathbb{T}^2 = S^1 \times S^1\)</span>, defined as the quotient space:</p>
+<p><span class="math display">\[\mathbb{T}^2 = \mathbb{R}^2 / (2\pi\mathbb{Z})^2\]</span></p>
+<p>Concretely, this means two points <span class="math inline">\((x_1, y_1)\)</span> and <span class="math inline">\((x_2, y_2)\)</span> in <span class="math inline">\(\mathbb{R}^2\)</span> are identified as the same point on <span class="math inline">\(\mathbb{T}^2\)</span> if and only if:</p>
+<p><span class="math display">\[(x_1 - x_2, y_1 - y_2) = (2\pi k, 2\pi m) \quad \text{for some } k, m \in \mathbb{Z}\]</span></p>
+<p>The two explicit boundary identifications that make the square <span class="math inline">\([-\pi, \pi)^2\)</span> into a seamless manifold without boundary are:</p>
+<p><span class="math display">\[(-\pi, y) \sim (\pi, y) \quad \text{for all } y \in [-\pi, \pi) \qquad \text{(left edge = right edge)}\]</span></p>
+<p><span class="math display">\[(x, -\pi) \sim (x, \pi) \quad \text{for all } x \in [-\pi, \pi) \qquad \text{(bottom edge = top edge)}\]</span></p>
+<p><span class="math inline">\(\mathbb{T}^2\)</span> carries the flat product metric inherited from <span class="math inline">\(\mathbb{R}^2\)</span>. In local coordinates <span class="math inline">\((\phi, \psi)\)</span>, the metric tensor is:</p>
+<p><span class="math display">\[g = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; 1 \end{pmatrix} = I_2\]</span></p>
+<p>This means the arc length between two infinitesimally close points is <span class="math inline">\(ds^2 = d\phi^2 + d\psi^2\)</span>, with no cross terms — the <span class="math inline">\(\phi\)</span> and <span class="math inline">\(\psi\)</span> directions are orthogonal and the manifold is intrinsically flat. The Gaussian curvature is <span class="math inline">\(K = 0\)</span> everywhere. Geodesics are straight lines with periodic boundary conditions.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="torus_flat.png" class="img-fluid figure-img"></p>
+<figcaption>Torus as flat square</figcaption>
+</figure>
+</div>
+<p><em><span class="math inline">\(\mathbb{T}^2\)</span> represented as a flat square <span class="math inline">\([-\pi, \pi)^2\)</span> with identified edges. Matching arrows (red: left <span class="math inline">\(\equiv\)</span> right, blue: bottom <span class="math inline">\(\equiv\)</span> top) show which boundary points are geometrically identical. Torsion angle data is overlaid — note the density near edges that naively appears disconnected but is physically continuous across the identification.</em></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="torus_embedded.png" class="img-fluid figure-img"></p>
+<figcaption>Torus embedded in R3</figcaption>
+</figure>
+</div>
+<p><em>The same <span class="math inline">\(\mathbb{T}^2\)</span> embedded in <span class="math inline">\(\mathbb{R}^3\)</span> via <span class="math inline">\(x = (R + r\cos\psi)\cos\phi\)</span>, <span class="math inline">\(y = (R + r\cos\psi)\sin\phi\)</span>, <span class="math inline">\(z = r\sin\psi\)</span> with <span class="math inline">\(R=2.0\)</span>, <span class="math inline">\(r=0.7\)</span>. The embedded surface has variable extrinsic curvature, but the intrinsic geometry used throughout this project is the flat metric <span class="math inline">\(g = I_2\)</span>. This visualization is for intuition only.</em></p>
+<hr>
+</section>
+<section id="exponential-and-logarithm-maps-on-mathbbt2" class="level3">
+<h3 class="anchored" data-anchor-id="exponential-and-logarithm-maps-on-mathbbt2">Exponential and Logarithm Maps on <span class="math inline">\(\mathbb{T}^2\)</span></h3>
+<p>Because <span class="math inline">\(\mathbb{T}^2\)</span> is flat and geodesics are straight lines with periodic boundary conditions, both maps reduce to modular arithmetic applied component-wise — one operation per <span class="math inline">\(S^1\)</span> factor.</p>
+<p><strong>Logarithm map</strong> <span class="math inline">\(\text{log}_p : \mathbb{T}^2 \to T_p\mathbb{T}^2\)</span></p>
+<p>Given a base point <span class="math inline">\(p \in \mathbb{T}^2\)</span> and a target point <span class="math inline">\(q \in \mathbb{T}^2\)</span>, the logarithm map returns the shortest geodesic tangent vector at <span class="math inline">\(p\)</span> pointing toward <span class="math inline">\(q\)</span>:</p>
+<p><span class="math display">\[\text{log}_p(q) = \left(\left(q - p + \pi\right) \bmod 2\pi\right) - \pi\]</span></p>
+<p>applied component-wise. The three-step operation — shift by <span class="math inline">\(+\pi\)</span>, reduce modulo <span class="math inline">\(2\pi\)</span>, shift back by <span class="math inline">\(-\pi\)</span> — maps any raw difference <span class="math inline">\(q - p\)</span> into the range <span class="math inline">\([-\pi, \pi)\)</span>, selecting the signed shortest arc on each <span class="math inline">\(S^1\)</span> factor. For example, with <span class="math inline">\(p = -2.9\)</span> and <span class="math inline">\(q = 2.9\)</span>:</p>
+<p><span class="math display">\[\text{log}_{-2.9}(2.9) = ((2.9 - (-2.9) + \pi) \bmod 2\pi) - \pi = (8.94 \bmod 6.28) - \pi = -0.4832\]</span></p>
+<p>The naive difference <span class="math inline">\(q - p = 5.8\)</span> is wrong; the geodesic displacement <span class="math inline">\(-0.4832\)</span> crosses the <span class="math inline">\(\pm\pi\)</span> boundary in the short direction.</p>
+<p><strong>Exponential map</strong> <span class="math inline">\(\text{exp}_p : T_p\mathbb{T}^2 \to \mathbb{T}^2\)</span></p>
+<p>Given a base point <span class="math inline">\(p \in \mathbb{T}^2\)</span> and a tangent vector <span class="math inline">\(v \in T_p\mathbb{T}^2\)</span>, the exponential map returns the point reached by walking distance <span class="math inline">\(\|v\|\)</span> along the geodesic from <span class="math inline">\(p\)</span> in direction <span class="math inline">\(v\)</span>:</p>
+<p><span class="math display">\[\text{exp}_p(v) = \left(\left(p + v + \pi\right) \bmod 2\pi\right) - \pi\]</span></p>
+<p>applied component-wise. The codomain is always <span class="math inline">\(\mathbb{T}^2\)</span> by construction — the modular wrapping guarantees the output lies in <span class="math inline">\([-\pi, \pi)\)</span> regardless of the magnitude of <span class="math inline">\(v\)</span>. The two maps satisfy the round-trip identity:</p>
+<p><span class="math display">\[\text{exp}_p\!\left(\text{log}_p(q)\right) = q \quad \forall\, p, q \in \mathbb{T}^2\]</span></p>
+<p>verified numerically on all 50,000 pairs in the dataset with component-wise error below <span class="math inline">\(10^{-6}\)</span>.</p>
+<hr>
+</section>
+<section id="riemannian-conditional-flow-matching-loss" class="level3">
+<h3 class="anchored" data-anchor-id="riemannian-conditional-flow-matching-loss">Riemannian Conditional Flow Matching Loss</h3>
+<p>Standard Euclidean CFM learns a vector field <span class="math inline">\(v_\theta : \mathbb{R}^2 \times [0,1] \to \mathbb{R}^2\)</span> by minimizing:</p>
+<p><span class="math display">\[\mathcal{L}_{\text{Euclid}}(\theta) = \mathbb{E}_{t,\, x_0 \sim \mu,\, x_1 \sim \nu}\left[\left\|v_\theta(x_t, t) - (x_1 - x_0)\right\|^2\right]\]</span></p>
+<p>where <span class="math inline">\(x_t = (1-t)x_0 + t x_1\)</span> is the Euclidean linear interpolation. This objective encodes two Euclidean assumptions that fail on <span class="math inline">\(\mathbb{T}^2\)</span>.</p>
+<p>Riemannian CFM replaces both with their manifold-aware counterparts:</p>
+<p><span class="math display">\[\mathcal{L}_{\text{Riem}}(\theta) = \mathbb{E}_{t,\, x_0 \sim \mu,\, x_1 \sim \nu}\left[\left\|v_\theta(x_t, t) - \frac{\text{log}_{x_t}(x_1)}{1-t}\right\|^2\right]\]</span></p>
+<p>where the interpolated point is now:</p>
+<p><span class="math display">\[x_t = \text{exp}_{x_0}\!\left(t \cdot \text{log}_{x_0}(x_1)\right)\]</span></p>
+<p>The two substitutions and their justifications are:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Location</th>
+<th>Euclidean expression</th>
+<th>Riemannian replacement</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Interpolation</td>
+<td><span class="math inline">\((1-t)x_0 + t x_1\)</span></td>
+<td><span class="math inline">\(\text{exp}_{x_0}(t \cdot \text{log}_{x_0}(x_1))\)</span></td>
+<td>Stays on <span class="math inline">\(\mathbb{T}^2\)</span>; follows shortest geodesic</td>
+</tr>
+<tr class="even">
+<td>Regression target</td>
+<td><span class="math inline">\(x_1 - x_0\)</span></td>
+<td><span class="math inline">\(\frac{1}{1-t}\text{log}_{x_t}(x_1)\)</span></td>
+<td>Tangent vector at <span class="math inline">\(x_t\)</span>; respects wrap-around</td>
+</tr>
+</tbody>
+</table>
+<p>The factor <span class="math inline">\(\frac{1}{1-t}\)</span> normalizes the regression target to constant speed: <span class="math inline">\(\text{log}_{x_t}(x_1)\)</span> contracts naturally as <span class="math inline">\(x_t \to x_1\)</span>, so dividing by <span class="math inline">\((1-t)\)</span> recovers the constant-velocity parameterization of the geodesic. Time <span class="math inline">\(t\)</span> is clamped to <span class="math inline">\([0, 0.999]\)</span> during training to avoid division instability.</p>
+<hr>
+</section>
+<section id="geodesic-euler-integrator" class="level3">
+<h3 class="anchored" data-anchor-id="geodesic-euler-integrator">Geodesic Euler Integrator</h3>
+<p>At inference, the learned vector field <span class="math inline">\(v_\theta\)</span> is integrated from <span class="math inline">\(t=0\)</span> to <span class="math inline">\(t=1\)</span> using a manifold-constrained Euler scheme. The standard Euclidean update <span class="math inline">\(x_{t+\Delta t} = x_t + \Delta t \cdot v_\theta(x_t, t)\)</span> allows trajectories to accumulate off <span class="math inline">\(\mathbb{T}^2\)</span> over multiple steps. The geodesic integrator replaces this with:</p>
+<p><span class="math display">\[x_{t+\Delta t} = \text{exp}_{x_t}\!\left(\Delta t \cdot v_\theta(x_t, t)\right)\]</span></p>
+<p>Because <span class="math inline">\(\text{exp}_p\)</span> maps any tangent vector back onto <span class="math inline">\(\mathbb{T}^2\)</span> by construction, every intermediate state <span class="math inline">\(x_t\)</span> is guaranteed to lie on the manifold regardless of step size <span class="math inline">\(\Delta t\)</span>. This was verified explicitly: zero manifold violations were recorded across all 100 integration steps on 512 trajectories. The network receives only valid <span class="math inline">\((\phi, \psi) \in [-\pi, \pi)^2\)</span> inputs at every step — a property the Euclidean integrator cannot provide even with post-hoc wrapping.</p>
+<p><strong>Periodic input encoding.</strong> The network <span class="math inline">\(v_\theta\)</span> takes <span class="math inline">\((\phi, \psi, t)\)</span> as input. Raw angles are discontinuous at <span class="math inline">\(\pm\pi\)</span> — a network trained on <span class="math inline">\(\phi = +3.13\)</span> and <span class="math inline">\(\phi = -3.13\)</span> sees them as maximally distant when they are in fact adjacent on <span class="math inline">\(S^1\)</span>. The encoding:</p>
+<p><span class="math display">\[\phi, \psi \;\longmapsto\; (\sin\phi,\, \cos\phi,\, \sin\psi,\, \cos\psi,\, t) \in \mathbb{R}^5\]</span></p>
+<p>is smooth and periodic everywhere on <span class="math inline">\(\mathbb{T}^2\)</span>, removing the discontinuity entirely. The 5-dimensional input is passed through a 3-layer MLP with SiLU activations, outputting a 2-dimensional tangent vector.</p>
+<hr>
+</section>
+</section>
+<section id="riemannian-flow-matching-on-mathbbt2" class="level2">
+<h2 class="anchored" data-anchor-id="riemannian-flow-matching-on-mathbbt2">Riemannian Flow Matching on <span class="math inline">\(\mathbb{T}^2\)</span></h2>
+<p>Riemannian Flow Matching generalizes Conditional Flow Matching from Euclidean space to smooth Riemannian manifolds. The core idea is to construct a probability path <span class="math inline">\(p_t\)</span> between a source distribution <span class="math inline">\(\mu\)</span> and a target distribution <span class="math inline">\(\nu\)</span> entirely within the manifold, and train a neural network to learn the tangent vector field that generates this path. On <span class="math inline">\(\mathbb{T}^2\)</span>, this means every interpolated point, every regression target, and every integration step lives on the torus — not in the ambient <span class="math inline">\(\mathbb{R}^2\)</span> that contains it.</p>
+<hr>
+<section id="probability-path-on-mathbbt2" class="level3">
+<h3 class="anchored" data-anchor-id="probability-path-on-mathbbt2">Probability Path on <span class="math inline">\(\mathbb{T}^2\)</span></h3>
+<p>In Euclidean CFM, the probability path is constructed by linearly interpolating between paired samples. On <span class="math inline">\(\mathbb{T}^2\)</span>, the path must follow geodesics. Given a source sample <span class="math inline">\(x_0 \sim \mu\)</span> (uniform on <span class="math inline">\(\mathbb{T}^2\)</span>) and a target sample <span class="math inline">\(x_1 \sim \nu\)</span> (empirical torsion angle distribution), the geodesic probability path is:</p>
+<p><span class="math display">\[p_t = (\gamma_t)_\# \mu \otimes \nu\]</span></p>
+<p>where <span class="math inline">\(\gamma_t : \mathbb{T}^2 \times \mathbb{T}^2 \to \mathbb{T}^2\)</span> is the geodesic interpolation map:</p>
+<p><span class="math display">\[\gamma_t(x_0, x_1) = \text{exp}_{x_0}\!\left(t \cdot \text{log}_{x_0}(x_1)\right), \quad t \in [0, 1]\]</span></p>
+<p>and <span class="math inline">\((\cdot)_\#\)</span> denotes the push-forward of the joint measure under <span class="math inline">\(\gamma_t\)</span>. At <span class="math inline">\(t=0\)</span>, <span class="math inline">\(\gamma_0(x_0, x_1) = x_0 \sim \mu\)</span>. At <span class="math inline">\(t=1\)</span>, <span class="math inline">\(\gamma_1(x_0, x_1) = x_1 \sim \nu\)</span>. For all intermediate <span class="math inline">\(t\)</span>, <span class="math inline">\(\gamma_t(x_0, x_1) \in \mathbb{T}^2\)</span> by the closure property of <span class="math inline">\(\text{exp}_{x_0}\)</span>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="geodesic_interp.png" class="img-fluid figure-img"></p>
+<figcaption>Geodesic interpolation</figcaption>
+</figure>
+</div>
+<p><em>Geodesic path (red) from <span class="math inline">\(\beta\)</span>-sheet <span class="math inline">\((-120°, 130°)\)</span> to <span class="math inline">\(\alpha\)</span>-helix <span class="math inline">\((-60°, -45°)\)</span> across 10 frames, overlaid on the ground-truth Ramachandran plot. Gray dashed line shows the naïve Euclidean linear path. All 10 geodesic waypoints are verified on <span class="math inline">\(\mathbb{T}^2\)</span>. For this pair, the two paths coincide because neither component crosses the <span class="math inline">\(\pm\pi\)</span> boundary — the divergence manifests for pairs near <span class="math inline">\(\phi\)</span> or <span class="math inline">\(\psi = \pm\pi\)</span>.</em></p>
+<hr>
+</section>
+<section id="conditional-vector-field-and-regression-target" class="level3">
+<h3 class="anchored" data-anchor-id="conditional-vector-field-and-regression-target">Conditional Vector Field and Regression Target</h3>
+<p>The generative ODE on <span class="math inline">\(\mathbb{T}^2\)</span> is driven by a time-dependent tangent vector field <span class="math inline">\(u_t : \mathbb{T}^2 \to T\mathbb{T}^2\)</span>. For a fixed pair <span class="math inline">\((x_0, x_1)\)</span>, the conditional vector field that generates the geodesic path <span class="math inline">\(\gamma_t(x_0, x_1)\)</span> at the interpolated point <span class="math inline">\(x_t = \gamma_t(x_0, x_1)\)</span> is:</p>
+<p><span class="math display">\[u_t(x_t \mid x_0, x_1) = \frac{d}{dt}\,\text{exp}_{x_0}\!\left(t \cdot \text{log}_{x_0}(x_1)\right) = \frac{\text{log}_{x_t}(x_1)}{1 - t}\]</span></p>
+<p>This is the unique tangent vector at <span class="math inline">\(x_t\)</span> pointing toward <span class="math inline">\(x_1\)</span> along the shortest geodesic, normalized to constant speed. Three properties make this the correct regression target:</p>
+<ul>
+<li>It lies in <span class="math inline">\(T_{x_t}\mathbb{T}^2\)</span> — the tangent space at the current point, not at <span class="math inline">\(x_0\)</span>.</li>
+<li>It respects wrap-around: <span class="math inline">\(\text{log}_{x_t}(x_1)\)</span> uses the shortest arc on each <span class="math inline">\(S^1\)</span> factor.</li>
+<li>The <span class="math inline">\(\frac{1}{1-t}\)</span> normalization maintains constant velocity along the geodesic as <span class="math inline">\(x_t \to x_1\)</span>.</li>
+</ul>
+<p>Contrast with the Euclidean target <span class="math inline">\(x_1 - x_0\)</span>, which is constant along the path and ignores the current position <span class="math inline">\(x_t\)</span> entirely. Near the <span class="math inline">\(\pm\pi\)</span> boundary, <span class="math inline">\(x_1 - x_0\)</span> can point in the opposite direction to the true geodesic — the numerical example from Stage 3 showed a magnitude error of <span class="math inline">\(5.8\)</span> vs <span class="math inline">\(0.48\)</span> and a sign flip in the <span class="math inline">\(\phi\)</span> component.</p>
+<hr>
+</section>
+<section id="training-objective" class="level3">
+<h3 class="anchored" data-anchor-id="training-objective">Training Objective</h3>
+<p>The network <span class="math inline">\(v_\theta : \mathbb{T}^2 \times [0,1] \to T\mathbb{T}^2\)</span> is trained by minimizing the mean squared error between its predicted tangent vector and the conditional vector field:</p>
+<p><span class="math display">\[\mathcal{L}_{\text{Riem}}(\theta) = \mathbb{E}_{t \sim \mathcal{U}[0, 0.999],\; x_0 \sim \mu,\; x_1 \sim \nu}\!\left[\left\|v_\theta(x_t, t) - \frac{\text{log}_{x_t}(x_1)}{1-t}\right\|^2\right]\]</span></p>
+<p>where:</p>
+<p><span class="math display">\[x_t = \text{exp}_{x_0}\!\left(t \cdot \text{log}_{x_0}(x_1)\right)\]</span></p>
+<p>In practice, each training step:</p>
+<ol type="1">
+<li>Samples <span class="math inline">\(t \sim \mathcal{U}[0, 0.999]\)</span>, <span class="math inline">\(x_0 \sim \mathcal{U}[-\pi, \pi)^2\)</span>, <span class="math inline">\(x_1 \sim \nu\)</span> (minibatch from dataset)</li>
+<li>Computes <span class="math inline">\(x_t\)</span> via geodesic interpolation using <span class="math inline">\(\text{exp}\)</span> and <span class="math inline">\(\text{log}\)</span> maps</li>
+<li>Computes the regression target <span class="math inline">\(\text{log}_{x_t}(x_1) / (1-t)\)</span></li>
+<li>Encodes <span class="math inline">\(x_t\)</span> as <span class="math inline">\((\sin\phi, \cos\phi, \sin\psi, \cos\psi, t) \in \mathbb{R}^5\)</span></li>
+<li>Regresses <span class="math inline">\(v_\theta(x_t, t)\)</span> against the target via MSE</li>
+</ol>
+<p>The MSE loss function is identical to Euclidean CFM — the Riemannian geometry enters entirely through the computation of <span class="math inline">\(x_t\)</span> and the regression target, not through the loss function itself. This is the surgical nature of the substitution: two lines of code, same training loop.</p>
+<hr>
+</section>
+<section id="network-architecture" class="level3">
+<h3 class="anchored" data-anchor-id="network-architecture">Network Architecture</h3>
+<p>The vector field network <span class="math inline">\(v_\theta\)</span> is a 3-layer MLP with SiLU activations:</p>
+<p><span class="math display">\[v_\theta(\phi, \psi, t) = W_4\,\sigma(W_3\,\sigma(W_2\,\sigma(W_1\,[\sin\phi,\, \cos\phi,\, \sin\psi,\, \cos\psi,\, t]^\top + b_1) + b_2) + b_3) + b_4\]</span></p>
+<p>where <span class="math inline">\(\sigma\)</span> is the SiLU activation function <span class="math inline">\(\sigma(x) = x \cdot \text{sigmoid}(x)\)</span>.</p>
+<p>Two model sizes were trained:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Version</th>
+<th>Hidden dim</th>
+<th>Parameters</th>
+<th>Epochs</th>
+<th>ODE steps</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Riemannian v1</td>
+<td>256</td>
+<td>133,634</td>
+<td>500</td>
+<td>100</td>
+</tr>
+<tr class="even">
+<td>Riemannian v2</td>
+<td>512</td>
+<td>529,410</td>
+<td>1,000</td>
+<td>200</td>
+</tr>
+<tr class="odd">
+<td>Euclidean baseline</td>
+<td>256</td>
+<td>133,634</td>
+<td>500</td>
+<td>100</td>
+</tr>
+</tbody>
+</table>
+<p>The Euclidean baseline uses the identical architecture — the only differences are the loss function (Euclidean interpolation and target) and the integrator (standard Euler in <span class="math inline">\(\mathbb{R}^2\)</span> with post-hoc wrapping). This ensures the comparison is a clean ablation of geometry, not capacity.</p>
+<hr>
+</section>
+<section id="training-dynamics" class="level3">
+<h3 class="anchored" data-anchor-id="training-dynamics">Training Dynamics</h3>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="loss_comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Loss comparison</figcaption>
+</figure>
+</div>
+<p><em>Training loss curves for Euclidean CFM (gray) and Riemannian CFM v1 (red) over 500 epochs, identical hyperparameters. Riemannian loss converges to 2.382 vs Euclidean 3.030 — a 21.4% reduction in final loss. The Riemannian curve is smoother because the geodesic regression target is geometrically consistent: the network is never trained on contradictory gradients near the <span class="math inline">\(\pm\pi\)</span> boundary.</em></p>
+<p>Checkpoint coverage during Riemannian v1 training:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Epoch</th>
+<th><span class="math inline">\(\alpha\)</span>-helix coverage</th>
+<th><span class="math inline">\(\beta\)</span>-sheet coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>10</td>
+<td>7.0%</td>
+<td>1.5%</td>
+</tr>
+<tr class="even">
+<td>50</td>
+<td>13.9%</td>
+<td>5.1%</td>
+</tr>
+<tr class="odd">
+<td>100</td>
+<td>21.5%</td>
+<td>14.1%</td>
+</tr>
+<tr class="even">
+<td>200</td>
+<td>25.4%</td>
+<td>16.3%</td>
+</tr>
+<tr class="odd">
+<td>500 (final)</td>
+<td>25.0%</td>
+<td>18.1%</td>
+</tr>
+</tbody>
+</table>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="checkpoints_riem.png" class="img-fluid figure-img"></p>
+<figcaption>Training checkpoints</figcaption>
+</figure>
+</div>
+<p><em>Ramachandran plots of generated samples at training checkpoints (epochs 10, 50, 100, 200). Gray: ground truth. Red: generated. The model progressively learns to concentrate mass in the <span class="math inline">\(\alpha\)</span>-helix and <span class="math inline">\(\beta\)</span>-sheet regions as training proceeds.</em></p>
+<hr>
+</section>
+</section>
+<section id="geodesic-ode-integrator" class="level2">
+<h2 class="anchored" data-anchor-id="geodesic-ode-integrator">Geodesic ODE Integrator</h2>
+<p>The geodesic ODE integrator is the sampling engine of the Riemannian flow matching model. Once the vector field <span class="math inline">\(v_\theta\)</span> is trained, generating a new <span class="math inline">\((\phi, \psi)\)</span> pair requires integrating the learned flow from <span class="math inline">\(t=0\)</span> to <span class="math inline">\(t=1\)</span> starting from a noise sample <span class="math inline">\(x_0 \sim \mathcal{U}[-\pi, \pi)^2\)</span>. The integrator must guarantee that every intermediate state <span class="math inline">\(x_t\)</span> lies on <span class="math inline">\(\mathbb{T}^2\)</span> — not just the final output. This is a non-negotiable constraint: the network <span class="math inline">\(v_\theta\)</span> was trained on inputs in <span class="math inline">\([-\pi, \pi)^2\)</span>, and feeding it coordinates outside this range produces undefined behavior in the learned vector field.</p>
+<hr>
+<section id="why-standard-euler-integration-fails-on-mathbbt2" class="level3">
+<h3 class="anchored" data-anchor-id="why-standard-euler-integration-fails-on-mathbbt2">Why Standard Euler Integration Fails on <span class="math inline">\(\mathbb{T}^2\)</span></h3>
+<p>The standard Euler update in <span class="math inline">\(\mathbb{R}^2\)</span>:</p>
+<p><span class="math display">\[x_{t+\Delta t} = x_t + \Delta t \cdot v_\theta(x_t, t)\]</span></p>
+<p>fails on <span class="math inline">\(\mathbb{T}^2\)</span> for two compounding reasons.</p>
+<p><strong>Coordinate drift.</strong> Each Euler step is an addition in <span class="math inline">\(\mathbb{R}^2\)</span>. If <span class="math inline">\(x_t = 3.0\)</span> and <span class="math inline">\(\Delta t \cdot v = 0.5\)</span>, the update produces <span class="math inline">\(x_{t+\Delta t} = 3.5\)</span>, which lies outside <span class="math inline">\([-\pi, \pi)\)</span>. Over <span class="math inline">\(N\)</span> steps, floating-point coordinates accumulate linearly in <span class="math inline">\(\mathbb{R}^2\)</span>, wandering arbitrarily far from the manifold. A post-hoc modular wrap at the final step does not fix this: the network receives invalid inputs at every intermediate step, producing garbage velocities that compound across the trajectory.</p>
+<p><strong>Distribution shift.</strong> The input encoding <span class="math inline">\((\sin\phi, \cos\phi, \sin\psi, \cos\psi)\)</span> is smooth and well-defined for any real angle. However, the network weights were optimized for inputs sampled from <span class="math inline">\([-\pi, \pi)^2\)</span> during training. An out-of-range coordinate like <span class="math inline">\(\phi = 7.1\)</span> maps to the same <span class="math inline">\((\sin, \cos)\)</span> encoding as <span class="math inline">\(\phi = 7.1 - 2\pi \approx 0.82\)</span>, so the encoding itself does not break — but the intermediate trajectory is geometrically invalid, and the velocity field evaluated at unwrapped coordinates is not the velocity field the network learned.</p>
+<hr>
+</section>
+<section id="geodesic-euler-update" class="level3">
+<h3 class="anchored" data-anchor-id="geodesic-euler-update">Geodesic Euler Update</h3>
+<p>The manifold-constrained Euler scheme replaces addition with the exponential map at every step:</p>
+<p><span class="math display">\[x_{t+\Delta t} = \text{exp}_{x_t}\!\left(\Delta t \cdot v_\theta(x_t, t)\right)\]</span></p>
+<p>Expanding the definition of <span class="math inline">\(\text{exp}\)</span> on <span class="math inline">\(\mathbb{T}^2\)</span>:</p>
+<p><span class="math display">\[x_{t+\Delta t} = \left(\left(x_t + \Delta t \cdot v_\theta(x_t, t) + \pi\right) \bmod 2\pi\right) - \pi\]</span></p>
+<p>The modular wrapping is applied at every single step, not just at the end. This guarantees:</p>
+<p><span class="math display">\[x_t \in [-\pi, \pi)^2 \quad \forall\, t \in \{0, \Delta t, 2\Delta t, \ldots, 1\}\]</span></p>
+<p>by the closure property of <span class="math inline">\(\text{exp}_p : T_p\mathbb{T}^2 \to \mathbb{T}^2\)</span>. The manifold is a fixed point of the integrator — it is geometrically impossible for a trajectory to leave <span class="math inline">\(\mathbb{T}^2\)</span> under this scheme, regardless of step size <span class="math inline">\(\Delta t\)</span> or the magnitude of <span class="math inline">\(v_\theta\)</span>.</p>
+<hr>
+</section>
+<section id="full-sampling-algorithm" class="level3">
+<h3 class="anchored" data-anchor-id="full-sampling-algorithm">Full Sampling Algorithm</h3>
+<p>Starting from a noise sample <span class="math inline">\(x_0 \sim \mathcal{U}[-\pi, \pi)^2\)</span>, the complete geodesic Euler integration proceeds as:</p>
+<p><span class="math display">\[x_0 \sim \mathcal{U}[-\pi, \pi)^2\]</span></p>
+<p><span class="math display">\[\text{for } i = 0, 1, \ldots, N-1:\]</span></p>
+<p><span class="math display">\[\quad t_i = \frac{i}{N}, \qquad \Delta t = \frac{1}{N}\]</span></p>
+<p><span class="math display">\[\quad x_{t_i + \Delta t} = \text{exp}_{x_{t_i}}\!\left(\Delta t \cdot v_\theta(x_{t_i},\, t_i)\right)\]</span></p>
+<p><span class="math display">\[x_1 \leftarrow x_{t_N} \in [-\pi, \pi)^2 \quad \text{(generated sample)}\]</span></p>
+<p>The final state <span class="math inline">\(x_1\)</span> is a sample from the learned approximation to <span class="math inline">\(\nu\)</span> on <span class="math inline">\(\mathbb{T}^2\)</span>.</p>
+<hr>
+</section>
+<section id="step-count-stability" class="level3">
+<h3 class="anchored" data-anchor-id="step-count-stability">Step Count Stability</h3>
+<p>Because the manifold constraint is enforced at every step rather than post-hoc, the geodesic integrator is stable across a wide range of step counts. Euclidean integration with post-hoc wrapping degrades at low step counts because large individual steps carry the trajectory far off <span class="math inline">\(\mathbb{T}^2\)</span> before wrapping, corrupting intermediate network inputs. The geodesic integrator has no such degradation:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>ODE steps <span class="math inline">\(N\)</span></th>
+<th>Riemannian <span class="math inline">\(\alpha\)</span>-helix</th>
+<th>Euclidean <span class="math inline">\(\alpha\)</span>-helix</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>10</td>
+<td>25.6%</td>
+<td>20.8%</td>
+</tr>
+<tr class="even">
+<td>25</td>
+<td>26.1%</td>
+<td>20.5%</td>
+</tr>
+<tr class="odd">
+<td>50</td>
+<td>26.2%</td>
+<td>20.2%</td>
+</tr>
+<tr class="even">
+<td>100</td>
+<td>26.2%</td>
+<td>20.1%</td>
+</tr>
+</tbody>
+</table>
+<p>Riemannian coverage is stable to within <span class="math inline">\(0.6\%\)</span> across a <span class="math inline">\(10\times\)</span> range of step counts. Euclidean coverage degrades monotonically as step count increases because more steps provide more opportunities for post-hoc wrapping to mask accumulated intermediate errors — revealing the underlying signal more faithfully, but at the cost of showing the model is operating on corrupted trajectories throughout.</p>
+<hr>
+</section>
+<section id="manifold-verification" class="level3">
+<h3 class="anchored" data-anchor-id="manifold-verification">Manifold Verification</h3>
+<p>Every intermediate state was verified explicitly during a dedicated verification pass:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># geodesic euler step — manifold membership checked at every step</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> exp_map_torch(x, dt <span class="op">*</span> model(x, t))</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> (x <span class="op">&gt;=</span> <span class="op">-</span>pi).<span class="bu">all</span>() <span class="kw">and</span> (x <span class="op">&lt;</span> pi).<span class="bu">all</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Result: <strong>0 manifold violations</strong> across 100 integration steps on 512 simultaneous trajectories — 51,200 individual manifold membership checks, all passing. This is the operational definition of a manifold-constrained generative model: not just a model whose outputs happen to be wrappable, but one whose entire trajectory is geometrically valid.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="ramachandran_comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Ramachandran comparison</figcaption>
+</figure>
+</div>
+<p><em>Side-by-side Ramachandran plots of 5,000 generated samples. Left: Euclidean CFM (blue). Right: Riemannian CFM v1 (red). Gray background: ground truth. The Riemannian model concentrates more mass in the <span class="math inline">\(\alpha\)</span>-helix and <span class="math inline">\(\beta\)</span>-sheet boxes. Both models were integrated with <span class="math inline">\(N=100\)</span> ODE steps.</em></p>
+<hr>
+</section>
+</section>
+<section id="the-full-arc-how-every-phase-led-here" class="level2">
+<h2 class="anchored" data-anchor-id="the-full-arc-how-every-phase-led-here">The Full Arc: How Every Phase Led Here</h2>
+<p>This project is the convergence point of a structured mathematical steps covering smooth manifolds, Riemannian geometry, optimal transport, and generative modeling. Every architectural decision in this project has a precise mathematical origin. The table below maps each decision to its source concept and the phase in which it was developed.</p>
+<hr>
+<section id="decision-to-mathematics-mapping" class="level3">
+<h3 class="anchored" data-anchor-id="decision-to-mathematics-mapping">Decision-to-Mathematics Mapping</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Architectural Decision</th>
+<th>Mathematical Source</th>
+<th>Origin</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Angles encoded as <span class="math inline">\((\sin\phi, \cos\phi, \sin\psi, \cos\psi)\)</span></td>
+<td>Smooth manifold chart; smooth embedding <span class="math inline">\(S^1 \hookrightarrow \mathbb{R}^2\)</span></td>
+<td>Smooth Manifolds</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\text{exp\_map}\)</span> and <span class="math inline">\(\text{log\_map}\)</span> on <span class="math inline">\(\mathbb{T}^2\)</span></td>
+<td>Riemannian exponential and logarithm maps; geodesic completeness</td>
+<td>Riemannian Geometry</td>
+</tr>
+<tr class="odd">
+<td>Geodesic interpolation <span class="math inline">\(\gamma(t) = \text{exp}_{x_0}(t \cdot \text{log}_{x_0}(x_1))\)</span></td>
+<td>Displacement interpolation along geodesics in the space of measures</td>
+<td>Optimal Transport</td>
+</tr>
+<tr class="even">
+<td>Tangent vector regression target <span class="math inline">\(\frac{1}{1-t}\text{log}_{x_t}(x_1)\)</span></td>
+<td>Tangent bundle <span class="math inline">\(T\mathbb{T}^2\)</span>; tangent vector at a point on the manifold</td>
+<td>Smooth Manifolds</td>
+</tr>
+<tr class="odd">
+<td>ODE integration via <span class="math inline">\(\text{exp\_map}\)</span> at every step</td>
+<td>Neural ODE; push-forward of a measure under a flow map</td>
+<td>Generative Modeling</td>
+</tr>
+<tr class="even">
+<td>Riemannian CFM loss on <span class="math inline">\(\mathbb{T}^2\)</span></td>
+<td>Conditional Flow Matching; marginal vector field matching</td>
+<td>Generative Modeling</td>
+</tr>
+<tr class="odd">
+<td>Ramachandran coverage as evaluation metric</td>
+<td>Push-forward <span class="math inline">\((\gamma_t)_\# \mu = p_t\)</span>; measure transport</td>
+<td>Optimal Transport</td>
+</tr>
+<tr class="even">
+<td>Flat torus metric <span class="math inline">\(g = I_2\)</span></td>
+<td>Riemannian metric tensor; intrinsic vs extrinsic geometry</td>
+<td>Riemannian Geometry</td>
+</tr>
+<tr class="odd">
+<td>Source distribution <span class="math inline">\(\mu = \mathcal{U}[-\pi, \pi)^2\)</span></td>
+<td>Reference measure on manifold; source in OT problem</td>
+<td>Optimal Transport</td>
+</tr>
+<tr class="even">
+<td>Periodic input encoding removes <span class="math inline">\(\pm\pi\)</span> discontinuity</td>
+<td>Atlas and chart compatibility; smooth coordinate maps</td>
+<td>Smooth Manifolds</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="explanatory-notes" class="level3">
+<h3 class="anchored" data-anchor-id="explanatory-notes">Explanatory Notes</h3>
+<p><strong>Angles encoded as <span class="math inline">\((\sin\phi, \cos\phi, \sin\psi, \cos\psi)\)</span>.</strong> A raw angle <span class="math inline">\(\phi \in [-\pi, \pi)\)</span> is a chart coordinate — it is locally valid but globally discontinuous at <span class="math inline">\(\pm\pi\)</span>. The map <span class="math inline">\(\phi \mapsto (\sin\phi, \cos\phi)\)</span> is the smooth embedding of <span class="math inline">\(S^1\)</span> into <span class="math inline">\(\mathbb{R}^2\)</span>, which is continuous and injective everywhere on the circle. Using the embedding instead of the chart coordinate is the manifold-aware choice: it respects the topology of <span class="math inline">\(S^1\)</span> rather than the accident of how we chose to coordinatize it.</p>
+<p><strong><span class="math inline">\(\text{exp\_map}\)</span> and <span class="math inline">\(\text{log\_map}\)</span> on <span class="math inline">\(\mathbb{T}^2\)</span>.</strong> The exponential map <span class="math inline">\(\text{exp}_p : T_p M \to M\)</span> is the fundamental operation of Riemannian geometry — it maps a tangent vector at <span class="math inline">\(p\)</span> to the point reached by following the geodesic from <span class="math inline">\(p\)</span> in that direction. On <span class="math inline">\(\mathbb{T}^2\)</span>, geodesic completeness (every geodesic extends infinitely) means <span class="math inline">\(\text{exp}_p\)</span> is defined everywhere, and the flat metric makes it reduce to modular arithmetic. The logarithm map <span class="math inline">\(\text{log}_p : M \to T_p M\)</span> is its inverse, finding the shortest geodesic between two points.</p>
+<p><strong>Geodesic interpolation.</strong> In optimal transport, displacement interpolation constructs the probability path <span class="math inline">\(p_t = ((1-t)\text{id} + t T)_\# \mu\)</span> between source <span class="math inline">\(\mu\)</span> and target <span class="math inline">\(\nu = T_\# \mu\)</span> along the Wasserstein geodesic. On a Riemannian manifold, the Euclidean map <span class="math inline">\((1-t)\text{id} + tT\)</span> is replaced by <span class="math inline">\(\text{exp}_{x_0}(t \cdot \text{log}_{x_0}(x_1))\)</span> — the direct generalization of displacement interpolation to curved spaces. The geodesic interpolation in this project is precisely this construction restricted to <span class="math inline">\(\mathbb{T}^2\)</span>.</p>
+<p><strong>Tangent vector regression target.</strong> The regression target <span class="math inline">\(\frac{1}{1-t}\text{log}_{x_t}(x_1)\)</span> is an element of <span class="math inline">\(T_{x_t}\mathbb{T}^2\)</span> — the tangent space at the current interpolated point. This is not a vector in <span class="math inline">\(\mathbb{R}^2\)</span>; it is a geometric object attached to a specific point on the manifold. The tangent bundle <span class="math inline">\(T\mathbb{T}^2 = \bigsqcup_{p \in \mathbb{T}^2} T_p\mathbb{T}^2\)</span> is the natural domain for velocity fields on a manifold, and the network <span class="math inline">\(v_\theta\)</span> is best understood as a section of this bundle — a smooth assignment of a tangent vector to each point.</p>
+<p><strong>ODE integration via <span class="math inline">\(\text{exp\_map}\)</span>.</strong> Neural ODEs define a generative model by integrating a learned vector field <span class="math inline">\(\dot{x} = v_\theta(x, t)\)</span> from <span class="math inline">\(t=0\)</span> to <span class="math inline">\(t=1\)</span>. The push-forward interpretation is: the distribution of <span class="math inline">\(x_1\)</span> is the push-forward of the source distribution <span class="math inline">\(\mu\)</span> under the flow map <span class="math inline">\(\Phi_1 : x_0 \mapsto x_1\)</span>. On <span class="math inline">\(\mathbb{T}^2\)</span>, each Euler step must remain on the manifold, which requires replacing the Euclidean update <span class="math inline">\(x + \Delta t \cdot v\)</span> with <span class="math inline">\(\text{exp}_x(\Delta t \cdot v)\)</span>. The flow map <span class="math inline">\(\Phi_1\)</span> then maps <span class="math inline">\(\mathbb{T}^2 \to \mathbb{T}^2\)</span>, and the push-forward <span class="math inline">\((\Phi_1)_\# \mu\)</span> approximates <span class="math inline">\(\nu\)</span> on <span class="math inline">\(\mathbb{T}^2\)</span>.</p>
+<p><strong>Riemannian CFM loss.</strong> Conditional Flow Matching constructs the marginal vector field <span class="math inline">\(u_t(x) = \mathbb{E}[u_t(x \mid x_0, x_1) \mid x_t = x]\)</span> by regressing on conditional fields. The key theorem (Lipman et al., 2022) states that minimizing the CFM objective is equivalent to matching the marginal vector field, which in turn generates the correct probability path <span class="math inline">\(p_t\)</span>. The Riemannian extension replaces conditional fields with their geodesic analogues — the result is a loss that is provably correct on any complete Riemannian manifold with a tractable <span class="math inline">\(\text{exp}\)</span> and <span class="math inline">\(\text{log}\)</span> map.</p>
+<p><strong>Ramachandran coverage as evaluation metric.</strong> The generative model defines a push-forward measure <span class="math inline">\((\Phi_1)_\# \mu\)</span> on <span class="math inline">\(\mathbb{T}^2\)</span>. Ramachandran coverage measures how well this push-forward approximates the target measure <span class="math inline">\(\nu\)</span> on specific subsets of <span class="math inline">\(\mathbb{T}^2\)</span> (the <span class="math inline">\(\alpha\)</span>-helix and <span class="math inline">\(\beta\)</span>-sheet regions). This is a direct instance of evaluating whether <span class="math inline">\(T_\# \mu \approx \nu\)</span> on a partition of the support — the central question of optimal transport, now applied as a generative model evaluation criterion on a manifold.</p>
+<p><strong>Flat torus metric <span class="math inline">\(g = I_2\)</span>.</strong> The intrinsic geometry of <span class="math inline">\(\mathbb{T}^2 = \mathbb{R}^2 / (2\pi\mathbb{Z})^2\)</span> is flat: the Riemannian metric tensor is <span class="math inline">\(g = I_2\)</span> everywhere, and the Gaussian curvature is <span class="math inline">\(K = 0\)</span>. This is distinct from the extrinsic geometry of the embedded torus in <span class="math inline">\(\mathbb{R}^3\)</span>, which has variable curvature. Working with the intrinsic flat metric is the geometrically correct choice — it reflects the actual distance structure on <span class="math inline">\(\mathbb{T}^2\)</span> as a quotient space, not the accident of how it happens to sit in <span class="math inline">\(\mathbb{R}^3\)</span>.</p>
+<p><strong>Source distribution <span class="math inline">\(\mu = \mathcal{U}[-\pi, \pi)^2\)</span>.</strong> In optimal transport and flow matching, the source distribution <span class="math inline">\(\mu\)</span> is the reference measure from which noise samples are drawn. On <span class="math inline">\(\mathbb{T}^2\)</span>, the natural reference measure is the uniform distribution on <span class="math inline">\([-\pi, \pi)^2\)</span>, which is the Haar measure on the compact abelian group <span class="math inline">\(\mathbb{T}^2\)</span>. This is the manifold analogue of the standard Gaussian used as a source in Euclidean flow matching.</p>
+<p><strong>Periodic input encoding removes <span class="math inline">\(\pm\pi\)</span> discontinuity.</strong> A coordinate chart <span class="math inline">\(\phi \in [-\pi, \pi)\)</span> on <span class="math inline">\(S^1\)</span> is not compatible with the standard topology at <span class="math inline">\(\pm\pi\)</span>: a sequence of angles approaching <span class="math inline">\(+\pi\)</span> from below is mapped to values near <span class="math inline">\(+3.14\)</span>, while the geometrically adjacent sequence approaching from above (i.e., wrapping to <span class="math inline">\(-\pi\)</span>) is mapped to values near <span class="math inline">\(-3.14\)</span>. Chart compatibility requires transition maps to be smooth, which this single chart fails to provide globally. The <span class="math inline">\((\sin, \cos)\)</span> encoding sidesteps this by using the smooth embedding <span class="math inline">\(S^1 \hookrightarrow \mathbb{R}^2\)</span>, which is globally smooth and requires no transition maps.</p>
+<hr>
+</section>
+</section>
+<section id="results" class="level2">
+<h2 class="anchored" data-anchor-id="results">Results</h2>
+<section id="findings" class="level3">
+<h3 class="anchored" data-anchor-id="findings">Findings</h3>
+<p>Riemannian Flow Matching on <span class="math inline">\(\mathbb{T}^2\)</span> consistently outperforms the Euclidean CFM baseline across every quantitative metric, using identical network architecture and training budget. The geometric substitution — replacing Euclidean interpolation and regression target with their <span class="math inline">\(\text{exp}\)</span> and <span class="math inline">\(\text{log}\)</span> map counterparts — produces a 43.2% reduction in Jensen-Shannon divergence against the ground-truth Ramachandran distribution for the base model, and a 75.4% total reduction when model capacity and training duration are scaled. Zero manifold violations were recorded across all integration steps, confirming that the geodesic Euler integrator enforces the hard manifold constraint by construction rather than as a post-hoc correction.</p>
+<p>The Euclidean baseline exhibits the predicted failure pattern: it underperforms most severely in the <span class="math inline">\(\beta\)</span>-sheet region, whose <span class="math inline">\(\psi\)</span> coordinate sits just <span class="math inline">\(0.17\)</span> radians (<span class="math inline">\(10°\)</span>) from the <span class="math inline">\(+\pi\)</span> boundary. The Riemannian model recovers substantially more density in this region precisely because its training signal is geometrically correct near the boundary from the first gradient step.</p>
+<hr>
+</section>
+<section id="evaluation-figure" class="level3">
+<h3 class="anchored" data-anchor-id="evaluation-figure">Evaluation Figure</h3>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="ramachandran_eval_2x2.png" class="img-fluid figure-img"></p>
+<figcaption>2x2 Ramachandran evaluation</figcaption>
+</figure>
+</div>
+<p><em>2×2 Ramachandran evaluation grid. Top-left: ground-truth distribution (<span class="math inline">\(N = 50,000\)</span> residues, Lovell et al.&nbsp;2003 statistics). Top-right: Riemannian CFM v1 samples (<span class="math inline">\(N = 5,000\)</span>). Bottom-left: Euclidean CFM baseline samples (<span class="math inline">\(N = 5,000\)</span>). Bottom-right: KDE density difference (Riemannian <span class="math inline">\(-\)</span> Euclidean) — red regions indicate where Riemannian captures more density, blue where Euclidean over-generates. Red and blue annotation boxes mark the <span class="math inline">\(\alpha\)</span>-helix and <span class="math inline">\(\beta\)</span>-sheet regions respectively.</em></p>
+<hr>
+</section>
+<section id="density-difference" class="level3">
+<h3 class="anchored" data-anchor-id="density-difference">Density Difference</h3>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="density_diff.png" class="img-fluid figure-img"></p>
+<figcaption>Density difference</figcaption>
+</figure>
+</div>
+<p><em>KDE density difference map (Riemannian <span class="math inline">\(-\)</span> Euclidean CFM). Positive (red) regions indicate where the Riemannian model recovers more density relative to the Euclidean baseline. The <span class="math inline">\(\beta\)</span>-sheet region (upper-left box) shows the largest positive difference — consistent with its <span class="math inline">\(\psi\)</span> coordinate sitting <span class="math inline">\(0.17\)</span> rad from the <span class="math inline">\(+\pi\)</span> boundary, where Euclidean regression targets are most corrupted.</em></p>
+<hr>
+</section>
+<section id="quantitative-results" class="level3">
+<h3 class="anchored" data-anchor-id="quantitative-results">Quantitative Results</h3>
+<p><strong>Primary comparison: Euclidean CFM vs Riemannian CFM v1</strong></p>
+<p>Both models use identical architecture (hidden dim 256, 3 layers, 133,634 parameters), identical optimizer (Adam, <span class="math inline">\(\text{lr} = 10^{-3}\)</span>, CosineAnnealingLR), identical training budget (500 epochs, batch size 2048, seed 42), and identical ODE integration steps (100). The only differences are the loss function and integrator.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Ground Truth</th>
+<th>Euclidean CFM</th>
+<th>Riemannian CFM v1</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\alpha\)</span>-helix coverage</td>
+<td>32.9%</td>
+<td>20.5%</td>
+<td>25.0%</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\beta\)</span>-sheet coverage</td>
+<td>22.1%</td>
+<td>15.4%</td>
+<td>18.1%</td>
+</tr>
+<tr class="odd">
+<td>JSD vs ground truth</td>
+<td>—</td>
+<td>0.044667</td>
+<td>0.025385</td>
+</tr>
+<tr class="even">
+<td>Final training loss</td>
+<td>—</td>
+<td>3.03009</td>
+<td>2.38184</td>
+</tr>
+<tr class="odd">
+<td>Manifold violations</td>
+<td>—</td>
+<td>N/A</td>
+<td><strong>0</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Riemannian CFM v1 achieves: - <span class="math inline">\(+4.5\%\)</span> absolute improvement in <span class="math inline">\(\alpha\)</span>-helix coverage - <span class="math inline">\(+2.7\%\)</span> absolute improvement in <span class="math inline">\(\beta\)</span>-sheet coverage - <strong>43.2% reduction in JSD</strong> vs ground truth</p>
+<hr>
+<p><strong>Scaling experiment: Riemannian CFM v1 vs v2</strong></p>
+<p>To demonstrate that the Riemannian formulation scales correctly with model capacity, a larger model (hidden dim 512, 529,410 parameters) was trained for 1,000 epochs with 200 ODE integration steps at inference.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Ground Truth</th>
+<th>Riem v1</th>
+<th>Riem v2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\alpha\)</span>-helix coverage</td>
+<td>32.9%</td>
+<td>25.0%</td>
+<td>30.3%</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\beta\)</span>-sheet coverage</td>
+<td>22.1%</td>
+<td>18.1%</td>
+<td>20.1%</td>
+</tr>
+<tr class="odd">
+<td>JSD vs ground truth</td>
+<td>—</td>
+<td>0.025385</td>
+<td>0.010963</td>
+</tr>
+<tr class="even">
+<td>Final training loss</td>
+<td>—</td>
+<td>2.38184</td>
+<td>2.19546</td>
+</tr>
+<tr class="odd">
+<td>Hidden dim</td>
+<td>—</td>
+<td>256</td>
+<td>512</td>
+</tr>
+<tr class="even">
+<td>Epochs</td>
+<td>—</td>
+<td>500</td>
+<td>1,000</td>
+</tr>
+<tr class="odd">
+<td>ODE steps</td>
+<td>—</td>
+<td>100</td>
+<td>200</td>
+</tr>
+</tbody>
+</table>
+<p>Riemannian CFM v2 achieves: - <span class="math inline">\(+5.3\%\)</span> additional <span class="math inline">\(\alpha\)</span>-helix coverage over v1 (30.3% vs 32.9% ground truth — within 2.6pp) - <span class="math inline">\(+2.0\%\)</span> additional <span class="math inline">\(\beta\)</span>-sheet coverage over v1 (20.1% vs 22.1% ground truth — within 2.0pp) - <strong>56.8% further JSD reduction</strong> over v1 - <strong>75.4% total JSD reduction</strong> over Euclidean baseline</p>
+<hr>
+<p><strong>Full model comparison summary</strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Model</th>
+<th><span class="math inline">\(\alpha\)</span>-helix</th>
+<th><span class="math inline">\(\beta\)</span>-sheet</th>
+<th>JSD</th>
+<th>Parameters</th>
+<th>Epochs</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Ground truth</td>
+<td>32.9%</td>
+<td>22.1%</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>Euclidean CFM</td>
+<td>20.5%</td>
+<td>15.4%</td>
+<td>0.0447</td>
+<td>133,634</td>
+<td>500</td>
+</tr>
+<tr class="odd">
+<td>Riemannian v1</td>
+<td>25.0%</td>
+<td>18.1%</td>
+<td>0.0254</td>
+<td>133,634</td>
+<td>500</td>
+</tr>
+<tr class="even">
+<td>Riemannian v2</td>
+<td>30.3%</td>
+<td>20.1%</td>
+<td>0.0110</td>
+<td>529,410</td>
+<td>1,000</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="training-dynamics-1" class="level3">
+<h3 class="anchored" data-anchor-id="training-dynamics-1">Training Dynamics</h3>
+<p><strong>Euclidean CFM training:</strong> - Initial loss: 5.219 — Final loss: 3.030 - Loss plateau observed after epoch 100, slow monotonic decrease thereafter</p>
+<p><strong>Riemannian CFM v1 training:</strong> - Initial loss: 3.306 — Final loss: 2.382 - Smoother convergence than Euclidean; geometrically consistent gradients near <span class="math inline">\(\pm\pi\)</span> boundary</p>
+<p><strong>Riemannian CFM v2 training:</strong> - Initial loss: $$2.549 (epoch 100) — Final loss: 2.195 - Continued improvement through epoch 1,000; no sign of overfitting</p>
+<p>The lower initial loss of the Riemannian model (3.306 vs 5.219) reflects that the geodesic regression target is geometrically meaningful from the first step — the network is never asked to regress toward a vector pointing in the wrong direction across the <span class="math inline">\(\pm\pi\)</span> boundary.</p>
+<hr>
+</section>
+<section id="manifold-constraint-verification" class="level3">
+<h3 class="anchored" data-anchor-id="manifold-constraint-verification">Manifold Constraint Verification</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Verification</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\text{exp\_map}\)</span> round-trip on 50,000 pairs</td>
+<td>✓ max error <span class="math inline">\(&lt; 10^{-6}\)</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\text{log\_map}\)</span> component max <span class="math inline">\(\leq \pi\)</span></td>
+<td>✓ max <span class="math inline">\(= 3.1416\)</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(\text{log\_map}\)</span> joint norm <span class="math inline">\(\leq \pi\sqrt{2}\)</span></td>
+<td>✓ max <span class="math inline">\(= 4.4287 &lt; 4.4429\)</span></td>
+</tr>
+<tr class="even">
+<td>Geodesic path (10 frames) all on <span class="math inline">\(\mathbb{T}^2\)</span></td>
+<td>✓ all 10 frames verified</td>
+</tr>
+<tr class="odd">
+<td>Integration steps on <span class="math inline">\(\mathbb{T}^2\)</span> (512 trajectories, 100 steps)</td>
+<td>✓ 0 violations / 51,200 checks</td>
+</tr>
+<tr class="even">
+<td>Final 5,000 generated samples on <span class="math inline">\(\mathbb{T}^2\)</span></td>
+<td>✓ all verified</td>
+</tr>
+</tbody>
+</table>
+<p>Every component of the pipeline — from the <span class="math inline">\(\text{exp}\)</span> and <span class="math inline">\(\text{log}\)</span> maps through to the final generated samples — was verified to lie on <span class="math inline">\(\mathbb{T}^2\)</span> at each stage. Manifold membership is not an assumption; it is a proven property of the implementation.</p>
+<hr>
+</section>
+</section>
+<section id="key-insights" class="level2">
+<h2 class="anchored" data-anchor-id="key-insights">Key Insights</h2>
+<p><strong>1. The Euclidean Failure is a Training Problem, Not an Inference Problem</strong></p>
+<p>The most common proposed fix for Euclidean flow matching on periodic data is to wrap the generated samples back to <span class="math inline">\([-\pi, \pi)^2\)</span> using modular arithmetic after integration. This addresses the symptom but not the cause. The fundamental damage occurs during training: for a source sample at <span class="math inline">\(\phi = -2.9\)</span> and a target sample at <span class="math inline">\(\phi = +2.9\)</span>, the Euclidean regression target is <span class="math inline">\(x_1 - x_0 = +5.8\)</span> (pointing rightward across the full domain), while the correct geodesic displacement is <span class="math inline">\(\text{log}_{x_0}(x_1) = -0.483\)</span> (pointing leftward across the <span class="math inline">\(\pm\pi\)</span> boundary — a <span class="math inline">\(12\times\)</span> magnitude error with opposite sign). The network is trained on this wrong signal from the first gradient step. Every weight update nudges <span class="math inline">\(v_\theta\)</span> toward a vector field that pushes mass in the wrong direction near the <span class="math inline">\(\pm\pi\)</span> boundary, and no amount of post-hoc wrapping can undo what has been baked into the weights. The Riemannian formulation fixes this at the geometric root: by computing regression targets via <span class="math inline">\(\text{log}_{x_t}(x_1)\)</span>, the training signal is correct everywhere on <span class="math inline">\(\mathbb{T}^2\)</span>, including at and across the <span class="math inline">\(\pm\pi\)</span> boundary.</p>
+<hr>
+<p><strong>2. The <span class="math inline">\(\beta\)</span>-Sheet Region is the Canary in the Toric Coal Mine</strong></p>
+<p>Not all regions of the Ramachandran plot are equally affected by the Euclidean assumption. The <span class="math inline">\(\alpha\)</span>-helix region (<span class="math inline">\(\phi \in [-80°, -40°]\)</span>, <span class="math inline">\(\psi \in [-60°, -20°]\)</span>) sits comfortably in the interior of <span class="math inline">\([-\pi, \pi)^2\)</span>, with its nearest boundary at <span class="math inline">\(1.745\)</span> radians — well clear of the <span class="math inline">\(\pm\pi\)</span> wrap. The <span class="math inline">\(\beta\)</span>-sheet region, however, has its <span class="math inline">\(\psi\)</span> upper bound at <span class="math inline">\(170°\)</span> (<span class="math inline">\(2.967\)</span> rad), just <span class="math inline">\(0.1745\)</span> radians (<span class="math inline">\(10°\)</span>) from the <span class="math inline">\(+\pi\)</span> boundary. Real protein backbone conformations fluctuate continuously across this boundary: a residue with <span class="math inline">\(\psi = +179°\)</span> and one with <span class="math inline">\(\psi = -179°\)</span> are <span class="math inline">\(2°\)</span> apart on <span class="math inline">\(\mathbb{T}^2\)</span> but <span class="math inline">\(358°\)</span> apart in the Euclidean chart. A Euclidean model sees this as two disconnected clusters separated by the largest possible distance, learning to avoid generating samples near the boundary entirely. This is precisely what the results confirm: Euclidean CFM recovers only <span class="math inline">\(15.4\%\)</span> <span class="math inline">\(\beta\)</span>-sheet coverage vs <span class="math inline">\(22.1\%\)</span> ground truth — a <span class="math inline">\(30\%\)</span> relative deficit concentrated in the boundary-adjacent region — while the Riemannian model recovers <span class="math inline">\(18.1\%\)</span> (v1) and <span class="math inline">\(20.1\%\)</span> (v2), closing the gap substantially by treating the boundary as what it geometrically is: a seamless continuation of the manifold.</p>
+<hr>
+<p><strong>3. The Geodesic Integrator Provides Stability That Post-Hoc Wrapping Cannot</strong></p>
+<p>A natural question is whether the Euclidean integrator with per-step modular wrapping — <span class="math inline">\(x_{t+\Delta t} = \text{wrap}(x_t + \Delta t \cdot v_\theta(x_t, t))\)</span> — is equivalent to the geodesic integrator <span class="math inline">\(x_{t+\Delta t} = \text{exp}_{x_t}(\Delta t \cdot v_\theta(x_t, t))\)</span>. On <span class="math inline">\(\mathbb{T}^2\)</span>, they are arithmetically identical for the integration step itself. The difference lies in what the network receives as input. In the geodesic integrator, <span class="math inline">\(x_t\)</span> is always in <span class="math inline">\([-\pi, \pi)^2\)</span> before the network evaluates it — the wrapping happens before <span class="math inline">\(v_\theta\)</span> is called, not after. In a naive implementation without per-step wrapping, <span class="math inline">\(x_t\)</span> drifts outside <span class="math inline">\([-\pi, \pi)^2\)</span> and the network receives out-of-distribution inputs. The step-count stability experiment quantifies this: Riemannian <span class="math inline">\(\alpha\)</span>-helix coverage varies by only <span class="math inline">\(0.6\%\)</span> across step counts from 10 to 100, while Euclidean coverage degrades from <span class="math inline">\(20.8\%\)</span> to <span class="math inline">\(20.1\%\)</span> as step count increases — revealing that more steps expose more accumulated intermediate errors rather than improving quality. The manifold constraint is not a convenience; it is what makes the integration numerically stable and distribution-consistent at every step.</p>
+<hr>
+<p><strong>4. Two Lines of Code Separate the Models — Geometry is the Difference</strong></p>
+<p>The Euclidean CFM and Riemannian CFM models in this project share identical network architecture (3-layer MLP, hidden dim 256, SiLU activations, 133,634 parameters), identical input encoding <span class="math inline">\((\sin\phi, \cos\phi, \sin\psi, \cos\psi, t)\)</span>, identical optimizer (Adam, <span class="math inline">\(\text{lr} = 10^{-3}\)</span>, CosineAnnealingLR), identical training budget (500 epochs, batch size 2048), and identical ODE step count (100). The entire performance gap — <span class="math inline">\(+4.5\%\)</span> helix coverage, <span class="math inline">\(+2.7\%\)</span> sheet coverage, <span class="math inline">\(43.2\%\)</span> JSD reduction — is attributable to exactly two substitutions in the loss function:</p>
+<p><span class="math display">\[x_t:\quad (1-t)x_0 + t x_1 \;\longrightarrow\; \text{exp}_{x_0}(t \cdot \text{log}_{x_0}(x_1))\]</span></p>
+<p><span class="math display">\[\text{target}:\quad x_1 - x_0 \;\longrightarrow\; \frac{\text{log}_{x_t}(x_1)}{1-t}\]</span></p>
+<p>This is the central lesson of the project: when data lives on a manifold, the geometry of the domain is not a detail to be handled by post-processing — it is the most leveraged single intervention available. The Riemannian formulation does not add complexity; it removes the geometric incorrectness that was already present in the Euclidean formulation.</p>
+<hr>
+<p><strong>5. Intrinsic Geometry is Not the Same as the Embedding Geometry</strong></p>
+<p>The torus <span class="math inline">\(\mathbb{T}^2\)</span> was visualized in this project both as a flat square with identified edges and as a surface embedded in <span class="math inline">\(\mathbb{R}^3\)</span> via <span class="math inline">\((R + r\cos\psi)\cos\phi\)</span>, <span class="math inline">\((R + r\cos\psi)\sin\phi\)</span>, <span class="math inline">\(r\sin\psi\)</span>. The embedded surface has variable Gaussian curvature — positive on the outer equator and negative on the inner ring. This curvature is extrinsic: it describes how <span class="math inline">\(\mathbb{T}^2\)</span> curves within <span class="math inline">\(\mathbb{R}^3\)</span>, not the intrinsic geometry of <span class="math inline">\(\mathbb{T}^2\)</span> itself. The intrinsic geometry — the one that governs geodesics, distances, <span class="math inline">\(\text{exp}\)</span> maps, and <span class="math inline">\(\text{log}\)</span> maps — is flat: <span class="math inline">\(g = I_2\)</span>, <span class="math inline">\(K = 0\)</span> everywhere. This is why the <span class="math inline">\(\text{exp}\)</span> and <span class="math inline">\(\text{log}\)</span> maps reduce to modular arithmetic rather than requiring the solution of geodesic ODEs. The distinction between intrinsic and extrinsic geometry is not pedantic: using the embedding geometry to define distances on <span class="math inline">\(\mathbb{T}^2\)</span> would produce geodesics that curve through <span class="math inline">\(\mathbb{R}^3\)</span> rather than straight-line paths on the manifold, giving wrong results. All geometry in this project is intrinsic.</p>
+<hr>
+</section>
+<section id="implementation-notes" class="level2">
+<h2 class="anchored" data-anchor-id="implementation-notes">Implementation Notes</h2>
+<ul>
+<li><p><strong>No Riemannian geometry libraries for core maps.</strong> <code>exp_map</code> and <code>log_map</code> on <span class="math inline">\(\mathbb{T}^2\)</span> are implemented from scratch in both NumPy and PyTorch using modular arithmetic. No <code>geomstats</code>, no <code>geoopt</code>, no external manifold libraries are used for any core computation. This exposes every numerical detail explicitly and ensures the geometric operations are fully understood rather than delegated to a black box.</p></li>
+<li><p><strong>Component-wise decomposition of <span class="math inline">\(\mathbb{T}^2\)</span> operations.</strong> Because <span class="math inline">\(\mathbb{T}^2 = S^1 \times S^1\)</span> and the metric is diagonal (<span class="math inline">\(g = I_2\)</span>), all manifold operations decompose component-wise: <span class="math inline">\(\text{exp}_{(p_1, p_2)}((v_1, v_2)) = (\text{exp}_{p_1}(v_1), \text{exp}_{p_2}(v_2))\)</span> and similarly for <span class="math inline">\(\text{log}\)</span>. This is not an approximation — it is exact for the flat product metric. Implementing it component-wise avoids unnecessary matrix operations and makes the periodic wrapping explicit in both dimensions.</p></li>
+<li><p><strong>Time clamping to <span class="math inline">\([0, 0.999]\)</span> during training.</strong> The regression target <span class="math inline">\(\frac{1}{1-t}\text{log}_{x_t}(x_1)\)</span> diverges as <span class="math inline">\(t \to 1\)</span> due to the division by <span class="math inline">\((1-t)\)</span>. Time is clamped to <span class="math inline">\([0, 0.999]\)</span> during training to prevent numerical instability without introducing a separate stability term or loss reweighting scheme. This is sufficient in practice: the target magnitude at <span class="math inline">\(t = 0.999\)</span> is at most <span class="math inline">\(1000 \cdot \pi \approx 3141\)</span>, which gradient clipping (norm <span class="math inline">\(\leq 1.0\)</span>) handles safely.</p></li>
+<li><p><strong>Gradient clipping throughout.</strong> All training runs use gradient norm clipping at <span class="math inline">\(1.0\)</span> via <code>torch.nn.utils.clip_grad_norm_</code>. This is particularly important for the Riemannian model near <span class="math inline">\(t \approx 1\)</span> where regression targets can be large, and for the Euclidean model near the <span class="math inline">\(\pm\pi\)</span> boundary where targets are geometrically inconsistent and produce erratic gradients.</p></li>
+<li><p><strong>Periodic input encoding is mandatory, not optional.</strong> Raw angles <span class="math inline">\((\phi, \psi) \in [-\pi, \pi)\)</span> are discontinuous at <span class="math inline">\(\pm\pi\)</span>: the network would see <span class="math inline">\(\phi = +3.13\)</span> and <span class="math inline">\(\phi = -3.13\)</span> as maximally distant inputs when they are adjacent on <span class="math inline">\(S^1\)</span>. The encoding <span class="math inline">\((\phi, \psi) \mapsto (\sin\phi, \cos\phi, \sin\psi, \cos\psi, t) \in \mathbb{R}^5\)</span> is smooth and periodic everywhere. This is not a heuristic improvement — it is required for the network to represent a continuous function on <span class="math inline">\(\mathbb{T}^2\)</span>.</p></li>
+<li><p><strong>Identical architecture and budget for the controlled ablation.</strong> The Euclidean baseline uses the exact same <code>VectorFieldMLP</code> class, optimizer, scheduler, batch size, epoch count, random seed, and ODE step count as the Riemannian v1 model. The only code differences are two lines in the loss function and the use of <code>exp_map_torch</code> vs standard addition in the integrator. This ensures the performance gap is attributable solely to geometric correctness, not to any capacity or training advantage.</p></li>
+<li><p><strong>Per-step manifold verification during development.</strong> A dedicated verification sampler (<code>sample_riem_verified</code>) checks manifold membership at every integration step, not just at the final output. This was run once to confirm zero violations across 51,200 individual checks (512 trajectories <span class="math inline">\(\times\)</span> 100 steps). The production sampler omits these checks for speed but their correctness is guaranteed by the <code>exp_map_torch</code> implementation.</p></li>
+<li><p><strong>Synthetic dataset from published population statistics.</strong> The torsion angle dataset is generated synthetically from wrapped normal distributions fitted to the population parameters of Lovell et al.&nbsp;(2003): <span class="math inline">\(\alpha\)</span>-helix (<span class="math inline">\(\phi = -63°\)</span>, <span class="math inline">\(\psi = -43°\)</span>, <span class="math inline">\(\sigma = 7°\)</span>, 32% of residues), <span class="math inline">\(\beta\)</span>-sheet (<span class="math inline">\(\phi = -119°\)</span>, <span class="math inline">\(\psi = 130°\)</span>, <span class="math inline">\(\sigma = 8°\)</span>, 22%), left-handed helix (3%), and loop/other (43%). This makes the notebook fully self-contained with no external PDB downloads while producing a ground-truth distribution with the correct structural population fractions.</p></li>
+<li><p><strong>KDE evaluation grid is shared across all models.</strong> The <span class="math inline">\(100 \times 100\)</span> evaluation grid and all KDE density estimates (<code>kde_gt</code>, <code>kde_euclid</code>, <code>kde_riem</code>) are computed once and reused for JSD computation, the density difference map, and the 2×2 evaluation figure. Bandwidth is fixed at <span class="math inline">\(0.15\)</span> radians for all models to ensure the JSD comparison is not confounded by bandwidth selection.</p></li>
+</ul>
+<hr>
+</section>
+<section id="dependencies" class="level2">
+<h2 class="anchored" data-anchor-id="dependencies">Dependencies</h2>
+<pre><code>numpy&gt;=1.24          # array operations, wrapped normal sampling, KDE evaluation grid
+torch&gt;=2.0           # network training, GPU-accelerated sampling, exp_map_torch
+scipy                # gaussian_kde for Ramachandran density estimation, rel_entr for JSD
+matplotlib           # Ramachandran plots, loss curves, torus visualizations, quiver field
+pandas               # dataset construction and inspection</code></pre>
+<hr>
+</section>
+<section id="note" class="level2">
+<h2 class="anchored" data-anchor-id="note">Note</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 100%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: center;">The notebook was developed and tested on a Kaggle environment. All cells run end-to-end from a clean kernel without any external dependencies beyond those listed above.</th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+<hr>
+<hr>
+<ul>
+<li><a href="">Project Notebook (Code)</a></li>
+<li><a href="../../projects/Riemannian Flow Matching for Protein Backbone Generation/mathematical_framework.html">Mathematical Framework</a></li>
+<li><a href="../../projects/Riemannian Flow Matching for Protein Backbone Generation/solving_anchor_example.html">Solving an Anchor Example</a></li>
+</ul>
+<hr>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

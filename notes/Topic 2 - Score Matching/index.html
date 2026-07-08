@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2026-07-08">
+
+<title>Topic 2 - Score Matching – Shreesh Bhattarai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f476d09796a223f24f1d84e1ae9c0b0c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Shreesh Bhattarai</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Topic 2 - Score Matching</li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../projects/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Projects</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../catw/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concepts Along the Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../papers/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Paper Comprehensions</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../notes/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#topic-2---score-matching-learning-the-direction-of-probability-mass" id="toc-topic-2---score-matching-learning-the-direction-of-probability-mass" class="nav-link active" data-scroll-target="#topic-2---score-matching-learning-the-direction-of-probability-mass">Topic 2 - Score Matching: Learning the Direction of Probability Mass</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#layer-1-story" id="toc-layer-1-story" class="nav-link" data-scroll-target="#layer-1-story">Layer 1 (Story)</a></li>
+  <li><a href="#layer-2-mathematics" id="toc-layer-2-mathematics" class="nav-link" data-scroll-target="#layer-2-mathematics">Layer 2 (Mathematics)</a></li>
+  <li><a href="#layer-3-bridge" id="toc-layer-3-bridge" class="nav-link" data-scroll-target="#layer-3-bridge">Layer 3 (Bridge)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Topic 2 - Score Matching</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">July 8, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="topic-2---score-matching-learning-the-direction-of-probability-mass" class="level1">
+<h1>Topic 2 - Score Matching: Learning the Direction of Probability Mass</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>Topic 1 established the architectural framework: a neural network <span class="math inline">\(f_\theta(x,t)\)</span> parameterizes a time-dependent velocity field, an ODE solver integrates it to produce samples, the adjoint method trains it with constant memory, and the instantaneous change of variables formula computes exact log-likelihoods. The neural ODE is the engine. Topic 1 said nothing specific about what velocity field to learn — it only said how to learn it once you have defined a training objective.</p>
+<p>Topic 2 answers the question that Topic 1 left open: what is the velocity field, and how do you teach a neural network to produce it without computing quantities that are intractable for high-dimensional data?</p>
+<p>The answer is the score function. From Chapter 1’s Topic 1, you know that the Wasserstein gradient flow of entropy produces the heat equation, and the key object driving that flow is the velocity field <span class="math inline">\(v_t = -\nabla\log\rho_t\)</span> — the negative gradient of the log-density, pointing from high-density regions toward low-density regions. From Chapter 1’s Topic 2, you know that the Anderson reverse-time SDE requires the score function <span class="math inline">\(s_t(x) = \nabla\log\rho_t(x)\)</span> as the essential correction term that turns diffusion’s spreading tendency into concentration toward data. From Topic 1 of this chapter, you know that the probability flow ODE velocity is <span class="math inline">\(v_t = b_t - \frac{\sigma_t^2}{2}s_t\)</span> — the score function determines the ODE that generates samples.</p>
+<p>The score function is the thread connecting everything. It is the Wasserstein gradient of entropy. It is the reverse-time correction. It is half the probability flow ODE velocity. Learning the score function is sufficient to fully specify the generative model — both the stochastic sampler (reverse SDE) and the deterministic sampler (probability flow ODE). Score matching is the family of methods for learning the score function from data without computing the intractable normalizing constant that makes direct estimation impossible.</p>
+<p>The central difficulty is this. The score function <span class="math inline">\(\nabla\log\rho_t(x)\)</span> requires knowing <span class="math inline">\(\rho_t(x)\)</span> — the probability density at every point in the data space. For the forward OU process, <span class="math inline">\(\rho_t\)</span> is the convolution of the data distribution with a Gaussian, and this convolution is intractable for complex high-dimensional data distributions like images or molecular structures: you cannot write down a formula for <span class="math inline">\(\rho_t(x)\)</span> that you can differentiate. You have samples from <span class="math inline">\(\rho_t\)</span> — you can generate them by taking data points <span class="math inline">\(x_0\sim p_{\text{data}}\)</span> and adding noise <span class="math inline">\(\alpha_t x_0 + \sigma_t\epsilon\)</span> — but you cannot evaluate <span class="math inline">\(\rho_t(x)\)</span> at an arbitrary point <span class="math inline">\(x\)</span> without integrating over all data points, which is intractable for large datasets.</p>
+<p>Score matching resolves this by reformulating the training objective. Instead of directly minimizing <span class="math inline">\(\mathbb{E}[\|s_\theta(x,t) - \nabla\log\rho_t(x)\|^2]\)</span> — which requires knowing <span class="math inline">\(\nabla\log\rho_t\)</span> — it finds an equivalent objective expressible purely in terms of quantities computable from samples. The key mathematical trick, due to Hyvärinen (2005), is integration by parts: the Fisher divergence <span class="math inline">\(\mathbb{E}[\|s_\theta - \nabla\log\rho\|^2]\)</span> can be rewritten as <span class="math inline">\(\mathbb{E}[\|s_\theta\|^2 + 2\nabla\cdot s_\theta] + C\)</span>, where the term involving the intractable <span class="math inline">\(\nabla\log\rho\)</span> has vanished and been replaced by the divergence of <span class="math inline">\(s_\theta\)</span> itself — which is computable. This is the original score matching objective. Denoising score matching, developed independently and shown to be equivalent, sidesteps even the divergence computation by using the known structure of the forward noising process to replace <span class="math inline">\(\nabla\log\rho_t\)</span> with the known noise direction, making training a simple regression problem.</p>
+<p>This topic has three components that build in strict logical sequence.</p>
+<p>The first component is <strong>the Fisher divergence and the original score matching objective</strong>. The Fisher divergence <span class="math inline">\(\mathbb{E}_{\rho}[\|s_\theta(x) - \nabla\log\rho(x)\|^2]\)</span> is the natural distance between a score network <span class="math inline">\(s_\theta\)</span> and the true score <span class="math inline">\(\nabla\log\rho\)</span>. Hyvärinen’s score matching theorem shows that minimizing the Fisher divergence is equivalent to minimizing <span class="math inline">\(\mathbb{E}_\rho[\frac{1}{2}\|s_\theta(x)\|^2 + \nabla\cdot s_\theta(x)]\)</span>, where the divergence <span class="math inline">\(\nabla\cdot s_\theta = \text{tr}(\nabla_x s_\theta)\)</span> is the trace of the Jacobian of <span class="math inline">\(s_\theta\)</span>. This equivalence holds by integration by parts — the same divergence theorem from MATH 201 that appeared in the Fokker-Planck derivation and the FFJORD likelihood computation. The original score matching objective is exact but computationally expensive in high dimensions: computing <span class="math inline">\(\nabla\cdot s_\theta\)</span> requires the trace of the Jacobian of <span class="math inline">\(s_\theta\)</span>, which costs <span class="math inline">\(O(d)\)</span> backward passes — the same Hutchinson bottleneck as in Topic 1. Sliced score matching resolves this by projecting the score onto random directions before computing the divergence, reducing the cost to <span class="math inline">\(O(1)\)</span> backward passes at the expense of variance.</p>
+<p>The second component is <strong>denoising score matching and its equivalence to the original objective</strong>. Vincent (2011) showed that the score matching objective for a smoothed density <span class="math inline">\(\tilde\rho_\sigma(x) = \int\rho(x_0)\mathcal{N}(x; x_0, \sigma^2 I)\,dx_0\)</span> — the original data distribution convolved with Gaussian noise — is equivalent to the denoising objective <span class="math inline">\(\mathbb{E}_{x_0\sim\rho, \epsilon\sim\mathcal{N}(0,I)}[\|s_\theta(x_0+\sigma\epsilon,\sigma) - (-\epsilon/\sigma)\|^2]\)</span>: learning to predict the noise direction <span class="math inline">\(-\epsilon/\sigma\)</span> from the noisy observation <span class="math inline">\(x_0+\sigma\epsilon\)</span>. This equivalence has two profound consequences. First, the training objective requires no Jacobian computation — it is a simple mean squared error regression problem, as computationally cheap as any standard supervised learning task. Second, by Tweedie’s formula from Chapter 1 Topic 2, learning to predict the noise direction <span class="math inline">\(-\epsilon/\sigma\)</span> is equivalent to learning the score function <span class="math inline">\(\nabla\log\rho_\sigma(x)\)</span> of the smoothed distribution. The denoising score matching objective is therefore simultaneously a simple regression problem and an exact score estimator for the smoothed density.</p>
+<p>The third component is <strong>the noise-conditional score network and the unified training objective for diffusion models</strong>. Song and Ermon (2019) extended denoising score matching to a continuous range of noise levels <span class="math inline">\(\sigma\in[\sigma_{\min},\sigma_{\max}]\)</span>, training a single noise-conditional score network <span class="math inline">\(s_\theta(x,\sigma)\)</span> to estimate <span class="math inline">\(\nabla\log\rho_\sigma(x)\)</span> at all noise levels simultaneously. This produces the score function at every point in the noise schedule — not just at one fixed noise level — giving everything needed to run the reverse SDE or probability flow ODE at any time <span class="math inline">\(t\)</span>. Ho, Jain, and Abbeel (2020) showed that weighting the different noise levels appropriately and using the OU process as the forward noising mechanism gives DDPM — the denoising diffusion probabilistic model — whose training objective is precisely the noise-weighted sum of denoising score matching objectives across the noise schedule. The DDPM training procedure is score matching; the DDPM sampling procedure is numerical integration of the reverse SDE with the learned score; and the DDIM sampler is the probability flow ODE with the learned score, as established in Topic 1.</p>
+<p>The connections to your curriculum are direct and concrete across three courses.</p>
+<p>Your MATH 201 course on Advanced Calculus provides the integration by parts identity that is the mathematical heart of score matching. The Hyvärinen equivalence is proved by expanding <span class="math inline">\(\|s_\theta - \nabla\log\rho\|^2 = \|s_\theta\|^2 - 2s_\theta\cdot\nabla\log\rho + \|\nabla\log\rho\|^2\)</span>, noting that <span class="math inline">\(\|\nabla\log\rho\|^2\)</span> is a constant with respect to <span class="math inline">\(\theta\)</span>, and converting the cross-term <span class="math inline">\(-2\mathbb{E}[s_\theta\cdot\nabla\log\rho]\)</span> to <span class="math inline">\(+2\mathbb{E}[\nabla\cdot s_\theta]\)</span> via the divergence theorem — the same integration by parts used in the Fokker-Planck derivation. The divergence <span class="math inline">\(\nabla\cdot s_\theta = \sum_i\partial s_\theta^i/\partial x_i\)</span> is the trace of the Jacobian from MATH 201’s multivariate calculus.</p>
+<p>Your MATH 208 course on Statistics and Probability provides the probabilistic framework for denoising score matching. The conditional expectation <span class="math inline">\(\mathbb{E}[\epsilon|X_t = x] = -\sigma_t s_t(x)\)</span> is Bayes’ theorem applied to the Gaussian forward process — Tweedie’s formula from Chapter 1. The denoising score matching loss is a mean squared error regression — the fundamental quantity from MATH 208’s estimation theory, measuring the expected squared difference between the predicted and true noise directions. The noise schedule <span class="math inline">\(\sigma_t\)</span> and signal coefficient <span class="math inline">\(\alpha_t\)</span> of the OU process determine the signal-to-noise ratio <span class="math inline">\(\text{SNR}(t) = \alpha_t^2/\sigma_t^2\)</span> that weights the contribution of each noise level to the total training objective.</p>
+<p>Your MSCS 202 course on Numerical Methods provides the discretization schemes — Euler-Maruyama for the stochastic reverse SDE, Euler and Runge-Kutta for the deterministic probability flow ODE — that convert the continuous-time score-based model into a discrete-time sampling algorithm. The error analysis of these discretization schemes — how many steps are needed for a given distributional accuracy — uses the same global error bounds from MATH 217 that appeared in Topic 1’s neural ODE analysis.</p>
+<p>By the end of this topic, score matching will feel not like a clever computational trick for avoiding an intractable quantity but like the inevitable consequence of asking: how do you learn the direction of probability mass from samples alone, without computing the normalizing constant? The answer — use integration by parts to eliminate the intractable density from the objective, or use the forward process’s known structure to replace the intractable score with a computable noise direction — is the same mathematical move in two different forms. Both forms train the same function: the score <span class="math inline">\(\nabla\log\rho_t\)</span>, the Wasserstein gradient of entropy, the reverse-time correction, the half-velocity of the probability flow ODE. Learning the score is learning the geometry of the data distribution — the direction, at every point in the space and at every noise level, in which probability mass is most concentrated.</p>
+<hr>
+</section>
+<section id="layer-1-story" class="level2">
+<h2 class="anchored" data-anchor-id="layer-1-story">Layer 1 (Story)</h2>
+<p>It is 2022. A catastrophic glacial lake outburst flood — a GLOF event — has struck the Marsyangdi river valley in Manang district. The flood has displaced thousands of villagers across a rugged 200-square-kilometre search zone. Nepal’s Search and Rescue Coordination Centre in Kathmandu has activated its emergency response network, and you are the chief data scientist tasked with a specific problem: given the current distribution of rescue teams across the terrain, predict where survivors are most likely to be found, and direct the teams toward regions of highest survivor density.</p>
+<p>The survivor distribution is unknown. You cannot see it directly. What you can observe are signals — smoke from fires, sound of voices, footprints in mud, thermal signatures from drones — that tell you, locally and noisily, which direction the survivor density is increasing. At any terrain point <span class="math inline">\(x\)</span>, a rescue team’s observations tell them not the survivor density <span class="math inline">\(\rho(x)\)</span> itself but its gradient direction: are there more survivors uphill or downhill, to the left or to the right? The gradient of the log-density <span class="math inline">\(\nabla\log\rho(x)\)</span> — the direction of steepest increase in survivor concentration — is what each team can estimate locally from their observations, even though none of them can estimate the total density <span class="math inline">\(\rho(x)\)</span> without knowing how many survivors there are in total.</p>
+<p>This is the score function: <span class="math inline">\(s(x) = \nabla\log\rho(x)\)</span>. Not the density. Not the count. The direction — at each location — in which survivor concentration is increasing most rapidly. Learning this direction field from local observations, without ever counting the total number of survivors, is score matching.</p>
+<hr>
+<p><strong>The normalizing constant problem: why you cannot count survivors.</strong></p>
+<p>The coordination centre receives a question from the government: how many survivors are there in total? You explain the difficulty. To know the total count, you would need to integrate the survivor density over the entire 200-square-kilometre search zone: <span class="math inline">\(Z = \int_\Omega\rho(x)\,dx\)</span>. But you do not know <span class="math inline">\(\rho(x)\)</span> at every point — you only have noisy local observations from seventeen rescue teams scattered across the terrain. Computing the integral would require either surveying every point in the 200-square-kilometre zone (impossible) or fitting a global density model from the sparse observations (inaccurate and expensive).</p>
+<p>Here is the key insight: you do not need the total count to direct the rescue teams. You need the gradient direction. Knowing that survivor density is increasing toward the northwest at a rate of 3 survivors per kilometre tells you to send teams northwest — without knowing whether the total survivor count is 500 or 5000. The gradient <span class="math inline">\(\nabla\log\rho(x) = \nabla\rho(x)/\rho(x)\)</span> captures the relative rate of change — how much denser is one region relative to its neighbours — without requiring knowledge of the absolute density level.</p>
+<p>The score function <span class="math inline">\(s(x) = \nabla\log\rho(x)\)</span> is the rescue operation’s fundamental information object: it encodes everything you need to navigate toward survivors, even when you cannot enumerate them. This is why score matching — learning <span class="math inline">\(s(x)\)</span> rather than <span class="math inline">\(\rho(x)\)</span> — is both more tractable and more directly useful for the generative modeling problem: the reverse-time SDE and probability flow ODE both require <span class="math inline">\(s_t(x) = \nabla\log\rho_t(x)\)</span>, not <span class="math inline">\(\rho_t(x)\)</span> itself.</p>
+<hr>
+<p><strong>The naive approach: direct score estimation and why it fails.</strong></p>
+<p>Your data science team’s junior analyst, Sushil, tries the direct approach. Fit a parametric model <span class="math inline">\(s_\theta(x)\)</span> to approximate the true score <span class="math inline">\(s(x) = \nabla\log\rho(x)\)</span> by minimizing the mean squared error between them:</p>
+<p><span class="math display">\[\mathcal{L}_{\text{naive}}(\theta) = \mathbb{E}_{x\sim\rho}\left[\|s_\theta(x) - \nabla\log\rho(x)\|^2\right]\]</span></p>
+<p>Sushil writes the code and immediately hits the wall. The training data consists of survivor location observations — samples from <span class="math inline">\(\rho\)</span>. But the loss function requires evaluating <span class="math inline">\(\nabla\log\rho(x)\)</span> at each observed location — and this requires knowing <span class="math inline">\(\rho(x)\)</span>, the density at <span class="math inline">\(x\)</span>, which is exactly what you are trying to learn. You cannot compute the loss without already knowing the answer.</p>
+<p>The senior analyst, Maya, recognizes the problem immediately: the naive objective requires the ground truth score function as a label for each training point, but the ground truth score is the thing we are trying to estimate. This is circular. We need a training objective that measures how well <span class="math inline">\(s_\theta\)</span> approximates <span class="math inline">\(\nabla\log\rho\)</span> without ever computing <span class="math inline">\(\nabla\log\rho\)</span> itself.</p>
+<hr>
+<p><strong>Hyvärinen’s insight: integration by parts removes the intractable term.</strong></p>
+<p>Maya recalls a mathematical trick from her Analysis II course. The problematic term in the naive loss is the cross-product <span class="math inline">\(-2\mathbb{E}[s_\theta(x)\cdot\nabla\log\rho(x)]\)</span> — the inner product between the predicted score and the true score. This term requires knowing <span class="math inline">\(\nabla\log\rho\)</span>. What if you could rewrite it using integration by parts — moving the derivative from <span class="math inline">\(\log\rho\)</span> to <span class="math inline">\(s_\theta\)</span>?</p>
+<p>The divergence theorem says: <span class="math inline">\(\int f\cdot\nabla g\,d\rho = -\int(\nabla\cdot f)g\,d\rho + \text{boundary terms}\)</span>. Applying this with <span class="math inline">\(f = s_\theta\)</span> and <span class="math inline">\(g = \log\rho\)</span>, noting that <span class="math inline">\(\nabla g = \nabla\log\rho\)</span> and <span class="math inline">\(d\rho = \rho\,dx\)</span>:</p>
+<p><span class="math display">\[\mathbb{E}_\rho[s_\theta(x)\cdot\nabla\log\rho(x)] = -\mathbb{E}_\rho[\nabla\cdot s_\theta(x)] + \text{boundary terms}\]</span></p>
+<p>The boundary terms vanish if <span class="math inline">\(\rho\)</span> decays sufficiently fast at infinity — which it does for well-behaved distributions like the Gaussian-smoothed survivor density. The cross-term involving the intractable <span class="math inline">\(\nabla\log\rho\)</span> has been converted into <span class="math inline">\(-\mathbb{E}[\nabla\cdot s_\theta]\)</span> — the divergence of <span class="math inline">\(s_\theta\)</span>, which requires no knowledge of <span class="math inline">\(\rho\)</span> whatsoever. You can compute <span class="math inline">\(\nabla\cdot s_\theta(x) = \sum_i\partial s_\theta^i/\partial x_i\)</span> from the network <span class="math inline">\(s_\theta\)</span> alone.</p>
+<p>Expanding the original naive loss and substituting:</p>
+<p><span class="math display">\[\mathcal{L}_{\text{naive}}(\theta) = \mathbb{E}_\rho\left[\|s_\theta(x)\|^2 + 2\nabla\cdot s_\theta(x)\right] + C\]</span></p>
+<p>where <span class="math inline">\(C = \mathbb{E}_\rho[\|\nabla\log\rho\|^2]\)</span> is a constant independent of <span class="math inline">\(\theta\)</span>. Since minimizing over <span class="math inline">\(\theta\)</span> ignores constants, the Hyvärinen score matching objective is:</p>
+<p><span class="math display">\[\mathcal{L}_{\text{SM}}(\theta) = \mathbb{E}_\rho\left[\frac{1}{2}\|s_\theta(x)\|^2 + \nabla\cdot s_\theta(x)\right]\]</span></p>
+<p>No <span class="math inline">\(\rho\)</span> appears anywhere. No <span class="math inline">\(\nabla\log\rho\)</span> appears anywhere. You only need samples from <span class="math inline">\(\rho\)</span> (the observed survivor locations) and the ability to evaluate <span class="math inline">\(s_\theta\)</span> and its divergence at those locations. The intractable normalizing constant has been eliminated by integration by parts — the same mathematical move used to derive the Fokker-Planck equation from Itô’s formula.</p>
+<hr>
+<p><strong>The rescue team’s interpretation of the score matching objective.</strong></p>
+<p>Maya explains the objective to the rescue team coordinators using the terrain analogy.</p>
+<p>The first term <span class="math inline">\(\frac{1}{2}\|s_\theta(x)\|^2\)</span> penalizes the score network for predicting large gradient magnitudes — for confidently pointing teams in a specific direction — at observed survivor locations. If the network claims the density is increasing steeply to the northwest at a known survivor location, it is asserting strong local structure in the density, which should be penalized unless the data supports it.</p>
+<p>The second term <span class="math inline">\(\nabla\cdot s_\theta(x)\)</span> is the divergence of the predicted score field at each observed location. Positive divergence means the predicted score field is spreading outward from that location — the network is predicting that density decreases in all directions away from the observed point. Negative divergence means the score field is converging toward the observed location — the network is predicting a local density maximum there. Adding the divergence to the objective pushes the network to create inward-pointing score fields at observed survivor locations — exactly the correct behavior for a distribution that concentrates mass at likely survivor positions.</p>
+<p>Together, the two terms balance: the first prevents the network from predicting overly strong gradients, and the second encourages the network to predict score fields that concentrate toward the observed data. At the optimum, the balance produces a score field that exactly matches <span class="math inline">\(\nabla\log\rho\)</span> — pointing toward density peaks everywhere.</p>
+<hr>
+<p><strong>The divergence bottleneck: a new computational problem.</strong></p>
+<p>Sushil implements the Hyvärinen objective and immediately discovers a new problem. Computing the divergence <span class="math inline">\(\nabla\cdot s_\theta(x) = \sum_{i=1}^d\partial s_\theta^i/\partial x_i\)</span> requires computing <span class="math inline">\(d\)</span> partial derivatives — one per spatial dimension. Each partial derivative requires one backward pass through the neural network <span class="math inline">\(s_\theta\)</span>. For the Marsyangdi search zone discretized into a 100-metre grid, <span class="math inline">\(d = 2000\)</span> spatial dimensions. For a molecular structure generation problem, <span class="math inline">\(d\)</span> might be thousands. Computing the divergence costs <span class="math inline">\(O(d)\)</span> backward passes per training point — prohibitively expensive.</p>
+<p>This is the same Jacobian trace bottleneck encountered in Topic 1’s FFJORD instantaneous change of variables formula. And the same fix applies: the Hutchinson estimator. Using a random vector <span class="math inline">\(z\sim\mathcal{N}(0,I)\)</span>: <span class="math inline">\(\nabla\cdot s_\theta(x) = \text{tr}(\nabla_x s_\theta(x)) \approx z^\top\nabla_x s_\theta(x)z\)</span>, computable with one Jacobian-vector product. This is sliced score matching — it converts the exact Hyvärinen objective into a computationally tractable stochastic approximation, at the cost of variance in the gradient estimates.</p>
+<hr>
+<p><strong>The denoising breakthrough: a completely different approach.</strong></p>
+<p>While Sushil is debugging the sliced score matching implementation, Maya discovers a fundamentally different approach. Instead of estimating the score of <span class="math inline">\(\rho\)</span> directly, add known Gaussian noise to the survivor locations to create a smoothed version of the survivor distribution, and estimate the score of the smoothed distribution. The smoothed distribution <span class="math inline">\(\tilde\rho_\sigma(x) = \int\rho(x_0)\mathcal{N}(x;x_0,\sigma^2)\,dx_0\)</span> is the original density convolved with a Gaussian — it represents the distribution of survivor locations plus random displacement noise of magnitude <span class="math inline">\(\sigma\)</span>.</p>
+<p>Now here is the key observation. A survivor who is truly at location <span class="math inline">\(x_0\)</span> appears at noisy observed location <span class="math inline">\(x = x_0 + \sigma\epsilon\)</span> for <span class="math inline">\(\epsilon\sim\mathcal{N}(0,I)\)</span>. The score of the smoothed distribution at the noisy location <span class="math inline">\(x\)</span> is:</p>
+<p><span class="math display">\[\nabla_x\log\tilde\rho_\sigma(x) = -\frac{\epsilon}{\sigma} = -\frac{x - x_0}{\sigma^2}\]</span></p>
+<p>This is a remarkable fact: the score of the smoothed distribution at the noisy observation <span class="math inline">\(x = x_0+\sigma\epsilon\)</span> points directly toward the clean location <span class="math inline">\(x_0\)</span>, with magnitude <span class="math inline">\(1/\sigma\)</span>. The score tells you: go back toward where the survivor actually was, before the noise was added. The direction from the noisy observation to the clean signal is <span class="math inline">\(x_0 - x = -\sigma\epsilon\)</span>, and the score is this direction normalized by <span class="math inline">\(\sigma^2\)</span>.</p>
+<p>More precisely, the score <span class="math inline">\(\nabla_x\log\tilde\rho_\sigma(x)\)</span> can be computed from the conditional distribution <span class="math inline">\(p(x_0|x)\)</span> via Tweedie’s formula:</p>
+<p><span class="math display">\[\nabla_x\log\tilde\rho_\sigma(x) = \frac{\mathbb{E}[x_0|x] - x}{\sigma^2}\]</span></p>
+<p>The optimal denoiser — predicting the clean survivor location from the noisy observation — is directly related to the score function. Learning to denoise is learning the score.</p>
+<hr>
+<p><strong>The denoising score matching objective: regression without intractability.</strong></p>
+<p>This observation converts score estimation into a supervised learning problem. You have pairs <span class="math inline">\((x_0, x)\)</span> — clean survivor location and noisy observation — generated by the process <span class="math inline">\(x = x_0 + \sigma\epsilon\)</span>. You want to train a network <span class="math inline">\(s_\theta(x,\sigma)\)</span> to predict <span class="math inline">\(\nabla_x\log\tilde\rho_\sigma(x) = -\epsilon/\sigma\)</span>. The training objective is:</p>
+<p><span class="math display">\[\mathcal{L}_{\text{DSM}}(\theta) = \mathbb{E}_{x_0\sim\rho,\,\epsilon\sim\mathcal{N}(0,I)}\left[\left\|s_\theta(x_0 + \sigma\epsilon,\,\sigma) + \frac{\epsilon}{\sigma}\right\|^2\right]\]</span></p>
+<p>This is mean squared error between the network’s score prediction and the known noise direction <span class="math inline">\(-\epsilon/\sigma\)</span>. No divergence computation. No Jacobian. No intractable density. Just regression on pairs <span class="math inline">\((x_0+\sigma\epsilon, -\epsilon/\sigma)\)</span> — synthetic data generated from the known noising process.</p>
+<p>The rescue team analogy: you teach the network where survivors really are by showing it noisy observations and telling it the direction toward the true location. After training, the network can estimate the score — the direction toward survivors — from any noisy observation, even without knowing the noise that was added.</p>
+<hr>
+<p><strong>The break moment: why one noise level is not enough.</strong></p>
+<p>You train the denoising score matching network at a fixed noise level <span class="math inline">\(\sigma = 500\)</span> metres — a reasonable search radius for the rescue operation. The trained network <span class="math inline">\(s_\theta(x, 500\text{m})\)</span> accurately predicts the score of the <span class="math inline">\(\sigma=500\text{m}\)</span>-smoothed survivor distribution. You use it to direct rescue teams.</p>
+<p>The teams find survivors efficiently at first. But as the search zone becomes sparser — most survivors found, only isolated individuals remaining in remote locations — the trained score network starts failing. The score at any observed location now points toward the nearest known survivor cluster, even if that cluster is 5 kilometres away. The network’s score predictions are dominated by large-scale density features and cannot resolve fine-scale local structure.</p>
+<p>Here is the naive assumption that breaks: one noise level <span class="math inline">\(\sigma\)</span> is sufficient to learn the score function for sampling.</p>
+<p>It breaks in two ways. At large <span class="math inline">\(\sigma\)</span> (heavy noise), the smoothed distribution <span class="math inline">\(\tilde\rho_\sigma\)</span> is nearly Gaussian — it has lost all fine-grained structure of the original distribution. The score <span class="math inline">\(\nabla\log\tilde\rho_\sigma\)</span> points toward the global density center with no information about local structure. This is useful for coarse navigation — getting teams into the right general area — but not for fine-grained search. At small <span class="math inline">\(\sigma\)</span> (light noise), the score captures fine-grained local structure but the training data is sparse: most of the space has very few noisy observations near any particular <span class="math inline">\(x\)</span>, making the score estimate unreliable everywhere except near observed survivor locations.</p>
+<p>The correct approach — established by Song and Ermon (2019) — is to train on many noise levels simultaneously, from large <span class="math inline">\(\sigma\)</span> (coarse structure, reliable estimates) down to small <span class="math inline">\(\sigma\)</span> (fine structure, sparse but informative). The noise-conditional score network <span class="math inline">\(s_\theta(x, \sigma)\)</span> or equivalently <span class="math inline">\(s_\theta(x, t)\)</span> for the time-indexed noise schedule, learns the score at every noise level, enabling a sampling procedure that navigates from the coarse to the fine: start at large noise (coarse Gaussian landscape, easy to navigate), gradually reduce noise (finer landscape, more complex terrain), and arrive at small noise (sharp survivor distribution, accurate local search). This is the annealed Langevin dynamics of Song-Ermon, the DDPM sampling schedule of Ho et al., and the reverse SDE of Anderson — all instances of multi-scale score learning navigating from large to small noise.</p>
+<hr>
+<p><strong>The noise-conditional score network: learning across all scales.</strong></p>
+<p>The training objective for the noise-conditional score network integrates across the noise schedule with a weighting function <span class="math inline">\(\lambda(\sigma)\)</span>:</p>
+<p><span class="math display">\[\mathcal{L}_{\text{NCSN}}(\theta) = \mathbb{E}_{t\sim U[0,T]}\left[\lambda(t)\cdot\mathbb{E}_{x_0\sim p_{\text{data}},\,\epsilon\sim\mathcal{N}(0,I)}\left[\left\|s_\theta(\alpha_t x_0 + \sigma_t\epsilon,\,t) + \frac{\epsilon}{\sigma_t}\right\|^2\right]\right]\]</span></p>
+<p>where <span class="math inline">\(\alpha_t\)</span> and <span class="math inline">\(\sigma_t\)</span> are the signal and noise coefficients of the OU process. The weighting <span class="math inline">\(\lambda(t) = \sigma_t^2\)</span> — chosen so that the loss is dimensionally consistent and all noise levels contribute equally to the total training signal — produces the DDPM objective of Ho et al.&nbsp;(2020) after reparameterization: <span class="math inline">\(\mathbb{E}_{t,x_0,\epsilon}[\|\epsilon_\theta(\alpha_t x_0+\sigma_t\epsilon, t) - \epsilon\|^2]\)</span>, where <span class="math inline">\(\epsilon_\theta = -\sigma_t s_\theta\)</span> is the noise prediction network.</p>
+<p>The rescue operation analogy: train the rescue coordination network on observations from all scales simultaneously — some teams searching in 5-kilometre radius sectors (large <span class="math inline">\(\sigma\)</span>, coarse search), some in 500-metre sectors (medium <span class="math inline">\(\sigma\)</span>), some in 50-metre sectors (small <span class="math inline">\(\sigma\)</span>, fine search). The network learns a consistent score field across all scales, enabling a sampling procedure that starts with large-scale navigation and progressively zooms in toward precise survivor locations.</p>
+<hr>
+<p><strong>Three pictures to carry into the mathematics.</strong></p>
+<p>The first picture: the score field as a direction field over the search terrain — at each location <span class="math inline">\(x\)</span>, an arrow pointing toward higher survivor density. The score function <span class="math inline">\(s(x) = \nabla\log\rho(x)\)</span> is this direction field. Rescue teams follow the arrows. The generative model generates samples by following the reverse-time score field from noise to data.</p>
+<p>The second picture: the Hyvärinen integration by parts — the problematic cross-term <span class="math inline">\(\mathbb{E}[s_\theta\cdot\nabla\log\rho]\)</span> converted to <span class="math inline">\(-\mathbb{E}[\nabla\cdot s_\theta]\)</span> by the divergence theorem, eliminating <span class="math inline">\(\nabla\log\rho\)</span> from the objective entirely. The boundary terms vanish because <span class="math inline">\(\rho\)</span> decays at infinity. The resulting objective <span class="math inline">\(\mathbb{E}[\frac{1}{2}\|s_\theta\|^2 + \nabla\cdot s_\theta]\)</span> requires only samples from <span class="math inline">\(\rho\)</span> and evaluations of <span class="math inline">\(s_\theta\)</span>.</p>
+<p>The third picture: the denoising equivalence — a noisy observation <span class="math inline">\(x = x_0 + \sigma\epsilon\)</span> paired with the noise direction <span class="math inline">\(-\epsilon/\sigma\)</span> pointing back toward the clean location. Training <span class="math inline">\(s_\theta(x,\sigma)\)</span> to predict <span class="math inline">\(-\epsilon/\sigma\)</span> is simultaneously learning the score of the smoothed distribution <span class="math inline">\(\tilde\rho_\sigma\)</span>. Multi-scale training across all <span class="math inline">\(\sigma\)</span> gives the noise-conditional score network, enabling annealed sampling from coarse to fine.</p>
+<hr>
+</section>
+<section id="layer-2-mathematics" class="level2">
+<h2 class="anchored" data-anchor-id="layer-2-mathematics">Layer 2 (Mathematics)</h2>
+<p>We build the formalism in six stages: the Fisher divergence and score matching objective, Hyvärinen’s integration by parts theorem, denoising score matching and Vincent’s equivalence theorem, the noise-conditional score network and DDPM, the connection between score matching and the reverse SDE, and the unified framework of continuous-time score-based generative models.</p>
+<section id="the-fisher-divergence-and-score-matching" class="level3">
+<h3 class="anchored" data-anchor-id="the-fisher-divergence-and-score-matching">The Fisher Divergence and Score Matching</h3>
+<p><strong>Definition (Score function).</strong> For a differentiable density <span class="math inline">\(\rho: \mathbb{R}^d\to\mathbb{R}_{&gt;0}\)</span>, the <strong>score function</strong> is:</p>
+<p><span class="math display">\[s(x) = \nabla_x\log\rho(x) = \frac{\nabla_x\rho(x)}{\rho(x)}\]</span></p>
+<p><strong>Definition (Fisher divergence).</strong> The <strong>Fisher divergence</strong> between densities <span class="math inline">\(p\)</span> and <span class="math inline">\(q\)</span> is:</p>
+<p><span class="math display">\[\mathcal{F}(p\|q) = \mathbb{E}_p\!\left[\|\nabla\log p(x) - \nabla\log q(x)\|^2\right] = \int_{\mathbb{R}^d}\|\nabla\log p - \nabla\log q\|^2\,p\,dx\]</span></p>
+<p>Unlike KL divergence, <span class="math inline">\(\mathcal{F}(p\|q)\)</span> depends only on the scores of <span class="math inline">\(p\)</span> and <span class="math inline">\(q\)</span>, not on their densities directly.</p>
+<p><strong>Score matching objective.</strong> Given data density <span class="math inline">\(\rho\)</span> and score network <span class="math inline">\(s_\theta: \mathbb{R}^d\to\mathbb{R}^d\)</span>, the <strong>explicit score matching</strong> objective is:</p>
+<p><span class="math display">\[\mathcal{L}_{\text{ESM}}(\theta) = \mathbb{E}_\rho\!\left[\frac{1}{2}\|s_\theta(x) - \nabla\log\rho(x)\|^2\right] = \frac{1}{2}\mathcal{F}(\rho\|q_\theta)\]</span></p>
+<p>where <span class="math inline">\(q_\theta\)</span> is the model whose score is <span class="math inline">\(s_\theta\)</span>.</p>
+<p><strong>Expanding the objective:</strong></p>
+<p><span class="math display">\[\mathcal{L}_{\text{ESM}}(\theta) = \mathbb{E}_\rho\!\left[\frac{1}{2}\|s_\theta(x)\|^2 - s_\theta(x)\cdot\nabla\log\rho(x) + \frac{1}{2}\|\nabla\log\rho(x)\|^2\right]\]</span></p>
+<p>The last term is constant in <span class="math inline">\(\theta\)</span>. The problematic term is <span class="math inline">\(-\mathbb{E}_\rho[s_\theta(x)\cdot\nabla\log\rho(x)]\)</span> — it requires knowing <span class="math inline">\(\nabla\log\rho(x)\)</span>.</p>
+<hr>
+</section>
+<section id="hyvärinens-score-matching-theorem" class="level3">
+<h3 class="anchored" data-anchor-id="hyvärinens-score-matching-theorem">Hyvärinen’s Score Matching Theorem</h3>
+<p><strong>Theorem (Hyvärinen 2005).</strong> Under the regularity conditions that <span class="math inline">\(\rho\)</span> is differentiable, <span class="math inline">\(\rho(x)\to 0\)</span> as <span class="math inline">\(\|x\|\to\infty\)</span> sufficiently fast, and <span class="math inline">\(s_\theta\)</span> satisfies <span class="math inline">\(\rho(x)\|s_\theta(x)\|\to 0\)</span> as <span class="math inline">\(\|x\|\to\infty\)</span>:</p>
+<p><span class="math display">\[\mathbb{E}_\rho[s_\theta(x)\cdot\nabla\log\rho(x)] = -\mathbb{E}_\rho[\nabla_x\cdot s_\theta(x)]\]</span></p>
+<p><strong>Proof.</strong> Write <span class="math inline">\(\nabla\log\rho = \nabla\rho/\rho\)</span>:</p>
+<p><span class="math display">\[\mathbb{E}_\rho[s_\theta\cdot\nabla\log\rho] = \int s_\theta(x)\cdot\nabla\rho(x)\,dx = \int s_\theta(x)\cdot\nabla\rho(x)\,dx\]</span></p>
+<p>Apply the integration by parts formula (divergence theorem in <span class="math inline">\(\mathbb{R}^d\)</span>):</p>
+<p><span class="math display">\[\int s_\theta\cdot\nabla\rho\,dx = -\int(\nabla\cdot s_\theta)\rho\,dx + \oint_{\partial\Omega}(s_\theta\cdot n)\rho\,dS\]</span></p>
+<p>As the domain <span class="math inline">\(\Omega\to\mathbb{R}^d\)</span>, the boundary term <span class="math inline">\(\oint_{\partial\Omega}(s_\theta\cdot n)\rho\,dS\to 0\)</span> by the decay assumption <span class="math inline">\(\rho(x)\|s_\theta(x)\|\to 0\)</span>. Therefore:</p>
+<p><span class="math display">\[\mathbb{E}_\rho[s_\theta\cdot\nabla\log\rho] = -\int(\nabla\cdot s_\theta)\rho\,dx = -\mathbb{E}_\rho[\nabla\cdot s_\theta] \qquad\square\]</span></p>
+<p><strong>Corollary (Implicit score matching objective — Hyvärinen 2005).</strong> Minimizing <span class="math inline">\(\mathcal{L}_{\text{ESM}}(\theta)\)</span> is equivalent to minimizing:</p>
+<p><span class="math display">\[\mathcal{L}_{\text{ISM}}(\theta) = \mathbb{E}_\rho\!\left[\frac{1}{2}\|s_\theta(x)\|^2 + \nabla_x\cdot s_\theta(x)\right]\]</span></p>
+<p>since <span class="math inline">\(\mathcal{L}_{\text{ESM}}(\theta) = \mathcal{L}_{\text{ISM}}(\theta) + C\)</span> where <span class="math inline">\(C = \frac{1}{2}\mathbb{E}_\rho[\|\nabla\log\rho\|^2]\)</span> is <span class="math inline">\(\theta\)</span>-independent.</p>
+<p><strong>Proof.</strong> Substitute <span class="math inline">\(\mathbb{E}_\rho[s_\theta\cdot\nabla\log\rho] = -\mathbb{E}_\rho[\nabla\cdot s_\theta]\)</span> into the expanded <span class="math inline">\(\mathcal{L}_{\text{ESM}}\)</span>:</p>
+<p><span class="math display">\[\mathcal{L}_{\text{ESM}} = \mathbb{E}_\rho\!\left[\frac{1}{2}\|s_\theta\|^2\right] - \mathbb{E}_\rho[s_\theta\cdot\nabla\log\rho] + C = \mathbb{E}_\rho\!\left[\frac{1}{2}\|s_\theta\|^2 + \nabla\cdot s_\theta\right] + C = \mathcal{L}_{\text{ISM}} + C \qquad\square\]</span></p>
+<p><strong>Computational cost.</strong> Computing <span class="math inline">\(\nabla\cdot s_\theta(x) = \sum_{i=1}^d\partial s_\theta^i/\partial x_i\)</span> requires <span class="math inline">\(d\)</span> Jacobian-vector products: <span class="math inline">\(\partial s_\theta^i/\partial x_i = e_i^\top\nabla_x s_\theta(x)e_i\)</span> for standard basis vectors <span class="math inline">\(e_i\)</span>. Total cost: <span class="math inline">\(O(d)\)</span> backward passes — the Hutchinson bottleneck.</p>
+<hr>
+</section>
+<section id="sliced-score-matching" class="level3">
+<h3 class="anchored" data-anchor-id="sliced-score-matching">Sliced Score Matching</h3>
+<p><strong>Definition (Sliced score matching — Song et al.&nbsp;2020).</strong> For <span class="math inline">\(v\sim p_v\)</span> with <span class="math inline">\(\mathbb{E}[vv^\top]=I\)</span>:</p>
+<p><span class="math display">\[\mathcal{L}_{\text{SSM}}(\theta) = \mathbb{E}_{x\sim\rho,\,v\sim p_v}\!\left[\frac{1}{2}(v^\top s_\theta(x))^2 + v^\top\nabla_x(v^\top s_\theta(x))\right]\]</span></p>
+<p><strong>Theorem.</strong> <span class="math inline">\(\mathcal{L}_{\text{SSM}}(\theta) = \mathcal{L}_{\text{ISM}}(\theta) + C'\)</span> for a constant <span class="math inline">\(C'\)</span> independent of <span class="math inline">\(\theta\)</span>.</p>
+<p><strong>Proof.</strong> <span class="math inline">\(\mathbb{E}_v[v^\top\nabla_x(v^\top s_\theta)] = \mathbb{E}_v[v^\top(\nabla_x s_\theta)v] = \text{tr}(\nabla_x s_\theta\cdot\mathbb{E}_v[vv^\top]) = \text{tr}(\nabla_x s_\theta) = \nabla\cdot s_\theta\)</span>. Similarly <span class="math inline">\(\mathbb{E}_v[(v^\top s_\theta)^2] = \mathbb{E}_v[v^\top s_\theta s_\theta^\top v] = \text{tr}(s_\theta s_\theta^\top\mathbb{E}[vv^\top]) = \|s_\theta\|^2\)</span>. <span class="math inline">\(\square\)</span></p>
+<p><strong>Cost:</strong> One JVP <span class="math inline">\(\nabla_x(v^\top s_\theta(x)) = \nabla_x s_\theta(x)\cdot v\)</span> per sample — <span class="math inline">\(O(p)\)</span> for a network with <span class="math inline">\(p\)</span> parameters. Total cost reduced from <span class="math inline">\(O(dp)\)</span> to <span class="math inline">\(O(p)\)</span>.</p>
+<hr>
+</section>
+<section id="denoising-score-matching" class="level3">
+<h3 class="anchored" data-anchor-id="denoising-score-matching">Denoising Score Matching</h3>
+<p><strong>Setup.</strong> Let <span class="math inline">\(\tilde\rho_\sigma(x) = \int\rho(x_0)\mathcal{N}(x;x_0,\sigma^2 I)\,dx_0\)</span> be the <strong>noise-perturbed density</strong> — the original density convolved with <span class="math inline">\(\mathcal{N}(0,\sigma^2 I)\)</span>.</p>
+<p><strong>Score of the perturbed density.</strong> For <span class="math inline">\(x = x_0 + \sigma\epsilon\)</span>, <span class="math inline">\(\epsilon\sim\mathcal{N}(0,I)\)</span>:</p>
+<p><span class="math display">\[\nabla_x\log\tilde\rho_\sigma(x) = \frac{\nabla_x\tilde\rho_\sigma(x)}{\tilde\rho_\sigma(x)} = \frac{\int\rho(x_0)\nabla_x\mathcal{N}(x;x_0,\sigma^2)\,dx_0}{\tilde\rho_\sigma(x)}\]</span></p>
+<p><span class="math display">\[= \frac{\int\rho(x_0)\frac{-(x-x_0)}{\sigma^2}\mathcal{N}(x;x_0,\sigma^2)\,dx_0}{\tilde\rho_\sigma(x)} = -\frac{x - \mathbb{E}[x_0|x]}{\sigma^2} = -\frac{\mathbb{E}[\epsilon|x]}{\sigma}\]</span></p>
+<p>This is <strong>Tweedie’s formula</strong> applied to the Gaussian perturbation model.</p>
+<p><strong>Theorem (Vincent 2011 — DSM equivalence).</strong> Minimizing the denoising score matching objective:</p>
+<p><span class="math display">\[\mathcal{L}_{\text{DSM}}(\theta,\sigma) = \mathbb{E}_{x_0\sim\rho,\,\epsilon\sim\mathcal{N}(0,I)}\!\left[\left\|s_\theta(x_0+\sigma\epsilon,\,\sigma) + \frac{\epsilon}{\sigma}\right\|^2\right]\]</span></p>
+<p>is equivalent to minimizing the implicit score matching objective <span class="math inline">\(\mathcal{L}_{\text{ISM}}(\theta)\)</span> for the perturbed density <span class="math inline">\(\tilde\rho_\sigma\)</span>.</p>
+<p><strong>Proof.</strong> Expand:</p>
+<p><span class="math display">\[\mathcal{L}_{\text{DSM}} = \mathbb{E}_{x_0,\epsilon}\!\left[\left\|s_\theta(x,\sigma) - \nabla_x\log\tilde\rho_\sigma(x)\right\|^2\right] - \mathbb{E}\!\left[\left\|\nabla_x\log\tilde\rho_\sigma(x)\right\|^2\right] + \mathbb{E}\!\left[\left\|\nabla_x\log\tilde\rho_\sigma(x) + \frac{\epsilon}{\sigma}\right\|^2\right]\]</span></p>
+<p>The last term equals <span class="math inline">\(\mathbb{E}[\|\nabla_x\log\tilde\rho_\sigma(x) - (-\epsilon/\sigma)\|^2\cdot\tilde\rho_\sigma(x)/p(x,x_0)]\)</span> — which by Tweedie’s formula satisfies <span class="math inline">\(\mathbb{E}[\epsilon|x] = -\sigma\nabla_x\log\tilde\rho_\sigma(x)\)</span>, so the last term is a constant in <span class="math inline">\(\theta\)</span>. Therefore <span class="math inline">\(\mathcal{L}_{\text{DSM}}(\theta,\sigma) = \mathcal{L}_{\text{ESM}}^{\tilde\rho_\sigma}(\theta) + C\)</span>. <span class="math inline">\(\square\)</span></p>
+<p><strong>Computational cost:</strong> <span class="math inline">\(O(p)\)</span> per sample — evaluate <span class="math inline">\(s_\theta(x_0+\sigma\epsilon,\sigma)\)</span> and compare to <span class="math inline">\(-\epsilon/\sigma\)</span>. No Jacobian, no divergence.</p>
+<hr>
+</section>
+<section id="the-noise-conditional-score-network-and-ddpm" class="level3">
+<h3 class="anchored" data-anchor-id="the-noise-conditional-score-network-and-ddpm">The Noise-Conditional Score Network and DDPM</h3>
+<p><strong>Multi-scale score matching.</strong> For the OU forward process <span class="math inline">\(X_t = \alpha_t X_0 + \sigma_t\epsilon\)</span>, <span class="math inline">\(\epsilon\sim\mathcal{N}(0,I)\)</span>, the marginal density is:</p>
+<p><span class="math display">\[\rho_t(x) = \int p_{\text{data}}(x_0)\mathcal{N}(x;\alpha_t x_0,\sigma_t^2 I)\,dx_0\]</span></p>
+<p>with score:</p>
+<p><span class="math display">\[\nabla_x\log\rho_t(x) = -\frac{x - \alpha_t\mathbb{E}[X_0|X_t=x]}{\sigma_t^2} = -\frac{\mathbb{E}[\epsilon|X_t=x]}{\sigma_t}\]</span></p>
+<p><strong>Definition (NCSN objective — Song-Ermon 2019).</strong> The <strong>noise-conditional score network</strong> (NCSN) training objective:</p>
+<p><span class="math display">\[\mathcal{L}_{\text{NCSN}}(\theta) = \mathbb{E}_{t\sim U[0,T]}\!\left[\lambda(t)\cdot\mathbb{E}_{X_0\sim p_{\text{data}},\,\epsilon\sim\mathcal{N}(0,I)}\!\left[\left\|s_\theta(\alpha_t X_0+\sigma_t\epsilon,\,t) + \frac{\epsilon}{\sigma_t}\right\|^2\right]\right]\]</span></p>
+<p>with weighting <span class="math inline">\(\lambda(t) = \sigma_t^2\)</span> (Fisher-consistent weighting).</p>
+<p><strong>DDPM training objective (Ho et al.&nbsp;2020).</strong> Reparameterize: <span class="math inline">\(\epsilon_\theta(x_t,t) = -\sigma_t s_\theta(x_t,t)\)</span> (noise prediction network). With <span class="math inline">\(\lambda(t) = 1\)</span>:</p>
+<p><span class="math display">\[\mathcal{L}_{\text{DDPM}}(\theta) = \mathbb{E}_{t\sim U\{1,\ldots,T\},\,X_0\sim p_{\text{data}},\,\epsilon\sim\mathcal{N}(0,I)}\!\left[\|\epsilon_\theta(\alpha_t X_0+\sigma_t\epsilon,\,t) - \epsilon\|^2\right]\]</span></p>
+<p><strong>Equivalence.</strong> <span class="math inline">\(\mathcal{L}_{\text{DDPM}} = \frac{1}{\sigma_t^2}\mathcal{L}_{\text{NCSN}}\)</span> with the noise prediction reparameterization, confirming that DDPM is denoising score matching with the OU forward process and <span class="math inline">\(\epsilon\)</span>-prediction parameterization.</p>
+<p><strong>Three equivalent parameterizations:</strong></p>
+<p><span class="math inline">\(x_0\)</span>-prediction: <span class="math inline">\(\hat x_0^\theta(x_t,t) = (x_t - \sigma_t\epsilon_\theta(x_t,t))/\alpha_t\)</span></p>
+<p><span class="math inline">\(\epsilon\)</span>-prediction: <span class="math inline">\(\epsilon_\theta(x_t,t) = -\sigma_t s_\theta(x_t,t)\)</span></p>
+<p><span class="math inline">\(v\)</span>-prediction (Salimans-Ho 2022): <span class="math inline">\(v_\theta(x_t,t) = \alpha_t\epsilon_\theta - \sigma_t\hat x_0^\theta = \alpha_t\epsilon - \sigma_t x_0\)</span></p>
+<p>All three are linear reparameterizations of the score <span class="math inline">\(s_\theta\)</span>:</p>
+<p><span class="math display">\[s_\theta(x_t,t) = -\frac{\epsilon_\theta}{\sigma_t} = \frac{\hat x_0^\theta - x_t/\alpha_t}{\sigma_t^2/\alpha_t} = \frac{-\sigma_t\hat x_0^\theta - \alpha_t v_\theta}{\sigma_t^2 + \alpha_t^2\sigma_t} \]</span></p>
+<hr>
+</section>
+<section id="reverse-sde-and-sampling" class="level3">
+<h3 class="anchored" data-anchor-id="reverse-sde-and-sampling">Reverse SDE and Sampling</h3>
+<p><strong>Learned reverse SDE.</strong> Substituting <span class="math inline">\(s_\theta\approx\nabla\log\rho_t\)</span> into the Anderson reverse SDE:</p>
+<p><span class="math display">\[d\tilde X_t = \left[-b(\tilde X_t,T-t) + \sigma_{T-t}^2 s_\theta(\tilde X_t,T-t)\right]dt + \sigma_{T-t}\,d\tilde W_t\]</span></p>
+<p>For the OU forward process with <span class="math inline">\(b(x,t) = -\frac{\beta_t}{2}x\)</span> and <span class="math inline">\(\sigma_t = \sqrt{\beta_t}\)</span>:</p>
+<p><span class="math display">\[d\tilde X_t = \left[\frac{\beta_{T-t}}{2}\tilde X_t + \beta_{T-t}s_\theta(\tilde X_t,T-t)\right]dt + \sqrt{\beta_{T-t}}\,d\tilde W_t\]</span></p>
+<p><strong>DDPM reverse sampler (discretization).</strong> Euler-Maruyama discretization with step <span class="math inline">\(\Delta t = 1/N\)</span>:</p>
+<p><span class="math display">\[x_{t-1} = \frac{1}{\sqrt{1-\beta_t}}\!\left(x_t + \beta_t s_\theta(x_t,t)\right) + \sqrt{\beta_t}\,\epsilon_t, \quad \epsilon_t\sim\mathcal{N}(0,I)\]</span></p>
+<p>equivalently with <span class="math inline">\(\epsilon\)</span>-prediction:</p>
+<p><span class="math display">\[x_{t-1} = \frac{1}{\sqrt{\bar\alpha_t}}\!\left(x_t - \frac{1-\alpha_t}{\sqrt{1-\bar\alpha_t}}\epsilon_\theta(x_t,t)\right) + \sigma_t\epsilon_t\]</span></p>
+<p>where <span class="math inline">\(\bar\alpha_t = \prod_{s=1}^t\alpha_s\)</span> and <span class="math inline">\(\alpha_t = 1-\beta_t\)</span>.</p>
+<p><strong>Probability flow ODE sampler (DDIM).</strong> Deterministic sampler from the probability flow ODE:</p>
+<p><span class="math display">\[\frac{dx_t}{dt} = -\frac{\beta_t}{2}\!\left(x_t + s_\theta(x_t,t)\right)\]</span></p>
+<p>discretized as:</p>
+<p><span class="math display">\[x_{t-1} = \sqrt{\bar\alpha_{t-1}}\hat x_0^\theta(x_t,t) + \sqrt{1-\bar\alpha_{t-1}}\epsilon_\theta(x_t,t)\]</span></p>
+<p>This is DDIM (Song et al.&nbsp;2020) — deterministic, uses the same learned <span class="math inline">\(\epsilon_\theta\)</span> as DDPM but produces deterministic trajectories with fewer function evaluations.</p>
+<hr>
+</section>
+<section id="optimal-weighting-and-the-evidence-lower-bound" class="level3">
+<h3 class="anchored" data-anchor-id="optimal-weighting-and-the-evidence-lower-bound">Optimal Weighting and the Evidence Lower Bound</h3>
+<p><strong>Theorem (Optimal weighting).</strong> The weighting <span class="math inline">\(\lambda^*(t) = \mathbb{E}[\|\nabla_x\log\rho_t(X_t)\|^2]^{-1}\cdot\sigma_t^2\)</span> minimizes the variance of the training gradient over the noise schedule. In practice, <span class="math inline">\(\lambda(t) = \sigma_t^2\)</span> (min-SNR weighting) or <span class="math inline">\(\lambda(t) = 1\)</span> (DDPM) are used.</p>
+<p><strong>Connection to ELBO.</strong> The DDPM objective is a reweighted Evidence Lower Bound (ELBO) for the variational model <span class="math inline">\(p_\theta\)</span> with prior <span class="math inline">\(p_T = \mathcal{N}(0,I)\)</span>:</p>
+<p><span class="math display">\[\log p_\theta(x_0) \geq -\mathcal{L}_{\text{DDPM}}(\theta) + C\]</span></p>
+<p><strong>Proof sketch.</strong> The ELBO for the latent variable model <span class="math inline">\(p_\theta(x_0) = \int p_\theta(x_0|x_1)\cdots p_\theta(x_{T-1}|x_T)p(x_T)\,dx_{1:T}\)</span> factorizes as a sum of KL divergences between forward and backward conditional Gaussians, each of which reduces to the DDPM <span class="math inline">\(\epsilon\)</span>-prediction MSE at each time step. <span class="math inline">\(\square\)</span></p>
+<hr>
+</section>
+<section id="classifier-free-guidance" class="level3">
+<h3 class="anchored" data-anchor-id="classifier-free-guidance">Classifier-Free Guidance</h3>
+<p><strong>Definition.</strong> For a conditional score <span class="math inline">\(\nabla\log p(x|y)\)</span> where <span class="math inline">\(y\)</span> is a conditioning signal (class label, text prompt):</p>
+<p><span class="math display">\[\nabla\log p(x|y) = \nabla\log p(y|x) + \nabla\log p(x)\]</span></p>
+<p><strong>Classifier guidance (Dhariwal-Nichol 2021).</strong> Use a separately trained classifier <span class="math inline">\(p_\phi(y|x_t)\)</span>:</p>
+<p><span class="math display">\[\tilde s_\theta(x_t,t,y) = s_\theta(x_t,t) + w\nabla_{x_t}\log p_\phi(y|x_t)\]</span></p>
+<p><strong>Classifier-free guidance (Ho-Salimans 2022).</strong> Train a single network jointly on conditional and unconditional:</p>
+<p><span class="math display">\[\tilde s_\theta(x_t,t,y) = s_\theta(x_t,t,\emptyset) + w\!\left(s_\theta(x_t,t,y) - s_\theta(x_t,t,\emptyset)\right)\]</span></p>
+<p>where <span class="math inline">\(\emptyset\)</span> indicates null conditioning (10-20% of training uses <span class="math inline">\(y=\emptyset\)</span>). The guidance scale <span class="math inline">\(w &gt; 1\)</span> amplifies the conditional score, trading diversity for fidelity.</p>
+<p><strong>Geometric interpretation.</strong> The guided score <span class="math inline">\(\tilde s = s_\text{uncond} + w(s_\text{cond} - s_\text{uncond})\)</span> is the extrapolation of the conditional score beyond the unconditional: it exaggerates the direction in which the conditioning signal increases density, pushing samples toward high-likelihood regions of the conditional distribution at the cost of reducing sample diversity.</p>
+<hr>
+</section>
+<section id="why-this-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-matters">WHY THIS MATTERS</h3>
+<p>In <strong>MATH 201 (Advanced Calculus)</strong>, Hyvärinen’s theorem uses the divergence theorem <span class="math inline">\(\int s_\theta\cdot\nabla\rho\,dx = -\int(\nabla\cdot s_\theta)\rho\,dx\)</span> — the integration by parts identity for vector fields in <span class="math inline">\(\mathbb{R}^d\)</span>, with boundary terms vanishing by the decay condition on <span class="math inline">\(\rho\|s_\theta\|\)</span>. This is the same integration by parts used to derive the Fokker-Planck equation from Itô’s formula: in both cases, moving a derivative from one factor to another via the divergence theorem eliminates an intractable quantity (the true score <span class="math inline">\(\nabla\log\rho\)</span> in score matching; the expectation of <span class="math inline">\(\nabla\phi\)</span> in the Fokker-Planck derivation). The divergence <span class="math inline">\(\nabla\cdot s_\theta = \text{tr}(\nabla_x s_\theta)\)</span> is the trace of the Jacobian matrix from MATH 201’s multivariate calculus — the same object that appeared in the instantaneous change of variables formula of Topic 1 and in the Hutchinson estimator. The sliced score matching equivalence <span class="math inline">\(\mathbb{E}_v[v^\top\nabla_x s_\theta v] = \text{tr}(\nabla_x s_\theta)\)</span> for <span class="math inline">\(\mathbb{E}[vv^\top]=I\)</span> uses the trace-expectation identity from linear algebra — <span class="math inline">\(\text{tr}(AB) = \text{tr}(BA)\)</span> and <span class="math inline">\(\mathbb{E}[v^\top Av] = \text{tr}(A\mathbb{E}[vv^\top])\)</span> — applied to the Jacobian of <span class="math inline">\(s_\theta\)</span>.</p>
+<p>In <strong>MATH 208 (Statistics and Probability)</strong>, Tweedie’s formula <span class="math inline">\(\nabla\log\tilde\rho_\sigma(x) = -(x-\mathbb{E}[X_0|X=x])/\sigma^2\)</span> is the posterior mean formula for the Gaussian observation model <span class="math inline">\(X = X_0+\sigma\epsilon\)</span>, derived by Bayes’ theorem: <span class="math inline">\(p(x_0|x)\propto p_{\text{data}}(x_0)\mathcal{N}(x;x_0,\sigma^2)\)</span>, and the posterior mean <span class="math inline">\(\mathbb{E}[X_0|X=x] = \int x_0 p(x_0|x)dx_0\)</span> appears in the score via differentiation under the integral sign. The DDPM loss <span class="math inline">\(\mathbb{E}[\|\epsilon_\theta(X_t,t)-\epsilon\|^2]\)</span> is the MSE for predicting the noise <span class="math inline">\(\epsilon\)</span> from the noisy observation <span class="math inline">\(X_t = \alpha_t X_0+\sigma_t\epsilon\)</span> — a classical regression problem from MATH 208, where the optimal predictor is <span class="math inline">\(\mathbb{E}[\epsilon|X_t] = -\sigma_t\nabla\log\rho_t(X_t)\)</span> by Tweedie’s formula. The signal-to-noise ratio <span class="math inline">\(\text{SNR}(t) = \alpha_t^2/\sigma_t^2\)</span> from MATH 208’s signal processing perspective determines the difficulty of the denoising task at each noise level: high SNR (early time, little noise) makes denoising easy and the score estimate reliable; low SNR (late time, heavy noise) makes denoising hard and the score estimate unreliable.</p>
+<p>In <strong>MSCS 202 (Numerical Methods)</strong>, the Euler-Maruyama discretization of the reverse SDE — <span class="math inline">\(x_{t-1} = x_t + \Delta t\cdot\tilde b(x_t,t) + \sqrt{\Delta t}\cdot\sigma\epsilon_t\)</span> — is the stochastic analogue of the explicit Euler method from MSCS 202, applied to the SDE rather than an ODE. The global error of the Euler-Maruyama method is <span class="math inline">\(O(\sqrt{\Delta t})\)</span> in the strong sense (pathwise) and <span class="math inline">\(O(\Delta t)\)</span> in the weak sense (distributional) — the distributional accuracy improving linearly with the number of steps, motivating the use of higher-order solvers (DPM-Solver, DEIS) that achieve <span class="math inline">\(O(\Delta t^k)\)</span> weak accuracy for order <span class="math inline">\(k\)</span>. The DDIM discretization <span class="math inline">\(x_{t-1} = \sqrt{\bar\alpha_{t-1}}\hat x_0^\theta + \sqrt{1-\bar\alpha_{t-1}}\epsilon_\theta\)</span> is a second-order implicit solver for the probability flow ODE — it predicts <span class="math inline">\(\hat x_0^\theta\)</span> (the clean signal) and interpolates toward the next noise level, achieving better accuracy per function evaluation than Euler-Maruyama.</p>
+<hr>
+</section>
+</section>
+<section id="layer-3-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="layer-3-bridge">Layer 3 (Bridge)</h2>
+<p>Every element of the Nepal Search and Rescue Coordination Centre story has a precise mathematical address. We walk through them completely — the survivor density, the local gradient observations, the normalizing constant problem, Sushil’s circular naive objective, Maya’s integration by parts elimination, the divergence bottleneck, the denoising equivalence, and the multi-scale break moment — until the story and the formalism are a single object seen from two angles.</p>
+<hr>
+<p><strong>The survivor distribution across the Marsyangdi search zone — the unknown density of survivors at each terrain point — is the data distribution <span class="math inline">\(p_{\text{data}}(x)\)</span>, an unnormalized density over the search space <span class="math inline">\(\mathbb{R}^d\)</span> that cannot be evaluated pointwise from the available observations.</strong> The rescue operation has access only to samples — observed survivor locations from incomplete search coverage — not to the density function itself. In the generative modeling context, <span class="math inline">\(p_{\text{data}}\)</span> is known only through its samples <span class="math inline">\(\{x_0^{(i)}\}_{i=1}^n\)</span>; the density <span class="math inline">\(p_{\text{data}}(x)\)</span> at an arbitrary point <span class="math inline">\(x\)</span> is intractable because it would require integrating over all possible data configurations. The normalizing constant <span class="math inline">\(Z = \int\rho(x)\,dx\)</span> — the total survivor count in the rescue story — is the intractable quantity that makes direct density estimation impossible: computing <span class="math inline">\(Z\)</span> requires integrating an unknown function over a high-dimensional space, which is as intractable as the original density estimation problem.</p>
+<p><strong>The gradient direction field — the rescue team’s local observation that survivor density is increasing toward the northwest at rate 3 survivors per kilometre, without knowing the absolute count — is the score function <span class="math inline">\(s(x) = \nabla_x\log\rho(x) = \nabla_x\rho(x)/\rho(x)\)</span>, the relative rate of change of the density at each point.</strong> The key property that makes the score tractable when the density is not: <span class="math inline">\(\nabla\log\rho = \nabla\rho/\rho\)</span> cancels the normalizing constant. If <span class="math inline">\(\rho(x) = \tilde\rho(x)/Z\)</span> for unnormalized <span class="math inline">\(\tilde\rho\)</span> and intractable <span class="math inline">\(Z\)</span>, then <span class="math inline">\(\nabla\log\rho = \nabla\log\tilde\rho + \nabla\log Z^{-1} = \nabla\log\tilde\rho\)</span> — the constant <span class="math inline">\(Z\)</span> vanishes under the gradient. This is the fundamental reason score matching is tractable when density estimation is not: the score requires only the unnormalized density <span class="math inline">\(\tilde\rho\)</span>, whose gradient <span class="math inline">\(\nabla\tilde\rho\)</span> is computable from the neural network parameterization. The rescue team’s directional observations are score function evaluations — noisy samples of <span class="math inline">\(\nabla\log\rho\)</span> at observed survivor locations — and score matching is the procedure for learning the full direction field from these local observations.</p>
+<hr>
+<p><strong>Sushil’s circular naive objective <span class="math inline">\(\mathcal{L}_{\text{naive}}(\theta) = \mathbb{E}_{x\sim\rho}[\|s_\theta(x)-\nabla\log\rho(x)\|^2]\)</span> — requiring the true score <span class="math inline">\(\nabla\log\rho\)</span> as a label for each training point — is the Fisher divergence <span class="math inline">\(\frac{1}{2}\mathcal{F}(\rho\|q_\theta) = \frac{1}{2}\mathbb{E}_\rho[\|s_\theta - \nabla\log\rho\|^2]\)</span>, which is the natural <span class="math inline">\(L^2(\rho)\)</span>-distance between the model score and the true score but requires knowledge of the true score as a training target.</strong> The circularity is precise: minimizing <span class="math inline">\(\mathcal{F}(\rho\|q_\theta)\)</span> requires evaluating <span class="math inline">\(\nabla\log\rho(x)\)</span> at each training point <span class="math inline">\(x\sim\rho\)</span>, but <span class="math inline">\(\nabla\log\rho(x) = \nabla_x\log\int p_{\text{data}}(x_0)\mathcal{N}(x;\alpha_t x_0,\sigma_t^2)dx_0\)</span> requires integrating over all data points — a sum over the entire training dataset at each gradient step, reducing to <span class="math inline">\(O(n\cdot d)\)</span> computation per step for <span class="math inline">\(n\)</span> training samples in <span class="math inline">\(d\)</span> dimensions. For ImageNet with <span class="math inline">\(n = 1.2\times 10^6\)</span> samples and <span class="math inline">\(d = 256\times 256\times 3\approx 2\times 10^5\)</span> dimensions, this is <span class="math inline">\(2.4\times 10^{11}\)</span> operations per gradient step — completely intractable. The rescue team analogy: to compute Sushil’s training labels, you would need to know the exact survivor location at every possible terrain point simultaneously — the very information you are trying to learn.</p>
+<hr>
+<p><strong>Maya’s integration by parts insight — converting the cross-term <span class="math inline">\(\mathbb{E}_\rho[s_\theta\cdot\nabla\log\rho]\)</span> to <span class="math inline">\(-\mathbb{E}_\rho[\nabla\cdot s_\theta]\)</span> by the divergence theorem — is Hyvärinen’s theorem, proved by applying <span class="math inline">\(\int s_\theta\cdot\nabla\rho\,dx = -\int(\nabla\cdot s_\theta)\rho\,dx\)</span> with vanishing boundary terms.</strong> The proof walks precisely as follows. The cross-term is <span class="math inline">\(\mathbb{E}_\rho[s_\theta\cdot\nabla\log\rho] = \int s_\theta(x)\cdot\nabla\rho(x)\,dx\)</span> — using <span class="math inline">\(\nabla\log\rho\cdot\rho = \nabla\rho\)</span>, so the <span class="math inline">\(\rho\)</span> in the expectation and the <span class="math inline">\(1/\rho\)</span> in <span class="math inline">\(\nabla\log\rho\)</span> cancel. The divergence theorem in <span class="math inline">\(\mathbb{R}^d\)</span>: <span class="math inline">\(\int_\Omega s_\theta\cdot\nabla\rho\,dx = -\int_\Omega(\nabla\cdot s_\theta)\rho\,dx + \oint_{\partial\Omega}(s_\theta\cdot n)\rho\,dS\)</span>. As <span class="math inline">\(\Omega\to\mathbb{R}^d\)</span>: the boundary integral <span class="math inline">\(\oint_{\partial\Omega}(s_\theta\cdot n)\rho\,dS\to 0\)</span> because <span class="math inline">\(\rho(x)\|s_\theta(x)\|\to 0\)</span> as <span class="math inline">\(\|x\|\to\infty\)</span> — a reasonable assumption for well-trained networks on data distributions that decay at infinity. The result <span class="math inline">\(\mathbb{E}_\rho[s_\theta\cdot\nabla\log\rho] = -\mathbb{E}_\rho[\nabla\cdot s_\theta]\)</span> substitutes into the expanded Fisher divergence: <span class="math inline">\(\mathcal{L}_{\text{ESM}} = \mathbb{E}_\rho[\frac{1}{2}\|s_\theta\|^2] - \mathbb{E}_\rho[s_\theta\cdot\nabla\log\rho] + C = \mathbb{E}_\rho[\frac{1}{2}\|s_\theta\|^2 + \nabla\cdot s_\theta] + C = \mathcal{L}_{\text{ISM}} + C\)</span>. The Hyvärinen objective <span class="math inline">\(\mathcal{L}_{\text{ISM}} = \mathbb{E}_\rho[\frac{1}{2}\|s_\theta\|^2 + \nabla\cdot s_\theta]\)</span> contains no <span class="math inline">\(\nabla\log\rho\)</span> — the intractable ground truth score has been completely eliminated by one application of the divergence theorem from MATH 201.</p>
+<p><strong>The two-term interpretation of the Hyvärinen objective — <span class="math inline">\(\frac{1}{2}\|s_\theta(x)\|^2\)</span> penalizing large predicted gradient magnitudes and <span class="math inline">\(\nabla\cdot s_\theta(x)\)</span> encouraging inward-pointing score fields at observed locations — is the balance between regularization and data fidelity encoded in the score matching objective.</strong> The term <span class="math inline">\(\frac{1}{2}\|s_\theta\|^2\)</span> is the squared <span class="math inline">\(L^2\)</span>-norm of the predicted score field at the data point <span class="math inline">\(x\)</span>: it penalizes the network for confidently predicting strong gradients at observed locations, acting as a form of score regularization. The term <span class="math inline">\(\nabla\cdot s_\theta(x) = \sum_i\partial s_\theta^i/\partial x_i\)</span> is the divergence of the score field — positive when the score spreads outward (density minimum at <span class="math inline">\(x\)</span>), negative when the score converges inward (density maximum at <span class="math inline">\(x\)</span>). Minimizing <span class="math inline">\(\nabla\cdot s_\theta\)</span> at observed data points pushes the score to converge inward at those points — the correct behavior for a score field near a density peak, where <span class="math inline">\(\nabla\log\rho\)</span> points inward from all directions toward the mode. At the optimum, these two terms balance to reproduce <span class="math inline">\(\nabla\log\rho\)</span> exactly — the network predicts gradients of the magnitude that the density gradient field demands, neither too large nor too small.</p>
+<hr>
+<p><strong>The divergence bottleneck — computing <span class="math inline">\(\nabla\cdot s_\theta(x) = \sum_{i=1}^d\partial s_\theta^i/\partial x_i\)</span> requiring <span class="math inline">\(d\)</span> Jacobian-vector products at <span class="math inline">\(O(d)\)</span> cost — is the same Hutchinson trace bottleneck as in Topic 1’s instantaneous change of variables formula, resolved by sliced score matching.</strong> The sliced score matching objective <span class="math inline">\(\mathcal{L}_{\text{SSM}} = \mathbb{E}_{x\sim\rho,v\sim p_v}[\frac{1}{2}(v^\top s_\theta)^2 + v^\top\nabla_x(v^\top s_\theta)]\)</span> is equivalent to <span class="math inline">\(\mathcal{L}_{\text{ISM}}\)</span> by the trace identity <span class="math inline">\(\text{tr}(A) = \mathbb{E}_v[v^\top Av]\)</span> for <span class="math inline">\(\mathbb{E}[vv^\top]=I\)</span>: <span class="math inline">\(\mathbb{E}_v[v^\top\nabla_x s_\theta\cdot v] = \text{tr}(\nabla_x s_\theta\cdot\mathbb{E}[vv^\top]) = \text{tr}(\nabla_x s_\theta) = \nabla\cdot s_\theta\)</span>. The scalar <span class="math inline">\(v^\top s_\theta\)</span> requires only one forward pass; its gradient <span class="math inline">\(\nabla_x(v^\top s_\theta) = \nabla_x s_\theta\cdot v\)</span> requires one backward pass at cost <span class="math inline">\(O(p)\)</span> — the same Hutchinson estimator that reduced the FFJORD divergence from <span class="math inline">\(O(d^2)\)</span> to <span class="math inline">\(O(p)\)</span>. The rescue analogy: instead of asking every rescue team member independently which direction survivor density increases (measuring all <span class="math inline">\(d\)</span> components of <span class="math inline">\(\nabla s_\theta\)</span>), project onto a random direction <span class="math inline">\(v\)</span> and measure only that one scalar projection — an unbiased estimate of the divergence at <span class="math inline">\(O(1/d)\)</span> of the cost.</p>
+<hr>
+<p><strong>The denoising breakthrough — observing that the score of the smoothed distribution at a noisy location <span class="math inline">\(x = x_0+\sigma\epsilon\)</span> equals <span class="math inline">\(-\epsilon/\sigma\)</span>, the known noise direction pointing back toward the clean signal — is Tweedie’s formula <span class="math inline">\(\nabla_x\log\tilde\rho_\sigma(x) = -(x-\mathbb{E}[X_0|X=x])/\sigma^2\)</span>, derived by differentiating the Gaussian mixture <span class="math inline">\(\tilde\rho_\sigma(x) = \int p_{\text{data}}(x_0)\mathcal{N}(x;x_0,\sigma^2)dx_0\)</span> under the integral sign.</strong> The derivation proceeds: <span class="math inline">\(\nabla_x\tilde\rho_\sigma(x) = \int p_{\text{data}}(x_0)\nabla_x\mathcal{N}(x;x_0,\sigma^2)dx_0 = \int p_{\text{data}}(x_0)\frac{-(x-x_0)}{\sigma^2}\mathcal{N}(x;x_0,\sigma^2)dx_0\)</span>. Dividing by <span class="math inline">\(\tilde\rho_\sigma(x)\)</span>: <span class="math inline">\(\nabla_x\log\tilde\rho_\sigma(x) = -\frac{x-\int x_0 p(x_0|x)dx_0}{\sigma^2} = -\frac{x-\mathbb{E}[X_0|X=x]}{\sigma^2}\)</span>. Since <span class="math inline">\(X = X_0+\sigma\epsilon\)</span> gives <span class="math inline">\(\mathbb{E}[X_0|X=x] = x - \sigma\mathbb{E}[\epsilon|X=x]\)</span>, the score becomes <span class="math inline">\(-\mathbb{E}[\epsilon|X=x]/\sigma\)</span>. The optimal score estimator <span class="math inline">\(s^*(x,\sigma) = -\mathbb{E}[\epsilon|X=x]/\sigma\)</span> requires predicting the expected noise given the noisy observation — a denoising problem, not a density estimation problem. The rescue analogy: instead of estimating the survivor density gradient at each location (the score), ask a simpler question: given a noisy observation <span class="math inline">\(x\)</span> of a survivor location displaced by <span class="math inline">\(\sigma\epsilon\)</span>, what direction points back toward the true location? The answer <span class="math inline">\(-\epsilon/\sigma\)</span> is known because you generated the noisy observation yourself by adding <span class="math inline">\(\sigma\epsilon\)</span> to the true location <span class="math inline">\(x_0\)</span> — the forward noising process has created training labels for free.</p>
+<p><strong>Vincent’s equivalence theorem — the denoising score matching objective <span class="math inline">\(\mathcal{L}_{\text{DSM}}(\theta,\sigma) = \mathbb{E}_{x_0,\epsilon}[\|s_\theta(x_0+\sigma\epsilon,\sigma)+\epsilon/\sigma\|^2]\)</span> is equivalent to the implicit score matching objective <span class="math inline">\(\mathcal{L}_{\text{ISM}}(\theta)\)</span> for the smoothed density <span class="math inline">\(\tilde\rho_\sigma\)</span> — is the bridge between the simple regression problem and the principled score estimation framework.</strong> The proof shows <span class="math inline">\(\mathcal{L}_{\text{DSM}} = \mathcal{L}_{\text{ESM}}^{\tilde\rho_\sigma} + C\)</span> by expanding <span class="math inline">\(\|s_\theta + \epsilon/\sigma\|^2 = \|s_\theta - \nabla\log\tilde\rho_\sigma\|^2 + \|\nabla\log\tilde\rho_\sigma + \epsilon/\sigma\|^2 + 2(s_\theta-\nabla\log\tilde\rho_\sigma)\cdot(\nabla\log\tilde\rho_\sigma+\epsilon/\sigma)\)</span>: the last term vanishes in expectation because <span class="math inline">\(\mathbb{E}[\epsilon/\sigma|X=x] = -\nabla_x\log\tilde\rho_\sigma(x)\)</span> by Tweedie’s formula, and the middle term is a constant in <span class="math inline">\(\theta\)</span>. The practical consequence: training with the denoising objective <span class="math inline">\(\mathbb{E}[\|s_\theta(x_0+\sigma\epsilon)+\epsilon/\sigma\|^2]\)</span> — a simple MSE regression on pairs <span class="math inline">\((x_0+\sigma\epsilon, -\epsilon/\sigma)\)</span> — is guaranteed to minimize the Fisher divergence between <span class="math inline">\(s_\theta(\cdot,\sigma)\)</span> and <span class="math inline">\(\nabla\log\tilde\rho_\sigma(\cdot)\)</span>. No Jacobian, no divergence computation, no Hutchinson estimator needed. The rescue analogy: training the rescue coordination network to predict the direction back to the true survivor location from each noisy observation is equivalent to learning the score of the smoothed survivor distribution — both objectives have the same minimum.</p>
+<hr>
+<p><strong>The break moment — one noise level <span class="math inline">\(\sigma\)</span> is insufficient for the full generative model — is the formal statement that the score <span class="math inline">\(\nabla\log\tilde\rho_\sigma\)</span> for a single <span class="math inline">\(\sigma\)</span> cannot drive a sampling procedure that traverses from pure Gaussian noise to the data distribution, because the score at large <span class="math inline">\(\sigma\)</span> has no fine-grained information about the data manifold, and the score at small <span class="math inline">\(\sigma\)</span> is unreliable away from data points due to data sparsity in high dimensions.</strong> At large <span class="math inline">\(\sigma\)</span>: <span class="math inline">\(\tilde\rho_\sigma\approx\mathcal{N}(0,\sigma^2 I)\)</span> for any bounded <span class="math inline">\(p_{\text{data}}\)</span> — the smoothed distribution is nearly Gaussian and the score <span class="math inline">\(\nabla\log\tilde\rho_\sigma\approx -x/\sigma^2\)</span> is the Gaussian score, containing no information distinguishing <span class="math inline">\(p_{\text{data}}\)</span> from a Gaussian. The rescue analogy: with 5-kilometre search radius noise, every survivor observation looks like a point in the center of the valley — no fine-grained structure is visible. At small <span class="math inline">\(\sigma\)</span>: <span class="math inline">\(\tilde\rho_\sigma\)</span> approximates <span class="math inline">\(p_{\text{data}}\)</span> closely, but for most points <span class="math inline">\(x\)</span> in the high-dimensional space <span class="math inline">\(\mathbb{R}^d\)</span>, the nearest data point is far away and <span class="math inline">\(\tilde\rho_\sigma(x)\approx 0\)</span>, making the score numerically unstable. The rescue analogy: with 50-metre search radius, most terrain points have zero observed survivors nearby, giving no information about the score direction. The multi-scale solution: train the noise-conditional score network <span class="math inline">\(s_\theta(x,t)\)</span> simultaneously on all noise levels <span class="math inline">\(t\in[0,T]\)</span>, with large-<span class="math inline">\(t\)</span> scores providing reliable coarse structure and small-<span class="math inline">\(t\)</span> scores providing fine-grained data geometry. The NCSN weighting <span class="math inline">\(\lambda(t) = \sigma_t^2\)</span> equalizes the signal magnitude across noise levels — at large <span class="math inline">\(\sigma_t\)</span>, the true score <span class="math inline">\(\nabla\log\rho_t\approx -x/\sigma_t^2\)</span> has small magnitude <span class="math inline">\(\|s\|\approx 1/\sigma_t\)</span>, so multiplying the loss by <span class="math inline">\(\sigma_t^2\)</span> restores the contribution of each noise level to a comparable scale.</p>
+<hr>
+<p><strong>The DDPM training objective <span class="math inline">\(\mathcal{L}_{\text{DDPM}} = \mathbb{E}_{t,X_0,\epsilon}[\|\epsilon_\theta(\alpha_t X_0+\sigma_t\epsilon,t)-\epsilon\|^2]\)</span> — predicting the noise added in the forward OU process — is the denoising score matching objective with the <span class="math inline">\(\epsilon\)</span>-parameterization <span class="math inline">\(\epsilon_\theta = -\sigma_t s_\theta\)</span> and unit weighting <span class="math inline">\(\lambda(t) = 1\)</span>, equivalent to Fisher-weighted score matching with <span class="math inline">\(\lambda(t) = \sigma_t^2\)</span> up to reparameterization.</strong> The three equivalent parameterizations — <span class="math inline">\(x_0\)</span>-prediction, <span class="math inline">\(\epsilon\)</span>-prediction, and <span class="math inline">\(v\)</span>-prediction — are all linear reparameterizations of the same underlying score function <span class="math inline">\(s_\theta(x_t,t) = \nabla_{x_t}\log\rho_t(x_t)\)</span>. The <span class="math inline">\(\epsilon\)</span>-prediction <span class="math inline">\(\epsilon_\theta = -\sigma_t s_\theta\)</span> replaces the score with the noise prediction, scaling by <span class="math inline">\(\sigma_t\)</span> to make the prediction dimensionless. The <span class="math inline">\(x_0\)</span>-prediction <span class="math inline">\(\hat x_0^\theta = (x_t-\sigma_t\epsilon_\theta)/\alpha_t = x_t/\alpha_t + \sigma_t^2 s_\theta/\alpha_t\)</span> is the Tweedie denoiser — the posterior mean <span class="math inline">\(\mathbb{E}[X_0|X_t=x_t]\)</span> reconstructed from the score via Tweedie’s formula. The <span class="math inline">\(v\)</span>-prediction <span class="math inline">\(v_\theta = \alpha_t\epsilon-\sigma_t x_0\)</span> is the velocity along the interpolation path from <span class="math inline">\(x_0\)</span> to <span class="math inline">\(\epsilon\)</span> — a numerically stable parameterization at intermediate noise levels where neither <span class="math inline">\(\epsilon\)</span>-prediction (noisy at low noise) nor <span class="math inline">\(x_0\)</span>-prediction (noisy at high noise) is well-conditioned. All three train the same score function; the choice of parameterization affects only the numerical conditioning of the training gradient.</p>
+<p><strong>The DDPM reverse sampler <span class="math inline">\(x_{t-1} = \frac{1}{\sqrt{1-\beta_t}}(x_t+\beta_t s_\theta(x_t,t)) + \sqrt{\beta_t}\epsilon_t\)</span> — the Euler-Maruyama discretization of the Anderson reverse SDE with the learned score substituted — is the stochastic sampling procedure whose distributional accuracy is <span class="math inline">\(O(\sqrt{\Delta t})\)</span> strong and <span class="math inline">\(O(\Delta t)\)</span> weak in the step size <span class="math inline">\(\Delta t = \beta_t\)</span>.</strong> The DDIM sampler <span class="math inline">\(x_{t-1} = \sqrt{\bar\alpha_{t-1}}\hat x_0^\theta(x_t,t)+\sqrt{1-\bar\alpha_{t-1}}\epsilon_\theta(x_t,t)\)</span> is the Euler discretization of the probability flow ODE — the same probability flow ODE derived in Topic 1, now with the score replaced by the learned <span class="math inline">\(s_\theta\)</span>, giving deterministic generation trajectories. The accuracy-speed trade-off: DDPM uses <span class="math inline">\(T=1000\)</span> steps for high-quality stochastic sampling; DDIM uses <span class="math inline">\(T=20\)</span>-<span class="math inline">\(50\)</span> steps for deterministic sampling at comparable quality, because the ODE trajectories are smoother than the SDE trajectories and require fewer evaluation points for the same numerical accuracy. The higher-order solvers DPM-Solver and DEIS achieve <span class="math inline">\(O(\Delta t^k)\)</span> weak accuracy at order <span class="math inline">\(k\)</span>, further reducing the step count to <span class="math inline">\(T=5\)</span>-<span class="math inline">\(20\)</span> while maintaining sample quality.</p>
+<p><strong>The classifier-free guidance score <span class="math inline">\(\tilde s_\theta(x_t,t,y) = s_\theta(x_t,t,\emptyset) + w(s_\theta(x_t,t,y)-s_\theta(x_t,t,\emptyset))\)</span> — the extrapolation of the conditional score beyond the unconditional score — is the geometric interpolation in score space that amplifies the gradient direction toward high-likelihood regions of the conditional distribution <span class="math inline">\(p(x|y)\)</span>.</strong> The decomposition <span class="math inline">\(\nabla\log p(x|y) = \nabla\log p(y|x) + \nabla\log p(x)\)</span> — Bayes’ theorem differentiated — shows that the conditional score equals the unconditional score plus the classifier gradient <span class="math inline">\(\nabla\log p(y|x)\)</span>. Classifier-free guidance approximates this decomposition without a separate classifier by training a single network on both conditional (<span class="math inline">\(y\)</span> given) and unconditional (<span class="math inline">\(y=\emptyset\)</span>) inputs, then extrapolating: <span class="math inline">\(\tilde s = s_\text{uncond} + w(s_\text{cond}-s_\text{uncond})\)</span> for <span class="math inline">\(w&gt;1\)</span> amplifies the difference <span class="math inline">\(s_\text{cond}-s_\text{uncond}\approx\nabla\log p(y|x)\)</span> by factor <span class="math inline">\(w\)</span>, pushing samples toward regions of high <span class="math inline">\(p(y|x)\)</span> — high fidelity to the conditioning signal — at the cost of reduced diversity. The rescue analogy: instead of searching wherever survivor density is highest (unconditional), search where survivor density is highest given a specific constraint (conditional on being near a water source), amplified by <span class="math inline">\(w\)</span> to prioritize the constraint strongly.</p>
+<hr>
+<p><strong>The connection to MATH 201 is the integration by parts identity.</strong> Hyvärinen’s theorem uses <span class="math inline">\(\int s_\theta\cdot\nabla\rho\,dx = -\int(\nabla\cdot s_\theta)\rho\,dx\)</span> — the product rule for divergence <span class="math inline">\(\nabla\cdot(s_\theta\rho) = (\nabla\cdot s_\theta)\rho + s_\theta\cdot\nabla\rho\)</span> integrated by the divergence theorem — the same identity used to derive the Fokker-Planck equation. Differentiating under the integral sign <span class="math inline">\(\nabla_x\int p_{\text{data}}(x_0)\mathcal{N}(x;x_0,\sigma^2)dx_0 = \int p_{\text{data}}(x_0)\nabla_x\mathcal{N}(x;x_0,\sigma^2)dx_0\)</span> from MATH 201 proves Tweedie’s formula. The sliced score matching identity <span class="math inline">\(\mathbb{E}_v[v^\top Av] = \text{tr}(A)\)</span> for <span class="math inline">\(\mathbb{E}[vv^\top]=I\)</span> uses <span class="math inline">\(\text{tr}(AB)=\text{tr}(BA)\)</span> from MATH 201’s linear algebra. <strong>The connection to MATH 208 is Bayes’ theorem and MSE regression.</strong> Tweedie’s formula is the Bayes posterior mean <span class="math inline">\(\mathbb{E}[X_0|X]=\int x_0 p(x_0|x)dx_0\)</span> for the Gaussian likelihood <span class="math inline">\(p(x|x_0)=\mathcal{N}(x;x_0,\sigma^2)\)</span> and prior <span class="math inline">\(p_{\text{data}}\)</span>. The DDPM loss is MSE regression from MATH 208 — optimal predictor of <span class="math inline">\(\epsilon\)</span> given <span class="math inline">\(X_t=\alpha_t X_0+\sigma_t\epsilon\)</span> is <span class="math inline">\(\mathbb{E}[\epsilon|X_t]=-\sigma_t s_t(X_t)\)</span> by Tweedie. The SNR <span class="math inline">\(\alpha_t^2/\sigma_t^2\)</span> determines the regression difficulty at each noise level. <strong>The connection to MSCS 202 is the numerical discretization.</strong> DDPM Euler-Maruyama has <span class="math inline">\(O(\sqrt{\Delta t})\)</span> strong error; DDIM has <span class="math inline">\(O(\Delta t)\)</span> weak error; DPM-Solver has <span class="math inline">\(O(\Delta t^k)\)</span> for order <span class="math inline">\(k\)</span> — the same error analysis hierarchy as explicit Euler (<span class="math inline">\(O(h)\)</span>), Runge-Kutta (<span class="math inline">\(O(h^k)\)</span>) from MSCS 202, now applied to the stochastic and deterministic reverse-time samplers.</p>
+<hr>
+<p>The Nepal Search and Rescue network — survivor density as <span class="math inline">\(p_{\text{data}}\)</span>, gradient direction as the score <span class="math inline">\(s=\nabla\log\rho\)</span>, normalizing constant problem eliminating direct density estimation, Sushil’s circular Fisher divergence, Maya’s integration by parts eliminating <span class="math inline">\(\nabla\log\rho\)</span> to give the Hyvärinen objective <span class="math inline">\(\mathbb{E}[\frac{1}{2}\|s_\theta\|^2+\nabla\cdot s_\theta]\)</span>, divergence bottleneck resolved by sliced score matching, denoising equivalence via Tweedie’s formula giving <span class="math inline">\(\mathcal{L}_{\text{DSM}}=\mathbb{E}[\|s_\theta+\epsilon/\sigma\|^2]\)</span>, break moment of single noise level insufficiency, noise-conditional score network <span class="math inline">\(s_\theta(x,t)\)</span> trained across all scales, DDPM <span class="math inline">\(\epsilon\)</span>-prediction reparameterization, stochastic DDPM sampler as Euler-Maruyama of the reverse SDE, deterministic DDIM sampler as Euler of the probability flow ODE, and classifier-free guidance as conditional score extrapolation — is now completely dissolved into its mathematical form. The score is <span class="math inline">\(s_t=\nabla\log\rho_t\)</span>. Hyvärinen’s theorem is <span class="math inline">\(\mathbb{E}[s_\theta\cdot\nabla\log\rho]=-\mathbb{E}[\nabla\cdot s_\theta]\)</span>. The ISM objective is <span class="math inline">\(\mathbb{E}[\frac{1}{2}\|s_\theta\|^2+\nabla\cdot s_\theta]\)</span>. Tweedie’s formula is <span class="math inline">\(\nabla\log\tilde\rho_\sigma=-\mathbb{E}[\epsilon|X]/\sigma\)</span>. The DSM objective is <span class="math inline">\(\mathbb{E}[\|s_\theta+\epsilon/\sigma\|^2]\)</span>. DDPM is <span class="math inline">\(\mathbb{E}[\|\epsilon_\theta-\epsilon\|^2]\)</span>. The reverse SDE uses <span class="math inline">\(s_\theta\)</span>. DDIM uses the probability flow ODE with <span class="math inline">\(s_\theta\)</span>.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/shreeshb51\.github\.io\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Shreesh Bhattarai · GDL &amp; COT</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/shreeshb51">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/shreesh-bhattarai-1ba1681bb/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
